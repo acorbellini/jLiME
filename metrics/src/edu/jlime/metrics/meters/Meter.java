@@ -5,6 +5,11 @@ import edu.jlime.metrics.metric.Metrics;
 
 public class Meter implements Metric<Float>, MeterMBean {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -7321038067082719726L;
+
 	Gauge g = new Gauge();
 
 	Float meterValue;

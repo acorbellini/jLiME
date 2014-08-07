@@ -7,6 +7,10 @@ import edu.jlime.metrics.metric.Metric;
 
 public class MetricSet implements Metric<Object>, MetricSetMBean {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -3173481557892978052L;
 	Set<Object> set = new HashSet<Object>();
 
 	@Override

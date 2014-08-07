@@ -5,6 +5,11 @@ import edu.jlime.metrics.metric.Metrics;
 
 public class Gauge implements Metric<Float>, GaugeMBean {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 6115039270311056716L;
+
 	Float min = Float.MAX_VALUE;
 
 	Float max = Float.MIN_VALUE;
