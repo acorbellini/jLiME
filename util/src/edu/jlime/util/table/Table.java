@@ -276,11 +276,11 @@ public class Table {
 		return new Row(this, row);
 	}
 
-	public void sortRowHeader(Comparator comparator) {
+	public void sortRowHeader(Comparator<String> comparator) {
 		sortCols(0, 1, getRowLimit(), comparator);
 	}
 
-	private void sortCols(int col, int init, int end, Comparator comparator) {
+	private void sortCols(int col, int init, int end, Comparator<String> comparator) {
 		Col copy = getCol(col);
 		Integer[] indexes = getSortIndexes(copy, init, end, comparator);
 		reorderRows(indexes);

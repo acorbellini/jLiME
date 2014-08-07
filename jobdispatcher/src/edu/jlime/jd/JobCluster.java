@@ -161,8 +161,8 @@ public class JobCluster implements Iterable<JobNode> {
 		chain(peers, j, true);
 	}
 
-	public CompositeMetrics getInfo() throws Exception {
-		return new CompositeMetrics(broadcast(new MetricsQuery()));
+	public CompositeMetrics<JobNode> getInfo() throws Exception {
+		return new CompositeMetrics<JobNode>(broadcast(new MetricsQuery()));
 	}
 
 	@Override

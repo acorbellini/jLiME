@@ -9,12 +9,9 @@ public class Marshaller {
 
 	private Logger log = Logger.getLogger(Marshaller.class);
 
-	private ClassLoaderProvider clp;
-
 	private TypeConverters tc;
 
 	public Marshaller(ClassLoaderProvider cl) {
-		this.clp = cl;
 		this.tc = new TypeConverters(cl);
 	}
 

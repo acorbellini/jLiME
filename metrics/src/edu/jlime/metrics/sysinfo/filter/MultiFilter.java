@@ -19,7 +19,7 @@ public abstract class MultiFilter<T> implements SysInfoFilter<T> {
 	@Override
 	public HashMap<T, Float> extract(CompositeMetrics<T> info) {
 		List<HashMap<T, Float>> toMerge = new ArrayList<>();
-		for (SysInfoFilter fil : filters) {
+		for (SysInfoFilter<T> fil : filters) {
 			toMerge.add(fil.extract(info));
 		}
 		return merge(toMerge);

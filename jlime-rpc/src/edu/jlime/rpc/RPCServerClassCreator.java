@@ -12,7 +12,7 @@ public class RPCServerClassCreator {
 			IOException {
 		String iface = args[0];
 
-		Class serverInterface = Class.forName(iface);
+		Class<?> serverInterface = Class.forName(iface);
 
 		createBroadcastIface(serverInterface);
 
@@ -261,7 +261,7 @@ public class RPCServerClassCreator {
 		return ret.toString();
 	}
 
-	private static String getImports(Class ifaceClass) {
+	private static String getImports(Class<?> ifaceClass) {
 		StringBuilder imports = new StringBuilder();
 		imports.append("import " + ifaceClass.getName() + ";\n");
 		imports.append("import edu.jlime.core.rpc.RPCDispatcher;\n");

@@ -17,9 +17,9 @@ public class CriteriaMapper extends Mapper {
 
 	private static final long serialVersionUID = -821812463957389816L;
 
-	private SysInfoFilter filter;
+	private SysInfoFilter<JobNode> filter;
 
-	public CriteriaMapper(SysInfoFilter ext) {
+	public CriteriaMapper(SysInfoFilter<JobNode> ext) {
 		this.filter = ext;
 	}
 

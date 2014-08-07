@@ -25,7 +25,7 @@ public class ClusterProfiler {
 
 	long freq;
 
-	HashMap<Date, CompositeMetrics> info = new HashMap<>();
+	HashMap<Date, CompositeMetrics<JobNode>> info = new HashMap<>();
 
 	Timer timer;
 
@@ -52,7 +52,7 @@ public class ClusterProfiler {
 	}
 
 	public void csv(CSV csv, MetricExtractor ext) {
-		HashMap<Date, CompositeMetrics> info = new HashMap<>(this.info);
+		HashMap<Date, CompositeMetrics<JobNode>> info = new HashMap<>(this.info);
 
 		HashSet<JobNode> peersUsed = new HashSet<>();
 		for (Date ci : info.keySet()) {
@@ -79,7 +79,7 @@ public class ClusterProfiler {
 		for (Date date : dates) {
 			csv.put(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(date));
 			for (JobNode peer : sorted) {
-				CompositeMetrics i = info.get(date);
+				CompositeMetrics<JobNode> i = info.get(date);
 				if (i.contains(peer))
 					csv.put(ext.get(i.get(peer)));
 

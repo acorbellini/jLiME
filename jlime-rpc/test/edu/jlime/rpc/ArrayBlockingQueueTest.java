@@ -31,8 +31,8 @@ public class ArrayBlockingQueueTest {
 
 		if ("hola" == "hola")
 			System.out.println("Son iguales");
-		else
-			System.out.println("Son distintos");
+//		else
+//			System.out.println("Son distintos");
 
 		if (new String("hola") == new String("hola"))
 			System.out.println("Son iguales");

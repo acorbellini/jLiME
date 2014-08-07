@@ -15,13 +15,10 @@ public class HashCountJob implements Job<byte[]> {
 
 	private int[] data;
 
-	private String hash;
-
 	String map;
 
 	public HashCountJob(int[] data, String hash, String map) {
 		this.data = data;
-		this.hash = hash;
 		this.map = map;
 	}
 
