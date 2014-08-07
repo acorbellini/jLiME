@@ -15,7 +15,7 @@
 	<bean id="availablememory"
 		class="edu.jlime.collections.adjacencygraph.mappers.CriteriaMapper">
 		<constructor-arg>
-			<bean class="edu.jlime.metrics.sysinfo.filter.simple.SimpleInfoFilter">
+			<bean class="edu.jlime.metrics.sysinfo.filter.SimpleInfoFilter">
 				<constructor-arg value="mem.available" />
 			</bean>
 		</constructor-arg>
