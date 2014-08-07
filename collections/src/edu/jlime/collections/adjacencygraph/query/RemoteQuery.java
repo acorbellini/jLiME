@@ -22,6 +22,7 @@ public abstract class RemoteQuery<R> implements Serializable, Query<R> {
 
 	public RemoteQuery(RemoteAdjacencyGraph graph) {
 		this.graph = graph;
+		this.cluster = graph.getCluster();
 	}
 
 	public Mapper getMapper() {
@@ -57,14 +58,10 @@ public abstract class RemoteQuery<R> implements Serializable, Query<R> {
 	public final R query() throws Exception {
 		R res = null;
 		long init = Calendar.getInstance().getTimeInMillis();
-		if (!getCluster().getLocalPeer().isExec()) {
-			res = getCluster().getAnyExecutor().exec(
-					new QueryJobWrapper<R>(this));
-			// res = cluster.getByName("GridCluster1").get(0)
-			// .exec(new QueryJobWrapper<R>(this));
+		if (!cluster.getLocalPeer().isExec()) {
+			res = cluster.getAnyExecutor().exec(new QueryJobWrapper<R>(this));
 		} else
-			res = getCluster().getLocalPeer()
-					.exec(new QueryJobWrapper<R>(this));
+			res = cluster.getLocalPeer().exec(new QueryJobWrapper<R>(this));
 		long end = Calendar.getInstance().getTimeInMillis();
 		queryTime = end - init;
 		return res;
