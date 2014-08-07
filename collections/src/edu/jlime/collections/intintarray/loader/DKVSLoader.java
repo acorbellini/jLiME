@@ -176,7 +176,7 @@ public class DKVSLoader {
 				try {
 					count++;
 					log.warn("Clave " + k + ", intento " + count
-							+ ": Hubo una excepción  al intentar agregar ["
+							+ ": Hubo una excepciï¿½n  al intentar agregar ["
 							+ e.getMessage() + "].");
 					Thread.sleep(5000);
 				} catch (InterruptedException e1) {

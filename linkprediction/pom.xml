@@ -22,7 +22,7 @@
 						<configuration>
 							<tasks>
 								<fileset id="lp_scripts" dir="./scripts" includes="**" />
-								<copy todir="../jlime/dist/extra/linkprediction" file="target/linkprediction-${version}.jar"
+								<copy todir="../jlime/dist/extra/linkprediction" file="target/linkprediction-${project.version}.jar"
 									failonerror="false"></copy>
 								<copy todir="../jlime/dist/extra/linkprediction"
 									failonerror="false">

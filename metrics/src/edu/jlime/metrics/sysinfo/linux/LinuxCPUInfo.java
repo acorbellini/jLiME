@@ -31,7 +31,7 @@ public class LinuxCPUInfo extends SysInfoProvider {
 			mgr.createTimedSensor(new SensorMeasure() {
 				@Override
 				public void proc(Metrics mgr) throws Exception {
-					mgr.gauge("sysinfo.cpu.freq").update(getCpuUsage(cores));
+					mgr.gauge("sysinfo.cpu.usage").update(getCpuUsage(cores));
 				}
 			});
 

@@ -34,8 +34,7 @@ public class LinuxDiskInfo extends SysInfoProvider {
 							Float.valueOf(diskData[3]));
 					mgr.gauge(deviceMetric + ".available").update(
 							Float.valueOf(diskData[4]));
-					mgr.gauge(deviceMetric + ".diskname").update(
-							Float.valueOf(diskData[6]));
+					mgr.simple(deviceMetric + ".diskname", diskData[6]);
 
 					currentDevs.add(deviceMetric);
 				}

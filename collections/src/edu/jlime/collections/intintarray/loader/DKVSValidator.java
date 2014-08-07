@@ -19,7 +19,7 @@ public class DKVSValidator extends DKVSLoader {
 
 				if (get != null)
 					if (get.length == list.length) {
-						log.info("La clave: " + k + " es válida.");
+						log.info("La clave: " + k + " es vï¿½lida.");
 					} else {
 						log.info("El largo de los datos de la clave " + k
 								+ " es " + get.length

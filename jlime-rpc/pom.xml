@@ -21,7 +21,7 @@
 						<phase>package</phase>
 						<configuration>
 							<tasks>								
-								<copy todir="../jlime/dist/lib/" file="target/jlime-rpc-${version}.jar" />
+								<copy todir="../jlime/dist/lib/" file="target/jlime-rpc-${project.version}.jar" />
 							</tasks>
 						</configuration>
 						<goals>

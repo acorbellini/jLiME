@@ -71,10 +71,10 @@ public class Server {
 		if (ext != null)
 			extensions = ext.split(",");
 
-		Server.run(instances, fact, extensions);
+		Server.runMultipleInstances(instances, fact, extensions);
 	}
 
-	private static ArrayList<Server> run(int n,
+	private static ArrayList<Server> runMultipleInstances(int n,
 			final JobDispatcherFactory factory, final String[] extClasses) {
 
 		final ArrayList<Server> ret = new ArrayList<>();
