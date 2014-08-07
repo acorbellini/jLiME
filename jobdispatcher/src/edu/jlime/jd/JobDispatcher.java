@@ -1,0 +1,515 @@
+package edu.jlime.jd;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.ThreadFactory;
+
+import org.apache.log4j.Logger;
+
+import edu.jlime.client.JobContextImpl;
+import edu.jlime.core.cluster.BroadcastException;
+import edu.jlime.core.cluster.Cluster;
+import edu.jlime.core.cluster.ClusterChangeListener;
+import edu.jlime.core.cluster.Peer;
+import edu.jlime.core.marshalling.ObjectConverter;
+import edu.jlime.core.marshalling.TypeConverters;
+import edu.jlime.core.rpc.RPCDispatcher;
+import edu.jlime.core.stream.RemoteInputStream;
+import edu.jlime.core.stream.RemoteOutputStream;
+import edu.jlime.jd.job.ResultManager;
+import edu.jlime.metrics.metric.Metrics;
+import edu.jlime.util.ByteBuffer;
+
+public class JobDispatcher implements ClusterChangeListener, JobExecutor {
+
+	private static final String JOB_DISPATCHER = "JD";
+
+	public static final String ISEXEC = "ISEXEC";
+
+	public static final String TAGS = "TAGS";
+
+	private static final int TIME_TO_SHOWUP = 20000;
+
+	private Cluster cluster;
+
+	private ExecEnvironment env;
+
+	private RPCDispatcher rpc;
+
+	private Semaphore initLock = new Semaphore(0);
+
+	private ArrayList<Peer> executors = new ArrayList<>();
+
+	private HashMap<String, List<Peer>> byTag = new HashMap<>();
+
+	private Map<UUID, ResultManager<?>> jobMap = new ConcurrentHashMap<UUID, ResultManager<?>>();
+
+	private Logger log = Logger.getLogger(JobDispatcher.class);
+
+	private int minServers;
+
+	private StreamProvider streamer;
+
+	private ExecutorService exec = Executors
+			.newCachedThreadPool(new ThreadFactory() {
+				@Override
+				public Thread newThread(Runnable r) {
+					Thread t = Executors.defaultThreadFactory().newThread(r);
+					t.setName("JobDispatcher");
+					return t;
+				}
+			});
+
+	private List<CloseListener> closeListeners = new ArrayList<>();
+
+	private JobExecutorFactory factory;
+
+	private Metrics metrics;
+
+	public Map<UUID, ResultManager<?>> getJobMap() {
+		return jobMap;
+	}
+
+	public JobDispatcher(int minPeers, Cluster cluster, RPCDispatcher rpc) {
+		this.minServers = minPeers;
+		this.env = new ExecEnvironment(this);
+		this.cluster = cluster;
+		this.rpc = rpc;
+
+		cluster.addChangeListener(this);
+		for (Peer peer : cluster) {
+			peerAdded(peer, cluster);
+		}
+
+		rpc.registerTarget(JOB_DISPATCHER, this);
+
+		factory = new JobExecutorFactory(rpc, JOB_DISPATCHER);
+		final TypeConverters tc = rpc.getMarshaller().getTc();
+		tc.registerTypeConverter(JobContainer.class.getName(),
+				new ObjectConverter() {
+					@Override
+					public void toArray(Object o, ByteBuffer buffer)
+							throws Exception {
+						JobContainer jc = (JobContainer) o;
+						tc.objectToByteArray(jc.getRequestor(), buffer);
+						tc.objectToByteArray(jc.getJob(), buffer);
+						buffer.putUUID(jc.getJobID());
+						buffer.putBoolean(jc.isNoresponse());
+					}
+
+					@Override
+					public Object fromArray(ByteBuffer buff, String originID,
+							String clientID) throws Exception {
+						JobNode p = (JobNode) tc.getObjectFromArray(buff,
+								originID, clientID);
+						ClientJob<?> job = (ClientJob<?>) tc
+								.getObjectFromArray(buff, originID, clientID);
+						UUID id = buff.getUUID();
+						boolean isNoResponse = buff.getBoolean();
+						JobContainer jc = new JobContainer(job, p);
+						jc.setID(id);
+						jc.setNoResponse(isNoResponse);
+						return jc;
+					}
+				});
+
+	}
+
+	public void setStreamer(StreamProvider streamer) {
+		this.streamer = streamer;
+	}
+
+	public void deleteAndStop(Peer srv) {
+		env.remove(srv);
+	}
+
+	public <R> void mcastAsync(Collection<JobNode> peers, ClientJob<R> j)
+			throws Exception {
+		List<Peer> copy = new ArrayList<>();
+		for (JobNode jobNode : peers) {
+			copy.add(jobNode.getPeer());
+		}
+		// if (j.doNotReplicateIfLocal()) {
+		// Iterator<JobNode> it = copy.iterator();
+		// while (it.hasNext()) {
+		// JobContainer jw = new JobContainer(j, cluster.getLocalPeer());
+		// jw.setNoResponse(true);
+		// Peer dest = (Peer) it.next();
+		// JobDispatcher jd = DispatcherManager.getJD(dest.getID());
+		// if (jd != null) {
+		// it.remove();
+		// jd.execute(jw);
+		// }
+		// }
+		// }
+		if (!copy.isEmpty()) {
+			JobContainer jw = new JobContainer(j, new JobNode(getLocalPeer(),
+					getID(), this));
+			jw.setNoResponse(true);
+
+			JobExecutorBroadcast other = factory.getBroadcast(copy,
+					j.getClientID());
+			other.execute(jw);
+		}
+	}
+
+	public <R> Map<JobNode, R> mcast(List<JobNode> peers, ClientJob<R> j)
+			throws BroadcastException {
+		if (log.isDebugEnabled())
+			log.debug("Broadcasting job " + j + " to " + peers);
+		BroadcastResultManager<R> rm = new BroadcastResultManager<R>(
+				peers.size());
+		if (log.isDebugEnabled())
+			log.debug("Creating copy of peers.");
+		List<Peer> copy = new ArrayList<>();
+		for (JobNode jobNode : peers) {
+			copy.add(jobNode.getPeer());
+		}
+
+		try {
+
+			Iterator<Peer> it = copy.iterator();
+			JobContainer jw = new JobContainer(j, new JobNode(getLocalPeer(),
+					j.getClientID(), this));
+			addJobMapping(rm, jw, peers);
+			if (log.isDebugEnabled())
+				log.debug("Checking if it's local.");
+			while (it.hasNext()) {
+				Peer peer = it.next();
+				JobExecutor localJD = DispatcherManager.getJD(peer.getID());
+				if (localJD != null) {
+					if (log.isDebugEnabled())
+						log.debug("Executing job on local JD " + j);
+					it.remove();
+					localJD.execute(jw);
+				}
+			}
+			if (!copy.isEmpty()) {
+				if (log.isDebugEnabled())
+					log.debug("Creating JobExecutorBroadcast");
+				JobExecutorBroadcast remote = factory.getBroadcast(copy,
+						j.getClientID());
+				if (log.isDebugEnabled())
+					log.debug("Calling JobExecutorBroadcast");
+				remote.execute(jw);
+			}
+			if (log.isDebugEnabled())
+				log.debug("Waiting for results.");
+			rm.waitResults();
+		} catch (Exception e) {
+			e.printStackTrace();
+			rm.addException(e);
+		}
+
+		if (!rm.getException().isEmpty())
+			throw rm.getException();
+		return rm.getRes();
+
+	}
+
+	private void addJobMapping(ResultManager<?> rm, JobContainer jw,
+			List<JobNode> peers) {
+		jobMap.put(jw.getJobID(), rm);
+	}
+
+	public void execAsync(final JobNode dest, final ClientJob<?> j,
+			final ResultManager<?> m) throws Exception {
+		String cli = j.getClientID();
+		if (!cluster.contains(cli)) {
+			log.error("Won't send job for " + j.getClientID()
+					+ ", a server that has crashed.");
+			return;
+		}
+		JobContainer job = new JobContainer(j, new JobNode(
+				cluster.getLocalPeer(), cli, this));
+		if (m != null) {
+			ArrayList<JobNode> al = new ArrayList<>();
+			al.add(dest);
+			addJobMapping(m, job, al);
+			job.setNoResponse(false);
+		} else
+			job.setNoResponse(true);
+
+		try {
+			JobExecutor localJD = DispatcherManager.getJD(dest.getID());
+			if (localJD != null) {
+				if (log.isDebugEnabled())
+					log.debug("Invoking LOCAL execute method for job "
+							+ job.getJobID());
+				localJD.execute(job);
+			} else {
+				if (log.isDebugEnabled())
+					log.debug("Calling asynchronously \"execute\" method on server "
+							+ dest
+							+ ", Job ID "
+							+ job.getJobID()
+							+ " and type " + j.getClass());
+
+				JobExecutor remote = factory.get(dest.getPeer(), job.getJob()
+						.getClientID());
+				remote.execute(job);
+			}
+		} catch (Exception e) {
+			result(e, job.getJobID(), dest);
+		}
+
+	}
+
+	public <R> Future<R> execAsyncWithFuture(final JobNode address,
+			final ClientJob<R> job) {
+		Callable<R> task = new Callable<R>() {
+			@Override
+			public R call() throws Exception {
+				return execSync(address, job);
+			}
+		};
+
+		return exec.submit(task);
+	}
+
+	public <R> R execSync(JobNode address, ClientJob<R> job) throws Exception {
+		final Semaphore lock = new Semaphore(0);
+		final ArrayList<R> finalRes = new ArrayList<>();
+		final List<Exception> exceptionList = new ArrayList<>();
+		execAsync(address, job, new ResultManager<R>() {
+			@Override
+			public void handleException(Exception res, String job, JobNode peer) {
+				exceptionList.add(res);
+				lock.release();
+			}
+
+			@Override
+			public void handleResult(R res, String job, JobNode peer) {
+				finalRes.add(res);
+				lock.release();
+			}
+		});
+
+		try {
+			lock.acquire();
+		} catch (InterruptedException e) {
+			log.error("", e);
+		}
+
+		if (!exceptionList.isEmpty()) {
+			throw exceptionList.get(0);
+		}
+
+		if (finalRes.isEmpty())
+			throw new Exception("Final Res is empty.");
+		return finalRes.get(0);
+	}
+
+	@Override
+	public void execute(JobContainer j) throws Exception {
+		if (!cluster.waitFor(j.getJob().getClientID(), TIME_TO_SHOWUP)) {
+			log.error("Won't execute a job for " + j.getJob().getClientID()
+					+ ", a client that has crashed.");
+			throw new NotInClusterException();
+		}
+
+		if (log.isDebugEnabled())
+			log.info("Executing job " + j.getJobID() + " of client "
+					+ j.getJob().getClientID() + " and type "
+					+ j.getJob().getClass() + " from " + j.getRequestor());
+		try {
+			j.setSrv(this);
+			if (metrics != null)
+				metrics.counter("jlime.jobs.in").count();
+			String cli = j.getJob().getClientID();
+			if (cli == null)
+				log.error("Client for job " + j.getJob().getClass()
+						+ " is null, jobID:" + j.getJobID());
+			JobContextImpl cliEnv = env.getClientEnv(cli);
+			if (cliEnv == null)
+				log.error("Client Environment not created for client " + cli);
+			else {
+				if (log.isDebugEnabled())
+					log.debug("Submitting job " + j.getJobID() + " of client "
+							+ j.getJob().getClientID() + " from "
+							+ j.getRequestor());
+				cliEnv.execute(j);
+			}
+		} catch (Exception e) {
+			throw e;
+		}
+	}
+
+	public JobCluster getCluster() {
+		return new JobCluster(this, getID());
+	}
+
+	public ExecEnvironment getEnv() {
+		return env;
+	}
+
+	public String getID() {
+		return cluster.getLocalPeer().getID();
+	}
+
+	public int getMinServers() {
+		return minServers;
+	}
+
+	@Override
+	public void result(final Object res, final UUID jobID, final JobNode req)
+			throws Exception {
+		if (log.isDebugEnabled())
+			log.debug("Processing result of job " + jobID + " from " + req);
+		exec.execute(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					ResultManager manager = jobMap.get(jobID);
+					if (manager == null)
+						log.debug("Result was not expected from job " + jobID
+								+ " from server " + req);
+					else {
+						manager.manageResult(JobDispatcher.this, jobID, res,
+								req);
+
+						if (metrics != null)
+							metrics.counter("jlime.jobs.out").count();
+
+					}
+					if (log.isDebugEnabled())
+						log.debug("Leaving result method for job " + jobID);
+				} catch (Exception e) {
+					log.error("", e);
+				}
+			}
+		});
+	}
+
+	public void sendResult(Object res, JobNode req, UUID jobID, String cliID)
+			throws Exception {
+		JobExecutor localJD = DispatcherManager.getJD(req.getID());
+		if (localJD != null) {
+			if (log.isDebugEnabled())
+				log.debug("Sending result for job " + jobID
+						+ " to LOCAL dispatcher.");
+			localJD.result(res, jobID, req);
+		} else {
+			if (log.isDebugEnabled())
+				log.debug("Sending result for job " + jobID + " to " + req);
+
+			JobExecutor remote = factory.get(req.getPeer(), null);
+			remote.result(res, jobID, new JobNode(getLocalPeer(), cliID, this));
+		}
+	}
+
+	public void setMinServers(int minServers) {
+		this.minServers = minServers;
+	}
+
+	public void start() throws Exception {
+		rpc.start();
+		initLock.acquire();
+		DispatcherManager.registerJD(this);
+	}
+
+	public void stop() throws Exception {
+		DispatcherManager.unregisterJD(this);
+		rpc.stop();
+		exec.shutdown();
+		for (CloseListener cl : closeListeners) {
+			cl.onStop();
+		}
+	}
+
+	@Override
+	public void peerRemoved(Peer p, Cluster c) {
+		String[] tags = p.getData(TAGS).split(",");
+		for (String tag : tags)
+			byTag.get(tag).remove(p);
+		Boolean isExec = Boolean.valueOf(p.getData(ISEXEC));
+		if (isExec)
+			executors.remove(p);
+
+		deleteAndStop(p);
+		checkSize();
+	}
+
+	@Override
+	public void peerAdded(Peer p, Cluster c) {
+		String[] tags = p.getData(TAGS).split(",");
+		for (String tag : tags) {
+			if (!byTag.containsKey(tag))
+				byTag.put(tag, new ArrayList<Peer>());
+			byTag.get(tag).add(p);
+		}
+
+		Boolean isExec = Boolean.valueOf(p.getData(ISEXEC));
+		if (isExec)
+			executors.add(p);
+		checkSize();
+	}
+
+	public int executorsSize() {
+		return executors.size();
+	}
+
+	private void checkSize() {
+		if (executorsSize() >= getMinServers()) {
+			initLock.release();
+		} else
+			// ACA SE PUEDE AMPLIAR A ESPERAR POR CIERTOS TAGS A QUE APAREZCAN
+			log.info("Still waiting for "
+					+ (getMinServers() - executorsSize())
+					+ ((getMinServers() - executorsSize()) != 1 ? " executors "
+							: " executors") + " to show up.");
+
+	}
+
+	public RemoteInputStream getInputStream(UUID streamID, JobNode from) {
+		return streamer.getInputStream(streamID, from.getPeer());
+	}
+
+	public RemoteOutputStream getOutputStream(UUID streamID, JobNode from) {
+		return streamer.getOutputStream(streamID, from.getPeer());
+	}
+
+	public void addCloseListener(CloseListener listener) {
+		this.closeListeners.add(listener);
+	}
+
+	public Peer getLocalPeer() {
+		return cluster.getLocalPeer();
+	}
+
+	public ArrayList<Peer> getExecutors() {
+		return executors;
+	}
+
+	public ArrayList<Peer> getPeers() {
+		return cluster.getPeers();
+	}
+
+	public void removeMap(UUID jobID) {
+		jobMap.remove(jobID);
+	}
+
+	public String printInfo() {
+		return "Local Peer: " + cluster.getLocalPeer();
+	}
+
+	public void setMetrics(Metrics mgr) {
+		this.metrics = mgr;
+		this.rpc.setMetrics(mgr);
+	}
+
+	public Metrics getMetrics() {
+		return metrics;
+	}
+}

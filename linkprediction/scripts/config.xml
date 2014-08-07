@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+	<bean id="roundrobin"
+		class="edu.jlime.collections.adjacencygraph.mappers.RoundRobinMapper"
+		lazy-init="true" />
+
+	<bean id="totalmemory"
+		class="edu.jlime.collections.adjacencygraph.mappers.MapperFactory"
+		factory-method="memCriteria" lazy-init="true" />
+
+	<bean id="availablememory"
+		class="edu.jlime.collections.adjacencygraph.mappers.CriteriaMapper">
+		<constructor-arg>
+			<bean class="edu.jlime.metrics.sysinfo.filter.simple.SimpleInfoFilter">
+				<constructor-arg value="mem.available" />
+			</bean>
+		</constructor-arg>
+	</bean>
+
+	<bean id="locaware"
+		class="edu.jlime.collections.adjacencygraph.mappers.LocationMapper"
+		lazy-init="true">
+		<constructor-arg ref="storeConfig" />
+	</bean>
+	<bean id="storeConfig" factory-bean="config" factory-method="getStoreName"
+		lazy-init="true" />
+	<bean id="config" class="edu.jlime.linkprediction.TwitterStoreConfig"
+		factory-method="getConfig" lazy-init="true" />
+
+</beans>

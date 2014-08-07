@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:pt="http://xmlns.jcp.org/jsf/passthrough">
+<h:head>
+	<title>DEF Monitor</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<link href="../assets/css/bootstrap.min.css" rel="stylesheet" />
+	<link href="../assets/css/offcanvas.css" rel="stylesheet" />
+	<h:outputScript name="jsf.js" library="javax.faces" />
+	<script src="../assets/js/jquery-2.0.3.js"></script>
+	<script src="../assets/js/bootstrap.min.js"></script>
+	<script src="../assets/js/def.js"></script>
+</h:head>
+<h:body>
+	<div class="navbar navbar-fixed-top navbar-inverse" role="navigation">
+		<div class="container">
+			<div class="navbar-header">
+				<button type="button" class="navbar-toggle" data-toggle="collapse"
+					data-target=".navbar-collapse">
+					<span class="sr-only">Toggle navigation</span> <span
+						class="icon-bar"></span> <span class="icon-bar"></span> <span
+						class="icon-bar"></span>
+				</button>
+				<a class="navbar-brand" href="#">DEF Monitoring Tool</a>
+			</div>
+			<!-- 	<div class="collapse navbar-collapse">
+				<ul class="nav navbar-nav">
+					<li class="active"><a href="#">Home</a></li>
+					<li><a href="#about">About</a></li>
+					<li><a href="#contact">Contact</a></li>
+				</ul>
+			</div> -->
+			<!-- /.nav-collapse -->
+		</div>
+		<!-- /.container -->
+	</div>
+	<div class="container">
+		<div class="row row-offcanvas row-offcanvas-right">
+			<div class="col-xs-6 col-sm-3 sidebar-offcanvas" id="sidebar"
+				role="navigation">
+				<div class="list-group">
+					<h:outputLink value="#monitor.xhtml" class="list-group-item active">Monitor</h:outputLink>
+				</div>
+			</div>
+			<h:form>
+				<p:remoteCommand name="setPage" update="contentLoader"
+					actionListener="#{pageBean.setPage}" />
+				<h:panelGroup id="contentLoader" layout="block">
+					<ui:include src="#{pageBean.page}" />
+				</h:panelGroup>
+			</h:form>
+		</div>
+
+	</div>
+
+	<hr></hr>
+	<footer>
+		<p>© ISISTAN 2013</p>
+	</footer>
+</h:body>
+</html>

@@ -1,0 +1,18 @@
+package edu.jlime.jd;
+
+import edu.jlime.client.JobContext;
+import edu.jlime.jd.job.Job;
+import edu.jlime.metrics.metric.Metrics;
+
+public class MetricsQuery implements Job<Metrics> {
+
+	private static final long serialVersionUID = 1L;
+
+	public MetricsQuery() {
+	}
+
+	@Override
+	public Metrics call(JobContext env, JobNode peer) throws Exception {
+		return env.getCluster().getMetrics();
+	}
+}

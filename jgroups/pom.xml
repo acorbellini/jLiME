@@ -1,0 +1,47 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>jgroups</artifactId>
+	<build>
+		<sourceDirectory>src</sourceDirectory>
+		<testSourceDirectory>test</testSourceDirectory>
+		<plugins>
+			<plugin>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<configuration>
+							<tasks>
+								<copy todir="../jlime/dist/lib/" file="target/jgroups-${version}.jar" />
+							</tasks>
+						</configuration>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+	<dependencies>
+		<dependency>
+			<groupId>org.jgroups</groupId>
+			<artifactId>jgroups</artifactId>
+			<version>3.5.0.Beta3</version>
+			<type>jar</type>
+		</dependency>
+		<dependency>
+			<groupId>edu.jlime</groupId>
+			<artifactId>jobdispatcher</artifactId>
+			<version>1.0</version>
+		</dependency>
+	</dependencies>
+	<parent>
+		<artifactId>jlime</artifactId>
+		<version>1.0</version>
+		<relativePath>../jlime</relativePath>
+		<groupId>edu.jlime</groupId>
+	</parent>
+	<name>jLiME JGroups RPC</name>
+</project>

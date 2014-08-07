@@ -1,0 +1,76 @@
+<config
+	xmlns="urn:org:jgroups"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="urn:org:jgroups http://www.jgroups.org/schema/JGroups-3.3.xsd">
+	<TCP
+		bind_addr="${jgroups.bind_address:SITE_LOCAL}"
+		bind_port="0"
+		port_range="50"
+		loopback="true"
+
+		recv_buf_size="${tcp.recv_buf_size:25M}"
+		send_buf_size="${tcp.send_buf_size:25M}"
+		max_bundle_size="6M"
+		max_bundle_timeout="30"
+		use_send_queues="true"
+		sock_conn_timeout="300"
+
+		timer_type="new3"
+		timer.min_threads="4"
+		timer.max_threads="10"
+		timer.keep_alive_time="3000"
+		timer.queue_max_size="500"
+
+		thread_pool.enabled="true"
+		thread_pool.min_threads="1"
+		thread_pool.max_threads="10"
+		thread_pool.keep_alive_time="5000"
+		thread_pool.queue_enabled="false"
+		thread_pool.queue_max_size="100"
+		thread_pool.rejection_policy="run"
+
+		oob_thread_pool.enabled="true"
+		oob_thread_pool.min_threads="1"
+		oob_thread_pool.max_threads="8"
+		oob_thread_pool.keep_alive_time="5000"
+		oob_thread_pool.queue_enabled="false"
+		oob_thread_pool.queue_max_size="100"
+		oob_thread_pool.rejection_policy="run"
+
+		enable_diagnostics="false" />
+
+	<MPING 
+		receive_on_all_interfaces="true"
+		timeout="8000"
+		break_on_coord_rsp="false" />
+	<MERGE3
+		min_interval="10000"
+		max_interval="30000" />
+	<FD_SOCK />
+	<FD
+		timeout="3000"
+		max_tries="3" />
+	<VERIFY_SUSPECT
+		num_msgs="30"
+		timeout="3000" />
+	<pbcast.NAKACK2
+		use_mcast_xmit="false"
+		discard_delivered_msgs="true" />
+	<UNICAST3 />
+	<pbcast.STABLE
+		stability_delay="1000"
+		desired_avg_gossip="50000"
+		max_bytes="4M" />
+	<pbcast.GMS
+		max_join_attempts="0"
+		view_ack_collection_timeout="20000"
+		merge_timeout="10000"
+		print_local_addr="true"
+		join_timeout="8000"
+		view_bundling="true" />
+	<MFC
+		max_credits="2M"
+		min_threshold="0.4"
+		min_credits="10M" />
+	<FRAG2 frag_size="60K" />
+</config>

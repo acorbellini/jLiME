@@ -1,0 +1,69 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>webapp</artifactId>
+	<packaging>war</packaging>
+	<name>jLiME Webapp</name>
+	<url>http://maven.apache.org</url>
+	<dependencies>
+		<dependency>
+			<groupId>org.primefaces</groupId>
+			<artifactId>primefaces</artifactId>
+			<version>4.0</version>
+		</dependency>
+		<dependency>
+			<groupId>edu.jlime</groupId>
+			<artifactId>httpserver</artifactId>
+			<version>1.0</version>
+		</dependency>
+	</dependencies>
+	<build>
+		<sourceDirectory>src/main/java</sourceDirectory>
+		<finalName>webapp</finalName>
+		<plugins>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.1</version>
+				<configuration>
+					<source>1.7</source>
+					<target>1.7</target>
+				</configuration>
+			</plugin>
+			<plugin>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<configuration>
+							<tasks>
+								<fileset id="lib" dir="target/webapp/WEB-INF/lib"
+									includes="**" />
+								<move todir="../jlime/dist/lib">
+									<fileset refid="lib" />
+								</move>
+								<fileset id="web_content" dir="target/webapp"
+									includes="**" />
+								<copy todir="../jlime/dist/extra/webmonitor/web" failonerror="false">
+									<fileset refid="web_content" />
+								</copy>
+								<delete dir="target"></delete>
+								<!-- <copy todir="../DEF/dist/extra/webmonitor" failonerror="false" 
+									file="target/def-monitor-webapp.war" /> -->
+							</tasks>
+						</configuration>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+	<parent>
+		<artifactId>jlime</artifactId>
+		<version>1.0</version>
+		<relativePath>../jlime</relativePath>
+		<groupId>edu.jlime</groupId>
+	</parent>
+</project>

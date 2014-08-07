@@ -1,0 +1,170 @@
+package isistan.def.utils;
+
+import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicIntegerArray;
+import java.util.concurrent.atomic.AtomicReferenceArray;
+
+public class RingQueueAtomic {
+	private AtomicReferenceArray<Object> buffer;
+	private AtomicIntegerArray used;
+	private volatile int init;
+	private volatile int end;
+	private volatile int reserved;
+	private int len;
+
+	//
+	// ReentrantLock lockEmpty = new ReentrantLock();
+	// ReentrantLock lockFull = new ReentrantLock();
+	// ReentrantLock reserveLock = new ReentrantLock();
+	// ReentrantLock endLock = new ReentrantLock();
+	// Condition full = lockFull.newCondition();
+	// Condition empty = lockEmpty.newCondition();
+
+	public RingQueueAtomic() {
+		this.init = 0;
+		this.end = 0;
+		this.reserved = 0;
+		this.len = 8192;
+		this.buffer = new AtomicReferenceArray<Object>(len);
+		this.used = new AtomicIntegerArray(len);
+	}
+
+	public int pos(int i) {
+		return (i % len + len) % len;
+	}
+
+	public boolean isEmpty() {
+		return true;
+	}
+
+	public synchronized int getAndIncrementReserved() {
+		return reserved++;
+	}
+
+	public void add(Object msg) {
+		int currentInit = init;
+		// int currentEnd = end;
+		int currentReserved = 0;
+		// reserveLock.lock();
+		currentReserved = getAndIncrementReserved();
+		// reserveLock.unlock();
+
+		while (
+		// currentReserved != currentEnd
+		// ||
+		currentReserved - currentInit >= len) {
+			// int count = 0;
+			while (currentInit == init
+			// && currentEnd == end
+			) {
+				try {
+					synchronized (this) {
+						wait(0, 100);
+					}
+					// Thread.sleep(1);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				// count++;
+				// if (count > MAX_SPIN) {
+				// // lockFull.lock();
+				// // try {
+				// // System.out.println("Se durmio el escritor");
+				// // full.await(5, TimeUnit.MILLISECONDS);
+				// // } catch (InterruptedException e) {
+				// // e.printStackTrace();
+				// // }
+				// // lockFull.unlock();
+				// try {
+				// Thread.sleep(1);
+				// } catch (InterruptedException e) {
+				// e.printStackTrace();
+				// }
+				// }
+			}
+			currentInit = init;
+			// currentEnd = end;
+		}
+
+		// endLock.lock();
+
+		buffer.set(pos(currentReserved), msg);
+		used.set(pos(currentReserved), 1);
+
+		if (currentReserved == end) {
+			synchronized (buffer) {
+				if (currentReserved == end) {
+					do {
+						used.set(pos(end), 0);
+						end++;
+					} while (used.get(pos(end)) == 1);
+				}
+			}
+			synchronized (this) {
+				notifyAll();
+			}
+		}
+
+		// endLock.unlock();
+	}
+
+	public Object[] get() {
+		int currentEnd = end;
+		while (init == currentEnd) {
+			// int count = 0;
+			while (currentEnd == end) {
+				synchronized (this) {
+					try {
+						wait(0, 100);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+				// Thread.sleep(1);
+
+				// count++;
+				// if (count > MAX_SPIN) {
+				// try {
+				// Thread.sleep(1);
+				// } catch (InterruptedException e) {
+				// e.printStackTrace();
+				// }
+				// }
+			}
+			currentEnd = end;
+		}
+
+		Object[] ret = new Object[currentEnd - init];
+
+		// System.out.println("Leyendo " + (currentEnd - init) + " elementos.");
+		// int pos = 0;
+		// for (; init < currentEnd; init++) {
+		// ret[pos++] = buffer.get(pos(init));
+		// buffer.set(pos(init), null);
+		// }
+		int i = pos(init);
+		int f = pos(currentEnd);
+		if (f > i) {
+			setSubArray(ret, 0, i, f);
+		} else if (f == i) {
+			setSubArray(ret, 0, 0, len);
+		} else {
+			setSubArray(ret, 0, i, len);
+			setSubArray(ret, len - i, 0, f);
+		}
+
+		init = currentEnd;
+		synchronized (this) {
+			notifyAll();
+		}
+		return ret;
+	}
+
+	private void setSubArray(Object[] ret, int offset, int i, int f) {
+		for (int j = i; j < f; j++) {
+			ret[offset++] = buffer.get(j);
+			buffer.set(j, null);
+			used.set(j, 0);
+		}
+	}
+}
