@@ -13,8 +13,8 @@ public abstract class RemoteInputStream extends InputStream {
 		this.streamId = streamId;
 	}
 
-	public static DataInputStream getBDIS(RemoteInputStream inputStream, int i) {
-		return new DataInputStream(new BufferedInputStream(inputStream, 4096));
+	public static DataInputStream getBDIS(RemoteInputStream inputStream) {
+		return new DataInputStream(new BufferedInputStream(inputStream));
 	}
 
 }

@@ -21,7 +21,9 @@ import edu.jlime.rpc.message.AddressType;
 import edu.jlime.rpc.message.Address;
 import edu.jlime.rpc.message.StackElement;
 import edu.jlime.rpc.multi.MultiInterface;
+import edu.jlime.rpc.np.NetworkProtocol;
 import edu.jlime.rpc.np.Streamer;
+import edu.jlime.util.NetworkUtils;
 import edu.jlime.util.RingQueue;
 
 public class Stack {
@@ -104,23 +106,37 @@ public class Stack {
 
 	public static Stack tcpStack(Configuration config, UUID localID) {
 
-		NetworkProtocolFactory udpFactory = NetworkProtocolFactory.udp(localID,
-				config);
+		String iface = NetworkUtils.getFirstHostAddress();
 
-		NetworkProtocolFactory tcpFactory = NetworkProtocolFactory.tcp(localID,
-				config);
+		NetworkProtocol udp = NetworkProtocolFactory.udp(localID, config)
+				.getProtocol(iface);
 
-		NetworkProtocolFactory mcastFactory = NetworkProtocolFactory.mcast(
-				localID, config);
+		NetworkProtocol tcp = NetworkProtocolFactory.tcp(localID, config)
+				.getProtocol(iface);
 
-		MultiInterface udp = MultiInterface.create(AddressType.UDP, config,
-				udpFactory);
+		NetworkProtocol mcast = NetworkProtocolFactory.mcast(localID, config)
+				.getProtocol(iface);
 
-		MultiInterface tcp = MultiInterface.create(AddressType.TCP, config,
-				tcpFactory);
-
-		MultiInterface mcast = MultiInterface.create(AddressType.MCAST, config,
-				mcastFactory);
+		// NetworkProtocolFactory udpFactory =
+		// NetworkProtocolFactory.udp(localID,
+		// config);
+		//
+		// NetworkProtocolFactory tcpFactory =
+		// NetworkProtocolFactory.tcp(localID,
+		// config);
+		//
+		// NetworkProtocolFactory mcastFactory = NetworkProtocolFactory.mcast(
+		// localID, config);
+		//
+		// MultiInterface udp = MultiInterface.create(AddressType.UDP, config,
+		// udpFactory);
+		//
+		// MultiInterface tcp = MultiInterface.create(AddressType.TCP, config,
+		// tcpFactory);
+		//
+		// MultiInterface mcast = MultiInterface.create(AddressType.MCAST,
+		// config,
+		// mcastFactory);
 
 		final DataProcessor data = new DataProcessor(tcp);
 

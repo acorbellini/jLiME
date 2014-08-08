@@ -62,7 +62,8 @@ public class RPCDispatcher implements ClassLoaderProvider, DataReceiver {
 	public void setTransport(Transport tr) {
 		this.tr = tr;
 		this.tr.registerReceiver(this);
-		this.tr.setMetrics(metrics);
+		if (metrics != null)
+			this.tr.setMetrics(metrics);
 	}
 
 	public Object callSync(Peer dest, String clientID, MethodCall call)

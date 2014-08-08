@@ -1,14 +1,14 @@
 package edu.jlime.metrics.metric;
 
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
+import java.util.Set;
 
 public class MetricList implements Iterable<MetricListItem> {
 
 	IMetrics metrics;
 
-	List<String> keys = new ArrayList<>();
+	Set<String> keys = new HashSet<>();
 
 	private String root;
 
@@ -44,9 +44,21 @@ public class MetricList implements Iterable<MetricListItem> {
 
 	public MetricListItem findFirst(String prefix) {
 		for (String k : keys) {
-			if (k.startsWith(prefix))
+			String val = k;
+			if (k.contains("."))
+				val = k.substring(k.lastIndexOf(".") + 1, k.length());
+			if (val.startsWith(prefix))
 				return new MetricListItem(k, metrics);
 		}
 		return null;
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		for (MetricListItem ml : this) {
+			builder.append(ml.root + "\n");
+		}
+		return builder.toString();
 	}
 }

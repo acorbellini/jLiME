@@ -53,7 +53,7 @@ public class RemoteCountQuery extends CompositeQuery<int[], TIntIntHashMap>
 			protected void sendOutput(RemoteOutputStream os, JobNode p) {
 				log.info("Sending followers/followees to count to " + p);
 				try {
-					DataOutputStream dos = RemoteOutputStream.getBDOS(os, 4096);
+					DataOutputStream dos = RemoteOutputStream.getBDOS(os);
 					for (int d : map.get(p).toArray())
 						dos.writeInt(d);
 
@@ -67,7 +67,7 @@ public class RemoteCountQuery extends CompositeQuery<int[], TIntIntHashMap>
 
 			@Override
 			protected void receiveInput(RemoteInputStream is, JobNode p) {
-				DataInputStream dis = RemoteInputStream.getBDIS(is, 4096);
+				DataInputStream dis = RemoteInputStream.getBDIS(is);
 				TIntIntHashMap cached = new TIntIntHashMap();
 				try {
 					while (true) {

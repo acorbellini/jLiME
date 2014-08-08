@@ -4,7 +4,7 @@ import edu.jlime.core.cache.Cache;
 
 public class QueryCache {
 
-	private static final int QUERY_CACHE_SIZE = 100;
+	private static final int QUERY_CACHE_SIZE = 10;
 
 	private static Cache<Query<?>, Object> cache = new Cache<>(QUERY_CACHE_SIZE);
 

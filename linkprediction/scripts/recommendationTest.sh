@@ -9,7 +9,7 @@ function run {
  done < $userList
 }
 
-#run "locaware"
-#run "totalmemory"
-#run "availablememory"
+run "locaware"
+run "totalmemory"
+run "availablememory"
 run "roundrobin"

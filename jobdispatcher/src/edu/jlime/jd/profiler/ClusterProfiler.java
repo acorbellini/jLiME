@@ -43,7 +43,9 @@ public class ClusterProfiler {
 			@Override
 			public void run() {
 				try {
-					info.put(Calendar.getInstance().getTime(), c.getInfo());
+					CompositeMetrics<JobNode> clusterMetrics = c.getInfo();
+//					System.out.println(clusterMetrics);
+					info.put(Calendar.getInstance().getTime(), clusterMetrics);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}

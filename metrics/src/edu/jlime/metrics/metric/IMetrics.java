@@ -1,5 +1,7 @@
 package edu.jlime.metrics.metric;
 
+import java.util.Map;
+
 import edu.jlime.metrics.meters.Accumulator;
 import edu.jlime.metrics.meters.Counter;
 import edu.jlime.metrics.meters.Gauge;
@@ -23,5 +25,7 @@ public interface IMetrics {
 	public abstract void simple(String k, Object v);
 
 	public abstract Counter counter(String k);
+
+	public abstract Map<String, Metric<?>> getAll(String root);
 
 }

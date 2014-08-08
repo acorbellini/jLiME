@@ -103,7 +103,7 @@ public class TypeConverters {
 				// if (cs != null)
 				// stream.setClassLoader(cs);
 
-				DEFMarshallerInputStream stream = new DEFMarshallerInputStream(
+				MarshallerInputStream stream = new MarshallerInputStream(
 						bis, clp, clientID);
 				Object ret = stream.readObject();
 				stream.close();

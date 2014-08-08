@@ -2,6 +2,7 @@ package edu.jlime.metrics.metric;
 
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 
 public class CompositeMetrics<T> {
 
@@ -25,5 +26,14 @@ public class CompositeMetrics<T> {
 
 	public Metrics get(T peer) {
 		return map.get(peer);
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		for (Entry<T, Metrics> e : map.entrySet()) {
+			builder.append(e.getKey() + " : \n" + e.getValue() + "\n");
+		}
+		return builder.toString();
 	}
 }

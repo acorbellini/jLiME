@@ -146,7 +146,7 @@ public class PersistentIntIntArrayMap {
 		StreamForkJoin sfj = new StreamForkJoin() {
 			@Override
 			protected void sendOutput(RemoteOutputStream os, JobNode p) {
-				DataOutputStream dos = RemoteOutputStream.getBDOS(os, 4096);
+				DataOutputStream dos = RemoteOutputStream.getBDOS(os);
 				TIntArrayList list = byServer.get(p);
 				try {
 					for (int i : list.toArray())
@@ -159,7 +159,7 @@ public class PersistentIntIntArrayMap {
 
 			@Override
 			protected void receiveInput(RemoteInputStream is, JobNode p) {
-				DataInputStream dis = RemoteInputStream.getBDIS(is, 4096);
+				DataInputStream dis = RemoteInputStream.getBDIS(is);
 				TIntHashSet cached = new TIntHashSet();
 				try {
 					while (true) {
@@ -327,11 +327,17 @@ public class PersistentIntIntArrayMap {
 		StreamForkJoin sfj = new StreamForkJoin() {
 			@Override
 			protected void sendOutput(RemoteOutputStream os, JobNode p) {
-				DataOutputStream dos = RemoteOutputStream.getBDOS(os, 4096);
+				DataOutputStream dos = RemoteOutputStream.getBDOS(os);
 				TIntArrayList list = byServer.get(p);
 				try {
+
+					log.info("Sending key stream to get from local store.");
+
 					for (int i : list.toArray())
 						dos.writeInt(i);
+
+					log.info("Finished sending key stream to get from local store.");
+
 					dos.close();
 				} catch (IOException e) {
 					e.printStackTrace();
@@ -340,7 +346,7 @@ public class PersistentIntIntArrayMap {
 
 			@Override
 			protected void receiveInput(RemoteInputStream is, JobNode p) {
-				DataInputStream dis = RemoteInputStream.getBDIS(is, 4096);
+				DataInputStream dis = RemoteInputStream.getBDIS(is);
 				TIntIntHashMap cached = new TIntIntHashMap();
 				try {
 					while (true) {
@@ -351,8 +357,8 @@ public class PersistentIntIntArrayMap {
 						}
 					}
 				} catch (EOFException e) {
-					if (log.isDebugEnabled())
-						log.debug("Finished reading");
+					// if (log.isDebugEnabled())
+					log.info("Finished obtaining remote store keys.");
 				} catch (Exception e) {
 					log.error("", e);
 				} finally {
@@ -384,8 +390,8 @@ public class PersistentIntIntArrayMap {
 				return new GetAdyacencyListStreamJob(store);
 			}
 		});
-		if (log.isDebugEnabled())
-			log.debug("Returning count hash with " + hashToReturn.size());
+		// if (log.isDebugEnabled())
+		log.info("Returning count hash with " + hashToReturn.size());
 		return hashToReturn;
 	}
 
@@ -401,7 +407,8 @@ public class PersistentIntIntArrayMap {
 		public void run(RemoteInputStream inputStream,
 				RemoteOutputStream outputStream, JobContext ctx)
 				throws Exception {
-			DataInputStream dis = RemoteInputStream.getBDIS(inputStream, 4096);
+
+			DataInputStream dis = RemoteInputStream.getBDIS(inputStream);
 			Logger log = Logger.getLogger(MultiGetJob.class);
 			TIntArrayList kList = new TIntArrayList();
 			try {
@@ -410,12 +417,12 @@ public class PersistentIntIntArrayMap {
 				}
 			} catch (Exception e) {
 			}
-			DataOutputStream dos = RemoteOutputStream.getBDOS(outputStream,
-					4096);
-			if (log.isDebugEnabled())
-				log.debug("Obtaining multiple keys (" + kList.size()
-						+ ") from store");
+			DataOutputStream dos = RemoteOutputStream.getBDOS(outputStream);
+			// if (log.isDebugEnabled())
+			log.info("Obtaining multiple keys (" + kList.size()
+					+ ") from store");
 			Store store = (Store) ctx.get(name);
+
 			for (int u : kList.toArray()) {
 				byte[] valAsBytes = store.load(u);
 				if (valAsBytes != null) {
@@ -427,6 +434,8 @@ public class PersistentIntIntArrayMap {
 
 				}
 			}
+			log.info("Finished obtaining multiple keys (" + kList.size()
+					+ ") from store");
 			dos.close();
 		}
 

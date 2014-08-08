@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.SortedMap;
 import java.util.Timer;
@@ -25,7 +26,7 @@ public class Metrics implements Serializable, IMetrics {
 
 	private TreeMap<String, Metric<?>> metrics = new TreeMap<>();
 
-	private transient Timer timer = new Timer();
+	private transient Timer timer = new Timer(true);
 
 	private transient ArrayList<MetricsListener> listeners = new ArrayList<>();
 
@@ -76,17 +77,32 @@ public class Metrics implements Serializable, IMetrics {
 	@Override
 	public synchronized MetricList list(String k) {
 		MetricList ret = new MetricList(k, this);
-		SortedMap<String, Metric<?>> m = metrics.tailMap(k);
+
+		Map<String, Metric<?>> m = getAll(k);
 		Iterator<Entry<String, Metric<?>>> it = m.entrySet().iterator();
 		while (it.hasNext()) {
 			Entry<String, Metric<?>> e = it.next();
 			if (e.getKey().startsWith(k))
 				ret.add(e.getKey().substring(0,
-						e.getKey().indexOf(".", e.getKey().indexOf(k))));
+						e.getKey().indexOf(".", k.length() + 1)));
 			else
 				return ret;
 		}
 		return ret;
+	}
+
+	public Map<String, Metric<?>> getAll(String k) {
+		String root = "";
+		String el = k;
+		if (k.contains(".")) {
+			root = k.substring(0, k.lastIndexOf(".") + 1);
+			el = k.substring(k.lastIndexOf(".") + 1, k.length());
+		}
+
+		String nextLetter = String.valueOf((char) (el.charAt(0) + 1));
+
+		SortedMap<String, Metric<?>> m = metrics.subMap(k, root + nextLetter);
+		return m;
 	}
 
 	public void createTimedSensor(final SensorMeasure timed) {
@@ -166,4 +182,13 @@ public class Metrics implements Serializable, IMetrics {
 		return new HashMap<>(metrics);
 	}
 
+	@Override
+	public synchronized String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("Update every " + FREQ + ": \n");
+		for (Entry<String, Metric<?>> e : metrics.entrySet())
+			builder.append(e.getKey() + "-" + e.getValue() + "\n");
+
+		return builder.toString();
+	}
 }

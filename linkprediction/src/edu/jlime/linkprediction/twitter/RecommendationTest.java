@@ -17,6 +17,9 @@ import edu.jlime.jd.JobCluster;
 import edu.jlime.jd.profiler.ClusterProfiler;
 import edu.jlime.jd.profiler.MetricExtractor;
 import edu.jlime.linkprediction.TwitterStoreConfig;
+import edu.jlime.metrics.metric.Metric;
+import edu.jlime.metrics.metric.MetricList;
+import edu.jlime.metrics.metric.MetricListItem;
 import edu.jlime.metrics.metric.Metrics;
 import edu.jlime.util.CSV;
 import edu.jlime.util.CommandLineUtils;
@@ -129,6 +132,7 @@ public class RecommendationTest {
 				new MetricExtractor() {
 					@Override
 					public String get(Metrics m) {
+
 						return m.list("sysinfo.net").findFirst("eth")
 								.get("sent_total").toString();
 					}
@@ -142,7 +146,7 @@ public class RecommendationTest {
 
 					@Override
 					public String get(Metrics m) {
-						return m.get("jvm.used").toString();
+						return m.get("jvminfo.mem.used").toString();
 					}
 				});
 	}

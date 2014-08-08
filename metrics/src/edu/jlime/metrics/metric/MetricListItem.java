@@ -1,5 +1,8 @@
 package edu.jlime.metrics.metric;
 
+import java.util.List;
+import java.util.Map;
+
 import edu.jlime.metrics.meters.Accumulator;
 import edu.jlime.metrics.meters.Counter;
 import edu.jlime.metrics.meters.Gauge;
@@ -53,5 +56,15 @@ public class MetricListItem implements IMetrics {
 	@Override
 	public Counter counter(String k) {
 		return metrics.counter(root + "." + k);
+	}
+
+	@Override
+	public String toString() {
+		return metrics.getAll(root).toString();
+	}
+
+	@Override
+	public Map<String, Metric<?>> getAll(String root) {
+		return metrics.getAll(this.root + "." + root);
 	}
 }

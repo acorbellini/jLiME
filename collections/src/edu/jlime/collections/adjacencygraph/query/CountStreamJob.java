@@ -29,7 +29,7 @@ class CountStreamJob extends StreamJob {
 
 		TIntArrayList data = new TIntArrayList();
 
-		DataInputStream input = RemoteInputStream.getBDIS(inputStream, 4096);
+		DataInputStream input = RemoteInputStream.getBDIS(inputStream);
 		log.info("Reading data.");
 		try {
 			while (true) {
@@ -55,7 +55,7 @@ class CountStreamJob extends StreamJob {
 
 		log.info("Finished calling DKVS get, obtained " + adyacents.size());
 
-		DataOutputStream out = RemoteOutputStream.getBDOS(outputStream, 4096);
+		DataOutputStream out = RemoteOutputStream.getBDOS(outputStream);
 
 		for (int k : adyacents.keys()) {
 			out.writeInt(k);

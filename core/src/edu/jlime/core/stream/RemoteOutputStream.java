@@ -13,7 +13,7 @@ public abstract class RemoteOutputStream extends OutputStream {
 		this.streamID = streamID;
 	}
 
-	public static DataOutputStream getBDOS(OutputStream os, int i) {
-		return new DataOutputStream(new BufferedOutputStream(os, 4096));
+	public static DataOutputStream getBDOS(OutputStream os) {
+		return new DataOutputStream(new BufferedOutputStream(os));
 	}
 }
