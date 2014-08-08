@@ -28,6 +28,7 @@ public class TopQuery extends RemoteQuery<List<int[]>> {
 
 	public TopQuery(RemoteCountQuery query, int top, boolean delete) {
 		super(query.getGraph());
+		this.query = query;
 		this.top = top;
 		this.delete = delete;
 	}

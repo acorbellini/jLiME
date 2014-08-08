@@ -8,6 +8,7 @@ public abstract class CompositeQuery<T, R> extends RemoteQuery<R> {
 
 	public CompositeQuery(RemoteQuery<T> query) {
 		super(query.getGraph());
+		this.query = query;
 	}
 
 	public RemoteQuery<T> getQuery() {

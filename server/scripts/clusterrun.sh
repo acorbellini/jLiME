@@ -8,7 +8,7 @@ fi
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-bash $DIR/stop.sh $1 $2
+bash $DIR/clusterstop.sh $1 $2
 for i in $cluster; do
 	nohup ssh $user@$i "cd /home/$user/jlime/scripts;. localrun.sh" &
 done

@@ -2,12 +2,19 @@ package edu.jlime.collections.adjacencygraph;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.Serializable;
 
 import edu.jlime.collections.adjacencygraph.query.UserQuery;
 import edu.jlime.collections.intintarray.client.jobs.StoreConfig;
 import edu.jlime.jd.JobCluster;
 
-public class RemoteAdjacencyGraph implements Closeable, AdjacencyGraph {
+public class RemoteAdjacencyGraph implements Closeable, AdjacencyGraph,
+		Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 3153612628245292494L;
 
 	private Mapper mapper;
 

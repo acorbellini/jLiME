@@ -28,7 +28,7 @@ public class RecommendationTest {
 
 	// static String DEF_HOME = "../DEF/dist/def";
 
-	static String DEF_HOME = "/home/acorbellini/def";
+	static String DEF_HOME = "/home/acorbellini/jlime";
 
 	StoreConfig config = TwitterStoreConfig.getConfig();
 
@@ -67,8 +67,9 @@ public class RecommendationTest {
 
 		System.out.println("Running using mapper " + mapper + " with name "
 				+ mapperID + " user " + user + " and run " + runID);
-		CommandLineUtils.execCommand("bash " + DEF_HOME + "/scripts/runDEF.sh "
-				+ DEF_HOME + "/scripts/clusterde8.txt acorbellini");
+		CommandLineUtils.execCommand("bash " + DEF_HOME
+				+ "/scripts/clusterrun.sh " + DEF_HOME
+				+ "/scripts/eight.txt acorbellini");
 
 		System.out.println("Creating client, waiting for 8 execution nodes.");
 		Client client = Client.build(8);
@@ -89,8 +90,9 @@ public class RecommendationTest {
 
 		client.close();
 
-		CommandLineUtils.execCommand("bash " + DEF_HOME + "/scripts/stop.sh "
-				+ DEF_HOME + "/scripts/clusterde8.txt acorbellini");
+		CommandLineUtils.execCommand("bash " + DEF_HOME
+				+ "/scripts/clusterstop.sh " + DEF_HOME
+				+ "/scripts/eight.txt acorbellini");
 		System.exit(0);
 	}
 

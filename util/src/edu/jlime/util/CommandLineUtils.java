@@ -29,16 +29,31 @@ public class CommandLineUtils {
 
 		} else
 			procbuilder = new ProcessBuilder("/bin/sh", "-c", cmd);
+
 		Process proc = procbuilder.start();
 		BufferedReader br = new BufferedReader(new InputStreamReader(
 				proc.getInputStream()));
-		StringBuilder builder = new StringBuilder();
+		StringBuilder outputBuilder = new StringBuilder();
 		String line = null;
 		while ((line = br.readLine()) != null) {
-			builder.append(line);
-			builder.append(System.getProperty("line.separator"));
+			outputBuilder.append(line);
+			outputBuilder.append(System.getProperty("line.separator"));
 		}
-		return builder.toString();
+		BufferedReader errorReader = new BufferedReader(new InputStreamReader(
+				proc.getErrorStream()));
+		StringBuilder errorBuilder = new StringBuilder();
+		String errorLine = null;
+		while ((errorLine = errorReader.readLine()) != null) {
+			errorBuilder.append(errorLine);
+			errorBuilder.append(System.getProperty("line.separator"));
+		}
+
+		String error = errorBuilder.toString();
+		if (!error.isEmpty())
+			throw new Exception("Error executing command '" + cmd + "' : \n "
+					+ error);
+		
+		return outputBuilder.toString();
 
 	}
 }
