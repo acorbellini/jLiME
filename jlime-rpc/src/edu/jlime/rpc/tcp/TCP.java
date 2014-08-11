@@ -80,8 +80,8 @@ public class TCP extends NetworkProtocol implements DataReceiver {
 		final Socket conn = getServerSocket().accept();
 		// TODO Careful
 		// conn.setTcpNoDelay(true);
-		// conn.setReceiveBufferSize(config.tcp_rcv_buffer);
-		// conn.setSendBufferSize(config.tcp_send_buffer);
+		conn.setReceiveBufferSize(config.tcp_rcv_buffer);
+		conn.setSendBufferSize(config.tcp_send_buffer);
 		InputStream inputStream = conn.getInputStream();
 		StreamType type = StreamType.fromID((byte) inputStream.read());
 		UUID id = TCPConnectionManager.getID(inputStream);
@@ -292,10 +292,10 @@ public class TCP extends NetworkProtocol implements DataReceiver {
 							+ addr);
 				// TODO Careful
 
-				// sock.setReceiveBufferSize(config.tcp_rcv_buffer);
+				sock.setReceiveBufferSize(config.tcp_rcv_buffer);
 				// System.out.println(sock.getReceiveBufferSize());
 
-				// sock.setSendBufferSize(config.tcp_send_buffer);
+				sock.setSendBufferSize(config.tcp_send_buffer);
 				// System.out.println(sock.getSendBufferSize());
 				// sock.setTcpNoDelay(true);
 				OutputStream outputStream = sock.getOutputStream();

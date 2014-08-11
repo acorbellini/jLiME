@@ -71,10 +71,8 @@ class CountStreamJob extends StreamJob {
 			IntUtils.intToByteArray(it.key(), pos * 4, ret);
 			IntUtils.intToByteArray(it.value(), pos * 4 + 4, ret);
 			pos += 2;
-
 		}
 		adyacents.clear();
-
 		outputStream.write(ret);
 		outputStream.close();
 	}

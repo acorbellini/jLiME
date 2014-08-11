@@ -104,8 +104,10 @@ public class Configuration {
 				25 * 1024 * 1024);
 		this.tcp_config.tcp_send_buffer = getInt("tcp.send_buffer",
 				25 * 1024 * 1024);
-		this.tcp_config.input_buffer = getInt("tcp.input_buffer", 4096);
-		this.tcp_config.output_buffer = getInt("tcp.output_buffer", 4096);
+		this.tcp_config.input_buffer = getInt("tcp.input_buffer",
+				25 * 1024 * 1024);
+		this.tcp_config.output_buffer = getInt("tcp.output_buffer",
+				25 * 1024 * 1024);
 
 	}
 

@@ -17,15 +17,13 @@ import edu.jlime.core.stream.RemoteInputStream;
 import edu.jlime.core.stream.RemoteOutputStream;
 import edu.jlime.jd.JobNode;
 import edu.jlime.jd.job.StreamJob;
-import edu.jlime.rpc.tcp.TCPInputStream;
-import edu.jlime.rpc.tcp.TCPOutputStream;
 import edu.jlime.util.ByteBuffer;
 import edu.jlime.util.RingQueue;
 
 public class StreamTest {
 
-	private static final int INT_ARRAY_SIZE = 100000;
-	private static final int BUFFER_SIZE = 64 * 1024;
+	private static final int INT_ARRAY_SIZE = 1;
+	private static final int BUFFER_SIZE = 1024 * 1024 * 1024;
 
 	public static class StreamTestJob extends StreamJob {
 
@@ -47,7 +45,7 @@ public class StreamTest {
 			InputStream reader = inputStream;
 			// ((TCPInputStream) inputStream).getIs();
 			try {
-				byte[] four = new byte[BUFFER_SIZE];
+				byte[] four = new byte[32 * 1024];
 				int read = 0;
 				while ((read = reader.read(four)) != -1) {
 					// for (int i = 0; i < read / 4; i++) {
@@ -138,10 +136,10 @@ public class StreamTest {
 		}
 		ByteBuffer buffer = new ByteBuffer(4 * 8 * 1024);
 		for (int i = 0; i < INT_ARRAY_SIZE; i++) {
-//			for (int j = 0; j < 8 * 1024; j++)
-//				buffer.putInt(j);
-//			q.put(buffer.build());
-//			buffer.reset();
+			// for (int j = 0; j < 8 * 1024; j++)
+			// buffer.putInt(j);
+			// q.put(buffer.build());
+			// buffer.reset();
 			q.put(ba);
 			// for (int j = 0; j < 8 * 1024; j++)
 			// q.add(IntUtils.intToByteArray(j));

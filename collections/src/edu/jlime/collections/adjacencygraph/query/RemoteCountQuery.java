@@ -54,11 +54,10 @@ public class RemoteCountQuery extends CompositeQuery<int[], TIntIntHashMap>
 			protected void send(RemoteOutputStream os, JobNode p) {
 				log.info("Sending followers/followees to count to " + p);
 				try {
-					BufferedOutputStream dos = new BufferedOutputStream(os);
-					dos.write(IntUtils
-							.intArrayToByteArray(map.get(p).toArray()));
+					// BufferedOutputStream dos = new BufferedOutputStream(os);
+					os.write(IntUtils.intArrayToByteArray(map.get(p).toArray()));
 					log.info("Closing os.");
-					dos.close();
+					os.close();
 				} catch (IOException e1) {
 					e1.printStackTrace();
 				}

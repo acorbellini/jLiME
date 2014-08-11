@@ -1,6 +1,5 @@
 package edu.jlime.collections.intintarray.client;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
@@ -40,7 +39,7 @@ import gnu.trove.set.hash.TIntHashSet;
 
 public class PersistentIntIntArrayMap {
 
-	private static final int CACHED_THRESHOLD = 5000;
+	private static final int CACHED_THRESHOLD = 10000;
 
 	Logger log = Logger.getLogger(PersistentIntIntArrayMap.class);
 
@@ -311,42 +310,6 @@ public class PersistentIntIntArrayMap {
 	}
 
 	public TIntIntHashMap countLists(int[] array) throws Exception {
-		// final TIntIntHashMap hashToReturn = new TIntIntHashMap();
-		// HashMap<Peer, TIntArrayList> byServer = getAffinityNode(array);
-		// log.info("Obtaining Futures of executing CountListsJob");
-		//
-		// ForkJoinTask<byte[]> mgr = new ForkJoinTask<>();
-		// for (Entry<Peer, TIntArrayList> map : byServer.entrySet()) {
-		// Peer p = map.getKey();
-		// CountListsJob j = new CountListsJob(map.getValue().toArray(), store);
-		// mgr.putJob(j, p);
-		// }
-		// mgr.execute(new ResultListener<byte[]>() {
-		//
-		// @Override
-		// public void onSuccess(byte[] res) {
-		// TIntIntHashMap table = c.fromBytes(res);
-		// synchronized (hashToReturn) {
-		// if (hashToReturn.isEmpty())
-		// hashToReturn.putAll(table);
-		// else {
-		// for (int k : table.keys()) {
-		// int v = table.get(k);
-		// hashToReturn.adjustOrPutValue(k, v, v);
-		// }
-		// }
-		// }
-		// }
-		//
-		// @Override
-		// public void onFinished() {
-		// }
-		//
-		// @Override
-		// public void onFailure(Exception res) {
-		// }
-		// });
-		// return hashToReturn;
 
 		final TIntIntHashMap hashToReturn = new TIntIntHashMap();
 		final HashMap<JobNode, TIntArrayList> byServer = hashKeys(array);
@@ -448,11 +411,9 @@ public class PersistentIntIntArrayMap {
 					}
 			} catch (Exception e) {
 			}
-			BufferedOutputStream dos = new BufferedOutputStream(outputStream);
-			// if (log.isDebugEnabled())
 			log.info("Obtaining multiple keys (" + kList.size()
 					+ ") from store");
-			TIntHashSet set = new TIntHashSet();
+			TIntArrayList set = new TIntArrayList();
 
 			ByteBuffer buffer = new ByteBuffer();
 			int max = 256 * 1024;
@@ -463,32 +424,17 @@ public class PersistentIntIntArrayMap {
 				byte[] valAsBytes = store.load(u);
 				if (valAsBytes != null) {
 					set.addAll(IntUtils.byteArrayToIntArray(valAsBytes));
-					// buffer.putRawByteArray(valAsBytes);
-					// if (buffer.size() >= max) {
-					// dos.write(buffer.build());
-					// buffer.reset();
-					// }
 				}
-
-				// ;
-				// if (valAsBytes != null) {
-				// // for (int i = 0; i < valAsBytes.length / 4; i++) {
-				// dos.write(valAsBytes);
-				// // }
-				//
-				// }
 			}
-			// if (buffer.size() > 0)
-			// dos.write(buffer.build());
+
 			int[] array = set.toArray();
-			set.clear();
 			byte[] intArrayToByteArray = IntUtils.intArrayToByteArray(array);
-			log.info("Sending multiple keys (" + kList.size()
-					+ ") from store");
-			dos.write(intArrayToByteArray);
+			set.clear();
+			log.info("Sending multiple keys " + array.length + " from store");
+			outputStream.write(intArrayToByteArray);
 			log.info("Finished obtaining multiple keys (" + kList.size()
 					+ ") from store");
-			dos.close();
+			outputStream.close();
 		}
 	}
 }
