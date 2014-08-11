@@ -23,6 +23,9 @@ import edu.jlime.util.RingQueue;
 
 public class StreamTest {
 
+	private static final int INT_ARRAY_SIZE = 50000;
+	private static final int BUFFER_SIZE = 16 * 1024;
+
 	public static class StreamTestJob extends StreamJob {
 
 		@Override
@@ -38,9 +41,11 @@ public class StreamTest {
 			// }
 			long init = System.currentTimeMillis();
 			long count = 0;
-			BufferedInputStream reader = new BufferedInputStream(inputStream);
+			// BufferedInputStream reader = new
+			// BufferedInputStream(inputStream);
+			RemoteInputStream reader = inputStream;
 			try {
-				byte[] four = new byte[4 * 8 * 1024];
+				byte[] four = new byte[BUFFER_SIZE];
 				int read = 0;
 				while ((read = reader.read(four)) != -1) {
 					// for (int i = 0; i < read / 4; i++) {
@@ -89,32 +94,33 @@ public class StreamTest {
 		// BufferedOutputStream os = new BufferedOutputStream(res.getOs(),
 		// 2 * 1024 * 1024);
 
-		final RingQueue q = new RingQueue(4096);
-		final BufferedOutputStream os = new BufferedOutputStream(res.getOs(),
-				32 * 1024);
+		final RingQueue q = new RingQueue(10 * 1024);
+		// final BufferedOutputStream os = new BufferedOutputStream(res.getOs(),
+		// 32 * 1024);
+
+		final RemoteOutputStream os = res.getOs();
+
 		final AtomicBoolean finished = new AtomicBoolean(false);
 		final Semaphore sem = new Semaphore(0);
 		Thread thread = new Thread() {
 			public void run() {
 				while (!finished.get() || !q.isEmpty()) {
-					for (Object o : q.get()) {
+					for (Object o : q.take()) {
 						try {
 							os.write((byte[]) o);
 						} catch (IOException e) {
 							e.printStackTrace();
 						}
 					}
-					try {
-						os.flush();
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
+					// try {
+					// os.flush();
+					// } catch (IOException e) {
+					// e.printStackTrace();
+					// }
 				}
 				try {
 					os.flush();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 				sem.release();
@@ -122,20 +128,26 @@ public class StreamTest {
 		};
 		thread.start();
 
-		byte[] ba = new byte[32 * 1024];
+		byte[] ba = new byte[BUFFER_SIZE];
+		int[] array = new int[INT_ARRAY_SIZE];
+		for (int j = 0; j < array.length; j++) {
+			array[j] = (int) (Math.random() * 1000);
+		}
 		ByteBuffer buffer = new ByteBuffer(4 * 8 * 1024);
-		for (int i = 0; i < 100000; i++) {
-			for (int j = 0; j < 8 * 1024; j++)
-				buffer.putInt(j);
-			q.add(buffer.build());
-			buffer.reset();
+		for (int i = 0; i < INT_ARRAY_SIZE; i++) {
+			// for (int j = 0; j < 8 * 1024; j++)
+			// buffer.putInt(j);
+			// q.add(buffer.build());
+			// buffer.reset();
 			// for (int j = 0; j < 8 * 1024; j++)
 			// q.add(IntUtils.intToByteArray(j));
-			// os.write(ba);
+
+			os.write(ba);
+			// q.put(ba);
 		}
 
-		finished.set(true);
-		sem.acquire();
+//		finished.set(true);
+//		sem.acquire();
 
 		os.close();
 
@@ -150,5 +162,6 @@ public class StreamTest {
 		// stream.waitForFinished();
 		System.out.println((System.nanoTime() - init) / 1000000);
 		cli.close();
+		System.in.read();
 	}
 }

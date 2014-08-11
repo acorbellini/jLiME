@@ -13,7 +13,7 @@ public class RingQueueTest {
 
 			public void run() {
 				while (true) {
-					Object[] list = queue.get();
+					Object[] list = queue.take();
 					for (Object e : list) {
 						System.out.println(e);
 						count++;
@@ -30,7 +30,7 @@ public class RingQueueTest {
 
 		int iter = 0;
 		while (iter < ITER) {
-			queue.add(new Integer(iter++));
+			queue.put(new Integer(iter++));
 		}
 
 	}

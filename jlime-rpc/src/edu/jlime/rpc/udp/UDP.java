@@ -137,7 +137,7 @@ public class UDP extends NetworkProtocol implements PacketReceiver {
 	public void onStop() throws Exception {
 		super.onStop();
 		getDatagramSocket().close();
-		packetsTx.add(new DatagramPacket(new byte[] {}, 0));
+		packetsTx.put(new DatagramPacket(new byte[] {}, 0));
 		rx.setStopped();
 	}
 
@@ -178,7 +178,7 @@ public class UDP extends NetworkProtocol implements PacketReceiver {
 		DatagramPacket dg = new DatagramPacket(built, built.length,
 				realSockAddr.getSockTo());
 
-		packetsTx.add(dg);
+		packetsTx.put(dg);
 	}
 
 	@Override
@@ -201,7 +201,7 @@ public class UDP extends NetworkProtocol implements PacketReceiver {
 			@Override
 			public void run() {
 				while (true) {
-					Object[] list = packetsTx.get();
+					Object[] list = packetsTx.take();
 					if (stopped)
 						return;
 

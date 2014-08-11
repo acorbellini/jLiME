@@ -19,7 +19,7 @@ public class RingQueueTestMultiThread {
 
 			public void run() {
 				while (true) {
-					Object[] list = queue.get();
+					Object[] list = queue.take();
 					try {
 						sleep(100);
 					} catch (InterruptedException e1) {
@@ -44,7 +44,7 @@ public class RingQueueTestMultiThread {
 			public void run() {
 				int iter = 0;
 				while (iter < ITER) {
-					queue.add(new Integer(iter++));
+					queue.put(new Integer(iter++));
 				}
 			}
 		};

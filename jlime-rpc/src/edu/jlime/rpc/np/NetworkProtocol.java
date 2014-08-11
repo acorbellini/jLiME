@@ -60,7 +60,7 @@ public abstract class NetworkProtocol extends SimpleMessageProcessor implements
 			public void run() {
 				while (!stopped)
 					try {
-						Object[] pack = packetsRx.get();
+						Object[] pack = packetsRx.take();
 						if (stopped)
 							return;
 						for (Object object : pack) {
@@ -77,7 +77,7 @@ public abstract class NetworkProtocol extends SimpleMessageProcessor implements
 	}
 
 	public void notifyPacketRvcd(DataPacket pkt) {
-		packetsRx.add(pkt);
+		packetsRx.put(pkt);
 	};
 
 	private void processPacket(DataPacket pkt) throws Exception {
@@ -194,7 +194,7 @@ public abstract class NetworkProtocol extends SimpleMessageProcessor implements
 
 	@Override
 	public void onStop() throws Exception {
-		packetsRx.add(new DataPacket(null, null));
+		packetsRx.put(new DataPacket(null, null));
 		if (metrics != null)
 			metrics.set("jlime.interface").remove(
 					this.socket.getAddr() + ":" + this.socket.getPort());

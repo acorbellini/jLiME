@@ -37,7 +37,7 @@ public class DatagramReceiver {
 			public void run() {
 				while (!stopped)
 					try {
-						Object[] array = packets.get();
+						Object[] array = packets.take();
 						for (Object object : array) {
 							DatagramPacket pkt = (DatagramPacket) object;
 							if (stopped)
@@ -59,7 +59,7 @@ public class DatagramReceiver {
 		DatagramPacket d = new DatagramPacket(b, buff_size);
 		try {
 			sock.receive(d);
-			packets.add(d);
+			packets.put(d);
 		} catch (Exception e) {
 		}
 
@@ -68,7 +68,7 @@ public class DatagramReceiver {
 	public void setStopped() {
 		this.stopped = true;
 		// try {
-		packets.add(new DatagramPacket(new byte[] {}, 0));
+		packets.put(new DatagramPacket(new byte[] {}, 0));
 		// } catch (InterruptedException e) {
 		// e.printStackTrace();
 		// }

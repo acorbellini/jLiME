@@ -24,7 +24,7 @@ public class MessageQueue {
 			public void run() {
 				while (!stopped) {
 					try {
-						Object[] input = in.get();
+						Object[] input = in.take();
 						if (stopped)
 							return;
 						for (Object e : input) {
@@ -42,11 +42,11 @@ public class MessageQueue {
 	}
 
 	public void notify(Message defMessage) {
-		in.add(defMessage);
+		in.put(defMessage);
 	}
 
 	public void stop() {
 		stopped = true;
-		in.add(Message.newEmptyBroadcastOutDataMessage(MessageType.DATA));
+		in.put(Message.newEmptyBroadcastOutDataMessage(MessageType.DATA));
 	}
 }

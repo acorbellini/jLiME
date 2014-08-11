@@ -37,7 +37,7 @@ public abstract class MessageProcessor implements StackElement {
 			public void run() {
 				while (!stopped)
 					try {
-						final Object[] m = out.get();
+						final Object[] m = out.take();
 						if (stopped)
 							return;
 						for (Object e : m) {
@@ -68,7 +68,7 @@ public abstract class MessageProcessor implements StackElement {
 		if (stopped)
 			return;
 		stopped = true;
-		out.add(new MessageSimple(null, null, null, null));
+		out.put(new MessageSimple(null, null, null, null));
 
 		for (MessageQueue mq : secondaryMessage) {
 			mq.stop();
@@ -126,7 +126,7 @@ public abstract class MessageProcessor implements StackElement {
 	}
 
 	public void queue(Message msg) {
-		out.add(msg);
+		out.put(msg);
 	}
 
 	public synchronized void addMessageListener(MessageType type,

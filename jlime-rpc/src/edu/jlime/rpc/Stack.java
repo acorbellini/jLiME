@@ -255,11 +255,11 @@ public class Stack {
 			Thread tIn = new Thread("Bus in") {
 				public void run() {
 					while (!stopped) {
-						Object[] els = in.get();
+						Object[] els = in.take();
 						if (stopped)
 							return;
 						for (Object object : els) {
-							out.add(object);
+							out.put(object);
 						}
 					}
 				};
@@ -268,7 +268,7 @@ public class Stack {
 			Thread tOut = new Thread("Bus out") {
 				public void run() {
 					while (!stopped) {
-						Object[] els = out.get();
+						Object[] els = out.take();
 						if (stopped)
 							return;
 						for (Object object : els) {
@@ -284,12 +284,12 @@ public class Stack {
 
 		public void stop() {
 			stopped = true;
-			in.add(new Object());
-			out.add(new Object());
+			in.put(new Object());
+			out.put(new Object());
 		}
 
 		public void add(BusAction act) {
-			in.add(act);
+			in.put(act);
 		}
 
 	}

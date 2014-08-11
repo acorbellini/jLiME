@@ -42,7 +42,7 @@ public class RingQueue {
 		return reserved++;
 	}
 
-	public void add(Object msg) {
+	public void put(Object msg) {
 		int currentInit = init;
 		int currentReserved = getAndIncrementReserved();
 
@@ -103,7 +103,7 @@ public class RingQueue {
 		// endLock.unlock();
 	}
 
-	public Object[] get() {
+	public Object[] take() {
 		int currentEnd = end;
 		while (init == currentEnd) {
 			// int count = 0;

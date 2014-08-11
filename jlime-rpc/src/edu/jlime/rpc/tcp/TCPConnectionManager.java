@@ -86,7 +86,7 @@ class TCPConnectionManager {
 			@Override
 			public void run() {
 				while (!stopped) {
-					Object[] list = writeQueue.get();
+					Object[] list = writeQueue.take();
 					if (stopped)
 						return;
 					for (Object pkt : list) {
@@ -105,13 +105,13 @@ class TCPConnectionManager {
 				SocketAddress addr = pkt.addr;
 				TCPPacketConnection bestConn = getConnection(addr);
 				if (bestConn == null)
-					writeQueue.add(pkt);
+					writeQueue.put(pkt);
 				else {
 					if (log.isDebugEnabled())
 						log.debug("Sending " + pkt.data.length + "b using "
 								+ bestConn + " to " + to);
 					if (!bestConn.write(pkt.data))
-						writeQueue.add(pkt);
+						writeQueue.put(pkt);
 				}
 			}
 		});
@@ -141,7 +141,7 @@ class TCPConnectionManager {
 
 		if (log.isDebugEnabled())
 			log.debug("Adding " + data.length + " to write queue.");
-		writeQueue.add(new OutPacket(data, realSockAddr));
+		writeQueue.put(new OutPacket(data, realSockAddr));
 	}
 
 	private TCPPacketConnection getConnection(SocketAddress addr) {
@@ -181,8 +181,9 @@ class TCPConnectionManager {
 				outputStream.flush();
 				return addConnection(sock);
 			} catch (ConnectException e) {
-				log.error("Could not open socket to " + addr + " : "
-						+ e.getMessage());
+				if (log.isDebugEnabled())
+					log.error("Could not open socket to " + addr + " : "
+							+ e.getMessage());
 				return null;
 			} catch (Exception e) {
 				log.error("Could not open socket to " + addr + " socket is "
@@ -228,7 +229,7 @@ class TCPConnectionManager {
 		rcv.shutdown();
 		send.shutdown();
 		stopped = true;
-		writeQueue.add(new OutPacket(new byte[] {}, null));
+		writeQueue.put(new OutPacket(new byte[] {}, null));
 		synchronized (connections) {
 			for (TCPPacketConnection c : connections)
 				c.stop();
