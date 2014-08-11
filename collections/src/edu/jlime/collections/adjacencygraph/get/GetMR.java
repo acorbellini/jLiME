@@ -54,18 +54,19 @@ public class GetMR extends GraphMR<int[], int[]> {
 	@Override
 	public void processSubResult(int[] subres) {
 		Logger log = Logger.getLogger(GetMR.class);
-		if (log.isDebugEnabled())
-			log.debug("Obtained sub result on Get Map Reduce");
+		// if (log.isDebugEnabled())
+		log.info("Obtained sub result on Get Map Reduce");
 		synchronized (res) {
 			res.addAll(subres);
 		}
+		log.info("Added to final result.");
 	}
 
 	@Override
 	public int[] red(ArrayList<int[]> subres) {
 		Logger log = Logger.getLogger(GetMR.class);
-		if (log.isDebugEnabled())
-			log.debug("Finished obtaining results for Get MR");
+		// if (log.isDebugEnabled())
+		log.info("Finished obtaining results for Get MR");
 		int[] ret = res.toArray();
 		Arrays.sort(ret);
 		return ret;

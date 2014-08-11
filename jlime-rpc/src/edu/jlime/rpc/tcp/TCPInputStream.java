@@ -29,13 +29,15 @@ public class TCPInputStream extends RemoteInputStream {
 	public int read(byte[] b, int off, int len) throws IOException {
 		return is.read(b, off, len);
 	}
-	
+
 	@Override
 	public void close() throws IOException {
 		super.close();
 		is.close();
 	}
-	
-	
+
+	public InputStream getIs() {
+		return is;
+	}
 
 }

@@ -102,11 +102,11 @@ public class TCP extends NetworkProtocol implements DataReceiver {
 	}
 
 	private void addStream(UUID streamID, InputStream is, Address id2) {
-		HashMap<UUID, InputStream> streamsOfOrigin = getStreamOf(id2);
-		synchronized (streamsOfOrigin) {
-			if (!streamsOfOrigin.containsKey(streamID)) {
-				streamsOfOrigin.put(streamID, is);
-				streamsOfOrigin.notifyAll();
+		HashMap<UUID, InputStream> streams = getStreamOf(id2);
+		synchronized (streams) {
+			if (!streams.containsKey(streamID)) {
+				streams.put(streamID, is);
+				streams.notifyAll();
 			}
 			// else
 			// log.warn("Connection ignored from "
@@ -292,12 +292,12 @@ public class TCP extends NetworkProtocol implements DataReceiver {
 							+ addr);
 				// TODO Careful
 
-				sock.setReceiveBufferSize(config.tcp_rcv_buffer);
+				// sock.setReceiveBufferSize(config.tcp_rcv_buffer);
 				// System.out.println(sock.getReceiveBufferSize());
 
-				sock.setSendBufferSize(config.tcp_send_buffer);
+				// sock.setSendBufferSize(config.tcp_send_buffer);
 				// System.out.println(sock.getSendBufferSize());
-				sock.setTcpNoDelay(true);
+				// sock.setTcpNoDelay(true);
 				OutputStream outputStream = sock.getOutputStream();
 				outputStream.write(StreamType.STREAM.getId());
 				outputStream.write(new ByteBuffer().putUUID(getLocal().getId())

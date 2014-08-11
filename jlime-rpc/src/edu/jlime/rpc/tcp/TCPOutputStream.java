@@ -55,4 +55,8 @@ public class TCPOutputStream extends RemoteOutputStream {
 	public String toString() {
 		return "OutputStream using socket " + sock;
 	}
+
+	public OutputStream getOs() {
+		return os;
+	}
 }

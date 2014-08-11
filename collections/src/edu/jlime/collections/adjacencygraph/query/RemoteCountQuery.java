@@ -51,7 +51,7 @@ public class RemoteCountQuery extends CompositeQuery<int[], TIntIntHashMap>
 		final TIntIntHashMap res = new TIntIntHashMap();
 		StreamForkJoin sfj = new StreamForkJoin() {
 			@Override
-			protected void sendOutput(RemoteOutputStream os, JobNode p) {
+			protected void send(RemoteOutputStream os, JobNode p) {
 				log.info("Sending followers/followees to count to " + p);
 				try {
 					BufferedOutputStream dos = new BufferedOutputStream(os);
@@ -66,11 +66,11 @@ public class RemoteCountQuery extends CompositeQuery<int[], TIntIntHashMap>
 			}
 
 			@Override
-			protected void receiveInput(RemoteInputStream input, JobNode p) {
-//				BufferedInputStream input = new BufferedInputStream(is);
+			protected void receive(RemoteInputStream input, JobNode p) {
+				// BufferedInputStream input = new BufferedInputStream(is);
 				TIntIntHashMap cached = new TIntIntHashMap();
 				try {
-					byte[] buffer = new byte[4 * 1000];
+					byte[] buffer = new byte[32 * 1024];
 					int read = 0;
 					while ((read = input.read(buffer)) != -1)
 						for (int i = 0; i < read / 4; i += 2) {

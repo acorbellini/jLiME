@@ -33,14 +33,14 @@ public abstract class StreamForkJoin {
 
 				@Override
 				public void run() {
-					sendOutput(res.getOs(), p);
+					send(res.getOs(), p);
 				}
 			});
 			execInput.execute(new Runnable() {
 
 				@Override
 				public void run() {
-					receiveInput(res.getIs(), p);
+					receive(res.getIs(), p);
 				}
 			});
 		}
@@ -51,8 +51,8 @@ public abstract class StreamForkJoin {
 		execInput.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
 	}
 
-	protected abstract void sendOutput(RemoteOutputStream os, JobNode p);
+	protected abstract void send(RemoteOutputStream os, JobNode p);
 
-	protected abstract void receiveInput(RemoteInputStream is, JobNode p);
+	protected abstract void receive(RemoteInputStream is, JobNode p);
 
 }

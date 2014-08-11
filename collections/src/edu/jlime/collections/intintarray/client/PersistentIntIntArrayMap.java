@@ -28,6 +28,7 @@ import edu.jlime.core.stream.RemoteOutputStream;
 import edu.jlime.jd.JobCluster;
 import edu.jlime.jd.JobNode;
 import edu.jlime.jd.job.StreamJob;
+import edu.jlime.util.ByteBuffer;
 import edu.jlime.util.IntUtils;
 import gnu.trove.iterator.TIntIterator;
 import gnu.trove.iterator.TIntObjectIterator;
@@ -77,6 +78,10 @@ public class PersistentIntIntArrayMap {
 				return i1.compareTo(i2);
 			}
 		});
+		return getNode(k, ordered);
+	}
+
+	private JobNode getNode(int k, ArrayList<JobNode> ordered) {
 		return ordered.get(Math.abs(k % ordered.size()));
 	}
 
@@ -87,10 +92,21 @@ public class PersistentIntIntArrayMap {
 		return arr;
 	}
 
-	public HashMap<JobNode, TIntArrayList> getAffinityNode(int[] userList) {
+	public HashMap<JobNode, TIntArrayList> hashKeys(int[] userList) {
+		ArrayList<JobNode> ordered = cluster.getExecutors();
+		Collections.sort(ordered, new Comparator<JobNode>() {
+			@Override
+			public int compare(JobNode o1, JobNode o2) {
+				Integer i1 = Integer.valueOf(o1.getName().replaceAll(
+						"GridCluster", ""));
+				Integer i2 = Integer.valueOf(o2.getName().replaceAll(
+						"GridCluster", ""));
+				return i1.compareTo(i2);
+			}
+		});
 		HashMap<JobNode, TIntArrayList> ret = new HashMap<JobNode, TIntArrayList>();
 		for (int u : userList) {
-			JobNode addr = hashKey(u);
+			JobNode addr = getNode(u, ordered);
 			TIntArrayList l = ret.get(addr);
 			if (l == null) {
 				l = new TIntArrayList();
@@ -104,7 +120,7 @@ public class PersistentIntIntArrayMap {
 	public TIntObjectHashMap<int[]> get(int[] array) throws Exception {
 		ArrayList<Future<byte[]>> list = new ArrayList<>();
 		TIntObjectHashMap<int[]> res = new TIntObjectHashMap<int[]>();
-		HashMap<JobNode, TIntArrayList> byServer = getAffinityNode(array);
+		HashMap<JobNode, TIntArrayList> byServer = hashKeys(array);
 		if (log.isDebugEnabled())
 			log.debug("Obtaining Futures of executing MultiGetJob");
 		for (Entry<JobNode, TIntArrayList> map : byServer.entrySet()) {
@@ -142,18 +158,15 @@ public class PersistentIntIntArrayMap {
 
 	public TIntHashSet getSetOfUsers(int[] array) throws Exception {
 		final TIntHashSet res = new TIntHashSet();
-		final HashMap<JobNode, TIntArrayList> byServer = getAffinityNode(array);
+		final HashMap<JobNode, TIntArrayList> byServer = hashKeys(array);
 
 		StreamForkJoin sfj = new StreamForkJoin() {
 			@Override
-			protected void sendOutput(RemoteOutputStream os, JobNode p) {
-				BufferedOutputStream dos = new BufferedOutputStream(os);
+			protected void send(RemoteOutputStream dos, JobNode p) {
+				// BufferedOutputStream dos = new BufferedOutputStream(os);
 				TIntArrayList list = byServer.get(p);
 				try {
-					TIntIterator it = list.iterator();
-					while (it.hasNext()) {
-						dos.write(IntUtils.intToByteArray(it.next()));
-					}
+					dos.write(IntUtils.intArrayToByteArray(list.toArray()));
 					dos.close();
 				} catch (IOException e) {
 					e.printStackTrace();
@@ -161,12 +174,12 @@ public class PersistentIntIntArrayMap {
 			}
 
 			@Override
-			protected void receiveInput(RemoteInputStream input, JobNode p) {
+			protected void receive(RemoteInputStream input, JobNode p) {
 				// BufferedInputStream input = new BufferedInputStream(is);
 				TIntHashSet cached = new TIntHashSet();
 				try {
 
-					byte[] buffer = new byte[4 * 1000];
+					byte[] buffer = new byte[32 * 1024];
 					int read = 0;
 					while ((read = input.read(buffer)) != -1)
 						for (int i = 0; i < read / 4; i++) {
@@ -238,7 +251,7 @@ public class PersistentIntIntArrayMap {
 	}
 
 	public void set(final TIntObjectHashMap<int[]> orig) throws Exception {
-		HashMap<JobNode, TIntArrayList> byServer = getAffinityNode(orig.keys());
+		HashMap<JobNode, TIntArrayList> byServer = hashKeys(orig.keys());
 
 		for (Entry<JobNode, TIntArrayList> map : byServer.entrySet()) {
 			final TIntObjectHashMap<int[]> toAdd = new TIntObjectHashMap<>();
@@ -336,20 +349,16 @@ public class PersistentIntIntArrayMap {
 		// return hashToReturn;
 
 		final TIntIntHashMap hashToReturn = new TIntIntHashMap();
-		final HashMap<JobNode, TIntArrayList> byServer = getAffinityNode(array);
+		final HashMap<JobNode, TIntArrayList> byServer = hashKeys(array);
 		StreamForkJoin sfj = new StreamForkJoin() {
 			@Override
-			protected void sendOutput(RemoteOutputStream os, JobNode p) {
+			protected void send(RemoteOutputStream os, JobNode p) {
 				BufferedOutputStream dos = new BufferedOutputStream(os);
 				TIntArrayList list = byServer.get(p);
 				try {
 
 					log.info("Sending key stream to get from local store.");
-					TIntIterator it = list.iterator();
-					while (it.hasNext()) {
-						dos.write(IntUtils.intToByteArray(it.next()));
-					}
-
+					dos.write(IntUtils.intArrayToByteArray(list.toArray()));
 					log.info("Finished sending key stream to get from local store.");
 
 					dos.close();
@@ -359,11 +368,11 @@ public class PersistentIntIntArrayMap {
 			}
 
 			@Override
-			protected void receiveInput(RemoteInputStream input, JobNode p) {
+			protected void receive(RemoteInputStream input, JobNode p) {
 				// BufferedInputStream input = new BufferedInputStream(is);
 				TIntIntHashMap cached = new TIntIntHashMap();
 				try {
-					byte[] buffer = new byte[4 * 1000];
+					byte[] buffer = new byte[32 * 1024];
 					int read = 0;
 					while ((read = input.read(buffer)) != -1)
 						for (int i = 0; i < read / 4; i++) {
@@ -430,7 +439,7 @@ public class PersistentIntIntArrayMap {
 			Logger log = Logger.getLogger(MultiGetJob.class);
 			TIntArrayList kList = new TIntArrayList();
 			try {
-				byte[] buffer = new byte[4 * 1000];
+				byte[] buffer = new byte[32 * 1024];
 				int read = 0;
 				while ((read = input.read(buffer)) != -1)
 					for (int i = 0; i < read / 4; i++) {
@@ -443,21 +452,43 @@ public class PersistentIntIntArrayMap {
 			// if (log.isDebugEnabled())
 			log.info("Obtaining multiple keys (" + kList.size()
 					+ ") from store");
-			Store store = (Store) ctx.get(name);
+			TIntHashSet set = new TIntHashSet();
 
-			for (int u : kList.toArray()) {
+			ByteBuffer buffer = new ByteBuffer();
+			int max = 256 * 1024;
+			Store store = (Store) ctx.get(name);
+			TIntIterator it = kList.iterator();
+			while (it.hasNext()) {
+				int u = it.next();
 				byte[] valAsBytes = store.load(u);
 				if (valAsBytes != null) {
-					for (int i = 0; i < valAsBytes.length / 4; i++) {
-						dos.write(valAsBytes, i * 4, 4);
-					}
-
+					set.addAll(IntUtils.byteArrayToIntArray(valAsBytes));
+					// buffer.putRawByteArray(valAsBytes);
+					// if (buffer.size() >= max) {
+					// dos.write(buffer.build());
+					// buffer.reset();
+					// }
 				}
+
+				// ;
+				// if (valAsBytes != null) {
+				// // for (int i = 0; i < valAsBytes.length / 4; i++) {
+				// dos.write(valAsBytes);
+				// // }
+				//
+				// }
 			}
+			// if (buffer.size() > 0)
+			// dos.write(buffer.build());
+			int[] array = set.toArray();
+			set.clear();
+			byte[] intArrayToByteArray = IntUtils.intArrayToByteArray(array);
+			log.info("Sending multiple keys (" + kList.size()
+					+ ") from store");
+			dos.write(intArrayToByteArray);
 			log.info("Finished obtaining multiple keys (" + kList.size()
 					+ ") from store");
 			dos.close();
 		}
-
 	}
 }

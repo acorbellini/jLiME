@@ -56,6 +56,13 @@ public class RecommendationTest {
 	public void run(Mapper mapper, String mapperID, String runID, Integer user)
 			throws Exception, FileNotFoundException, IOException {
 
+		// String output = "/home/acorbellini/results/" + mapperID + "/" + user
+		// + "/" + user + "-" + mapperID + "-run" + runID + ".log";
+
+		// PrintStream fos = new PrintStream(
+		// new FileOutputStream(new File(output)));
+		// System.setOut(fos);
+
 		File checkIfExists = new File("/home/acorbellini/results/" + mapperID
 				+ "/" + user + "/" + user + "-profile-net-" + mapperID + "-run"
 				+ runID + ".csv");
@@ -110,7 +117,7 @@ public class RecommendationTest {
 		profiler.stop();
 		System.out.println("Query Time:  "
 				+ StringUtils.readableTime(query.getQueryTime()));
-		
+
 		System.out.println("Closing graph.");
 		graph.close();
 

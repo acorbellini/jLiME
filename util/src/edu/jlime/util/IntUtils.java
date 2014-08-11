@@ -28,15 +28,22 @@ public class IntUtils {
 
 	public static byte[] intToByteArray(int a) {
 		byte[] ret = new byte[4];
-		ret[3] = (byte) (a & 0xFF);
-		ret[2] = (byte) ((a >> 8) & 0xFF);
-		ret[1] = (byte) ((a >> 16) & 0xFF);
-		ret[0] = (byte) ((a >> 24) & 0xFF);
+
+		intToByteArray(a, 0, ret);
+
 		return ret;
 	}
 
 	public static int byteArrayToInt(byte[] b, int i) {
 		return b[i + 3] & 0xFF | (b[i + 2] & 0xFF) << 8
 				| (b[i + 1] & 0xFF) << 16 | (b[i] & 0xFF) << 24;
+	}
+
+	public static void intToByteArray(int a, int i, byte[] ret) {
+		ret[i + 3] = (byte) (a & 0xFF);
+		ret[i + 2] = (byte) ((a >> 8) & 0xFF);
+		ret[i + 1] = (byte) ((a >> 16) & 0xFF);
+		ret[i + 0] = (byte) ((a >> 24) & 0xFF);
+
 	}
 }
