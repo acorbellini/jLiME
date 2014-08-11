@@ -2,15 +2,18 @@ package edu.jlime.rpc.tcp;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.Socket;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.log4j.Logger;
+
+import edu.jlime.util.IntUtils;
+import edu.jlime.util.StreamUtils;
 
 class TCPPacketConnection {
 
@@ -20,9 +23,9 @@ class TCPPacketConnection {
 
 	Socket conn;
 
-	DataInputStream is;
+	InputStream is;
 
-	DataOutputStream os;
+	OutputStream os;
 
 	private static final int CONN_CLOSE_INIT = -1;
 
@@ -44,10 +47,9 @@ class TCPPacketConnection {
 		this.mgr = mgr;
 		this.conn = sock;
 		this.lastTimeUsed = System.currentTimeMillis();
-		is = new DataInputStream(new BufferedInputStream(sock.getInputStream(),
-				input_buffer));
-		os = new DataOutputStream(new BufferedOutputStream(
-				sock.getOutputStream(), output_buffer));
+		// is = new BufferedInputStream(sock.getInputStream(), input_buffer);
+		is = sock.getInputStream();
+		os = sock.getOutputStream();
 		closeTimer = new TimerTask() {
 
 			@Override
@@ -91,7 +93,7 @@ class TCPPacketConnection {
 			}
 			if (log.isDebugEnabled())
 				log.debug("Writing to " + conn);
-			os.writeInt(id);
+			os.write(IntUtils.intToByteArray(id));
 			this.lastTimeUsed = System.currentTimeMillis();
 			if (id >= 0)
 				os.write(out);
@@ -110,7 +112,7 @@ class TCPPacketConnection {
 	}
 
 	public byte[] read() {
-		byte[] data = null;
+
 		try {
 			if (log.isDebugEnabled())
 				log.debug("WAITING FOR LOCK ON " + readLock + " "
@@ -118,7 +120,7 @@ class TCPPacketConnection {
 			readLock.lock();
 			if (log.isDebugEnabled())
 				log.debug("READING ON SOCKET " + conn);
-			int id = is.readInt();
+			int id = StreamUtils.readInt(is);
 			if (log.isDebugEnabled())
 				log.debug("Read " + (id < 0 ? " ID " : " SIZE ") + id);
 			if (id == CONN_CLOSE_INIT) {
@@ -146,11 +148,10 @@ class TCPPacketConnection {
 				}
 			} else {
 				this.lastTimeUsed = System.currentTimeMillis();
-				data = new byte[id];
 				if (log.isDebugEnabled())
-					log.debug(" Fully reading from " + conn + " " + data.length
+					log.debug(" Fully reading from " + conn + " " + id
 							+ " bytes.");
-				is.readFully(data);
+				byte[] data = StreamUtils.read(is, id);
 				this.lastTimeUsed = System.currentTimeMillis();
 				if (log.isDebugEnabled())
 					log.debug("FINISHED READING ON SOCKET " + conn);
@@ -158,7 +159,7 @@ class TCPPacketConnection {
 			}
 		} catch (Exception e) {
 			if (log.isDebugEnabled())
-				log.debug(conn + " is closed.");
+				log.debug("Error reading from " + conn, e);
 		} finally {
 			readLock.unlock();
 		}

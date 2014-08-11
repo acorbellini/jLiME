@@ -1,7 +1,7 @@
 package edu.jlime.collections.adjacencygraph.query;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.EOFException;
 
 import org.apache.log4j.Logger;
@@ -11,6 +11,7 @@ import edu.jlime.collections.intintarray.client.PersistentIntIntArrayMap;
 import edu.jlime.core.stream.RemoteInputStream;
 import edu.jlime.core.stream.RemoteOutputStream;
 import edu.jlime.jd.job.StreamJob;
+import edu.jlime.util.IntUtils;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.TIntIntHashMap;
 
@@ -23,18 +24,22 @@ class CountStreamJob extends StreamJob {
 	}
 
 	@Override
-	public void run(RemoteInputStream inputStream,
+	public void run(RemoteInputStream input,
 			RemoteOutputStream outputStream, JobContext ctx) throws Exception {
 		Logger log = Logger.getLogger(CountStreamJob.class);
 
 		TIntArrayList data = new TIntArrayList();
 
-		DataInputStream input = RemoteInputStream.getBDIS(inputStream);
+//		BufferedInputStream input = new BufferedInputStream(inputStream,
+//				128 * 1024);
 		log.info("Reading data.");
 		try {
-			while (true) {
-				data.add(input.readInt());
-			}
+			byte[] buffer = new byte[4 * 1000];
+			int read = 0;
+			while ((read = input.read(buffer)) != -1)
+				for (int i = 0; i < read / 4; i++) {
+					data.add(IntUtils.byteArrayToInt(buffer, i*4));
+				}
 		} catch (EOFException e) {
 			log.info("Finished reading input stream.");
 		} catch (Exception e) {
@@ -55,11 +60,11 @@ class CountStreamJob extends StreamJob {
 
 		log.info("Finished calling DKVS get, obtained " + adyacents.size());
 
-		DataOutputStream out = RemoteOutputStream.getBDOS(outputStream);
+		BufferedOutputStream out = new BufferedOutputStream(outputStream);
 
 		for (int k : adyacents.keys()) {
-			out.writeInt(k);
-			out.writeInt(adyacents.get(k));
+			out.write(IntUtils.intToByteArray(k));
+			out.write(IntUtils.intToByteArray(adyacents.get(k)));
 		}
 		out.close();
 	}

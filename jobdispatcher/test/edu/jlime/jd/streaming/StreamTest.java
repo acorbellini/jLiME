@@ -3,11 +3,12 @@ package edu.jlime.jd.streaming;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedWriter;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.EOFException;
+import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.Scanner;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import edu.jlime.client.Client;
 import edu.jlime.client.JobContext;
@@ -16,6 +17,9 @@ import edu.jlime.core.stream.RemoteInputStream;
 import edu.jlime.core.stream.RemoteOutputStream;
 import edu.jlime.jd.JobNode;
 import edu.jlime.jd.job.StreamJob;
+import edu.jlime.util.ByteBuffer;
+import edu.jlime.util.IntUtils;
+import edu.jlime.util.RingQueue;
 
 public class StreamTest {
 
@@ -32,17 +36,29 @@ public class StreamTest {
 			// } catch (Exception e) {
 			// e.printStackTrace();
 			// }
-
-			DataInputStream reader = new DataInputStream(
-					new BufferedInputStream(inputStream, 4096));
+			long init = System.currentTimeMillis();
+			long count = 0;
+			BufferedInputStream reader = new BufferedInputStream(inputStream);
 			try {
-				while (true)
-					reader.readInt();
+				byte[] four = new byte[4 * 8 * 1024];
+				int read = 0;
+				while ((read = reader.read(four)) != -1) {
+					// for (int i = 0; i < read / 4; i++) {
+					// IntUtils.byteArrayToInt(four, i * 4);
+					// count++;
+					// }
+					count += read;
+
+				}
 			} catch (EOFException eof) {
 				System.out.println("Finished reading");
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
+
+			long megas = (count / (1024 * 1024));
+			float time = (System.currentTimeMillis() - init) / (float) (1000);
+			System.out.println(megas / time + " mb/s");
 
 			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(
 					outputStream));
@@ -70,11 +86,57 @@ public class StreamTest {
 		// writer.write(" 7 8 9");
 		// writer.close();
 
-		DataOutputStream os = new DataOutputStream(new BufferedOutputStream(
-				res.getOs(), 4096));
-		for (int i = 0; i < 100000000; i++) {
-			os.writeInt(i);
+		// BufferedOutputStream os = new BufferedOutputStream(res.getOs(),
+		// 2 * 1024 * 1024);
+
+		final RingQueue q = new RingQueue(4096);
+		final BufferedOutputStream os = new BufferedOutputStream(res.getOs(),
+				32 * 1024);
+		final AtomicBoolean finished = new AtomicBoolean(false);
+		final Semaphore sem = new Semaphore(0);
+		Thread thread = new Thread() {
+			public void run() {
+				while (!finished.get() || !q.isEmpty()) {
+					for (Object o : q.get()) {
+						try {
+							os.write((byte[]) o);
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+					}
+					try {
+						os.flush();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+				try {
+					os.flush();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				sem.release();
+			};
+		};
+		thread.start();
+
+		byte[] ba = new byte[32 * 1024];
+		ByteBuffer buffer = new ByteBuffer(4 * 8 * 1024);
+		for (int i = 0; i < 100000; i++) {
+			for (int j = 0; j < 8 * 1024; j++)
+				buffer.putInt(j);
+			q.add(buffer.build());
+			buffer.reset();
+			// for (int j = 0; j < 8 * 1024; j++)
+			// q.add(IntUtils.intToByteArray(j));
+			// os.write(ba);
 		}
+
+		finished.set(true);
+		sem.acquire();
+
 		os.close();
 
 		Scanner scanner = new Scanner(res.getIs());

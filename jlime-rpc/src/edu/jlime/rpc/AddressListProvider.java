@@ -2,8 +2,8 @@ package edu.jlime.rpc;
 
 import java.util.List;
 
-import edu.jlime.rpc.message.AddressType;
 import edu.jlime.rpc.message.Address;
+import edu.jlime.rpc.message.AddressType;
 import edu.jlime.rpc.message.SocketAddress;
 
 public interface AddressListProvider {

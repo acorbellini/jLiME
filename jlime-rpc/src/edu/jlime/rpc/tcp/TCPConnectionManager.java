@@ -1,7 +1,8 @@
 package edu.jlime.rpc.tcp;
 
-import java.io.DataInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -16,11 +17,12 @@ import java.util.concurrent.ThreadFactory;
 
 import org.apache.log4j.Logger;
 
-import edu.jlime.rpc.message.AddressType;
 import edu.jlime.rpc.message.Address;
+import edu.jlime.rpc.message.AddressType;
 import edu.jlime.rpc.message.SocketAddress;
 import edu.jlime.util.ByteBuffer;
 import edu.jlime.util.RingQueue;
+import edu.jlime.util.StreamUtils;
 
 class TCPConnectionManager {
 
@@ -165,13 +167,18 @@ class TCPConnectionManager {
 			Socket sock = null;
 			try {
 				sock = new Socket();
+				// TODO Careful
+				sock.setTcpNoDelay(true);
 				sock.setReuseAddress(true);
 				sock.connect(new InetSocketAddress(addr.getSockTo()
 						.getAddress(), addr.getSockTo().getPort()));
 				if (log.isDebugEnabled())
 					log.debug("Created socket " + sock + " to " + addr);
-				sock.getOutputStream().write(StreamType.PACKET.getId());
-				TCP.putUUIDinStream(sock, this.localID.getId());
+				OutputStream outputStream = sock.getOutputStream();
+				outputStream.write(StreamType.PACKET.getId());
+				outputStream.write(new ByteBuffer().putUUID(
+						this.localID.getId()).build());
+				outputStream.flush();
 				return addConnection(sock);
 			} catch (ConnectException e) {
 				log.error("Could not open socket to " + addr + " : "
@@ -229,11 +236,8 @@ class TCPConnectionManager {
 
 	}
 
-	public static UUID getID(Socket conn) throws IOException {
-		DataInputStream dis = new DataInputStream(conn.getInputStream());
-		byte[] uuidAsBytes = new byte[16];
-		dis.readFully(uuidAsBytes);
-		return new ByteBuffer(uuidAsBytes).getUUID();
+	public static UUID getID(InputStream is) throws IOException {
+		return new ByteBuffer(StreamUtils.read(is, 16)).getUUID();
 	}
 
 	@Override

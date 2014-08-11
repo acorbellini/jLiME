@@ -1,8 +1,9 @@
 package edu.jlime.rpc.tcp;
 
-import java.io.DataOutputStream;
+import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.net.InetSocketAddress;
@@ -18,11 +19,11 @@ import org.apache.log4j.Logger;
 
 import edu.jlime.core.stream.RemoteInputStream;
 import edu.jlime.core.stream.RemoteOutputStream;
-import edu.jlime.rpc.message.AddressType;
 import edu.jlime.rpc.message.Address;
+import edu.jlime.rpc.message.AddressType;
 import edu.jlime.rpc.message.SocketAddress;
-import edu.jlime.rpc.np.NetworkProtocol;
 import edu.jlime.rpc.np.DataPacket;
+import edu.jlime.rpc.np.NetworkProtocol;
 import edu.jlime.util.ByteBuffer;
 
 public class TCP extends NetworkProtocol implements DataReceiver {
@@ -46,10 +47,14 @@ public class TCP extends NetworkProtocol implements DataReceiver {
 	@Override
 	public List<SocketAddress> getAddresses() {
 		List<SocketAddress> addr = new ArrayList<>();
+		addr.add(getAddress());
+		return addr;
+	}
+
+	SocketAddress getAddress() {
 		InetSocketAddress sockAddr = (InetSocketAddress) getServerSocket()
 				.getLocalSocketAddress();
-		addr.add(new SocketAddress(getLocal(), sockAddr, getType()));
-		return addr;
+		return new SocketAddress(getLocal(), sockAddr, getType());
 	}
 
 	@Override
@@ -73,9 +78,13 @@ public class TCP extends NetworkProtocol implements DataReceiver {
 
 	protected void acceptConnection() throws Exception {
 		final Socket conn = getServerSocket().accept();
-		StreamType type = StreamType
-				.fromID((byte) conn.getInputStream().read());
-		UUID id = TCPConnectionManager.getID(conn);
+		// TODO Careful
+		// conn.setTcpNoDelay(true);
+		// conn.setReceiveBufferSize(config.tcp_rcv_buffer);
+		// conn.setSendBufferSize(config.tcp_send_buffer);
+		InputStream inputStream = conn.getInputStream();
+		StreamType type = StreamType.fromID((byte) inputStream.read());
+		UUID id = TCPConnectionManager.getID(inputStream);
 		if (type.equals(StreamType.PACKET)) {
 			TCPConnectionManager connList = getConnManager(new Address(id));
 			if (log.isDebugEnabled())
@@ -86,10 +95,9 @@ public class TCP extends NetworkProtocol implements DataReceiver {
 			if (log.isDebugEnabled())
 				log.debug("Received stream request from "
 						+ conn.getRemoteSocketAddress() + " with id " + id);
-			UUID streamID = TCPConnectionManager.getID(conn);
-			InputStream is = conn.getInputStream();
+			UUID streamID = TCPConnectionManager.getID(inputStream);
 			Address id2 = new Address(id);
-			addStream(streamID, is, id2);
+			addStream(streamID, inputStream, id2);
 		}
 	}
 
@@ -190,15 +198,18 @@ public class TCP extends NetworkProtocol implements DataReceiver {
 				&& lastAddress.get(from).getSockTo().getPort() == pkt.getAddr()
 						.getPort())
 			return;
-		for (SocketAddress add : backup.get(from))
-			if (pkt.getAddr().getAddress().equals(add.getSockTo().getAddress())
-					&& pkt.getAddr().getPort() == add.getSockTo().getPort()) {
-				if (log.isDebugEnabled())
-					log.debug("Changing last address of  " + from + " to "
-							+ pkt.getAddr());
-				lastAddress.put(from, new SocketAddress(from, pkt.getAddr(),
-						getType()));
-			}
+		List<SocketAddress> possibleAddressList = backup.get(from);
+		if (possibleAddressList != null)
+			for (SocketAddress add : possibleAddressList)
+				if (pkt.getAddr().getAddress()
+						.equals(add.getSockTo().getAddress())
+						&& pkt.getAddr().getPort() == add.getSockTo().getPort()) {
+					if (log.isDebugEnabled())
+						log.debug("Changing last address of  " + from + " to "
+								+ pkt.getAddr());
+					lastAddress.put(from, new SocketAddress(from,
+							pkt.getAddr(), getType()));
+				}
 
 	}
 
@@ -279,11 +290,21 @@ public class TCP extends NetworkProtocol implements DataReceiver {
 				if (log.isDebugEnabled())
 					log.debug("Created Streaming Socket " + sock + " to "
 							+ addr);
-				sock.getOutputStream().write(StreamType.STREAM.getId());
-				putUUIDinStream(sock, getLocal().getId());
-				putUUIDinStream(sock, streamId);
-				return new TCPOutputStream(streamId, sock,
-						sock.getOutputStream());
+				// TODO Careful
+
+				sock.setReceiveBufferSize(config.tcp_rcv_buffer);
+				// System.out.println(sock.getReceiveBufferSize());
+
+				sock.setSendBufferSize(config.tcp_send_buffer);
+				// System.out.println(sock.getSendBufferSize());
+				sock.setTcpNoDelay(true);
+				OutputStream outputStream = sock.getOutputStream();
+				outputStream.write(StreamType.STREAM.getId());
+				outputStream.write(new ByteBuffer().putUUID(getLocal().getId())
+						.build());
+				outputStream.write(new ByteBuffer().putUUID(streamId).build());
+				outputStream.flush();
+				return new TCPOutputStream(streamId, sock, outputStream);
 			} catch (Exception e) {
 				e.printStackTrace();
 				tries++;
@@ -292,13 +313,15 @@ public class TCP extends NetworkProtocol implements DataReceiver {
 
 	}
 
-	public static void putUUIDinStream(Socket sock, UUID id) throws IOException {
-		DataOutputStream dos = new DataOutputStream(sock.getOutputStream());
-		ByteBuffer bb = new ByteBuffer();
-		bb.putUUID(id);
-		dos.write(bb.build());
-		dos.flush();
-	}
+	// public static void putUUIDinStream(Socket sock, UUID id) throws
+	// IOException {
+	// BufferedOutputStream dos = new BufferedOutputStream(
+	// sock.getOutputStream());
+	// ByteBuffer bb = new ByteBuffer();
+	// bb.putUUID(id);
+	// dos.write(bb.build());
+	// dos.flush();
+	// }
 
 	@Override
 	public void onStop() throws Exception {

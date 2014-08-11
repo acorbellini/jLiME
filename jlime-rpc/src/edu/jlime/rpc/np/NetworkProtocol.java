@@ -14,11 +14,11 @@ import edu.jlime.metrics.metric.Metrics;
 import edu.jlime.rpc.AddressListProvider;
 import edu.jlime.rpc.SocketFactory;
 import edu.jlime.rpc.SocketFactory.jLimeSocket;
-import edu.jlime.rpc.message.AddressType;
 import edu.jlime.rpc.message.Address;
+import edu.jlime.rpc.message.AddressType;
 import edu.jlime.rpc.message.Message;
-import edu.jlime.rpc.message.SocketAddress;
 import edu.jlime.rpc.message.SimpleMessageProcessor;
+import edu.jlime.rpc.message.SocketAddress;
 import edu.jlime.util.ByteBuffer;
 import edu.jlime.util.RingQueue;
 
@@ -43,7 +43,7 @@ public abstract class NetworkProtocol extends SimpleMessageProcessor implements
 
 	private jLimeSocket socket;
 
-	private SocketFactory fact;
+	protected SocketFactory fact;
 
 	private Metrics metrics;
 

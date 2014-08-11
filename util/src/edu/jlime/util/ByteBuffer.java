@@ -23,8 +23,6 @@ public class ByteBuffer {
 
 	private ByteArrayOutputStream bos;
 
-	private boolean built = false;
-
 	public ByteBuffer() {
 		this(INIT_SIZE);
 	}
@@ -153,8 +151,6 @@ public class ByteBuffer {
 	}
 
 	private void ensureCapacity(int i) {
-		if (built)
-			System.out.println("CANNOT WRITE AFTER BUFFER IS BUILT.");
 		while (writePos + i > buffered.length) {
 			byte[] copy = buffered;
 			byte[] bufferedExtended = DEFByteArrayCache
@@ -185,9 +181,10 @@ public class ByteBuffer {
 		putByteArray(ba);
 	}
 
-	public void putUUID(UUID jobID) {
+	public ByteBuffer putUUID(UUID jobID) {
 		putLong(jobID.getMostSignificantBits());
 		putLong(jobID.getLeastSignificantBits());
+		return this;
 	}
 
 	public void putSet(Set<String> tags) {
@@ -224,9 +221,7 @@ public class ByteBuffer {
 	}
 
 	public void putRawByteArray(byte[] data) {
-		ensureCapacity(data.length);
-		System.arraycopy(data, 0, buffered, writePos, data.length);
-		writePos += data.length;
+		putRawByteArray(data, data.length);
 	}
 
 	public void putString(String s) {
@@ -245,10 +240,12 @@ public class ByteBuffer {
 	}
 
 	public byte[] build() {
-		built = true;
-		byte[] ret = Arrays.copyOf(buffered, writePos);
-		DEFByteArrayCache.put(buffered);
-		return ret;
+		if (buffered.length != writePos) {
+			byte[] ret = Arrays.copyOf(buffered, writePos);
+			DEFByteArrayCache.put(buffered);
+			return ret;
+		} else
+			return buffered;
 	}
 
 	public void putUUIDFront(UUID id) {
@@ -273,5 +270,16 @@ public class ByteBuffer {
 			putString(e.getKey());
 			putString(e.getValue());
 		}
+	}
+
+	public void putRawByteArray(byte[] data, int l) {
+		ensureCapacity(l);
+		System.arraycopy(data, 0, buffered, writePos, l);
+		writePos += l;
+	}
+
+	public void reset() {
+		writePos = 0;
+		readPos = 0;
 	}
 }

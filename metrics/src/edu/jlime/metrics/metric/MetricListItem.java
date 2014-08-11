@@ -1,6 +1,5 @@
 package edu.jlime.metrics.metric;
 
-import java.util.List;
 import java.util.Map;
 
 import edu.jlime.metrics.meters.Accumulator;

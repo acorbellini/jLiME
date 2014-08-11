@@ -16,13 +16,17 @@ public class RingQueue {
 
 	private int len;
 
-	public RingQueue() {
+	public RingQueue(int s) {
 		this.init = 0;
 		this.end = 0;
 		this.reserved = 0;
-		this.len = 1024;
+		this.len = s;
 		this.buffer = new Object[len];
 		this.used = new boolean[len];
+	}
+
+	public RingQueue() {
+		this(1024);
 	}
 
 	public int pos(int i) {
@@ -30,7 +34,8 @@ public class RingQueue {
 	}
 
 	public boolean isEmpty() {
-		return true;
+		int currentEnd = end;
+		return init == currentEnd;
 	}
 
 	public synchronized int getAndIncrementReserved() {

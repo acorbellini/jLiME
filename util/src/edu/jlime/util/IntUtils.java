@@ -6,8 +6,7 @@ import java.nio.IntBuffer;
 public class IntUtils {
 
 	public static int byteArrayToInt(byte[] b) {
-		return b[3] & 0xFF | (b[2] & 0xFF) << 8 | (b[1] & 0xFF) << 16
-				| (b[0] & 0xFF) << 24;
+		return byteArrayToInt(b, 0);
 	}
 
 	public static int[] byteArrayToIntArray(byte[] data) {
@@ -34,5 +33,10 @@ public class IntUtils {
 		ret[1] = (byte) ((a >> 16) & 0xFF);
 		ret[0] = (byte) ((a >> 24) & 0xFF);
 		return ret;
+	}
+
+	public static int byteArrayToInt(byte[] b, int i) {
+		return b[i + 3] & 0xFF | (b[i + 2] & 0xFF) << 8
+				| (b[i + 1] & 0xFF) << 16 | (b[i] & 0xFF) << 24;
 	}
 }

@@ -12,4 +12,6 @@ public class TCPConfig {
 
 	public int output_buffer;
 
+	public int tcp_send_buffer;
+
 }

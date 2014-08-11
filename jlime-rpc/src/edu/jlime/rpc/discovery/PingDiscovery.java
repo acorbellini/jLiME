@@ -8,11 +8,11 @@ import java.util.UUID;
 import edu.jlime.core.cluster.IP;
 import edu.jlime.metrics.metric.Metrics;
 import edu.jlime.rpc.Configuration;
-import edu.jlime.rpc.message.AddressType;
 import edu.jlime.rpc.message.Address;
+import edu.jlime.rpc.message.AddressType;
 import edu.jlime.rpc.message.Message;
-import edu.jlime.rpc.message.SocketAddress;
 import edu.jlime.rpc.message.MessageProcessor;
+import edu.jlime.rpc.message.SocketAddress;
 import edu.jlime.util.NetworkUtils.SelectedInterface;
 
 public class PingDiscovery extends Discovery {

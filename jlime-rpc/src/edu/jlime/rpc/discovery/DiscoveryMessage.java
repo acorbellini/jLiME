@@ -10,8 +10,8 @@ import java.util.UUID;
 
 import edu.jlime.rpc.message.AddressType;
 import edu.jlime.rpc.message.Message;
-import edu.jlime.rpc.message.SocketAddress;
 import edu.jlime.rpc.message.MessageType;
+import edu.jlime.rpc.message.SocketAddress;
 import edu.jlime.util.ByteBuffer;
 
 public class DiscoveryMessage {

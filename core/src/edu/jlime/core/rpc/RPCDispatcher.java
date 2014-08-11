@@ -23,6 +23,7 @@ import edu.jlime.core.marshalling.Marshaller;
 import edu.jlime.core.marshalling.PeerClassLoader;
 import edu.jlime.metrics.metric.Metrics;
 import edu.jlime.util.ByteBuffer;
+import edu.jlime.util.StreamUtils;
 
 public class RPCDispatcher implements ClassLoaderProvider, DataReceiver {
 
@@ -235,12 +236,9 @@ public class RPCDispatcher implements ClassLoaderProvider, DataReceiver {
 		byte[] serialized = null;
 		try {
 			BufferedInputStream bis = new BufferedInputStream(is);
-			ByteBuffer buffer = new ByteBuffer();
-			int data = 0;
-			while ((data = bis.read()) != -1)
-				buffer.put((byte) data);
-
-			serialized = buffer.build();// Compression.compress(buffer.build());
+			byte[] data = StreamUtils.readFully(bis);
+			
+			serialized = data;// Compression.compress(buffer.build());
 		} catch (IOException e) {
 			log.error("Error Compressing class file", e);
 		}

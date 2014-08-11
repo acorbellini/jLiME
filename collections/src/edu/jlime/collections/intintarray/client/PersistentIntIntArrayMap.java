@@ -1,7 +1,7 @@
 package edu.jlime.collections.intintarray.client;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -28,7 +28,8 @@ import edu.jlime.core.stream.RemoteOutputStream;
 import edu.jlime.jd.JobCluster;
 import edu.jlime.jd.JobNode;
 import edu.jlime.jd.job.StreamJob;
-import edu.jlime.util.DataTypeUtils;
+import edu.jlime.util.IntUtils;
+import gnu.trove.iterator.TIntIterator;
 import gnu.trove.iterator.TIntObjectIterator;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.TIntIntHashMap;
@@ -146,11 +147,13 @@ public class PersistentIntIntArrayMap {
 		StreamForkJoin sfj = new StreamForkJoin() {
 			@Override
 			protected void sendOutput(RemoteOutputStream os, JobNode p) {
-				DataOutputStream dos = RemoteOutputStream.getBDOS(os);
+				BufferedOutputStream dos = new BufferedOutputStream(os);
 				TIntArrayList list = byServer.get(p);
 				try {
-					for (int i : list.toArray())
-						dos.writeInt(i);
+					TIntIterator it = list.iterator();
+					while (it.hasNext()) {
+						dos.write(IntUtils.intToByteArray(it.next()));
+					}
 					dos.close();
 				} catch (IOException e) {
 					e.printStackTrace();
@@ -158,22 +161,32 @@ public class PersistentIntIntArrayMap {
 			}
 
 			@Override
-			protected void receiveInput(RemoteInputStream is, JobNode p) {
-				DataInputStream dis = RemoteInputStream.getBDIS(is);
+			protected void receiveInput(RemoteInputStream input, JobNode p) {
+				// BufferedInputStream input = new BufferedInputStream(is);
 				TIntHashSet cached = new TIntHashSet();
 				try {
-					while (true) {
-						int k = dis.readInt();
-						cached.add(k);
-						if (cached.size() > CACHED_THRESHOLD) {
-							flushCache(res, cached);
+
+					byte[] buffer = new byte[4 * 1000];
+					int read = 0;
+					while ((read = input.read(buffer)) != -1)
+						for (int i = 0; i < read / 4; i++) {
+							int k = IntUtils.byteArrayToInt(buffer, i * 4);
+							cached.add(k);
+							if (cached.size() > CACHED_THRESHOLD) {
+								flushCache(res, cached);
+							}
 						}
-					}
 				} catch (EOFException e) {
 					if (log.isDebugEnabled())
 						log.debug("Finished reading.");
 				} catch (Exception e) {
 					log.error("", e);
+				} finally {
+					try {
+						input.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
 				}
 				if (!cached.isEmpty())
 					flushCache(res, cached);
@@ -219,8 +232,8 @@ public class PersistentIntIntArrayMap {
 		// list.remove(future);
 		// }
 		// }
-		if (log.isDebugEnabled())
-			log.debug("Finished getSetOfUsers");
+		// if (log.isDebugEnabled())
+		log.info("Finished getSetOfUsers");
 		return res;
 	}
 
@@ -327,14 +340,15 @@ public class PersistentIntIntArrayMap {
 		StreamForkJoin sfj = new StreamForkJoin() {
 			@Override
 			protected void sendOutput(RemoteOutputStream os, JobNode p) {
-				DataOutputStream dos = RemoteOutputStream.getBDOS(os);
+				BufferedOutputStream dos = new BufferedOutputStream(os);
 				TIntArrayList list = byServer.get(p);
 				try {
 
 					log.info("Sending key stream to get from local store.");
-
-					for (int i : list.toArray())
-						dos.writeInt(i);
+					TIntIterator it = list.iterator();
+					while (it.hasNext()) {
+						dos.write(IntUtils.intToByteArray(it.next()));
+					}
 
 					log.info("Finished sending key stream to get from local store.");
 
@@ -345,29 +359,33 @@ public class PersistentIntIntArrayMap {
 			}
 
 			@Override
-			protected void receiveInput(RemoteInputStream is, JobNode p) {
-				DataInputStream dis = RemoteInputStream.getBDIS(is);
+			protected void receiveInput(RemoteInputStream input, JobNode p) {
+				// BufferedInputStream input = new BufferedInputStream(is);
 				TIntIntHashMap cached = new TIntIntHashMap();
 				try {
-					while (true) {
-						int k = dis.readInt();
-						cached.adjustOrPutValue(k, 1, 1);
-						if (cached.size() > CACHED_THRESHOLD) {
-							flushCache(hashToReturn, cached);
+					byte[] buffer = new byte[4 * 1000];
+					int read = 0;
+					while ((read = input.read(buffer)) != -1)
+						for (int i = 0; i < read / 4; i++) {
+							int k = IntUtils.byteArrayToInt(buffer, i * 4);
+							cached.adjustOrPutValue(k, 1, 1);
+							if (cached.size() > CACHED_THRESHOLD) {
+								flushCache(hashToReturn, cached);
+							}
 						}
-					}
 				} catch (EOFException e) {
 					// if (log.isDebugEnabled())
-					log.info("Finished obtaining remote store keys.");
+
 				} catch (Exception e) {
 					log.error("", e);
 				} finally {
 					try {
-						dis.close();
+						input.close();
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
 				}
+				log.info("Finished obtaining remote store keys.");
 				if (!cached.isEmpty())
 					flushCache(hashToReturn, cached);
 			}
@@ -404,20 +422,24 @@ public class PersistentIntIntArrayMap {
 		}
 
 		@Override
-		public void run(RemoteInputStream inputStream,
+		public void run(RemoteInputStream input,
 				RemoteOutputStream outputStream, JobContext ctx)
 				throws Exception {
 
-			DataInputStream dis = RemoteInputStream.getBDIS(inputStream);
+			// BufferedInputStream input = new BufferedInputStream(inputStream);
 			Logger log = Logger.getLogger(MultiGetJob.class);
 			TIntArrayList kList = new TIntArrayList();
 			try {
-				while (true) {
-					kList.add(dis.readInt());
-				}
+				byte[] buffer = new byte[4 * 1000];
+				int read = 0;
+				while ((read = input.read(buffer)) != -1)
+					for (int i = 0; i < read / 4; i++) {
+						int k = IntUtils.byteArrayToInt(buffer, i * 4);
+						kList.add(k);
+					}
 			} catch (Exception e) {
 			}
-			DataOutputStream dos = RemoteOutputStream.getBDOS(outputStream);
+			BufferedOutputStream dos = new BufferedOutputStream(outputStream);
 			// if (log.isDebugEnabled())
 			log.info("Obtaining multiple keys (" + kList.size()
 					+ ") from store");
@@ -426,10 +448,8 @@ public class PersistentIntIntArrayMap {
 			for (int u : kList.toArray()) {
 				byte[] valAsBytes = store.load(u);
 				if (valAsBytes != null) {
-					int[] obtained = DataTypeUtils
-							.byteArrayToIntArray(valAsBytes);
-					for (int i : obtained) {
-						dos.writeInt(i);
+					for (int i = 0; i < valAsBytes.length / 4; i++) {
+						dos.write(valAsBytes, i * 4, 4);
 					}
 
 				}

@@ -17,11 +17,11 @@ import edu.jlime.core.stream.RemoteInputStream;
 import edu.jlime.core.stream.RemoteOutputStream;
 import edu.jlime.metrics.metric.Metrics;
 import edu.jlime.rpc.SocketFactory;
-import edu.jlime.rpc.message.AddressType;
 import edu.jlime.rpc.message.Address;
+import edu.jlime.rpc.message.AddressType;
 import edu.jlime.rpc.message.SocketAddress;
-import edu.jlime.rpc.np.NetworkProtocol;
 import edu.jlime.rpc.np.DataPacket;
+import edu.jlime.rpc.np.NetworkProtocol;
 
 public class MINAProcessor extends NetworkProtocol {
 

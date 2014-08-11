@@ -17,9 +17,6 @@ import edu.jlime.jd.JobCluster;
 import edu.jlime.jd.profiler.ClusterProfiler;
 import edu.jlime.jd.profiler.MetricExtractor;
 import edu.jlime.linkprediction.TwitterStoreConfig;
-import edu.jlime.metrics.metric.Metric;
-import edu.jlime.metrics.metric.MetricList;
-import edu.jlime.metrics.metric.MetricListItem;
 import edu.jlime.metrics.metric.Metrics;
 import edu.jlime.util.CSV;
 import edu.jlime.util.CommandLineUtils;
@@ -111,12 +108,15 @@ public class RecommendationTest {
 			System.out.println(js[0] + " ==> " + js[1]);
 		}
 		profiler.stop();
+		System.out.println("Query Time:  "
+				+ StringUtils.readableTime(query.getQueryTime()));
+		
+		System.out.println("Closing graph.");
 		graph.close();
 
 		Thread.sleep(1000);
 
-		System.out.println("Query Time:  "
-				+ StringUtils.readableTime(query.getQueryTime()));
+		System.out.println("Saving profile information.");
 
 		CSV writer = CSV.fileCSV("/home/acorbellini/results/" + mapperID + "/"
 				+ user + "/" + user + "-" + mapperID + ".csv", true, "UserID",

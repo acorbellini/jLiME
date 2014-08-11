@@ -13,13 +13,13 @@ import org.apache.log4j.Logger;
 
 import edu.jlime.rpc.AddressListProvider;
 import edu.jlime.rpc.Configuration;
-import edu.jlime.rpc.message.AddressType;
 import edu.jlime.rpc.message.Address;
+import edu.jlime.rpc.message.AddressType;
 import edu.jlime.rpc.message.Message;
 import edu.jlime.rpc.message.MessageListener;
-import edu.jlime.rpc.message.SocketAddress;
 import edu.jlime.rpc.message.MessageProcessor;
 import edu.jlime.rpc.message.MessageType;
+import edu.jlime.rpc.message.SocketAddress;
 import edu.jlime.rpc.message.StackElement;
 import edu.jlime.util.NetworkChangeListener;
 import edu.jlime.util.NetworkUtils;

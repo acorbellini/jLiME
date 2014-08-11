@@ -14,6 +14,5 @@ public class QueryCache {
 
 	public static <R> R get(Query<R> q) {
 		return (R) cache.get(q);
-
 	}
 }
