@@ -34,7 +34,6 @@ public class GetSetOfUsersJob implements Job<int[]> {
 			byte[] valAsBytes = store.load(u);
 			if (valAsBytes != null) {
 				int[] obtained = DataTypeUtils.byteArrayToIntArray(valAsBytes);
-				Arrays.sort(obtained);
 				hash.addAll(obtained);
 			}
 			// res.put(u, new int[] {});

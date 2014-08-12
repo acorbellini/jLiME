@@ -42,7 +42,7 @@ public class DistHashCountMR extends GraphMR<TIntIntHashMap, byte[]> {
 
 	@Override
 	public void processSubResult(byte[] subres) {
-		TIntIntHashMap subHash = HashCountJob.fromBytes(subres);
+		TIntIntHashMap subHash = DistHashCountJob.fromBytes(subres);
 		resultLock.lock();
 		for (int k : subHash.keys()) {
 			int v = subHash.get(k);
@@ -66,8 +66,8 @@ public class DistHashCountMR extends GraphMR<TIntIntHashMap, byte[]> {
 		Map<Job<?>, JobNode> res = new HashMap<>();
 		Map<JobNode, TIntArrayList> map = getMapper().map(inverted, cluster);
 		for (Entry<JobNode, TIntArrayList> e : map.entrySet()) {
-			res.put(new HashCountJob(e.getValue().toArray(), hash, getMapName()),
-					e.getKey());
+			res.put(new DistHashCountJob(e.getValue().toArray(), hash,
+					getMapName()), e.getKey());
 		}
 		lock = new Semaphore(-map.size() + 1);
 		return res;

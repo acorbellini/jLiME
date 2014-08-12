@@ -71,10 +71,7 @@ public class LevelDb extends Store {
 	@Override
 	public byte[] load(int key) throws Exception {
 		byte[] res = getDb().get(DataTypeUtils.intToByteArray(key));
-		if (res != null)
-			return res;
-		else
-			return null;
+		return res;
 	}
 
 	public int[] load(String key) throws DBException, Exception {

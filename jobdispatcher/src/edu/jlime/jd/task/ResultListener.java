@@ -1,10 +1,10 @@
 package edu.jlime.jd.task;
 
-public abstract interface ResultListener<R> {
+public abstract interface ResultListener<T, R> {
 
-	public void onSuccess(R result);
+	public void onSuccess(T result);
 
-	public void onFinished();
+	public R onFinished();
 
 	public void onFailure(Exception res);
 }

@@ -4,11 +4,14 @@ import java.io.IOException;
 import java.io.InputStream;
 
 public class StreamUtils {
+	private static final int BUFFER_SIZE = 128 * 1024;
+
 	public static byte[] read(InputStream inputStream, int size)
 			throws IOException {
 		byte[] data = new byte[size];
 		int read = 0;
 		int total = 0;
+		// byte[] buffer = new byte[BUFFER_SIZE];
 		while (total != size
 				&& (read = inputStream.read(data, total, size - total)) != -1) {
 			total += read;

@@ -24,6 +24,8 @@ import org.apache.log4j.Logger;
 public class RemoteCountQuery extends CompositeQuery<int[], TIntIntHashMap>
 		implements CountQuery {
 
+	private static final int READ_BUFFER_SIZE = 128 * 1024;
+
 	private static final int CACHE_THRESHOLD = 5000000;
 
 	private static final long serialVersionUID = 5030949972656440876L;
@@ -56,7 +58,7 @@ public class RemoteCountQuery extends CompositeQuery<int[], TIntIntHashMap>
 				try {
 					// BufferedOutputStream dos = new BufferedOutputStream(os);
 					os.write(IntUtils.intArrayToByteArray(map.get(p).toArray()));
-					log.info("Closing os.");
+					log.info("RemoteCountQuery: Finished sending followers/followees to count to " + p);
 					os.close();
 				} catch (IOException e1) {
 					e1.printStackTrace();
@@ -69,7 +71,7 @@ public class RemoteCountQuery extends CompositeQuery<int[], TIntIntHashMap>
 				// BufferedInputStream input = new BufferedInputStream(is);
 				TIntIntHashMap cached = new TIntIntHashMap();
 				try {
-					byte[] buffer = new byte[32 * 1024];
+					byte[] buffer = new byte[READ_BUFFER_SIZE];
 					int read = 0;
 					while ((read = input.read(buffer)) != -1)
 						for (int i = 0; i < read / 4; i += 2) {

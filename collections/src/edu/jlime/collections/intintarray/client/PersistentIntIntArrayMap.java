@@ -1,21 +1,19 @@
 package edu.jlime.collections.intintarray.client;
 
-import java.io.BufferedOutputStream;
-import java.io.EOFException;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.Future;
 
 import org.apache.log4j.Logger;
 
 import edu.jlime.client.JobContext;
-import edu.jlime.collections.adjacencygraph.query.StreamForkJoin;
-import edu.jlime.collections.adjacencygraph.query.StreamForkJoin.StreamJobFactory;
+import edu.jlime.collections.adjacencygraph.count.DistHashCountMR;
 import edu.jlime.collections.intintarray.client.jobs.GetJob;
+import edu.jlime.collections.intintarray.client.jobs.GetSetOfUsersJob;
 import edu.jlime.collections.intintarray.client.jobs.MultiGetJob;
 import edu.jlime.collections.intintarray.client.jobs.MultiSetJob;
 import edu.jlime.collections.intintarray.client.jobs.PersistentIntIntArrayInitJob;
@@ -27,6 +25,8 @@ import edu.jlime.core.stream.RemoteOutputStream;
 import edu.jlime.jd.JobCluster;
 import edu.jlime.jd.JobNode;
 import edu.jlime.jd.job.StreamJob;
+import edu.jlime.jd.task.ForkJoinTask;
+import edu.jlime.jd.task.ResultListener;
 import edu.jlime.util.ByteBuffer;
 import edu.jlime.util.IntUtils;
 import gnu.trove.iterator.TIntIterator;
@@ -38,6 +38,8 @@ import gnu.trove.procedure.TIntProcedure;
 import gnu.trove.set.hash.TIntHashSet;
 
 public class PersistentIntIntArrayMap {
+
+	private static final int READ_BUFFER_SIZE = 128 * 1024;
 
 	private static final int CACHED_THRESHOLD = 10000;
 
@@ -156,69 +158,102 @@ public class PersistentIntIntArrayMap {
 	}
 
 	public TIntHashSet getSetOfUsers(int[] array) throws Exception {
-		final TIntHashSet res = new TIntHashSet();
-		final HashMap<JobNode, TIntArrayList> byServer = hashKeys(array);
 
-		StreamForkJoin sfj = new StreamForkJoin() {
+		HashMap<JobNode, TIntArrayList> byServer = hashKeys(array);
+		log.info("Obtaining Futures of executing CountListsJob");
+
+		ForkJoinTask<int[]> mgr = new ForkJoinTask<>();
+		for (Entry<JobNode, TIntArrayList> map : byServer.entrySet()) {
+			JobNode p = map.getKey();
+			GetSetOfUsersJob j = new GetSetOfUsersJob(map.getValue().toArray(),
+					store);
+			mgr.putJob(j, p);
+		}
+		return mgr.execute(new ResultListener<int[], TIntHashSet>() {
+			TIntHashSet hashToReturn = new TIntHashSet();
+
 			@Override
-			protected void send(RemoteOutputStream dos, JobNode p) {
-				// BufferedOutputStream dos = new BufferedOutputStream(os);
-				TIntArrayList list = byServer.get(p);
-				try {
-					dos.write(IntUtils.intArrayToByteArray(list.toArray()));
-					dos.close();
-				} catch (IOException e) {
-					e.printStackTrace();
+			public void onSuccess(int[] res) {
+				synchronized (hashToReturn) {
+					hashToReturn.addAll(res);
 				}
+
 			}
 
 			@Override
-			protected void receive(RemoteInputStream input, JobNode p) {
-				// BufferedInputStream input = new BufferedInputStream(is);
-				TIntHashSet cached = new TIntHashSet();
-				try {
-
-					byte[] buffer = new byte[32 * 1024];
-					int read = 0;
-					while ((read = input.read(buffer)) != -1)
-						for (int i = 0; i < read / 4; i++) {
-							int k = IntUtils.byteArrayToInt(buffer, i * 4);
-							cached.add(k);
-							if (cached.size() > CACHED_THRESHOLD) {
-								flushCache(res, cached);
-							}
-						}
-				} catch (EOFException e) {
-					if (log.isDebugEnabled())
-						log.debug("Finished reading.");
-				} catch (Exception e) {
-					log.error("", e);
-				} finally {
-					try {
-						input.close();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				}
-				if (!cached.isEmpty())
-					flushCache(res, cached);
+			public TIntHashSet onFinished() {
+				return hashToReturn;
 			}
 
-			private void flushCache(final TIntHashSet res, TIntHashSet cached) {
-				synchronized (res) {
-					for (int k : cached.toArray()) {
-						res.add(k);
-					}
-				}
-				cached.clear();
-			}
-		};
-		sfj.execute(new ArrayList<>(byServer.keySet()), new StreamJobFactory() {
 			@Override
-			public StreamJob getStreamJob() {
-				return new GetAdyacencyListStreamJob(store);
+			public void onFailure(Exception res) {
+				res.printStackTrace();
 			}
 		});
+		// final TIntHashSet res = new TIntHashSet();
+		// final HashMap<JobNode, TIntArrayList> byServer = hashKeys(array);
+		//
+		// StreamForkJoin sfj = new StreamForkJoin() {
+		// @Override
+		// protected void send(RemoteOutputStream dos, JobNode p) {
+		// // BufferedOutputStream dos = new BufferedOutputStream(os);
+		// TIntArrayList list = byServer.get(p);
+		// try {
+		// dos.write(IntUtils.intArrayToByteArray(list.toArray()));
+		// dos.close();
+		// } catch (IOException e) {
+		// e.printStackTrace();
+		// }
+		// }
+		//
+		// @Override
+		// protected void receive(RemoteInputStream input, JobNode p) {
+		// // BufferedInputStream input = new BufferedInputStream(is);
+		// TIntHashSet cached = new TIntHashSet();
+		// try {
+		//
+		// byte[] buffer = new byte[READ_BUFFER_SIZE];
+		// int read = 0;
+		// while ((read = input.read(buffer)) != -1)
+		// for (int i = 0; i < read / 4; i++) {
+		// int k = IntUtils.byteArrayToInt(buffer, i * 4);
+		// cached.add(k);
+		// if (cached.size() > CACHED_THRESHOLD) {
+		// flushCache(res, cached);
+		// }
+		// }
+		// } catch (EOFException e) {
+		// if (log.isDebugEnabled())
+		// log.debug("Finished reading.");
+		// } catch (Exception e) {
+		// log.error("", e);
+		// } finally {
+		// try {
+		// input.close();
+		// } catch (IOException e) {
+		// e.printStackTrace();
+		// }
+		// }
+		// if (!cached.isEmpty())
+		// flushCache(res, cached);
+		// }
+		//
+		// private void flushCache(final TIntHashSet res, TIntHashSet cached) {
+		// synchronized (res) {
+		// for (int k : cached.toArray()) {
+		// res.add(k);
+		// }
+		// }
+		// cached.clear();
+		// }
+		// };
+		// sfj.execute(new ArrayList<>(byServer.keySet()), new
+		// StreamJobFactory() {
+		// @Override
+		// public StreamJob getStreamJob() {
+		// return new GetAdyacencyListStreamJob(store);
+		// }
+		// });
 
 		// if (log.isDebugEnabled())
 		// log.debug("Obtaining Futures of executing GetSetOfUsersJob for getSetOfUsers");
@@ -245,8 +280,8 @@ public class PersistentIntIntArrayMap {
 		// }
 		// }
 		// if (log.isDebugEnabled())
-		log.info("Finished getSetOfUsers");
-		return res;
+		// log.info("Finished getSetOfUsers");
+		// return res;
 	}
 
 	public void set(final TIntObjectHashMap<int[]> orig) throws Exception {
@@ -310,79 +345,123 @@ public class PersistentIntIntArrayMap {
 	}
 
 	public TIntIntHashMap countLists(int[] array) throws Exception {
+		HashMap<JobNode, TIntArrayList> byServer = hashKeys(array);
+		log.info("Obtaining Futures of executing CountListsJob");
 
-		final TIntIntHashMap hashToReturn = new TIntIntHashMap();
-		final HashMap<JobNode, TIntArrayList> byServer = hashKeys(array);
-		StreamForkJoin sfj = new StreamForkJoin() {
+		ForkJoinTask<byte[]> mgr = new ForkJoinTask<>();
+		for (Entry<JobNode, TIntArrayList> map : byServer.entrySet()) {
+			JobNode p = map.getKey();
+			CountListsJob j = new CountListsJob(map.getValue().toArray(), store);
+			mgr.putJob(j, p);
+		}
+		return mgr.execute(new ResultListener<byte[], TIntIntHashMap>() {
+			List<TIntIntHashMap> subres = new ArrayList<>();
+
 			@Override
-			protected void send(RemoteOutputStream os, JobNode p) {
-				BufferedOutputStream dos = new BufferedOutputStream(os);
-				TIntArrayList list = byServer.get(p);
-				try {
-
-					log.info("Sending key stream to get from local store.");
-					dos.write(IntUtils.intArrayToByteArray(list.toArray()));
-					log.info("Finished sending key stream to get from local store.");
-
-					dos.close();
-				} catch (IOException e) {
-					e.printStackTrace();
+			public void onSuccess(byte[] res) {
+				TIntIntHashMap table = CountListsJob.fromBytes(res);
+				synchronized (subres) {
+					subres.add(table);
 				}
+
 			}
 
 			@Override
-			protected void receive(RemoteInputStream input, JobNode p) {
-				// BufferedInputStream input = new BufferedInputStream(is);
-				TIntIntHashMap cached = new TIntIntHashMap();
-				try {
-					byte[] buffer = new byte[32 * 1024];
-					int read = 0;
-					while ((read = input.read(buffer)) != -1)
-						for (int i = 0; i < read / 4; i++) {
-							int k = IntUtils.byteArrayToInt(buffer, i * 4);
-							cached.adjustOrPutValue(k, 1, 1);
-							if (cached.size() > CACHED_THRESHOLD) {
-								flushCache(hashToReturn, cached);
-							}
+			public TIntIntHashMap onFinished() {
+				if (subres.size() == 1)
+					return subres.get(0);
+				TIntIntHashMap hashToReturn = new TIntIntHashMap();
+				for (TIntIntHashMap table : subres) {
+					if (hashToReturn.isEmpty())
+						hashToReturn.putAll(table);
+					else {
+						for (int k : table.keys()) {
+							int v = table.get(k);
+							hashToReturn.adjustOrPutValue(k, v, v);
 						}
-				} catch (EOFException e) {
-					// if (log.isDebugEnabled())
-
-				} catch (Exception e) {
-					log.error("", e);
-				} finally {
-					try {
-						input.close();
-					} catch (IOException e) {
-						e.printStackTrace();
 					}
 				}
-				log.info("Finished obtaining remote store keys.");
-				if (!cached.isEmpty())
-					flushCache(hashToReturn, cached);
+				return hashToReturn;
 			}
 
-			private void flushCache(final TIntIntHashMap hashToReturn,
-					TIntIntHashMap cached) {
-				synchronized (hashToReturn) {
-					for (int cachedk : cached.keys()) {
-						int cachedv = cached.get(cachedk);
-						hashToReturn
-								.adjustOrPutValue(cachedk, cachedv, cachedv);
-					}
-				}
-				cached.clear();
-			}
-		};
-		sfj.execute(new ArrayList<>(byServer.keySet()), new StreamJobFactory() {
 			@Override
-			public StreamJob getStreamJob() {
-				return new GetAdyacencyListStreamJob(store);
+			public void onFailure(Exception res) {
+				res.printStackTrace();
 			}
 		});
-		// if (log.isDebugEnabled())
-		log.info("Returning count hash with " + hashToReturn.size());
-		return hashToReturn;
+		// final TIntIntHashMap hashToReturn = new TIntIntHashMap();
+		// final HashMap<JobNode, TIntArrayList> byServer = hashKeys(array);
+		// StreamForkJoin sfj = new StreamForkJoin() {
+		// @Override
+		// protected void send(RemoteOutputStream os, JobNode p) {
+		// BufferedOutputStream dos = new BufferedOutputStream(os);
+		// TIntArrayList list = byServer.get(p);
+		// try {
+		//
+		// log.info("Sending key stream to get from local store.");
+		// dos.write(IntUtils.intArrayToByteArray(list.toArray()));
+		// log.info("Finished sending key stream to get from local store.");
+		//
+		// dos.close();
+		// } catch (IOException e) {
+		// e.printStackTrace();
+		// }
+		// }
+		//
+		// @Override
+		// protected void receive(RemoteInputStream input, JobNode p) {
+		// // BufferedInputStream input = new BufferedInputStream(is);
+		// TIntIntHashMap cached = new TIntIntHashMap();
+		// try {
+		// byte[] buffer = new byte[READ_BUFFER_SIZE];
+		// int read = 0;
+		// while ((read = input.read(buffer)) != -1)
+		// for (int i = 0; i < read / 4; i++) {
+		// int k = IntUtils.byteArrayToInt(buffer, i * 4);
+		// cached.adjustOrPutValue(k, 1, 1);
+		// if (cached.size() > CACHED_THRESHOLD) {
+		// flushCache(hashToReturn, cached);
+		// }
+		// }
+		// } catch (EOFException e) {
+		// // if (log.isDebugEnabled())
+		//
+		// } catch (Exception e) {
+		// log.error("", e);
+		// } finally {
+		// try {
+		// input.close();
+		// } catch (IOException e) {
+		// e.printStackTrace();
+		// }
+		// }
+		// log.info("Finished obtaining remote store keys.");
+		// if (!cached.isEmpty())
+		// flushCache(hashToReturn, cached);
+		// }
+		//
+		// private void flushCache(final TIntIntHashMap hashToReturn,
+		// TIntIntHashMap cached) {
+		// synchronized (hashToReturn) {
+		// for (int cachedk : cached.keys()) {
+		// int cachedv = cached.get(cachedk);
+		// hashToReturn
+		// .adjustOrPutValue(cachedk, cachedv, cachedv);
+		// }
+		// }
+		// cached.clear();
+		// }
+		// };
+		// sfj.execute(new ArrayList<>(byServer.keySet()), new
+		// StreamJobFactory() {
+		// @Override
+		// public StreamJob getStreamJob() {
+		// return new GetAdyacencyListStreamJob(store);
+		// }
+		// });
+		// // if (log.isDebugEnabled())
+		// log.info("Returning count hash with " + hashToReturn.size());
+		// return hashToReturn;
 	}
 
 	private static class GetAdyacencyListStreamJob extends StreamJob {
@@ -402,7 +481,7 @@ public class PersistentIntIntArrayMap {
 			Logger log = Logger.getLogger(MultiGetJob.class);
 			TIntArrayList kList = new TIntArrayList();
 			try {
-				byte[] buffer = new byte[32 * 1024];
+				byte[] buffer = new byte[READ_BUFFER_SIZE];
 				int read = 0;
 				while ((read = input.read(buffer)) != -1)
 					for (int i = 0; i < read / 4; i++) {

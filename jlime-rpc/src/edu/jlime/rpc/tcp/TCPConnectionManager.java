@@ -1,5 +1,6 @@
 package edu.jlime.rpc.tcp;
 
+import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -62,7 +63,7 @@ class TCPConnectionManager {
 
 	private Address to;
 
-	private Address localID;
+	Address localID;
 
 	private Timer closer;
 
@@ -168,17 +169,19 @@ class TCPConnectionManager {
 			try {
 				sock = new Socket();
 				// TODO Careful
-				sock.setTcpNoDelay(true);
-				sock.setReuseAddress(true);
+				// sock.setTcpNoDelay(true);
+				// sock.setReuseAddress(true);
+				sock.setReceiveBufferSize(rcvr.config.tcp_rcv_buffer);
+				sock.setSendBufferSize(rcvr.config.tcp_send_buffer);
 				sock.connect(new InetSocketAddress(addr.getSockTo()
 						.getAddress(), addr.getSockTo().getPort()));
+
 				if (log.isDebugEnabled())
 					log.debug("Created socket " + sock + " to " + addr);
-				OutputStream outputStream = sock.getOutputStream();
-				outputStream.write(StreamType.PACKET.getId());
-				outputStream.write(new ByteBuffer().putUUID(
-						this.localID.getId()).build());
-				outputStream.flush();
+				OutputStream os = sock.getOutputStream();
+				os.write(StreamType.PACKET.getId());
+				os.write(new ByteBuffer().putUUID(localID.getId()).build());
+				os.flush();
 				return addConnection(sock);
 			} catch (ConnectException e) {
 				if (log.isDebugEnabled())

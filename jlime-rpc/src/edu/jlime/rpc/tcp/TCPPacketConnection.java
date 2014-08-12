@@ -12,6 +12,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.log4j.Logger;
 
+import edu.jlime.util.ByteBuffer;
 import edu.jlime.util.IntUtils;
 import edu.jlime.util.StreamUtils;
 
@@ -49,7 +50,7 @@ class TCPPacketConnection {
 		this.lastTimeUsed = System.currentTimeMillis();
 		// is = new BufferedInputStream(sock.getInputStream(), input_buffer);
 		is = sock.getInputStream();
-		os = sock.getOutputStream();
+		os = new BufferedOutputStream(sock.getOutputStream());
 		closeTimer = new TimerTask() {
 
 			@Override

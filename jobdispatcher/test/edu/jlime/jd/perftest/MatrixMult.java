@@ -13,7 +13,7 @@ import edu.jlime.jd.task.RoundRobinTask;
 
 public class MatrixMult {
 
-	private final class MatrixRM implements ResultListener<MultRes> {
+	private final class MatrixRM implements ResultListener<MultRes, Void> {
 
 		private Integer count = 0;
 
@@ -33,8 +33,8 @@ public class MatrixMult {
 		}
 
 		@Override
-		public void onFinished() {
-
+		public Void onFinished() {
+			return null;
 		}
 
 		@Override

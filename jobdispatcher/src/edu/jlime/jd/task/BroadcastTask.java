@@ -11,7 +11,7 @@ import edu.jlime.jd.JobNode;
 import edu.jlime.jd.SetEnvironment;
 import edu.jlime.jd.job.Job;
 
-public abstract class BroadcastTask<R> extends TaskBase<R> {
+public abstract class BroadcastTask<T> extends TaskBase<T> {
 
 	private JobCluster cluster;
 
@@ -19,9 +19,9 @@ public abstract class BroadcastTask<R> extends TaskBase<R> {
 
 	ArrayList<JobNode> peers;
 
-	private List<? extends Job<R>> jobs;
+	private List<? extends Job<T>> jobs;
 
-	public BroadcastTask(List<? extends Job<R>> jobs, JobCluster c) {
+	public BroadcastTask(List<? extends Job<T>> jobs, JobCluster c) {
 		this.cluster = c;
 		peers = c.getExecutors();
 		this.jobs = jobs;
@@ -49,7 +49,7 @@ public abstract class BroadcastTask<R> extends TaskBase<R> {
 	}
 
 	@Override
-	protected Map<Job<R>, JobNode> getMap() {
+	protected Map<Job<T>, JobNode> getMap() {
 		return split(limitPeers(peers), jobs);
 	}
 
@@ -63,7 +63,7 @@ public abstract class BroadcastTask<R> extends TaskBase<R> {
 		return limited;
 	}
 
-	public abstract <J extends Job<R>> HashMap<Job<R>, JobNode> split(
+	public abstract <J extends Job<T>> HashMap<Job<T>, JobNode> split(
 			List<JobNode> peers, List<J> jobs);
 
 	public static String getID(String k, String sharedID) {

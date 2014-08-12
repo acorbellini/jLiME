@@ -23,7 +23,8 @@ import edu.jlime.util.RingQueue;
 public class StreamTest {
 
 	private static final int INT_ARRAY_SIZE = 1;
-	private static final int BUFFER_SIZE = 1024 * 1024 * 1024;
+	private static final int BUFFER_SIZE = 1 * 1024 * 1024;
+	private static final int READ_BUFFER = 512 * 1024;
 
 	public static class StreamTestJob extends StreamJob {
 
@@ -45,7 +46,7 @@ public class StreamTest {
 			InputStream reader = inputStream;
 			// ((TCPInputStream) inputStream).getIs();
 			try {
-				byte[] four = new byte[32 * 1024];
+				byte[] four = new byte[READ_BUFFER];
 				int read = 0;
 				while ((read = reader.read(four)) != -1) {
 					// for (int i = 0; i < read / 4; i++) {
@@ -164,6 +165,5 @@ public class StreamTest {
 		// stream.waitForFinished();
 		System.out.println((System.nanoTime() - init) / 1000000);
 		cli.close();
-		System.in.read();
 	}
 }

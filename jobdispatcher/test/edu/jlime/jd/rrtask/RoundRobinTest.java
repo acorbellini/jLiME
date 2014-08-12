@@ -46,20 +46,21 @@ public class RoundRobinTest {
 		jobs.add(new HelloJob("Lets "));
 		jobs.add(new HelloJob("Go "));
 		Client cli = Client.build(3);
-		RoundRobinTask<String> task = new RoundRobinTask<String>(jobs,
+		RoundRobinTask<String> task = new RoundRobinTask<>(jobs,
 				cli.getCluster());
 
 		// task.setMaxPeers(2);
 
-		task.execute(new ResultListener<String>() {
+		task.execute(new ResultListener<String, Void>() {
 			@Override
 			public void onSuccess(String result) {
 				System.out.println(result);
 			}
 
 			@Override
-			public void onFinished() {
+			public Void onFinished() {
 				System.out.println("Finished");
+				return null;
 			}
 
 			@Override

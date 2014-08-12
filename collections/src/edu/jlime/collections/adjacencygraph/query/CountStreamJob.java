@@ -18,6 +18,7 @@ import gnu.trove.map.hash.TIntIntHashMap;
 
 class CountStreamJob extends StreamJob {
 
+	private static final int READ_BUFFER_SIZE = 128 * 1024;
 	private String map;
 
 	public CountStreamJob(String map) {
@@ -33,36 +34,41 @@ class CountStreamJob extends StreamJob {
 
 		// BufferedInputStream input = new BufferedInputStream(inputStream,
 		// 128 * 1024);
-		log.info("Reading data.");
+		log.info("CountStreamJob: Reading input data.");
 		try {
-			byte[] buffer = new byte[32 * 1024];
+			byte[] buffer = new byte[READ_BUFFER_SIZE];
 			int read = 0;
 			while ((read = input.read(buffer)) != -1)
 				for (int i = 0; i < read / 4; i++) {
 					data.add(IntUtils.byteArrayToInt(buffer, i * 4));
 				}
 		} catch (EOFException e) {
-			log.info("Finished reading input stream.");
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		log.info("Counting " + data.size() + " users.");
+
+		log.info("CountStreamJob: Finished reading input stream.");
+
+		log.info("CountStreamJob: Counting " + data.size() + " users.");
 
 		PersistentIntIntArrayMap dkvs = PersistentIntIntArrayMap.getMap(map,
 				ctx);
 
 		TIntIntHashMap adyacents = null;
 		try {
-			log.info("Calling DKVS get.");
+			log.info("CountStreamJob: Calling DKVS get.");
 			adyacents = dkvs.countLists(data.toArray());
 		} catch (Exception e1) {
 			e1.printStackTrace();
 		}
 
-		log.info("Finished calling DKVS get, obtained " + adyacents.size());
+		log.info("CountStreamJob: Finished calling DKVS get, obtained "
+				+ adyacents.size());
 
 		// BufferedOutputStream out = new BufferedOutputStream(outputStream);
 
+		log.info("CountStreamJob: Sending obtained count");
 		byte[] ret = new byte[4 * 2 * adyacents.size()];
 		TIntIntIterator it = adyacents.iterator();
 		int pos = 0;
@@ -74,6 +80,7 @@ class CountStreamJob extends StreamJob {
 		}
 		adyacents.clear();
 		outputStream.write(ret);
+		log.info("CountStreamJob: Finished sending obtained count");
 		outputStream.close();
 	}
 }

@@ -28,7 +28,7 @@ import edu.jlime.util.ByteBuffer;
 
 public class TCP extends NetworkProtocol implements DataReceiver {
 
-	private TCPConfig config;
+	TCPConfig config;
 
 	Logger log = Logger.getLogger(TCP.class);
 

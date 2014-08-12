@@ -54,15 +54,16 @@ public class SharedTest {
 		RoundRobinTask<String> task2 = new RoundRobinTask<String>(jobs2, Client
 				.build().getCluster());
 		task2.set("data", "Segundo");
-		task.execute(new ResultListener<String>() {
+		task.execute(new ResultListener<String, Void>() {
 			@Override
 			public void onSuccess(String result) {
 				System.out.println(result);
 			}
 
 			@Override
-			public void onFinished() {
+			public Void onFinished() {
 				System.out.println("Finished");
+				return null;
 			}
 
 			@Override
@@ -71,15 +72,16 @@ public class SharedTest {
 			}
 		});
 
-		task2.execute(new ResultListener<String>() {
+		task2.execute(new ResultListener<String, Void>() {
 			@Override
 			public void onSuccess(String result) {
 				System.out.println(result);
 			}
 
 			@Override
-			public void onFinished() {
+			public Void onFinished() {
 				System.out.println("Finished");
+				return null;
 			}
 
 			@Override
