@@ -1,12 +1,9 @@
 package edu.jlime.collections.adjacencygraph.get;
 
-import java.util.Arrays;
-
 import edu.jlime.client.JobContext;
 import edu.jlime.collections.intintarray.client.PersistentIntIntArrayMap;
 import edu.jlime.jd.JobNode;
 import edu.jlime.jd.job.Job;
-import gnu.trove.set.hash.TIntHashSet;
 
 public class GraphGet implements Job<int[]> {
 
@@ -25,11 +22,7 @@ public class GraphGet implements Job<int[]> {
 	public int[] call(JobContext ctx, JobNode peer) throws Exception {
 		PersistentIntIntArrayMap dkvs = PersistentIntIntArrayMap.getMap(map,
 				ctx);
-		TIntHashSet userList = null;
-		userList = dkvs.getSetOfUsers(data);
-		int[] ret = userList.toArray();
-		Arrays.sort(ret);
-		return ret;
+		return dkvs.getSetOfUsers(data);
 	}
 
 }

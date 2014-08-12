@@ -1,6 +1,7 @@
 package edu.jlime.collections.intintarray.db;
 
 import java.io.Closeable;
+import java.util.List;
 
 import edu.jlime.collections.intintarray.client.jobs.StoreConfig;
 import edu.jlime.util.DataTypeUtils;
@@ -36,5 +37,7 @@ public abstract class Store implements Closeable {
 	public abstract void close();
 
 	public void commit() {
-	};
+	}
+
+	public abstract List<byte[]> loadAll(int[] key) throws Exception;
 }

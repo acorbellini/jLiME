@@ -1,7 +1,6 @@
 package edu.jlime.collections.adjacencygraph.get;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -68,7 +67,6 @@ public class GetMR extends GraphMR<int[], int[]> {
 		// if (log.isDebugEnabled())
 		log.info("Finished obtaining results for Get MR");
 		int[] ret = res.toArray();
-		Arrays.sort(ret);
 		return ret;
 	}
 }

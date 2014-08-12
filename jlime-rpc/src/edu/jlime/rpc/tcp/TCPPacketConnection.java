@@ -1,7 +1,5 @@
 package edu.jlime.rpc.tcp;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -12,8 +10,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.log4j.Logger;
 
-import edu.jlime.util.ByteBuffer;
-import edu.jlime.util.IntUtils;
+import edu.jlime.util.DataTypeUtils;
 import edu.jlime.util.StreamUtils;
 
 class TCPPacketConnection {
@@ -50,7 +47,8 @@ class TCPPacketConnection {
 		this.lastTimeUsed = System.currentTimeMillis();
 		// is = new BufferedInputStream(sock.getInputStream(), input_buffer);
 		is = sock.getInputStream();
-		os = new BufferedOutputStream(sock.getOutputStream());
+		// os = new BufferedOutputStream(sock.getOutputStream());
+		os = sock.getOutputStream();
 		closeTimer = new TimerTask() {
 
 			@Override
@@ -94,7 +92,7 @@ class TCPPacketConnection {
 			}
 			if (log.isDebugEnabled())
 				log.debug("Writing to " + conn);
-			os.write(IntUtils.intToByteArray(id));
+			os.write(DataTypeUtils.intToByteArray(id));
 			this.lastTimeUsed = System.currentTimeMillis();
 			if (id >= 0)
 				os.write(out);

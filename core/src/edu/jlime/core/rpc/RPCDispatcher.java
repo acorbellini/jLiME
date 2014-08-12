@@ -22,7 +22,6 @@ import edu.jlime.core.marshalling.ClientClassLoader;
 import edu.jlime.core.marshalling.Marshaller;
 import edu.jlime.core.marshalling.PeerClassLoader;
 import edu.jlime.metrics.metric.Metrics;
-import edu.jlime.util.ByteBuffer;
 import edu.jlime.util.StreamUtils;
 
 public class RPCDispatcher implements ClassLoaderProvider, DataReceiver {

@@ -7,12 +7,11 @@ import edu.jlime.core.stream.RemoteInputStream;
 import edu.jlime.core.stream.RemoteOutputStream;
 import edu.jlime.jd.JobNode;
 import edu.jlime.jd.job.StreamJob;
-import edu.jlime.util.IntUtils;
+import edu.jlime.util.ByteBuffer;
+import edu.jlime.util.DataTypeUtils;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.TIntIntHashMap;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -21,12 +20,12 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
-public class RemoteCountQuery extends CompositeQuery<int[], TIntIntHashMap>
-		implements CountQuery {
+public class RemoteCountQuery extends CompositeQuery<int[], byte[]> implements
+		CountQuery {
 
-	private static final int READ_BUFFER_SIZE = 128 * 1024;
+	private static final int READ_BUFFER_SIZE = 32 * 1024;
 
-	private static final int CACHE_THRESHOLD = 5000000;
+	private static final int CACHE_THRESHOLD = 2000000;
 
 	private static final long serialVersionUID = 5030949972656440876L;
 
@@ -41,7 +40,7 @@ public class RemoteCountQuery extends CompositeQuery<int[], TIntIntHashMap>
 	}
 
 	@Override
-	public TIntIntHashMap doExec(JobContext c) throws Exception {
+	public byte[] doExec(JobContext c) throws Exception {
 		final Logger log = Logger.getLogger(RemoteCountQuery.class);
 		int[] data = getQuery().exec(c);
 		int[] inverted = Arrays.copyOf(data, data.length);
@@ -50,15 +49,17 @@ public class RemoteCountQuery extends CompositeQuery<int[], TIntIntHashMap>
 				inverted[i] = -1 * data[i];
 
 		final Map<JobNode, TIntArrayList> map = getMapper().map(inverted, c);
-		final TIntIntHashMap res = new TIntIntHashMap();
+		final TIntIntHashMap res = new TIntIntHashMap(20000000);
 		StreamForkJoin sfj = new StreamForkJoin() {
 			@Override
 			protected void send(RemoteOutputStream os, JobNode p) {
 				log.info("Sending followers/followees to count to " + p);
 				try {
 					// BufferedOutputStream dos = new BufferedOutputStream(os);
-					os.write(IntUtils.intArrayToByteArray(map.get(p).toArray()));
-					log.info("RemoteCountQuery: Finished sending followers/followees to count to " + p);
+					os.write(DataTypeUtils.intArrayToByteArray(map.get(p)
+							.toArray()));
+					log.info("RemoteCountQuery: Finished sending followers/followees to count to "
+							+ p);
 					os.close();
 				} catch (IOException e1) {
 					e1.printStackTrace();
@@ -69,21 +70,24 @@ public class RemoteCountQuery extends CompositeQuery<int[], TIntIntHashMap>
 			@Override
 			protected void receive(RemoteInputStream input, JobNode p) {
 				// BufferedInputStream input = new BufferedInputStream(is);
+				log.info("Receiving Count Stream Job from " + p);
 				TIntIntHashMap cached = new TIntIntHashMap();
 				try {
 					byte[] buffer = new byte[READ_BUFFER_SIZE];
 					int read = 0;
 					while ((read = input.read(buffer)) != -1)
 						for (int i = 0; i < read / 4; i += 2) {
-							int k = IntUtils.byteArrayToInt(buffer, i * 4);
-							int v = IntUtils.byteArrayToInt(buffer, i * 4 + 4);
+							int k = DataTypeUtils.byteArrayToInt(buffer, i * 4);
+							int v = DataTypeUtils.byteArrayToInt(buffer,
+									i * 4 + 4);
 							cached.adjustOrPutValue(k, v, v);
 							if (cached.size() > CACHE_THRESHOLD) {
+								System.out.println("Flushing cache.");
 								flushCache(res, cached);
 							}
 						}
 				} catch (EOFException e) {
-					log.info("Finished reading.");
+
 				} catch (Exception e) {
 					e.printStackTrace();
 				} finally {
@@ -93,6 +97,7 @@ public class RemoteCountQuery extends CompositeQuery<int[], TIntIntHashMap>
 						e.printStackTrace();
 					}
 				}
+				log.info("Finished reading from " + p);
 				if (!cached.isEmpty())
 					flushCache(res, cached);
 
@@ -121,8 +126,10 @@ public class RemoteCountQuery extends CompositeQuery<int[], TIntIntHashMap>
 				res.remove(u);
 			}
 		}
-
-		return res;
+		ByteBuffer writer = new ByteBuffer();
+		writer.putByteArray(DataTypeUtils.intArrayToByteArray(res.keys()));
+		writer.putByteArray(DataTypeUtils.intArrayToByteArray(res.values()));
+		return writer.build();
 	}
 
 	@Override

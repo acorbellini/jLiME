@@ -1,6 +1,7 @@
 package edu.jlime.collections.intintarray.db;
 
 import java.io.File;
+import java.util.List;
 
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
@@ -39,6 +40,12 @@ public class MapDB extends Store {
 	@Override
 	public void commit() {
 		db.commit();
+	}
+
+	@Override
+	public List<byte[]> loadAll(int[] key) throws Exception {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

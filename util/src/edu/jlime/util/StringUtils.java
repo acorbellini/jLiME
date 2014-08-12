@@ -48,4 +48,9 @@ public class StringUtils {
 		return String.format("%dh:%02dm:%02ds:%02dms", sinMS / 3600,
 				(sinMS % 3600) / 60, (sinMS % 60), s % 1000);
 	}
+
+	public static String printDEFTitle() {
+
+		return printDEFTitle(new String[] {});
+	}
 }

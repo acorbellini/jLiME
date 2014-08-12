@@ -9,6 +9,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 
 public class H2 extends Store {
 
@@ -153,6 +154,12 @@ public class H2 extends Store {
 			e.printStackTrace();
 		}
 
+	}
+
+	@Override
+	public List<byte[]> loadAll(int[] key) throws Exception {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

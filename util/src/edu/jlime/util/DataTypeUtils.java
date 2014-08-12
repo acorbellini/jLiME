@@ -5,22 +5,33 @@ import java.nio.IntBuffer;
 
 public class DataTypeUtils {
 
-	public static int byteArrayToInt(byte[] b, int init) {
-		return b[init + 3] & 0xFF | (b[init + 2] & 0xFF) << 8
-				| (b[init + 1] & 0xFF) << 16 | (b[init + 0] & 0xFF) << 24;
-	}
-
 	public static int byteArrayToInt(byte[] b) {
 		return byteArrayToInt(b, 0);
 	}
 
+	public static byte[] intToByteArray(int a) {
+		byte[] ret = new byte[4];
+		intToByteArray(a, 0, ret);
+		return ret;
+	}
+
+	public static int byteArrayToInt(byte[] b, int i) {
+		return b[i + 3] & 0xFF | (b[i + 2] & 0xFF) << 8
+				| (b[i + 1] & 0xFF) << 16 | (b[i] & 0xFF) << 24;
+	}
+
+	public static void intToByteArray(int a, int i, byte[] ret) {
+		ret[i + 3] = (byte) (a & 0xFF);
+		ret[i + 2] = (byte) ((a >> 8) & 0xFF);
+		ret[i + 1] = (byte) ((a >> 16) & 0xFF);
+		ret[i + 0] = (byte) ((a >> 24) & 0xFF);
+
+	}
+
 	public static int[] byteArrayToIntArray(byte[] data) {
 		int[] ret = new int[data.length / 4];
-		for (int i = 0; i < (data.length / 4); i++) {
-			byte[] d = new byte[] { data[i * 4 + 0], data[i * 4 + 1],
-					data[i * 4 + 2], data[i * 4 + 3] };
-			ret[i] = byteArrayToInt(d);
-		}
+		for (int i = 0; i < (data.length / 4); i++)
+			ret[i] = byteArrayToInt(data, i * 4);
 		return ret;
 	}
 
@@ -29,15 +40,6 @@ public class DataTypeUtils {
 		IntBuffer intBuffer = byteBuffer.asIntBuffer();
 		intBuffer.put(data);
 		return byteBuffer.array();
-	}
-
-	public static byte[] intToByteArray(int a) {
-		byte[] ret = new byte[4];
-		ret[3] = (byte) (a & 0xFF);
-		ret[2] = (byte) ((a >> 8) & 0xFF);
-		ret[1] = (byte) ((a >> 16) & 0xFF);
-		ret[0] = (byte) ((a >> 24) & 0xFF);
-		return ret;
 	}
 
 	public static byte[] longToByteArray(long val) {

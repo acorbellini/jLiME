@@ -11,7 +11,6 @@ import java.util.concurrent.Future;
 import org.apache.log4j.Logger;
 
 import edu.jlime.client.JobContext;
-import edu.jlime.collections.adjacencygraph.count.DistHashCountMR;
 import edu.jlime.collections.intintarray.client.jobs.GetJob;
 import edu.jlime.collections.intintarray.client.jobs.GetSetOfUsersJob;
 import edu.jlime.collections.intintarray.client.jobs.MultiGetJob;
@@ -28,7 +27,7 @@ import edu.jlime.jd.job.StreamJob;
 import edu.jlime.jd.task.ForkJoinTask;
 import edu.jlime.jd.task.ResultListener;
 import edu.jlime.util.ByteBuffer;
-import edu.jlime.util.IntUtils;
+import edu.jlime.util.DataTypeUtils;
 import gnu.trove.iterator.TIntIterator;
 import gnu.trove.iterator.TIntObjectIterator;
 import gnu.trove.list.array.TIntArrayList;
@@ -157,7 +156,7 @@ public class PersistentIntIntArrayMap {
 		return res;
 	}
 
-	public TIntHashSet getSetOfUsers(int[] array) throws Exception {
+	public int[] getSetOfUsers(int[] array) throws Exception {
 
 		HashMap<JobNode, TIntArrayList> byServer = hashKeys(array);
 		log.info("Obtaining Futures of executing CountListsJob");
@@ -169,7 +168,7 @@ public class PersistentIntIntArrayMap {
 					store);
 			mgr.putJob(j, p);
 		}
-		return mgr.execute(new ResultListener<int[], TIntHashSet>() {
+		return mgr.execute(new ResultListener<int[], int[]>() {
 			TIntHashSet hashToReturn = new TIntHashSet();
 
 			@Override
@@ -181,8 +180,9 @@ public class PersistentIntIntArrayMap {
 			}
 
 			@Override
-			public TIntHashSet onFinished() {
-				return hashToReturn;
+			public int[] onFinished() {
+				int[] array = hashToReturn.toArray();
+				return array;
 			}
 
 			@Override
@@ -485,7 +485,7 @@ public class PersistentIntIntArrayMap {
 				int read = 0;
 				while ((read = input.read(buffer)) != -1)
 					for (int i = 0; i < read / 4; i++) {
-						int k = IntUtils.byteArrayToInt(buffer, i * 4);
+						int k = DataTypeUtils.byteArrayToInt(buffer, i * 4);
 						kList.add(k);
 					}
 			} catch (Exception e) {
@@ -502,12 +502,13 @@ public class PersistentIntIntArrayMap {
 				int u = it.next();
 				byte[] valAsBytes = store.load(u);
 				if (valAsBytes != null) {
-					set.addAll(IntUtils.byteArrayToIntArray(valAsBytes));
+					set.addAll(DataTypeUtils.byteArrayToIntArray(valAsBytes));
 				}
 			}
 
 			int[] array = set.toArray();
-			byte[] intArrayToByteArray = IntUtils.intArrayToByteArray(array);
+			byte[] intArrayToByteArray = DataTypeUtils
+					.intArrayToByteArray(array);
 			set.clear();
 			log.info("Sending multiple keys " + array.length + " from store");
 			outputStream.write(intArrayToByteArray);

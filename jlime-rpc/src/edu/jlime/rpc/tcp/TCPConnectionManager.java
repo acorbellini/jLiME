@@ -1,6 +1,5 @@
 package edu.jlime.rpc.tcp;
 
-import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -171,8 +170,8 @@ class TCPConnectionManager {
 				// TODO Careful
 				// sock.setTcpNoDelay(true);
 				// sock.setReuseAddress(true);
-				sock.setReceiveBufferSize(rcvr.config.tcp_rcv_buffer);
-				sock.setSendBufferSize(rcvr.config.tcp_send_buffer);
+				// sock.setReceiveBufferSize(rcvr.config.tcp_rcv_buffer);
+				// sock.setSendBufferSize(rcvr.config.tcp_send_buffer);
 				sock.connect(new InetSocketAddress(addr.getSockTo()
 						.getAddress(), addr.getSockTo().getPort()));
 

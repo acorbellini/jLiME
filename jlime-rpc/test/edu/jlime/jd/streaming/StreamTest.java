@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.util.Arrays;
 import java.util.Scanner;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -23,8 +24,8 @@ import edu.jlime.util.RingQueue;
 public class StreamTest {
 
 	private static final int INT_ARRAY_SIZE = 1;
-	private static final int BUFFER_SIZE = 1 * 1024 * 1024;
-	private static final int READ_BUFFER = 512 * 1024;
+	private static final int DATA_SIZE = 1024 * 1024 * 1024;
+	private static final int READ_BUFFER = 128 * 1024;
 
 	public static class StreamTestJob extends StreamJob {
 
@@ -43,12 +44,12 @@ public class StreamTest {
 			long count = 0;
 			// BufferedInputStream reader = new
 			// BufferedInputStream(inputStream);
-			InputStream reader = inputStream;
+			InputStream input = inputStream;
 			// ((TCPInputStream) inputStream).getIs();
 			try {
 				byte[] four = new byte[READ_BUFFER];
 				int read = 0;
-				while ((read = reader.read(four)) != -1) {
+				while ((read = input.read(four)) != -1) {
 					// for (int i = 0; i < read / 4; i++) {
 					// IntUtils.byteArrayToInt(four, i * 4);
 					// count++;
@@ -130,23 +131,35 @@ public class StreamTest {
 		};
 		thread.start();
 
-		byte[] ba = new byte[BUFFER_SIZE];
+		byte[] ba = new byte[DATA_SIZE];
 		int[] array = new int[INT_ARRAY_SIZE];
 		for (int j = 0; j < array.length; j++) {
 			array[j] = (int) (Math.random() * 1000);
 		}
-		ByteBuffer buffer = new ByteBuffer(4 * 8 * 1024);
+
+		int chunks = (int) Math.ceil(DATA_SIZE / (double) READ_BUFFER);
+
+		// ByteBuffer buffer = new ByteBuffer(4 * 8 * 1024);
 		for (int i = 0; i < INT_ARRAY_SIZE; i++) {
+			// int remaining = DATA_SIZE;
+			// for (int j = 0; j < chunks; j++) {
+			// int init_chunk = j * READ_BUFFER;
+			// int len_chunk = Math.min(READ_BUFFER, remaining);
+			// q.put(Arrays
+			// .copyOfRange(ba, init_chunk, init_chunk + len_chunk));
+			// remaining -= READ_BUFFER;
+			// }
+
 			// for (int j = 0; j < 8 * 1024; j++)
 			// buffer.putInt(j);
 			// q.put(buffer.build());
 			// buffer.reset();
-			q.put(ba);
+
 			// for (int j = 0; j < 8 * 1024; j++)
 			// q.add(IntUtils.intToByteArray(j));
 			//
 			// os.write(ba);
-			// q.put(ba);
+			q.put(ba);
 		}
 
 		finished.set(true);

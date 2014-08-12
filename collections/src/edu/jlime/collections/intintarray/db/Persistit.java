@@ -1,5 +1,7 @@
 package edu.jlime.collections.intintarray.db;
 
+import java.util.List;
+
 public class Persistit extends Store {
 
 	// private String path;
@@ -22,6 +24,12 @@ public class Persistit extends Store {
 	@Override
 	public void close() {
 
+	}
+
+	@Override
+	public List<byte[]> loadAll(int[] key) throws Exception {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

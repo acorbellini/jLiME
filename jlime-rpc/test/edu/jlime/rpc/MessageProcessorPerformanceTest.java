@@ -12,7 +12,7 @@ import edu.jlime.rpc.message.Message;
 import edu.jlime.rpc.message.MessageListener;
 import edu.jlime.rpc.message.MessageProcessor;
 import edu.jlime.rpc.message.MessageType;
-import edu.jlime.util.IntUtils;
+import edu.jlime.util.DataTypeUtils;
 
 public class MessageProcessorPerformanceTest {
 
@@ -57,8 +57,8 @@ public class MessageProcessorPerformanceTest {
 				int iter = ITERMAX / 2;
 				while (iter < ITERMAX) {
 					mp.queue(Message.newOutDataMessage(
-							IntUtils.intToByteArray(iter), MessageType.ACK,
-							null));
+							DataTypeUtils.intToByteArray(iter),
+							MessageType.ACK, null));
 					iter++;
 				}
 			};
@@ -68,8 +68,8 @@ public class MessageProcessorPerformanceTest {
 		t.start();
 		int iter = 0;
 		while (iter < ITERMAX / 2) {
-			mp.queue(Message.newOutDataMessage(IntUtils.intToByteArray(iter),
-					MessageType.ACK, null));
+			mp.queue(Message.newOutDataMessage(
+					DataTypeUtils.intToByteArray(iter), MessageType.ACK, null));
 			iter++;
 		}
 	}

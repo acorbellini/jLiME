@@ -1,6 +1,5 @@
 package edu.jlime.rpc.tcp;
 
-import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -80,8 +79,8 @@ public class TCP extends NetworkProtocol implements DataReceiver {
 		final Socket conn = getServerSocket().accept();
 		// TODO Careful
 		// conn.setTcpNoDelay(true);
-		conn.setReceiveBufferSize(config.tcp_rcv_buffer);
-		conn.setSendBufferSize(config.tcp_send_buffer);
+		// conn.setReceiveBufferSize(config.tcp_rcv_buffer);
+		// conn.setSendBufferSize(config.tcp_send_buffer);
 		InputStream inputStream = conn.getInputStream();
 		StreamType type = StreamType.fromID((byte) inputStream.read());
 		UUID id = TCPConnectionManager.getID(inputStream);

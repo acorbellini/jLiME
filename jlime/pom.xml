@@ -108,13 +108,13 @@
 	</build>
 	<modules>
 		<module>../core</module>
-		<module>../httpserver</module>
+		
 		<module>../collections</module>
 		<module>../linkprediction</module>
-		<module>../webapp</module>
-		<module>../jgroups</module>
+		
+		
 		<module>../jlime-rpc</module>
-		<module>../graphly</module>
+		
 		<module>../jobdispatcher</module>
 		<module>../metrics</module>
 		<module>../server</module>

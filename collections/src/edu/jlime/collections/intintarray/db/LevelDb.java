@@ -3,14 +3,19 @@ package edu.jlime.collections.intintarray.db;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
 import org.fusesource.leveldbjni.JniDBFactory;
 import org.iq80.leveldb.DB;
 import org.iq80.leveldb.DBException;
+import org.iq80.leveldb.DBIterator;
 import org.iq80.leveldb.Options;
 import org.iq80.leveldb.WriteBatch;
 
@@ -49,9 +54,9 @@ public class LevelDb extends Store {
 				if (db == null) {
 					options = new Options();
 					options.createIfMissing(true);
-					options.cacheSize(100 * 1024 * 1024);
-					options.blockSize(256 * 1024);
-					JniDBFactory.pushMemoryPool(25 * 1024 * 1024);
+					// options.cacheSize(100 * 1024 * 1024);
+					// options.blockSize(256 * 1024);
+					// JniDBFactory.pushMemoryPool(25 * 1024 * 1024);
 
 					File dirDB = new File(sPath + "/" + sn);
 					if (!dirDB.exists())
@@ -72,6 +77,30 @@ public class LevelDb extends Store {
 	public byte[] load(int key) throws Exception {
 		byte[] res = getDb().get(DataTypeUtils.intToByteArray(key));
 		return res;
+	}
+
+	@Override
+	public List<byte[]> loadAll(int[] key) throws Exception {
+		List<byte[]> res = new ArrayList<byte[]>();
+		DBIterator it = db.iterator();
+
+		try {
+			for (it.seek(bytes(key[0])); it.hasNext()
+					&& !Arrays.equals(it.peekNext().getKey(),
+							bytes(key[key.length - 1])); it.next()) {
+				Entry<byte[], byte[]> e = it.peekNext();
+				res.add(e.getValue());
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			it.close();
+		}
+		return res;
+	}
+
+	private byte[] bytes(int key) {
+		return DataTypeUtils.intToByteArray(key);
 	}
 
 	public int[] load(String key) throws DBException, Exception {

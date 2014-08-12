@@ -8,21 +8,24 @@ public class StreamUtils {
 
 	public static byte[] read(InputStream inputStream, int size)
 			throws IOException {
-		byte[] data = new byte[size];
+		byte[] data = new byte[BUFFER_SIZE];
 		int read = 0;
-		int total = 0;
+		int remaining = size;
 		// byte[] buffer = new byte[BUFFER_SIZE];
-		while (total != size
-				&& (read = inputStream.read(data, total, size - total)) != -1) {
-			total += read;
+		ByteBuffer buff = new ByteBuffer(size);
+		while (remaining != 0
+				&& (read = inputStream.read(data, 0,
+						Math.min(remaining, BUFFER_SIZE))) != -1) {
+			buff.putRawByteArray(data, read);
+			remaining -= read;
 		}
-		if (read == -1)
+		if (read == -1 && remaining != size)
 			throw new IOException("Stream closed before finishing read.");
-		return data;
+		return buff.build();
 	}
 
 	public static int readInt(InputStream is) throws IOException {
-		return IntUtils.byteArrayToInt(StreamUtils.read(is, 4));
+		return DataTypeUtils.byteArrayToInt(StreamUtils.read(is, 4));
 	}
 
 	public static byte[] readFully(InputStream bis) throws IOException {

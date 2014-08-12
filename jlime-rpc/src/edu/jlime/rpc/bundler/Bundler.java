@@ -10,7 +10,7 @@ import edu.jlime.rpc.message.Address;
 import edu.jlime.rpc.message.Message;
 import edu.jlime.rpc.message.MessageProcessor;
 import edu.jlime.rpc.message.MessageType;
-import edu.jlime.util.IntUtils;
+import edu.jlime.util.DataTypeUtils;
 
 public class Bundler {
 
@@ -82,8 +82,8 @@ public class Bundler {
 		if (msgAsBytes.length + 4 + pos >= bundle.length)
 			sendBundle();
 
-		System.arraycopy(IntUtils.intToByteArray(msgAsBytes.length), 0, bundle,
-				pos, 4);
+		System.arraycopy(DataTypeUtils.intToByteArray(msgAsBytes.length), 0,
+				bundle, pos, 4);
 		System.arraycopy(msgAsBytes, 0, bundle, pos + 4, msgAsBytes.length);
 
 		pos += msgAsBytes.length + 4;

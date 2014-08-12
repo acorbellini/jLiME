@@ -20,21 +20,6 @@
 			<version>2.5.0</version>
 		</dependency>
 		<dependency>
-			<groupId>org.fusesource.leveldbjni</groupId>
-			<artifactId>leveldbjni</artifactId>
-			<version>1.8</version>
-		</dependency>
-		<dependency>
-			<groupId>org.fusesource.leveldbjni</groupId>
-			<artifactId>leveldbjni-win64</artifactId>
-			<version>1.8</version>
-		</dependency>
-		<dependency>
-			<groupId>org.fusesource.leveldbjni</groupId>
-			<artifactId>leveldbjni-linux64</artifactId>
-			<version>1.8</version>
-		</dependency>
-		<dependency>
 			<groupId>org.mapdb</groupId>
 			<artifactId>mapdb</artifactId>
 			<version>1.0.4</version>
@@ -52,4 +37,29 @@
 		<groupId>edu.jlime</groupId>
 	</parent>
 	<name>jLiME Collections</name>
+
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<configuration>
+							<tasks>
+								<fileset id="libs" dir="./lib" />
+								<copy todir="../jlime/dist/lib">
+									<fileset refid="libs" />
+								</copy>								
+							</tasks>
+						</configuration>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
 </project>

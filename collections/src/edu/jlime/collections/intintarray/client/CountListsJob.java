@@ -1,6 +1,13 @@
 package edu.jlime.collections.intintarray.client;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import org.apache.log4j.Logger;
 
@@ -11,6 +18,7 @@ import edu.jlime.jd.JobNode;
 import edu.jlime.jd.job.Job;
 import edu.jlime.util.ByteBuffer;
 import edu.jlime.util.DataTypeUtils;
+import gnu.trove.iterator.TIntIntIterator;
 import gnu.trove.map.hash.TIntIntHashMap;
 
 public class CountListsJob implements Job<byte[]> {
@@ -26,23 +34,100 @@ public class CountListsJob implements Job<byte[]> {
 		this.storeName = name;
 	}
 
+	ExecutorService exec = Executors.newFixedThreadPool(10);
+
+	private static class SubCount implements Callable<TIntIntHashMap> {
+
+		private int[] subset;
+		private Store store;
+
+		public SubCount(int[] subset, Store store) {
+			this.subset = subset;
+			this.store = store;
+		}
+
+		@Override
+		public TIntIntHashMap call() throws Exception {
+			TIntIntHashMap hash = new TIntIntHashMap();
+			// Arrays.sort(subset);
+			System.out.println("Obtaining a subset of " + subset.length);
+			for (int u : subset) {
+				byte[] valAsBytes = store.load(u);
+				if (valAsBytes != null) {
+					for (int i : DataTypeUtils.byteArrayToIntArray(valAsBytes))
+						hash.adjustOrPutValue(i, 1, 1);
+				}
+			}
+			System.out.println("Finished obtaining a subset of "
+					+ subset.length);
+			return hash;
+		}
+	}
+
 	@Override
 	public byte[] call(JobContext ctx, JobNode peer) throws Exception {
 		Logger log = Logger.getLogger(MultiGetJob.class);
 		log.info("Obtaining multiple keys (" + kList.length + ") from store");
 		TIntIntHashMap hash = new TIntIntHashMap();
 		Store store = (Store) ctx.get(storeName);
-		for (int u : kList) {
-			byte[] valAsBytes = store.load(u);
-			if (valAsBytes != null) {
-				int[] obtained = DataTypeUtils.byteArrayToIntArray(valAsBytes);
-				Arrays.sort(obtained);
-				for (int i : obtained) {
-					hash.adjustOrPutValue(i, 1, 1);
+		List<Future<TIntIntHashMap>> futures = new ArrayList<>();
+		int listSize = 1000000;
+		int remaining = kList.length;
+		int lists = (int) Math.ceil(kList.length / (double) listSize);
+		for (int i = 0; i < lists; i++) {
+			int init_chunk = i * listSize;
+			int len_chunk = Math.min(remaining, listSize);
+
+			if (init_chunk > (init_chunk + len_chunk)) {
+				System.out.println(init_chunk);
+				System.out.println(len_chunk);
+				System.out.println(remaining);
+
+			}
+
+			futures.add(exec.submit(new SubCount(Arrays.copyOfRange(kList,
+					init_chunk, init_chunk + len_chunk), store)));
+			remaining -= listSize;
+		}
+
+		// List<byte[]> collected = new ArrayList<>();
+		// Arrays.sort(kList);
+		// // List<byte[]> collected = store.loadAll(kList);
+		// for (int u : kList) {
+		// byte[] valAsBytes = store.load(u);
+		// if (valAsBytes != null) {
+		// collected.add(valAsBytes);
+		//
+		// }
+		// // res.put(u, new int[] {});
+		// }
+
+		exec.shutdown();
+		log.info("Merging.");
+		while (!futures.isEmpty()) {
+			for (Iterator<Future<TIntIntHashMap>> iterator = futures.iterator(); iterator
+					.hasNext();) {
+				Future<TIntIntHashMap> future = iterator.next();
+				if (future.isDone()) {
+					TIntIntIterator it = future.get().iterator();
+					while (it.hasNext()) {
+						it.advance();
+						hash.adjustOrPutValue(it.key(), it.value(), it.value());
+					}
+					iterator.remove();
 				}
 			}
-			// res.put(u, new int[] {});
+			Thread.sleep(1);
 		}
+
+		// for (Iterator<byte[]> iterator = collected.iterator(); iterator
+		// .hasNext();) {
+		// byte[] bs = iterator.next();
+		// for (int b : DataTypeUtils.byteArrayToIntArray(bs)) {
+		// hash.adjustOrPutValue(b, 1, 1);
+		// }
+		// }
+
 		log.info("Returning result for CountListsJob with " + hash.size()
 				+ " users.");
 		ByteBuffer writer = new ByteBuffer();

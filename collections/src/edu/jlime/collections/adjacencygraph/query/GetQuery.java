@@ -1,7 +1,5 @@
 package edu.jlime.collections.adjacencygraph.query;
 
-import java.util.Arrays;
-
 import org.apache.log4j.Logger;
 
 import edu.jlime.client.JobContext;
@@ -32,18 +30,20 @@ public class GetQuery extends RemoteListQuery {
 	public int[] doExec(JobContext c) throws Exception {
 		Logger log = Logger.getLogger(GetQuery.class);
 
-		if (log.isDebugEnabled())
-			log.debug("Executing MR query with mapper on map " + getMapName());
+		// if (log.isDebugEnabled())
+		log.info("Executing MR query with mapper on map " + getMapName());
 
 		int[] subres = new GetMR(query.exec(c), getMapName(), getMapper(), type)
 				.exec(c.getCluster());
 		TIntHashSet set = new TIntHashSet(subres);
+		log.info("Removing toRemove users.");
 		if (getToRemove() != null)
 			set.removeAll(getToRemove().query());
+		log.info("Filtering users.");
 		if (getFilter() != null)
 			set.retainAll(getFilter().query());
 		int[] array = set.toArray();
-		Arrays.sort(array);
+		// Arrays.sort(array);
 		return array;
 	}
 
