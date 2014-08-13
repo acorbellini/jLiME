@@ -30,8 +30,6 @@ class CountStreamJob extends StreamJob {
 
 		TIntArrayList data = new TIntArrayList();
 
-		// BufferedInputStream input = new BufferedInputStream(inputStream,
-		// 128 * 1024);
 		log.info("CountStreamJob: Reading input data.");
 		try {
 			byte[] buffer = new byte[READ_BUFFER_SIZE];
@@ -63,8 +61,6 @@ class CountStreamJob extends StreamJob {
 
 		log.info("CountStreamJob: Finished calling DKVS get, obtained "
 				+ adyacents.size());
-
-		// BufferedOutputStream out = new BufferedOutputStream(outputStream);
 
 		log.info("CountStreamJob: Converting obtained hash to bytearray");
 		byte[] ret = new byte[4 * 2 * adyacents.size()];

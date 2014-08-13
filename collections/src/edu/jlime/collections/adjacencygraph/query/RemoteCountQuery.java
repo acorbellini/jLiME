@@ -45,7 +45,7 @@ public class RemoteCountQuery extends CompositeQuery<int[], TIntIntHashMap>
 
 			TIntIntHashMap adyacents = null;
 			try {
-				log.info("CountStreamJob: Calling DKVS get.");
+				// log.info("CountStreamJob: Calling DKVS get.");
 				adyacents = dkvs.countLists(data.toArray());
 			} catch (Exception e1) {
 				e1.printStackTrace();
@@ -81,65 +81,17 @@ public class RemoteCountQuery extends CompositeQuery<int[], TIntIntHashMap>
 				inverted[i] = -1 * data[i];
 
 		final Map<JobNode, TIntArrayList> map = getMapper().map(inverted, c);
-		//
-		// ForkJoinTask<RemoteReference<TIntIntHashMap>> fjt = new
-		// ForkJoinTask<RemoteReference<TIntIntHashMap>>();
-		// for (Entry<JobNode, TIntArrayList> e : map.entrySet()) {
-		// JobNode p = e.getKey();
-		// CountJob j = new CountJob(e.getValue(), getMapName());
-		// fjt.putJob(j, p);
-		// }
-		//
-		// final TIntIntHashMap res = fjt
-		// .execute(new ResultListener<RemoteReference<TIntIntHashMap>,
-		// TIntIntHashMap>() {
-		// TIntIntHashMap hash = null;
-		//
-		// @Override
-		// public void onSuccess(RemoteReference<TIntIntHashMap> result) {
-		// try {
-		// synchronized (this) {
-		// if (hash == null) {
-		// log.info("First result");
-		// hash = result.get();
-		// } else {
-		// log.info("Inserting result into hash");
-		// TIntIntIterator it = result.get()
-		// .iterator();
-		// while (it.hasNext()) {
-		// it.advance();
-		// hash.adjustOrPutValue(it.key(),
-		// it.value(), it.value());
-		// }
-		// }
-		// }
-		// } catch (Exception e) {
-		// e.printStackTrace();
-		// }
-		// }
-		//
-		// @Override
-		// public TIntIntHashMap onFinished() {
-		// return hash;
-		// }
-		//
-		// @Override
-		// public void onFailure(Exception res) {
-		// res.printStackTrace();
-		// }
-		// });
 
 		final TIntIntHashMap res = new TIntIntHashMap();
 		StreamForkJoin sfj = new StreamForkJoin() {
 			@Override
 			protected void send(RemoteOutputStream os, JobNode p) {
-				log.info("Sending followers/followees to count to " + p);
+				// log.info("Sending followers/followees to count to " + p);
 				try {
-					// BufferedOutputStream dos = new BufferedOutputStream(os);
 					os.write(DataTypeUtils.intArrayToByteArray(map.get(p)
 							.toArray()));
-					log.info("RemoteCountQuery: Finished sending followers/followees to count to "
-							+ p);
+					// log.info("RemoteCountQuery: Finished sending followers/followees to count to "
+					// + p);
 					os.close();
 				} catch (IOException e1) {
 					e1.printStackTrace();
@@ -149,9 +101,9 @@ public class RemoteCountQuery extends CompositeQuery<int[], TIntIntHashMap>
 
 			@Override
 			protected void receive(RemoteInputStream input, JobNode p) {
-				// BufferedInputStream input = new BufferedInputStream(is);
-				log.info("Receiving Count Stream Job from " + p);
-				TIntArrayList cached = new TIntArrayList(CACHE_THRESHOLD);
+				// log.info("Receiving Count Stream Job from " + p);
+				int[] cached = new int[CACHE_THRESHOLD];
+				int count = 0;
 				try {
 					byte[] buffer = new byte[READ_BUFFER_SIZE];
 					int read = 0;
@@ -160,10 +112,11 @@ public class RemoteCountQuery extends CompositeQuery<int[], TIntIntHashMap>
 							int k = DataTypeUtils.byteArrayToInt(buffer, i * 4);
 							int v = DataTypeUtils.byteArrayToInt(buffer,
 									i * 4 + 4);
-							cached.add(k);
-							cached.add(v);
-							if (cached.size() > CACHE_THRESHOLD) {
-								flushCache(res, cached);
+							cached[count++] = k;
+							cached[count++] = v;
+							if (count == CACHE_THRESHOLD) {
+								flushCache(res, cached, count);
+								count = 0;
 							}
 						}
 				} catch (EOFException e) {
@@ -177,24 +130,12 @@ public class RemoteCountQuery extends CompositeQuery<int[], TIntIntHashMap>
 						e.printStackTrace();
 					}
 				}
+
+				if (count != 0)
+					flushCache(res, cached, count);
 				log.info("Finished reading from " + p);
-				if (!cached.isEmpty())
-					flushCache(res, cached);
 
 			}
-
-			private void flushCache(final TIntIntHashMap res,
-					TIntArrayList cached) {
-				synchronized (res) {
-					for (int i = 0; i < cached.size(); i += 2) {
-						int k = cached.get(i);
-						int v = cached.get(i + 1);
-						res.adjustOrPutValue(k, v, v);
-					}
-				}
-				cached.clear();
-			}
-
 		};
 		sfj.execute(new ArrayList<>(map.keySet()), new StreamJobFactory() {
 			@Override
@@ -207,7 +148,18 @@ public class RemoteCountQuery extends CompositeQuery<int[], TIntIntHashMap>
 				res.remove(u);
 			}
 		}
+		log.info("Finished RemoteCountQuery");
 		return res;
+	}
+
+	private void flushCache(final TIntIntHashMap res, int[] cached, int count) {
+		synchronized (res) {
+			for (int i = 0; i < count; i += 2) {
+				int k = cached[i];
+				int v = cached[i + 1];
+				res.adjustOrPutValue(k, v, v);
+			}
+		}
 	}
 
 	@Override

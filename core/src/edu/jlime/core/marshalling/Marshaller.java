@@ -3,7 +3,7 @@ package edu.jlime.core.marshalling;
 import org.apache.log4j.Logger;
 
 import edu.jlime.util.ByteBuffer;
-import edu.jlime.util.DEFByteArrayCache;
+import edu.jlime.util.compression.Compression;
 
 public class Marshaller {
 
@@ -19,8 +19,7 @@ public class Marshaller {
 		if (log.isDebugEnabled())
 			log.debug("Unmarshalling buffer of "
 					+ (array.length / (float) 1024) + " kb from " + originID);
-		// DEFByteBuffer buff = new
-		// DEFByteBuffer(Compression.uncompress(array));
+		// ByteBuffer buff = new ByteBuffer(Compression.uncompress(array));
 
 		ByteBuffer buff = new ByteBuffer(array);
 

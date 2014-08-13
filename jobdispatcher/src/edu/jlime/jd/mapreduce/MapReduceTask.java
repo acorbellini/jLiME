@@ -112,10 +112,11 @@ public abstract class MapReduceTask<T, R, SR> implements Job<R> {
 	public abstract R red(ArrayList<SR> subres);
 
 	public void result(SR subres) {
-		synchronized (subresults) {
-			if (subres != null && !dontCacheSubResults)
-				subresults.add(subres);
-		}
+		if (!dontCacheSubResults)
+			synchronized (subresults) {
+				if (subres != null && !dontCacheSubResults)
+					subresults.add(subres);
+			}
 		processSubResult(subres);
 		lock.release();
 	}

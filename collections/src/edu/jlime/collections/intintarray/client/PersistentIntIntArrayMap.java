@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.Future;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.log4j.Logger;
 
@@ -28,6 +29,7 @@ import edu.jlime.jd.task.ForkJoinTask;
 import edu.jlime.jd.task.ResultListener;
 import edu.jlime.util.ByteBuffer;
 import edu.jlime.util.DataTypeUtils;
+import gnu.trove.iterator.TIntIntIterator;
 import gnu.trove.iterator.TIntIterator;
 import gnu.trove.iterator.TIntObjectIterator;
 import gnu.trove.list.array.TIntArrayList;
@@ -357,32 +359,28 @@ public class PersistentIntIntArrayMap {
 		}
 		return mgr
 				.execute(new ResultListener<TIntIntHashMap, TIntIntHashMap>() {
-					List<TIntIntHashMap> subres = new ArrayList<>();
+					TIntIntHashMap hashToReturn = null;
+					ReentrantLock lock = new ReentrantLock();
 
 					@Override
 					public void onSuccess(TIntIntHashMap res) {
 						log.info("Received countLists subresult.");
-						synchronized (subres) {
-							subres.add(res);
+						lock.lock();
+						if (hashToReturn == null)
+							hashToReturn = res;
+						else {
+							TIntIntIterator it = res.iterator();
+							while (it.hasNext()) {
+								it.advance();
+								hashToReturn.adjustOrPutValue(it.key(),
+										it.value(), it.value());
+							}
 						}
+						lock.unlock();
 					}
 
 					@Override
 					public TIntIntHashMap onFinished() {
-						if (subres.size() == 1)
-							return subres.get(0);
-						TIntIntHashMap hashToReturn = new TIntIntHashMap();
-						for (TIntIntHashMap table : subres) {
-							if (hashToReturn.isEmpty())
-								hashToReturn.putAll(table);
-							else {
-								for (int k : table.keys()) {
-									int v = table.get(k);
-									hashToReturn.adjustOrPutValue(k, v, v);
-								}
-							}
-						}
-						log.info("Finished countLists");
 						return hashToReturn;
 					}
 

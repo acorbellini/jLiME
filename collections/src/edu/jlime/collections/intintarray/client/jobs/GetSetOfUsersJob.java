@@ -1,9 +1,6 @@
 package edu.jlime.collections.intintarray.client.jobs;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -17,7 +14,6 @@ import edu.jlime.jd.JobNode;
 import edu.jlime.jd.job.Job;
 import edu.jlime.util.DataTypeUtils;
 import edu.jlime.util.RingQueue;
-import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.set.hash.TIntHashSet;
 
 public class GetSetOfUsersJob implements Job<TIntHashSet> {
@@ -65,28 +61,11 @@ public class GetSetOfUsersJob implements Job<TIntHashSet> {
 		log.info("Obtaining multiple keys (" + kList.length + ") from store");
 		Store store = (Store) ctx.get(storeName);
 
-		// TIntHashSet hash = null;
-		// Arrays.sort(kList);
-		// for (int i : kList) {
-		// byte[] load = store.load(i);
-		// if (load != null) {
-		// int[] byteArrayToIntArray = DataTypeUtils
-		// .byteArrayToIntArray(load);
-		// if (hash == null)
-		// hash = new TIntHashSet(byteArrayToIntArray.length);
-		//
-		// hash.addAll(byteArrayToIntArray);
-		// }
-		// }
-		// log.info("Returning result for GetSetOfUsersJob with "
-		// + (hash != null ? hash.size() : null) + " users.");
-		// return hash;
-
-		final RingQueue queue = new RingQueue();
+		final RingQueue queue = new RingQueue(2 * 4 * 1024);
 		Future<TIntHashSet> fut = exec.submit(new Callable<TIntHashSet>() {
 			@Override
 			public TIntHashSet call() throws Exception {
-				TIntHashSet hash = null;
+				TIntHashSet hash = new TIntHashSet();
 				while (true) {
 					Object[] vals = queue.take();
 					for (Object bs : vals) {
@@ -95,24 +74,24 @@ public class GetSetOfUsersJob implements Job<TIntHashSet> {
 									+ hash.size() + " users.");
 							return hash;
 						}
-
 						int[] byteArrayToIntArray = DataTypeUtils
 								.byteArrayToIntArray((byte[]) bs);
-						if (hash == null)
-							hash = new TIntHashSet(byteArrayToIntArray.length);
 						hash.addAll(byteArrayToIntArray);
 					}
 				}
 			}
 		});
 		exec.shutdown();
+		// TIntHashSet hash = new TIntHashSet();
 		Arrays.sort(kList);
-		// List<byte[]> collected = store.loadAll(kList);
 		for (int u : kList) {
 			byte[] valAsBytes = store.load(u);
-			if (valAsBytes != null)
+			if (valAsBytes != null) {
 				queue.put(valAsBytes);
-			// res.put(u, new int[] {});
+				// int[] byteArrayToIntArray = DataTypeUtils
+				// .byteArrayToIntArray((byte[]) valAsBytes);
+				// hash.addAll(byteArrayToIntArray);
+			}
 		}
 		queue.put(null);
 

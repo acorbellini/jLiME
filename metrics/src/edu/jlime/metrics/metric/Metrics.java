@@ -30,7 +30,7 @@ public class Metrics implements Serializable, IMetrics {
 
 	private transient ArrayList<MetricsListener> listeners = new ArrayList<>();
 
-	private static final long FREQ = 3000;
+	private static final long FREQ = 5000;
 
 	public void stop() {
 		timer.cancel();

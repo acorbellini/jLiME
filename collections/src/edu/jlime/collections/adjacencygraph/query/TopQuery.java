@@ -49,33 +49,6 @@ public class TopQuery extends RemoteQuery<List<int[]>> {
 	public List<int[]> doExec(JobContext c) throws Exception {
 
 		final TIntIntHashMap countres = query.exec(c);
-		// int[] keys = countres.keys();
-		// final int[] values = countres.values();
-		// Integer[] order = new Integer[keys.length];
-		// for (int i = 0; i < order.length; i++) {
-		// order[i] = i;
-		// }
-		// System.out.println("Sorting result");
-		// Arrays.sort(order, new Comparator<Integer>() {
-		// @Override
-		// public int compare(Integer o1, Integer o2) {
-		// if (values[o1] == values[o2])
-		// return 0;
-		// else if (values[o1] < values[o2])
-		// return 1;
-		// else
-		// return -1;
-		//
-		// }
-		// });
-		// System.out.println("Keeping best " + top);
-		// List<int[]> res = new ArrayList<>();
-		// for (int i = 0; i < top; i++) {
-		// res.add(new int[] { keys[order[i]], values[order[i]] });
-		// }
-		//
-		// System.out.println("Finished top");
-		// return res;
 		Logger logger = Logger.getLogger(TopQuery.class);
 		logger.info("Obtaining " + top + " elements from query.");
 		TreeMap<Integer, Integer> finalRes = new TreeMap<Integer, Integer>();
@@ -92,7 +65,6 @@ public class TopQuery extends RemoteQuery<List<int[]>> {
 					finalRes.put(v, k);
 				}
 			}
-			it.remove();
 		}
 
 		logger.info("Finished obtaining " + top + " elements from query.");
@@ -108,10 +80,6 @@ public class TopQuery extends RemoteQuery<List<int[]>> {
 			}
 
 		});
-
-		// if (delete)
-		// countres.delete(c.getCluster());
-
 		return res;
 	}
 }

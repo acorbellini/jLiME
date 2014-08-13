@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.log4j.Logger;
 
@@ -20,6 +22,8 @@ public class GetMR extends GraphMR<TIntHashSet, TIntHashSet> {
 	private static final long serialVersionUID = 643643302077255726L;
 
 	TIntHashSet res = null;
+
+	ReentrantLock lock = new ReentrantLock();
 
 	private GetType type;
 
@@ -55,12 +59,13 @@ public class GetMR extends GraphMR<TIntHashSet, TIntHashSet> {
 		Logger log = Logger.getLogger(GetMR.class);
 		// if (log.isDebugEnabled())
 		log.info("Obtained sub result on Get Map Reduce");
-		synchronized (this) {
-			if (res == null)
-				res = subres;
-			else
-				res.addAll(subres);
-		}
+		lock.lock();
+		if (res == null)
+			res = subres;
+		else
+			res.addAll(subres);
+
+		lock.unlock();
 		log.info("Added to final result.");
 	}
 
