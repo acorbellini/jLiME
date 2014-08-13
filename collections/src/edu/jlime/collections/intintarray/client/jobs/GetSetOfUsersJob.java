@@ -16,10 +16,11 @@ import edu.jlime.collections.intintarray.db.Store;
 import edu.jlime.jd.JobNode;
 import edu.jlime.jd.job.Job;
 import edu.jlime.util.DataTypeUtils;
+import edu.jlime.util.RingQueue;
 import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.set.hash.TIntHashSet;
 
-public class GetSetOfUsersJob implements Job<int[]> {
+public class GetSetOfUsersJob implements Job<TIntHashSet> {
 
 	private static final long serialVersionUID = 3437379208216701568L;
 
@@ -31,8 +32,6 @@ public class GetSetOfUsersJob implements Job<int[]> {
 		this.kList = k;
 		this.storeName = name;
 	}
-
-	ExecutorService exec = Executors.newFixedThreadPool(10);
 
 	private static class SubSet implements Callable<TIntHashSet> {
 
@@ -47,7 +46,7 @@ public class GetSetOfUsersJob implements Job<int[]> {
 		@Override
 		public TIntHashSet call() throws Exception {
 			TIntHashSet hash = new TIntHashSet();
-			// Arrays.sort(subset);
+			Arrays.sort(subset);
 			for (int u : subset) {
 				byte[] valAsBytes = store.load(u);
 				if (valAsBytes != null) {
@@ -60,8 +59,9 @@ public class GetSetOfUsersJob implements Job<int[]> {
 	}
 
 	@Override
-	public int[] call(JobContext ctx, JobNode peer) throws Exception {
-		Logger log = Logger.getLogger(MultiGetJob.class);
+	public TIntHashSet call(JobContext ctx, JobNode peer) throws Exception {
+		ExecutorService exec = Executors.newFixedThreadPool(10);
+		final Logger log = Logger.getLogger(MultiGetJob.class);
 		log.info("Obtaining multiple keys (" + kList.length + ") from store");
 		TIntHashSet hash = new TIntHashSet();
 		Store store = (Store) ctx.get(storeName);
@@ -77,21 +77,55 @@ public class GetSetOfUsersJob implements Job<int[]> {
 		// remaining -= listSize;
 		// }
 
-		List<byte[]> res = new ArrayList<>(kList.length);
+		// List<byte[]> res = new ArrayList<>(kList.length);
+		// Arrays.sort(kList);
+		// for (int u : kList) {
+		// byte[] valAsBytes = store.load(u);
+		// if (valAsBytes != null) {
+		// res.add(valAsBytes);
+		// }
+		// // res.put(u, new int[] {});
+		// }
+		//
+		// for (Iterator<byte[]> iterator = res.iterator(); iterator.hasNext();)
+		// {
+		// byte[] bs = iterator.next();
+		// hash.addAll(DataTypeUtils.byteArrayToIntArray(bs));
+		// iterator.remove();
+		// }
+
+		final RingQueue queue = new RingQueue();
+		Future<TIntHashSet> fut = exec.submit(new Callable<TIntHashSet>() {
+
+			@Override
+			public TIntHashSet call() throws Exception {
+				TIntHashSet hash = new TIntHashSet();
+				while (true) {
+					Object[] vals = queue.take();
+					for (Object bs : vals) {
+						if (bs == null) {
+							log.info("Returning result for GetSetOfUsersJob with "
+									+ hash.size() + " users.");
+							return hash;
+						}
+						hash.addAll(DataTypeUtils
+								.byteArrayToIntArray((byte[]) bs));
+					}
+				}
+			}
+		});
+		exec.shutdown();
 		Arrays.sort(kList);
+		// List<byte[]> collected = store.loadAll(kList);
 		for (int u : kList) {
 			byte[] valAsBytes = store.load(u);
-			if (valAsBytes != null) {
-				res.add(valAsBytes);
-			}
+			if (valAsBytes != null)
+				queue.put(valAsBytes);
 			// res.put(u, new int[] {});
 		}
+		queue.put(null);
 
-		for (Iterator<byte[]> iterator = res.iterator(); iterator.hasNext();) {
-			byte[] bs = iterator.next();
-			hash.addAll(DataTypeUtils.byteArrayToIntArray(bs));
-			iterator.remove();
-		}
+		return fut.get();
 
 		// exec.shutdown();
 
@@ -109,8 +143,6 @@ public class GetSetOfUsersJob implements Job<int[]> {
 		// Thread.sleep(1);
 		// }
 
-		log.info("Returning result for GetSetOfUsersJob with " + hash.size()
-				+ " users.");
-		return hash.toArray();
+		// return hash;
 	}
 }

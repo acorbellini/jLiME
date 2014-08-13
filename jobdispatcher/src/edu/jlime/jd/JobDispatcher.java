@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
@@ -49,7 +50,7 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 
 	private Semaphore initLock = new Semaphore(0);
 
-	private ArrayList<Peer> executors = new ArrayList<>();
+	private TreeSet<Peer> executors = new TreeSet<>();
 
 	private HashMap<String, List<Peer>> byTag = new HashMap<>();
 
@@ -488,7 +489,7 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 		return cluster.getLocalPeer();
 	}
 
-	public ArrayList<Peer> getExecutors() {
+	public TreeSet<Peer> getExecutors() {
 		return executors;
 	}
 

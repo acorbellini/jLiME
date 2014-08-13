@@ -44,9 +44,9 @@ public class IntersectQuery extends RemoteListQuery {
 		}
 
 		@Override
-		public Map<Job<?>, JobNode> map(RemoteListQuery[] data, JobContext c)
+		public Map<Job<int[]>, JobNode> map(RemoteListQuery[] data, JobContext c)
 				throws Exception {
-			Map<Job<?>, JobNode> res = new HashMap<>();
+			Map<Job<int[]>, JobNode> res = new HashMap<>();
 			for (RemoteListQuery query : data) {
 				res.put(new IntersectJob(query), c.getCluster()
 						.getAnyExecutor());

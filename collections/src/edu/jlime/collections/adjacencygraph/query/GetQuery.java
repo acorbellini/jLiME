@@ -33,9 +33,8 @@ public class GetQuery extends RemoteListQuery {
 		// if (log.isDebugEnabled())
 		log.info("Executing MR query with mapper on map " + getMapName());
 
-		int[] subres = new GetMR(query.exec(c), getMapName(), getMapper(), type)
-				.exec(c.getCluster());
-		TIntHashSet set = new TIntHashSet(subres);
+		TIntHashSet set = new GetMR(query.exec(c), getMapName(), getMapper(),
+				type).exec(c.getCluster());
 		log.info("Removing toRemove users.");
 		if (getToRemove() != null)
 			set.removeAll(getToRemove().query());

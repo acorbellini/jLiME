@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Peer implements Serializable {
+public class Peer implements Serializable, Comparable<Peer> {
 
 	private static final long serialVersionUID = -1369404741700349661L;
 
@@ -61,5 +61,10 @@ public class Peer implements Serializable {
 	@Override
 	public String toString() {
 		return name + " " + id;
+	}
+
+	@Override
+	public int compareTo(Peer o) {
+		return this.name.compareTo(o.name);
 	}
 }

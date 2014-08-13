@@ -15,7 +15,7 @@ import edu.jlime.jd.job.Job;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.set.hash.TIntHashSet;
 
-public class GetMR extends GraphMR<int[], int[]> {
+public class GetMR extends GraphMR<TIntHashSet, TIntHashSet> {
 
 	private static final long serialVersionUID = 643643302077255726L;
 
@@ -30,7 +30,7 @@ public class GetMR extends GraphMR<int[], int[]> {
 	}
 
 	@Override
-	public Map<Job<?>, JobNode> map(int[] data, JobContext env)
+	public Map<Job<TIntHashSet>, JobNode> map(int[] data, JobContext env)
 			throws Exception {
 		TIntHashSet toSearch = new TIntHashSet();
 		if (type.equals(GetType.FOLLOWERS) || type.equals(GetType.NEIGHBOURS))
@@ -40,7 +40,7 @@ public class GetMR extends GraphMR<int[], int[]> {
 		if (type.equals(GetType.FOLLOWEES) || type.equals(GetType.NEIGHBOURS))
 			toSearch.addAll(data);
 
-		HashMap<Job<?>, JobNode> res = new HashMap<>();
+		HashMap<Job<TIntHashSet>, JobNode> res = new HashMap<>();
 		Map<JobNode, TIntArrayList> mapped = getMapper().map(
 				toSearch.toArray(), env);
 		for (Entry<JobNode, TIntArrayList> e : mapped.entrySet()) {
@@ -51,7 +51,7 @@ public class GetMR extends GraphMR<int[], int[]> {
 	}
 
 	@Override
-	public void processSubResult(int[] subres) {
+	public void processSubResult(TIntHashSet subres) {
 		Logger log = Logger.getLogger(GetMR.class);
 		// if (log.isDebugEnabled())
 		log.info("Obtained sub result on Get Map Reduce");
@@ -62,11 +62,10 @@ public class GetMR extends GraphMR<int[], int[]> {
 	}
 
 	@Override
-	public int[] red(ArrayList<int[]> subres) {
+	public TIntHashSet red(ArrayList<TIntHashSet> subres) {
 		Logger log = Logger.getLogger(GetMR.class);
 		// if (log.isDebugEnabled())
 		log.info("Finished obtaining results for Get MR");
-		int[] ret = res.toArray();
-		return ret;
+		return res;
 	}
 }

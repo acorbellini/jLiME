@@ -156,23 +156,23 @@ public class PersistentIntIntArrayMap {
 		return res;
 	}
 
-	public int[] getSetOfUsers(int[] array) throws Exception {
+	public TIntHashSet getSetOfUsers(int[] array) throws Exception {
 
 		HashMap<JobNode, TIntArrayList> byServer = hashKeys(array);
-		log.info("Obtaining Futures of executing CountListsJob");
+		log.info("Starting getSetOfUsers");
 
-		ForkJoinTask<int[]> mgr = new ForkJoinTask<>();
+		ForkJoinTask<TIntHashSet> mgr = new ForkJoinTask<>();
 		for (Entry<JobNode, TIntArrayList> map : byServer.entrySet()) {
 			JobNode p = map.getKey();
 			GetSetOfUsersJob j = new GetSetOfUsersJob(map.getValue().toArray(),
 					store);
 			mgr.putJob(j, p);
 		}
-		return mgr.execute(new ResultListener<int[], int[]>() {
+		return mgr.execute(new ResultListener<TIntHashSet, TIntHashSet>() {
 			TIntHashSet hashToReturn = new TIntHashSet();
 
 			@Override
-			public void onSuccess(int[] res) {
+			public void onSuccess(TIntHashSet res) {
 				synchronized (hashToReturn) {
 					hashToReturn.addAll(res);
 				}
@@ -180,9 +180,8 @@ public class PersistentIntIntArrayMap {
 			}
 
 			@Override
-			public int[] onFinished() {
-				int[] array = hashToReturn.toArray();
-				return array;
+			public TIntHashSet onFinished() {
+				return hashToReturn;
 			}
 
 			@Override
@@ -346,49 +345,50 @@ public class PersistentIntIntArrayMap {
 
 	public TIntIntHashMap countLists(int[] array) throws Exception {
 		HashMap<JobNode, TIntArrayList> byServer = hashKeys(array);
-		log.info("Obtaining Futures of executing CountListsJob");
+		log.info("Starting CountListsJob");
 
-		ForkJoinTask<byte[]> mgr = new ForkJoinTask<>();
+		ForkJoinTask<TIntIntHashMap> mgr = new ForkJoinTask<>();
 		for (Entry<JobNode, TIntArrayList> map : byServer.entrySet()) {
 			JobNode p = map.getKey();
 			CountListsJob j = new CountListsJob(map.getValue().toArray(), store);
 			mgr.putJob(j, p);
 		}
-		return mgr.execute(new ResultListener<byte[], TIntIntHashMap>() {
-			List<TIntIntHashMap> subres = new ArrayList<>();
+		return mgr
+				.execute(new ResultListener<TIntIntHashMap, TIntIntHashMap>() {
+					List<TIntIntHashMap> subres = new ArrayList<>();
 
-			@Override
-			public void onSuccess(byte[] res) {
-				TIntIntHashMap table = CountListsJob.fromBytes(res);
-				synchronized (subres) {
-					subres.add(table);
-				}
-
-			}
-
-			@Override
-			public TIntIntHashMap onFinished() {
-				if (subres.size() == 1)
-					return subres.get(0);
-				TIntIntHashMap hashToReturn = new TIntIntHashMap();
-				for (TIntIntHashMap table : subres) {
-					if (hashToReturn.isEmpty())
-						hashToReturn.putAll(table);
-					else {
-						for (int k : table.keys()) {
-							int v = table.get(k);
-							hashToReturn.adjustOrPutValue(k, v, v);
+					@Override
+					public void onSuccess(TIntIntHashMap res) {
+						log.info("Received countLists subresult.");
+						synchronized (subres) {
+							subres.add(res);
 						}
 					}
-				}
-				return hashToReturn;
-			}
 
-			@Override
-			public void onFailure(Exception res) {
-				res.printStackTrace();
-			}
-		});
+					@Override
+					public TIntIntHashMap onFinished() {
+						if (subres.size() == 1)
+							return subres.get(0);
+						TIntIntHashMap hashToReturn = new TIntIntHashMap();
+						for (TIntIntHashMap table : subres) {
+							if (hashToReturn.isEmpty())
+								hashToReturn.putAll(table);
+							else {
+								for (int k : table.keys()) {
+									int v = table.get(k);
+									hashToReturn.adjustOrPutValue(k, v, v);
+								}
+							}
+						}
+						log.info("Finished countLists");
+						return hashToReturn;
+					}
+
+					@Override
+					public void onFailure(Exception res) {
+						res.printStackTrace();
+					}
+				});
 		// final TIntIntHashMap hashToReturn = new TIntIntHashMap();
 		// final HashMap<JobNode, TIntArrayList> byServer = hashKeys(array);
 		// StreamForkJoin sfj = new StreamForkJoin() {

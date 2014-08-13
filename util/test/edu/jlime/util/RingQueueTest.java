@@ -1,4 +1,4 @@
-package edu.jlime.rpc;
+package edu.jlime.util;
 
 import edu.jlime.util.RingQueue;
 
@@ -15,15 +15,15 @@ public class RingQueueTest {
 				while (true) {
 					Object[] list = queue.take();
 					for (Object e : list) {
-						System.out.println(e);
-						count++;
+						if (e == null) {
+							long dur = System.nanoTime() - i;
+							System.out.println(dur / 1000 / 1000 + "ms");
+							System.out.println(dur / ITER + "ns");
+							System.exit(0);
+						} else
+							count++;
 					}
-					if (count == ITER) {
-						long dur = System.nanoTime() - i;
-						System.out.println(dur / 1000 / 1000 + "ms");
-						System.out.println(dur / ITER + "ns");
-						System.exit(0);
-					}
+
 				}
 			};
 		}.start();
@@ -32,6 +32,8 @@ public class RingQueueTest {
 		while (iter < ITER) {
 			queue.put(new Integer(iter++));
 		}
+
+		queue.put(null);
 
 	}
 }

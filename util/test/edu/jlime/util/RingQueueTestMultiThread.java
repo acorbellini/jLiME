@@ -1,4 +1,4 @@
-package edu.jlime.rpc;
+package edu.jlime.util;
 
 import java.io.IOException;
 

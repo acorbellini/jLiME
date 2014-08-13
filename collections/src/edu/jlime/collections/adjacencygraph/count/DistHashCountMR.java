@@ -53,7 +53,7 @@ public class DistHashCountMR extends GraphMR<TIntIntHashMap, byte[]> {
 	}
 
 	@Override
-	public Map<Job<?>, JobNode> map(int[] data, JobContext cluster)
+	public Map<Job<byte[]>, JobNode> map(int[] data, JobContext cluster)
 			throws Exception {
 
 		int[] inverted = Arrays.copyOf(data, data.length);
@@ -63,7 +63,7 @@ public class DistHashCountMR extends GraphMR<TIntIntHashMap, byte[]> {
 				inverted[i] = -1 * data[i];
 			}
 
-		Map<Job<?>, JobNode> res = new HashMap<>();
+		Map<Job<byte[]>, JobNode> res = new HashMap<>();
 		Map<JobNode, TIntArrayList> map = getMapper().map(inverted, cluster);
 		for (Entry<JobNode, TIntArrayList> e : map.entrySet()) {
 			res.put(new DistHashCountJob(e.getValue().toArray(), hash,

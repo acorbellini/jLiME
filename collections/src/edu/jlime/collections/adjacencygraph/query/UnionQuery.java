@@ -46,9 +46,9 @@ public class UnionQuery extends RemoteListQuery {
 		}
 
 		@Override
-		public Map<Job<?>, JobNode> map(RemoteListQuery[] data, JobContext env)
-				throws Exception {
-			Map<Job<?>, JobNode> res = new HashMap<>();
+		public Map<Job<int[]>, JobNode> map(RemoteListQuery[] data,
+				JobContext env) throws Exception {
+			Map<Job<int[]>, JobNode> res = new HashMap<>();
 			for (RemoteListQuery query : data) {
 				res.put(new UnionJob(query), env.getCluster().getAnyExecutor());
 			}

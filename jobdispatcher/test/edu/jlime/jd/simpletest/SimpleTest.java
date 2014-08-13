@@ -24,8 +24,8 @@ public class SimpleTest {
 		}
 
 		@Override
-		public Map<Job<?>, JobNode> map(int[] data, JobContext env) {
-			Map<Job<?>, JobNode> res = new HashMap<Job<?>, JobNode>();
+		public Map<Job<Integer>, JobNode> map(int[] data, JobContext env) {
+			Map<Job<Integer>, JobNode> res = new HashMap<>();
 			int countData = 0;
 			while (countData != data.length) {
 				for (JobNode peer : env.getCluster()) {

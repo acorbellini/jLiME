@@ -125,9 +125,9 @@ public class RemoteForEachQuery<T> extends RemoteQuery<Map<Integer, T>> {
 		}
 
 		@Override
-		public Map<Job<?>, JobNode> map(int[] data, JobContext env)
+		public Map<Job<Map<Integer, T>>, JobNode> map(int[] data, JobContext env)
 				throws Exception {
-			Map<Job<?>, JobNode> res = new HashMap<>();
+			Map<Job<Map<Integer, T>>, JobNode> res = new HashMap<>();
 			Map<JobNode, TIntArrayList> map = graph.getMapper().map(data, env);
 
 			for (JobNode p : map.keySet()) {

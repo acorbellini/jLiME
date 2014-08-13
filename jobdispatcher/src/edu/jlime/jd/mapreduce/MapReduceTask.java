@@ -72,11 +72,11 @@ public abstract class MapReduceTask<T, R, SR> implements Job<R> {
 
 		Logger log = Logger.getLogger(getClass());
 
-		Map<Job<?>, JobNode> m = map(data, c);
+		Map<Job<SR>, JobNode> m = map(data, c);
 
 		lock = new Semaphore(-m.size() + 1);
 
-		for (Entry<Job<?>, JobNode> jobServer : m.entrySet()) {
+		for (Entry<Job<SR>, JobNode> jobServer : m.entrySet()) {
 			try {
 				jobServer.getValue().execAsync(jobServer.getKey(),
 						new TaskResultManager(this));
@@ -102,7 +102,7 @@ public abstract class MapReduceTask<T, R, SR> implements Job<R> {
 			return red(new ArrayList<SR>());
 	};
 
-	public abstract Map<Job<?>, JobNode> map(T data, JobContext cluster)
+	public abstract Map<Job<SR>, JobNode> map(T data, JobContext cluster)
 			throws Exception;
 
 	public void processSubResult(SR subres) {

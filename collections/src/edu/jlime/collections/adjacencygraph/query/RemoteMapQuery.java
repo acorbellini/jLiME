@@ -77,9 +77,9 @@ public class RemoteMapQuery<T> extends CompositeQuery<int[], Map<Integer, T>>
 		}
 
 		@Override
-		public Map<Job<?>, JobNode> map(int[] data, JobContext env)
+		public Map<Job<Map<Integer, T>>, JobNode> map(int[] data, JobContext env)
 				throws Exception {
-			Map<Job<?>, JobNode> res = new HashMap<>();
+			Map<Job<Map<Integer, T>>, JobNode> res = new HashMap<>();
 			Map<JobNode, TIntArrayList> map = mapper.map(data, env);
 			Logger log = Logger.getLogger(MapMR.class);
 			log.info("Mapping " + map.size() + " groups .");
