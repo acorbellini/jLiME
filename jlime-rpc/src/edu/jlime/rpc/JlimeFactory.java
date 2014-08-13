@@ -10,7 +10,7 @@ import org.apache.log4j.Logger;
 
 import edu.jlime.core.cluster.Cluster;
 import edu.jlime.core.cluster.Peer;
-import edu.jlime.core.marshalling.ObjectConverter;
+import edu.jlime.core.marshalling.TypeConverter;
 import edu.jlime.core.rpc.RPCDispatcher;
 import edu.jlime.core.stream.RemoteInputStream;
 import edu.jlime.core.stream.RemoteOutputStream;
@@ -67,34 +67,30 @@ public class JlimeFactory extends JobDispatcherFactory {
 		jLiMETransport tr = new jLiMETransport(commStack);
 		RPCDispatcher rpc = new RPCDispatcher(cluster);
 		rpc.setTransport(tr);
-		rpc.getMarshaller()
-				.getTc()
-				.registerTypeConverter(PeerJlime.class.getName(),
-						new ObjectConverter() {
+		rpc.getMarshaller().getTc()
+				.registerTypeConverter(PeerJlime.class, new TypeConverter() {
 
-							@Override
-							public void toArray(Object o, ByteBuffer buff)
-									throws Exception {
-								PeerJlime pd = (PeerJlime) o;
-								buff.putUUID(pd.getAddr().getId());
-								buff.putString(pd.getName());
-								HashMap<String, String> data = pd.getDataMap();
-								buff.putMap(data);
-							}
+					@Override
+					public void toArray(Object o, ByteBuffer buff)
+							throws Exception {
+						PeerJlime pd = (PeerJlime) o;
+						buff.putUUID(pd.getAddr().getId());
+						buff.putString(pd.getName());
+						HashMap<String, String> data = pd.getDataMap();
+						buff.putMap(data);
+					}
 
-							@Override
-							public Object fromArray(ByteBuffer buff,
-									String originID, String clientID)
-									throws Exception {
-								UUID id = buff.getUUID();
-								String name = buff.getString();
-								Map<String, String> data = buff.getMap();
-								PeerJlime pd = new PeerJlime(new Address(id),
-										name);
-								pd.putData(data);
-								return pd;
-							}
-						});
+					@Override
+					public Object fromArray(ByteBuffer buff, String originID,
+							String clientID) throws Exception {
+						UUID id = buff.getUUID();
+						String name = buff.getString();
+						Map<String, String> data = buff.getMap();
+						PeerJlime pd = new PeerJlime(new Address(id), name);
+						pd.putData(data);
+						return pd;
+					}
+				});
 
 		// JD
 		final JobDispatcher disp = new JobDispatcher(minPeers, cluster, rpc);

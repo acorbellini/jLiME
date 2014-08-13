@@ -62,8 +62,8 @@ public abstract class MapReduceTask<T, R, SR> implements Job<R> {
 	}
 
 	public R exec(JobCluster c) throws Exception {
-		if (c.getLocalPeer().isExec())
-			return c.getLocalPeer().exec(this);
+		if (c.getLocalNode().isExec())
+			return c.getLocalNode().exec(this);
 		else
 			return c.getAnyExecutor().exec(this);
 	}

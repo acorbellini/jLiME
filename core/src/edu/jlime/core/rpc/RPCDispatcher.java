@@ -302,7 +302,7 @@ public class RPCDispatcher implements ClassLoaderProvider, DataReceiver {
 
 			return getMarshaller().toByteArray(callTarget(mc));
 		} catch (Exception e) {
-			log.error(e);
+			log.error(e, e);
 			try {
 				return getMarshaller().toByteArray(new Object[] { e });
 			} catch (Exception e1) {

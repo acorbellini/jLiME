@@ -28,8 +28,6 @@ public class Marshaller {
 
 		Object ret = tc.getObjectFromArray(buff, originID, clientID);
 
-		DEFByteArrayCache.put(array);
-
 		return ret;
 	}
 

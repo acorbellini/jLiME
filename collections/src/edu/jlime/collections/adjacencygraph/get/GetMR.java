@@ -19,7 +19,7 @@ public class GetMR extends GraphMR<TIntHashSet, TIntHashSet> {
 
 	private static final long serialVersionUID = 643643302077255726L;
 
-	TIntHashSet res = new TIntHashSet();
+	TIntHashSet res = null;
 
 	private GetType type;
 
@@ -55,8 +55,11 @@ public class GetMR extends GraphMR<TIntHashSet, TIntHashSet> {
 		Logger log = Logger.getLogger(GetMR.class);
 		// if (log.isDebugEnabled())
 		log.info("Obtained sub result on Get Map Reduce");
-		synchronized (res) {
-			res.addAll(subres);
+		synchronized (this) {
+			if (res == null)
+				res = subres;
+			else
+				res.addAll(subres);
 		}
 		log.info("Added to final result.");
 	}

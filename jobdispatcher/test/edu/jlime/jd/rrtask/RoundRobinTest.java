@@ -27,7 +27,7 @@ public class RoundRobinTest {
 		@Override
 		public String call(JobContext env, JobNode peer) throws Exception {
 			// Thread.sleep((long) (Math.random() * 3000));
-			return msg + env.getCluster().getLocalPeer().getID();
+			return msg + env.getCluster().getLocalNode().getID();
 		}
 
 	}

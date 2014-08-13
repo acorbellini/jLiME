@@ -38,7 +38,7 @@ public class ByteBuffer {
 	}
 
 	public ByteBuffer(int i) {
-		this(DEFByteArrayCache.get(i), 0);
+		this(new byte[i], 0);
 	}
 
 	public String getString() {
@@ -152,12 +152,12 @@ public class ByteBuffer {
 
 	private void ensureCapacity(int i) {
 		while (writePos + i > buffered.length) {
-			byte[] copy = buffered;
+			// byte[] copy = buffered;
 			byte[] bufferedExtended = DEFByteArrayCache
 					.get(buffered.length == 0 ? INIT_SIZE : buffered.length * 2);
 			System.arraycopy(buffered, 0, bufferedExtended, 0, buffered.length);
 			buffered = bufferedExtended;
-			DEFByteArrayCache.put(copy);
+			// DEFByteArrayCache.put(copy);
 		}
 
 	}

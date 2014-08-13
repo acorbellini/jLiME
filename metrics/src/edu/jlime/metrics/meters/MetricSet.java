@@ -32,4 +32,9 @@ public class MetricSet implements Metric<Object>, MetricSetMBean {
 		set.remove(string);
 	}
 
+	@Override
+	public String get() {
+		return set.toString();
+	}
+
 }

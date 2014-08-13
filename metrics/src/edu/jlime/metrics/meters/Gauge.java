@@ -46,4 +46,9 @@ public class Gauge implements Metric<Float>, GaugeMBean {
 		return current;
 	}
 
+	@Override
+	public String get() {
+		return current.toString();
+	}
+
 }

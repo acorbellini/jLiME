@@ -25,4 +25,9 @@ public class Simple implements Metric<Object>, SimpleMBean {
 		return val;
 	}
 
+	@Override
+	public String get() {
+		return val.toString();
+	}
+
 }

@@ -30,7 +30,7 @@ public class ChainJob<R> implements Job<Map<JobNode, R>> {
 		// + env.getCluster().getLocalPeer() + " to " + rem);
 
 		final ConcurrentHashMap<JobNode, R> ret = new ConcurrentHashMap<>();
-		JobNode local = env.getCluster().getLocalPeer();
+		JobNode local = env.getCluster().getLocalNode();
 
 		ret.put(local, local.exec(j));
 

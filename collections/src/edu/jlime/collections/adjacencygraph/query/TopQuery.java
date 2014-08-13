@@ -1,17 +1,16 @@
 package edu.jlime.collections.adjacencygraph.query;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.TreeMap;
 
 import org.apache.log4j.Logger;
 
 import edu.jlime.client.JobContext;
 import edu.jlime.collections.adjacencygraph.Mapper;
-import edu.jlime.util.ByteBuffer;
-import edu.jlime.util.DataTypeUtils;
 import gnu.trove.iterator.TIntIntIterator;
 import gnu.trove.map.hash.TIntIntHashMap;
 
@@ -50,11 +49,8 @@ public class TopQuery extends RemoteQuery<List<int[]>> {
 	public List<int[]> doExec(JobContext c) throws Exception {
 
 		final TIntIntHashMap countres = query.exec(c);
-		// ByteBuffer reader = new ByteBuffer(countres);
-		// int[] keys =
-		// DataTypeUtils.byteArrayToIntArray(reader.getByteArray());
-		// final int[] values = DataTypeUtils.byteArrayToIntArray(reader
-		// .getByteArray());
+		// int[] keys = countres.keys();
+		// final int[] values = countres.values();
 		// Integer[] order = new Integer[keys.length];
 		// for (int i = 0; i < order.length; i++) {
 		// order[i] = i;
@@ -82,28 +78,18 @@ public class TopQuery extends RemoteQuery<List<int[]>> {
 		// return res;
 		Logger logger = Logger.getLogger(TopQuery.class);
 		logger.info("Obtaining " + top + " elements from query.");
-		TIntIntHashMap finalRes = new TIntIntHashMap();
+		TreeMap<Integer, Integer> finalRes = new TreeMap<Integer, Integer>();
 		TIntIntIterator it = countres.iterator();
 		while (it.hasNext()) {
 			it.advance();
 			int k = it.key();
 			int v = it.value();
 			if (finalRes.size() < top)
-				finalRes.put(k, v);
+				finalRes.put(v, k);
 			else {
-				int minK = 0;
-				int minVal = Integer.MAX_VALUE;
-				for (TIntIntIterator iterator = finalRes.iterator(); iterator
-						.hasNext();) {
-					iterator.advance();
-					if (minVal > iterator.value()) {
-						minK = iterator.key();
-						minVal = iterator.value();
-					}
-				}
-				if (minVal < v) {
-					finalRes.remove(minK);
-					finalRes.put(k, v);
+				if (v > finalRes.lastKey()) {
+					finalRes.remove(finalRes.remove(finalRes.firstKey()));
+					finalRes.put(v, k);
 				}
 			}
 			it.remove();
@@ -111,10 +97,8 @@ public class TopQuery extends RemoteQuery<List<int[]>> {
 
 		logger.info("Finished obtaining " + top + " elements from query.");
 		List<int[]> res = new ArrayList<>();
-		TIntIntIterator finalIt = finalRes.iterator();
-		while (finalIt.hasNext()) {
-			finalIt.advance();
-			res.add(new int[] { finalIt.key(), finalIt.value() });
+		for (Entry<Integer, Integer> finalIt : finalRes.entrySet()) {
+			res.add(new int[] { finalIt.getValue(), finalIt.getKey() });
 		}
 		Collections.sort(res, new Comparator<int[]>() {
 

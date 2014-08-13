@@ -28,12 +28,15 @@ public class Meter implements Metric<Float>, MeterMBean {
 			meterValue = val;
 			return;
 		}
+
 		// http://en.wikipedia.org/wiki/Moving_average
 		long timeDiff = (currentTime - lastTime) / 1000;
 		double alpha = 1 - Math.exp(-timeDiff / TIME);
 		perf = alpha * val + (1 - alpha) * meterValue;
-
+		meterValue = val;
 		g.update(val);
+
+		
 	}
 
 	@Override
@@ -44,5 +47,10 @@ public class Meter implements Metric<Float>, MeterMBean {
 	@Override
 	public Float getValue() {
 		return meterValue;
+	}
+
+	@Override
+	public String get() {
+		return meterValue.toString();
 	}
 }

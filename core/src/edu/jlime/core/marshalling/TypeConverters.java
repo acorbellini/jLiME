@@ -14,9 +14,7 @@ import edu.jlime.util.ByteBuffer;
 
 public class TypeConverters {
 
-	private final String GENERIC = "GENERIC";
-
-	private HashMap<String, ObjectConverter> convs = new HashMap<>();
+	private HashMap<String, TypeConverter> convs = new HashMap<>();
 
 	private HashMap<String, Byte> ids = new HashMap<>();
 
@@ -27,7 +25,7 @@ public class TypeConverters {
 	private ClassLoaderProvider clp;
 
 	{
-		registerTypeConverter(Integer.class.getName(), new ObjectConverter() {
+		registerTypeConverter(Integer.class, new TypeConverter() {
 
 			@Override
 			public void toArray(Object o, ByteBuffer buffer) {
@@ -41,7 +39,7 @@ public class TypeConverters {
 			}
 		});
 
-		registerTypeConverter(Boolean.class.getName(), new ObjectConverter() {
+		registerTypeConverter(Boolean.class, new TypeConverter() {
 
 			@Override
 			public void toArray(Object o, ByteBuffer buff) {
@@ -55,7 +53,7 @@ public class TypeConverters {
 			}
 		});
 
-		registerTypeConverter(String.class.getName(), new ObjectConverter() {
+		registerTypeConverter(String.class, new TypeConverter() {
 
 			@Override
 			public void toArray(Object o, ByteBuffer buff) {
@@ -69,7 +67,7 @@ public class TypeConverters {
 			}
 		});
 
-		registerTypeConverter(NullType.class.getName(), new ObjectConverter() {
+		registerTypeConverter(NullType.class, new TypeConverter() {
 
 			@Override
 			public void toArray(Object o, ByteBuffer buff) {
@@ -82,7 +80,7 @@ public class TypeConverters {
 			}
 		});
 
-		registerTypeConverter(GENERIC, new ObjectConverter() {
+		registerTypeConverter(Object.class, new TypeConverter() {
 
 			@Override
 			public void toArray(Object o, ByteBuffer buff) throws IOException {
@@ -103,46 +101,43 @@ public class TypeConverters {
 				// if (cs != null)
 				// stream.setClassLoader(cs);
 
-				MarshallerInputStream stream = new MarshallerInputStream(
-						bis, clp, clientID);
+				MarshallerInputStream stream = new MarshallerInputStream(bis,
+						clp, clientID);
 				Object ret = stream.readObject();
 				stream.close();
 				return ret;
 			}
 		});
 
-		registerTypeConverter(MethodCall.class.getName(),
-				new ObjectConverter() {
+		registerTypeConverter(MethodCall.class, new TypeConverter() {
 
-					@Override
-					public void toArray(Object o, ByteBuffer buff)
-							throws Exception {
-						MethodCall mc = (MethodCall) o;
+			@Override
+			public void toArray(Object o, ByteBuffer buff) throws Exception {
+				MethodCall mc = (MethodCall) o;
 
-						buff.putString(mc.getName());
-						buff.putString(mc.getObjectKey());
+				buff.putString(mc.getName());
+				buff.putString(mc.getObjectKey());
 
-						Object[] objects = mc.getObjects();
-						buff.putInt(objects.length);
-						for (Object object : objects)
-							objectToByteArray(object, buff);
-					}
+				Object[] objects = mc.getObjects();
+				buff.putInt(objects.length);
+				for (Object object : objects)
+					objectToByteArray(object, buff);
+			}
 
-					@Override
-					public Object fromArray(ByteBuffer buff, String originID,
-							String clientID) throws Exception {
-						List<Object> objects = new ArrayList<>();
-						String name = buff.getString();
-						String k = buff.getString();
-						int num = buff.getInt();
-						for (int j = 0; j < num; j++)
-							objects.add(getObjectFromArray(buff, originID,
-									clientID));
-						return new MethodCall(k, name, objects.toArray());
-					}
-				});
+			@Override
+			public Object fromArray(ByteBuffer buff, String originID,
+					String clientID) throws Exception {
+				List<Object> objects = new ArrayList<>();
+				String name = buff.getString();
+				String k = buff.getString();
+				int num = buff.getInt();
+				for (int j = 0; j < num; j++)
+					objects.add(getObjectFromArray(buff, originID, clientID));
+				return new MethodCall(k, name, objects.toArray());
+			}
+		});
 
-		registerTypeConverter(UUID.class.getName(), new ObjectConverter() {
+		registerTypeConverter(UUID.class, new TypeConverter() {
 
 			@Override
 			public void toArray(Object o, ByteBuffer buffer) {
@@ -156,7 +151,7 @@ public class TypeConverters {
 			}
 		});
 
-		registerTypeConverter(byte[].class.getName(), new ObjectConverter() {
+		registerTypeConverter(byte[].class, new TypeConverter() {
 
 			@Override
 			public void toArray(Object o, ByteBuffer buffer) {
@@ -175,23 +170,34 @@ public class TypeConverters {
 		this.clp = cl;
 	}
 
-	public void registerTypeConverter(String className, ObjectConverter conv) {
+	public void registerTypeConverter(Class<?> classObj, TypeConverter conv) {
 		byte id = count++;
-		ids.put(className, id);
+		String className = classObj.getName();
+
 		types.put(id, className);
+
+		ids.put(className, id);
 		convs.put(className, conv);
 	}
 
+	public TypeConverter getTypeConverter(Class<?> classObj) {
+		String className = classObj.getName();
+		return convs.get(className);
+	}
+
+	public Byte getTypeId(Class<?> classObj) {
+		String className = classObj.getName();
+		return ids.get(className);
+	}
+
 	public void objectToByteArray(Object o, ByteBuffer buffer) throws Exception {
-		String classOfObject = o == null ? NullType.class.getName() : o
-				.getClass().toString();
+		Class<?> classOfObject = o == null ? NullType.class : o.getClass();
 		// Default converter
-		ObjectConverter converter = convs.get(GENERIC);
-		byte type = ids.get(GENERIC);
-		// Check if the converter is loaded
-		if (convs.containsKey(classOfObject)) {
-			converter = convs.get(classOfObject);
-			type = ids.get(classOfObject);
+		TypeConverter converter = getTypeConverter(classOfObject);
+		Byte type = getTypeId(classOfObject);
+		if (converter == null) {
+			converter = getTypeConverter(Object.class);
+			type = getTypeId(Object.class);
 		}
 		buffer.put(type);
 		converter.toArray(o, buffer);
@@ -201,7 +207,7 @@ public class TypeConverters {
 			String clientID) throws Exception {
 		byte type = buff.get();
 		String className = types.get(type);
-		ObjectConverter converter = convs.get(className);
+		TypeConverter converter = convs.get(className);
 		return converter.fromArray(buff, originID, clientID);
 	}
 }

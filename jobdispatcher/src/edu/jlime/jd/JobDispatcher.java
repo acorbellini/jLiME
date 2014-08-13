@@ -23,7 +23,7 @@ import edu.jlime.core.cluster.BroadcastException;
 import edu.jlime.core.cluster.Cluster;
 import edu.jlime.core.cluster.ClusterChangeListener;
 import edu.jlime.core.cluster.Peer;
-import edu.jlime.core.marshalling.ObjectConverter;
+import edu.jlime.core.marshalling.TypeConverter;
 import edu.jlime.core.marshalling.TypeConverters;
 import edu.jlime.core.rpc.RPCDispatcher;
 import edu.jlime.core.stream.RemoteInputStream;
@@ -97,33 +97,68 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 
 		factory = new JobExecutorFactory(rpc, JOB_DISPATCHER);
 		final TypeConverters tc = rpc.getMarshaller().getTc();
-		tc.registerTypeConverter(JobContainer.class.getName(),
-				new ObjectConverter() {
-					@Override
-					public void toArray(Object o, ByteBuffer buffer)
-							throws Exception {
-						JobContainer jc = (JobContainer) o;
-						tc.objectToByteArray(jc.getRequestor(), buffer);
-						tc.objectToByteArray(jc.getJob(), buffer);
-						buffer.putUUID(jc.getJobID());
-						buffer.putBoolean(jc.isNoresponse());
-					}
+		tc.registerTypeConverter(JobContainer.class, new TypeConverter() {
+			@Override
+			public void toArray(Object o, ByteBuffer buffer) throws Exception {
+				JobContainer jc = (JobContainer) o;
+				tc.objectToByteArray(jc.getRequestor(), buffer);
+				tc.objectToByteArray(jc.getJob(), buffer);
+				buffer.putUUID(jc.getJobID());
+				buffer.putBoolean(jc.isNoresponse());
+			}
 
-					@Override
-					public Object fromArray(ByteBuffer buff, String originID,
-							String clientID) throws Exception {
-						JobNode p = (JobNode) tc.getObjectFromArray(buff,
-								originID, clientID);
-						ClientJob<?> job = (ClientJob<?>) tc
-								.getObjectFromArray(buff, originID, clientID);
-						UUID id = buff.getUUID();
-						boolean isNoResponse = buff.getBoolean();
-						JobContainer jc = new JobContainer(job, p);
-						jc.setID(id);
-						jc.setNoResponse(isNoResponse);
-						return jc;
-					}
-				});
+			@Override
+			public Object fromArray(ByteBuffer buff, String originID,
+					String clientID) throws Exception {
+				JobNode p = (JobNode) tc.getObjectFromArray(buff, originID,
+						clientID);
+				ClientJob<?> job = (ClientJob<?>) tc.getObjectFromArray(buff,
+						originID, clientID);
+				UUID id = buff.getUUID();
+				boolean isNoResponse = buff.getBoolean();
+				JobContainer jc = new JobContainer(job, p);
+				jc.setID(id);
+				jc.setNoResponse(isNoResponse);
+				return jc;
+			}
+		});
+
+		tc.registerTypeConverter(JobNode.class, new TypeConverter() {
+			@Override
+			public void toArray(Object o, ByteBuffer buffer) throws Exception {
+				JobNode jc = (JobNode) o;
+				tc.objectToByteArray(jc.getPeer(), buffer);
+				buffer.putString(jc.getClientID());
+			}
+
+			@Override
+			public Object fromArray(ByteBuffer buff, String originID,
+					String clientID) throws Exception {
+				Peer p = (Peer) tc.getObjectFromArray(buff, originID, clientID);
+				String cliID = buff.getString();
+				JobNode jn = new JobNode(p, cliID, JobDispatcher.this);
+				return jn;
+			}
+		});
+
+		tc.registerTypeConverter(RemoteReference.class, new TypeConverter() {
+			@Override
+			public void toArray(Object o, ByteBuffer buffer) throws Exception {
+				RemoteReference rr = (RemoteReference) o;
+				tc.objectToByteArray(rr.getNode(), buffer);
+				buffer.putString(rr.getKey());
+			}
+
+			@Override
+			public Object fromArray(ByteBuffer buff, String originID,
+					String clientID) throws Exception {
+				JobNode p = (JobNode) tc.getObjectFromArray(buff, originID,
+						clientID);
+				String key = buff.getString();
+				RemoteReference rr = new RemoteReference(p, key);
+				return rr;
+			}
+		});
 
 	}
 

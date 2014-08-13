@@ -76,7 +76,7 @@ public class TransmittedReceivedTest {
 					data[i] = (int) (Math.random() * 1000000);
 				}
 				cluster.broadcast(new MessageJob("Message From "
-						+ env.getCluster().getLocalPeer() + " round " + i, data));
+						+ env.getCluster().getLocalNode() + " round " + i, data));
 			}
 		}
 	}

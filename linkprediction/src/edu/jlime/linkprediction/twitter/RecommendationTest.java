@@ -141,7 +141,7 @@ public class RecommendationTest {
 					public String get(Metrics m) {
 
 						return m.list("sysinfo.net").findFirst("eth")
-								.get("sent_total").toString();
+								.get("sent_total").get();
 					}
 				});
 
@@ -153,7 +153,7 @@ public class RecommendationTest {
 
 					@Override
 					public String get(Metrics m) {
-						return m.get("jvminfo.mem.used").toString();
+						return m.get("jvminfo.mem.used").get();
 					}
 				});
 	}

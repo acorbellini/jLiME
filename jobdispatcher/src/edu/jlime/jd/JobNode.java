@@ -133,4 +133,8 @@ public class JobNode implements Serializable {
 	public String toString() {
 		return peer.toString();
 	}
+
+	public String getClientID() {
+		return clientID;
+	}
 }

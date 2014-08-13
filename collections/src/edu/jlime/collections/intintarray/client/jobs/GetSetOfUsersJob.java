@@ -60,46 +60,33 @@ public class GetSetOfUsersJob implements Job<TIntHashSet> {
 
 	@Override
 	public TIntHashSet call(JobContext ctx, JobNode peer) throws Exception {
-		ExecutorService exec = Executors.newFixedThreadPool(10);
+		ExecutorService exec = Executors.newCachedThreadPool();
 		final Logger log = Logger.getLogger(MultiGetJob.class);
 		log.info("Obtaining multiple keys (" + kList.length + ") from store");
-		TIntHashSet hash = new TIntHashSet();
 		Store store = (Store) ctx.get(storeName);
-		// List<Future<TIntHashSet>> futures = new ArrayList<>();
-		// int listSize = 1000000;
-		// int remaining = kList.length;
-		// int lists = (int) Math.ceil(kList.length / (double) listSize);
-		// for (int i = 0; i < lists; i++) {
-		// int init_chunk = i * listSize;
-		// int len_chunk = Math.min(remaining, listSize);
-		// futures.add(exec.submit(new SubSet(Arrays.copyOfRange(kList,
-		// init_chunk, init_chunk + len_chunk), store)));
-		// remaining -= listSize;
-		// }
 
-		// List<byte[]> res = new ArrayList<>(kList.length);
+		// TIntHashSet hash = null;
 		// Arrays.sort(kList);
-		// for (int u : kList) {
-		// byte[] valAsBytes = store.load(u);
-		// if (valAsBytes != null) {
-		// res.add(valAsBytes);
-		// }
-		// // res.put(u, new int[] {});
-		// }
+		// for (int i : kList) {
+		// byte[] load = store.load(i);
+		// if (load != null) {
+		// int[] byteArrayToIntArray = DataTypeUtils
+		// .byteArrayToIntArray(load);
+		// if (hash == null)
+		// hash = new TIntHashSet(byteArrayToIntArray.length);
 		//
-		// for (Iterator<byte[]> iterator = res.iterator(); iterator.hasNext();)
-		// {
-		// byte[] bs = iterator.next();
-		// hash.addAll(DataTypeUtils.byteArrayToIntArray(bs));
-		// iterator.remove();
+		// hash.addAll(byteArrayToIntArray);
 		// }
+		// }
+		// log.info("Returning result for GetSetOfUsersJob with "
+		// + (hash != null ? hash.size() : null) + " users.");
+		// return hash;
 
 		final RingQueue queue = new RingQueue();
 		Future<TIntHashSet> fut = exec.submit(new Callable<TIntHashSet>() {
-
 			@Override
 			public TIntHashSet call() throws Exception {
-				TIntHashSet hash = new TIntHashSet();
+				TIntHashSet hash = null;
 				while (true) {
 					Object[] vals = queue.take();
 					for (Object bs : vals) {
@@ -108,8 +95,12 @@ public class GetSetOfUsersJob implements Job<TIntHashSet> {
 									+ hash.size() + " users.");
 							return hash;
 						}
-						hash.addAll(DataTypeUtils
-								.byteArrayToIntArray((byte[]) bs));
+
+						int[] byteArrayToIntArray = DataTypeUtils
+								.byteArrayToIntArray((byte[]) bs);
+						if (hash == null)
+							hash = new TIntHashSet(byteArrayToIntArray.length);
+						hash.addAll(byteArrayToIntArray);
 					}
 				}
 			}
@@ -126,23 +117,5 @@ public class GetSetOfUsersJob implements Job<TIntHashSet> {
 		queue.put(null);
 
 		return fut.get();
-
-		// exec.shutdown();
-
-		// log.info("Merging results");
-		// while (!futures.isEmpty()) {
-		// for (Iterator<Future<TIntHashSet>> iterator = futures.iterator();
-		// iterator
-		// .hasNext();) {
-		// Future<TIntHashSet> bs = iterator.next();
-		// if (bs.isDone()) {
-		// hash.addAll(bs.get());
-		// iterator.remove();
-		// }
-		// }
-		// Thread.sleep(1);
-		// }
-
-		// return hash;
 	}
 }

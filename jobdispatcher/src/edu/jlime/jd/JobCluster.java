@@ -71,7 +71,7 @@ public class JobCluster implements Iterable<JobNode> {
 		return disp.getOutputStream(streamID, streamSource);
 	}
 
-	public JobNode getLocalPeer() {
+	public JobNode getLocalNode() {
 		return localPeer;
 	}
 

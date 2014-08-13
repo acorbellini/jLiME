@@ -169,14 +169,16 @@ public class PersistentIntIntArrayMap {
 			mgr.putJob(j, p);
 		}
 		return mgr.execute(new ResultListener<TIntHashSet, TIntHashSet>() {
-			TIntHashSet hashToReturn = new TIntHashSet();
+			TIntHashSet hashToReturn = null;
 
 			@Override
 			public void onSuccess(TIntHashSet res) {
-				synchronized (hashToReturn) {
-					hashToReturn.addAll(res);
+				synchronized (this) {
+					if (hashToReturn == null)
+						hashToReturn = res;
+					else
+						hashToReturn.addAll(res);
 				}
-
 			}
 
 			@Override

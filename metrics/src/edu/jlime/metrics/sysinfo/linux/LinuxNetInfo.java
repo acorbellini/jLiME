@@ -18,7 +18,6 @@ public class LinuxNetInfo extends SysInfoProvider {
 			@Override
 			public Set<String> updateSet(IMetrics mgr) throws Exception {
 				HashSet<String> currentifaces = new HashSet<>();
-				long now = Calendar.getInstance().getTimeInMillis();
 				String[] ifaces = CommandLineUtils
 						.execCommand(
 								"ifconfig | cut -d' ' -f1 | tr '\\n' ' '| tr -s ' '")
