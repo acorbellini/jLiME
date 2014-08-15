@@ -2,7 +2,7 @@ package edu.jlime.collections.intintarray.loader;
 
 import java.util.logging.Logger;
 
-public class DKVSValidator extends DKVSLoader {
+public class DKVSValidator extends Loader {
 
 	public DKVSValidator(String propFilePath) {
 		super(propFilePath);

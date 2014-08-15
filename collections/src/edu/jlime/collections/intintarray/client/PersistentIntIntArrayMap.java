@@ -1,10 +1,7 @@
 package edu.jlime.collections.intintarray.client;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.Future;
 import java.util.concurrent.locks.ReentrantLock;
@@ -42,8 +39,6 @@ public class PersistentIntIntArrayMap {
 
 	private static final int READ_BUFFER_SIZE = 128 * 1024;
 
-	private static final int CACHED_THRESHOLD = 10000;
-
 	Logger log = Logger.getLogger(PersistentIntIntArrayMap.class);
 
 	private JobCluster cluster;
@@ -65,22 +60,22 @@ public class PersistentIntIntArrayMap {
 		// toAdd.put(k, data);
 		// cache.put(list, toAdd);
 		// }
-		hashKey(k).exec(new SetJob(k, data, store));
+		hashKey(k).execAsync(new SetJob(k, data, store));
 	}
 
 	public JobNode hashKey(int k) {
-		ArrayList<JobNode> ordered = cluster.getExecutors();
-		Collections.sort(ordered, new Comparator<JobNode>() {
-			@Override
-			public int compare(JobNode o1, JobNode o2) {
-				Integer i1 = Integer.valueOf(o1.getName().replaceAll(
-						"GridCluster", ""));
-				Integer i2 = Integer.valueOf(o2.getName().replaceAll(
-						"GridCluster", ""));
-				return i1.compareTo(i2);
-			}
-		});
-		return getNode(k, ordered);
+		// ArrayList<JobNode> ordered = cluster.getExecutors();
+		// Collections.sort(ordered, new Comparator<JobNode>() {
+		// @Override
+		// public int compare(JobNode o1, JobNode o2) {
+		// Integer i1 = Integer.valueOf(o1.getName().replaceAll(
+		// "GridCluster", ""));
+		// Integer i2 = Integer.valueOf(o2.getName().replaceAll(
+		// "GridCluster", ""));
+		// return i1.compareTo(i2);
+		// }
+		// });
+		return getNode(k, cluster.getExecutors());
 	}
 
 	private JobNode getNode(int k, ArrayList<JobNode> ordered) {
@@ -95,17 +90,18 @@ public class PersistentIntIntArrayMap {
 	}
 
 	public HashMap<JobNode, TIntArrayList> hashKeys(int[] userList) {
+		// ArrayList<JobNode> ordered = cluster.getExecutors();
+		// Collections.sort(ordered, new Comparator<JobNode>() {
+		// @Override
+		// public int compare(JobNode o1, JobNode o2) {
+		// Integer i1 = Integer.valueOf(o1.getName().replaceAll(
+		// "GridCluster", ""));
+		// Integer i2 = Integer.valueOf(o2.getName().replaceAll(
+		// "GridCluster", ""));
+		// return i1.compareTo(i2);
+		// }
+		// });
 		ArrayList<JobNode> ordered = cluster.getExecutors();
-		Collections.sort(ordered, new Comparator<JobNode>() {
-			@Override
-			public int compare(JobNode o1, JobNode o2) {
-				Integer i1 = Integer.valueOf(o1.getName().replaceAll(
-						"GridCluster", ""));
-				Integer i2 = Integer.valueOf(o2.getName().replaceAll(
-						"GridCluster", ""));
-				return i1.compareTo(i2);
-			}
-		});
 		HashMap<JobNode, TIntArrayList> ret = new HashMap<JobNode, TIntArrayList>();
 		for (int u : userList) {
 			JobNode addr = getNode(u, ordered);
@@ -516,5 +512,34 @@ public class PersistentIntIntArrayMap {
 					+ ") from store");
 			outputStream.close();
 		}
+	}
+
+	public void list() throws Exception {
+		ForkJoinTask<Boolean> mgr = new ForkJoinTask<>();
+		for (JobNode j : cluster.getExecutors()) {
+			JobNode p = j;
+			ListJob list = new ListJob(store);
+			mgr.putJob(list, p);
+		}
+		mgr.execute(new ResultListener<Boolean, Void>() {
+
+			@Override
+			public void onSuccess(Boolean result) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public Void onFinished() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			@Override
+			public void onFailure(Exception res) {
+				// TODO Auto-generated method stub
+
+			}
+		});
 	}
 }

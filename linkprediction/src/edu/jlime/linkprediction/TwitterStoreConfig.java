@@ -7,7 +7,7 @@ public class TwitterStoreConfig {
 
 	public static StoreConfig getConfig() {
 		return new StoreConfig(StoreType.LEVELDB,
-				"/home/acorbellini/TwitterDB", "TwitterLevelDB");
+				"/home/acorbellini/TwitterDBV2", "TwitterLevelDB");
 	}
 
 }

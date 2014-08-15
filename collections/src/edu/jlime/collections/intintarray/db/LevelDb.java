@@ -14,6 +14,7 @@ import java.util.Map.Entry;
 import org.apache.log4j.Logger;
 import org.fusesource.leveldbjni.JniDBFactory;
 import org.iq80.leveldb.DB;
+import org.iq80.leveldb.DBComparator;
 import org.iq80.leveldb.DBException;
 import org.iq80.leveldb.DBIterator;
 import org.iq80.leveldb.Options;
@@ -53,6 +54,31 @@ public class LevelDb extends Store {
 			synchronized (this) {
 				if (db == null) {
 					options = new Options();
+					options.comparator(new DBComparator() {
+
+						@Override
+						public int compare(byte[] o1, byte[] o2) {
+							return Integer.compare(
+									DataTypeUtils.byteArrayToInt(o1),
+									DataTypeUtils.byteArrayToInt(o2));
+						}
+
+						@Override
+						public String name() {
+							return "Integer comparator.";
+						}
+
+						@Override
+						public byte[] findShortestSeparator(byte[] s,
+								byte[] arg1) {
+							return s;
+						}
+
+						@Override
+						public byte[] findShortSuccessor(byte[] e) {
+							return e;
+						}
+					});
 					options.createIfMissing(true);
 					options.cacheSize(100 * 1024 * 1024);
 					options.blockSize(256 * 1024);
@@ -81,13 +107,13 @@ public class LevelDb extends Store {
 
 	@Override
 	public List<byte[]> loadAll(int[] key) throws Exception {
+		Arrays.sort(key);
 		List<byte[]> res = new ArrayList<byte[]>();
 		DBIterator it = db.iterator();
-
 		try {
-			for (it.seek(bytes(key[0])); it.hasNext()
-					&& !Arrays.equals(it.peekNext().getKey(),
-							bytes(key[key.length - 1])); it.next()) {
+			int i = 0;
+			for (it.seek(intToBytes(key[0])); it.hasNext(); it
+					.seek(intToBytes(key[i++]))) {
 				Entry<byte[], byte[]> e = it.peekNext();
 				res.add(e.getValue());
 			}
@@ -99,7 +125,7 @@ public class LevelDb extends Store {
 		return res;
 	}
 
-	private byte[] bytes(int key) {
+	private byte[] intToBytes(int key) {
 		return DataTypeUtils.intToByteArray(key);
 	}
 
@@ -148,6 +174,7 @@ public class LevelDb extends Store {
 	}
 
 	public void store(String k, int[] v) throws Exception {
+		Arrays.sort(v);
 		getDb().put(stringToByteArray(k), DataTypeUtils.intArrayToByteArray(v));
 	}
 
@@ -184,6 +211,30 @@ public class LevelDb extends Store {
 		} catch (Exception e) {
 			log.error("Error closing LevelDB database", e);
 		}
+
+	}
+
+	@Override
+	public String list() throws Exception {
+		log.info("Listing");
+		StringBuilder builder = new StringBuilder();
+		DBIterator it = getDb().iterator();
+
+		try {
+			it.seekToFirst();
+			while (it.hasNext()) {
+				Entry<byte[], byte[]> next = it.next();
+				builder.append(DataTypeUtils.byteArrayToInt(next.getKey())
+						+ " "
+						+ DataTypeUtils.byteArrayToIntArray(next.getValue())
+						+ "\n");
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			it.close();
+		}
+		return builder.toString();
 
 	}
 }

@@ -40,4 +40,8 @@ public abstract class Store implements Closeable {
 	}
 
 	public abstract List<byte[]> loadAll(int[] key) throws Exception;
+
+	public String list() throws Exception {
+		return "";
+	};
 }

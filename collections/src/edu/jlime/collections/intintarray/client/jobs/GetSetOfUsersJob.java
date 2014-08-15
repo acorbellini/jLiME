@@ -1,6 +1,7 @@
 package edu.jlime.collections.intintarray.client.jobs;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -82,19 +83,23 @@ public class GetSetOfUsersJob implements Job<TIntHashSet> {
 			}
 		});
 		exec.shutdown();
-		// TIntHashSet hash = new TIntHashSet();
-		Arrays.sort(kList);
-		for (int u : kList) {
-			byte[] valAsBytes = store.load(u);
+		TIntHashSet hash = new TIntHashSet();
+//		Arrays.sort(kList);
+		List<byte[]> list = store.loadAll(kList);
+		for (byte[] valAsBytes : list) {
 			if (valAsBytes != null) {
-				queue.put(valAsBytes);
+				// queue.put(valAsBytes);
+				int[] byteArrayToIntArray = DataTypeUtils
+						.byteArrayToIntArray((byte[]) valAsBytes);
+				hash.addAll(byteArrayToIntArray);
 				// int[] byteArrayToIntArray = DataTypeUtils
 				// .byteArrayToIntArray((byte[]) valAsBytes);
 				// hash.addAll(byteArrayToIntArray);
 			}
 		}
-		queue.put(null);
+		// queue.put(null);
 
-		return fut.get();
+		// return fut.get();
+		return hash;
 	}
 }

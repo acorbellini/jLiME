@@ -4,6 +4,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.lang.model.type.NullType;
+
 public class MethodCall implements Serializable {
 
 	private static final long serialVersionUID = -8541391959402389105L;
@@ -27,7 +29,11 @@ public class MethodCall implements Serializable {
 	public List<Class<?>> getArgTypes() {
 		List<Class<?>> classes = new ArrayList<Class<?>>();
 		for (Object o : objects) {
-			classes.add(o.getClass());
+			if (o != null)
+				classes.add(o.getClass());
+			else
+				classes.add(NullType.class);
+
 		}
 		return classes;
 	}

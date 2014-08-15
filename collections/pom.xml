@@ -31,13 +31,42 @@
 		</dependency>
 
 		<dependency>
+			<groupId>org.deephacks.lmdbjni</groupId>
+			<artifactId>lmdbjni</artifactId>
+			<version>0.1.2</version>
+		</dependency>
+		<dependency>
 			<groupId>leveldb</groupId>
-			<artifactId>leveldbjni-all</artifactId>
-			<version>1.7</version>
+			<artifactId>leveldbjni</artifactId>
+			<version>1.7-all</version>
 			<scope>system</scope>
 			<systemPath>${basedir}/lib/leveldbjni-all-1.7.jar</systemPath>
 		</dependency>
 	</dependencies>
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<configuration>
+							<tasks>
+								<fileset id="lp_scripts" dir="./scripts" includes="**" />
+								<copy todir="../jlime/dist/extra/collections" failonerror="false">
+									<fileset refid="lp_scripts" />
+								</copy>
+							</tasks>
+						</configuration>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+
+	</build>
 	<parent>
 		<artifactId>jlime</artifactId>
 		<version>1.0</version>
