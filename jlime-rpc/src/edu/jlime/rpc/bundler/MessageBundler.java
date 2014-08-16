@@ -5,14 +5,15 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.log4j.Logger;
 
+import edu.jlime.core.transport.Address;
 import edu.jlime.metrics.metric.Metrics;
-import edu.jlime.rpc.message.Address;
+import edu.jlime.rpc.message.JLiMEAddress;
 import edu.jlime.rpc.message.Message;
 import edu.jlime.rpc.message.MessageListener;
 import edu.jlime.rpc.message.MessageProcessor;
 import edu.jlime.rpc.message.MessageType;
 import edu.jlime.rpc.message.SimpleMessageProcessor;
-import edu.jlime.util.ByteBuffer;
+import edu.jlime.util.Buffer;
 
 public class MessageBundler extends SimpleMessageProcessor {
 
@@ -36,7 +37,7 @@ public class MessageBundler extends SimpleMessageProcessor {
 			@Override
 			public void rcv(Message defMessage, MessageProcessor origin)
 					throws Exception {
-				ByteBuffer reader = defMessage.getDataBuffer();
+				Buffer reader = defMessage.getDataBuffer();
 				while (reader.hasRemaining()) {
 					byte[] msg = reader.getByteArray();
 					try {
@@ -68,9 +69,9 @@ public class MessageBundler extends SimpleMessageProcessor {
 			sendNext(msg);
 			return;
 		}
-		Address to = msg.getTo();
+		JLiMEAddress to = (JLiMEAddress) msg.getTo();
 		if (to == null)
-			to = Address.noAddr();
+			to = JLiMEAddress.noAddr();
 		Bundler bundler = bundles.get(to);
 		if (bundler == null)
 			synchronized (bundles) {
@@ -112,7 +113,7 @@ public class MessageBundler extends SimpleMessageProcessor {
 	// }
 
 	@Override
-	public void cleanupOnFailedPeer(Address addr) {
+	public void cleanupOnFailedPeer(JLiMEAddress addr) {
 		// synchronized (bundles) {
 		Bundler b = bundles.remove(addr);
 		if (b != null)

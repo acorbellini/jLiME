@@ -23,25 +23,8 @@ public class PeerJgroups extends Peer {
 		return pjg;
 	}
 
-	private Address address;
-
 	public PeerJgroups(String id, IP ip, Address address) {
-		super(id, ip.toString());
-		this.address = address;
-
-	}
-
-	public Address getAddress() {
-		return address;
-	}
-
-	public void setAddress(Address address) {
-		this.address = address;
-	}
-
-	@Override
-	public String toString() {
-		return getAddress().toString();
+		super(new JGroupsAddress(address), ip.toString());
 	}
 
 }

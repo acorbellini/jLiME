@@ -10,6 +10,7 @@ import edu.jlime.core.cluster.Peer;
 import edu.jlime.core.cluster.StreamResult;
 import edu.jlime.core.stream.RemoteInputStream;
 import edu.jlime.core.stream.RemoteOutputStream;
+import edu.jlime.core.transport.Address;
 import edu.jlime.jd.job.Job;
 import edu.jlime.jd.job.ResultManager;
 import edu.jlime.jd.job.StreamJob;
@@ -19,13 +20,13 @@ public class JobNode implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	private String clientID;
+	private Peer clientID;
 
 	private Peer peer;
 
 	transient private JobDispatcher jd;
 
-	public JobNode(Peer p, String clientID, JobDispatcher disp) {
+	public JobNode(Peer p, Peer clientID, JobDispatcher disp) {
 		this.peer = p;
 		this.clientID = clientID;
 		this.jd = disp;
@@ -104,8 +105,8 @@ public class JobNode implements Serializable {
 				getInputStream(stream.getStreamIDOutput()));
 	}
 
-	public String getID() {
-		return peer.getID();
+	public Address getID() {
+		return peer.getAddress();
 	}
 
 	public static JobNode copy(JobNode req, JobDispatcher disp) {
@@ -134,7 +135,7 @@ public class JobNode implements Serializable {
 		return peer.toString();
 	}
 
-	public String getClientID() {
+	public Peer getClient() {
 		return clientID;
 	}
 }

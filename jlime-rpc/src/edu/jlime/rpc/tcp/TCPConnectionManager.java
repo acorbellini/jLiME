@@ -17,7 +17,7 @@ import java.util.concurrent.ThreadFactory;
 
 import org.apache.log4j.Logger;
 
-import edu.jlime.rpc.message.Address;
+import edu.jlime.rpc.message.JLiMEAddress;
 import edu.jlime.rpc.message.AddressType;
 import edu.jlime.rpc.message.SocketAddress;
 import edu.jlime.util.ByteBuffer;
@@ -60,9 +60,9 @@ class TCPConnectionManager {
 
 	private long time_limit = 15000;
 
-	private Address to;
+	private JLiMEAddress to;
 
-	Address localID;
+	JLiMEAddress localID;
 
 	private Timer closer;
 
@@ -72,8 +72,8 @@ class TCPConnectionManager {
 
 	private int output_buffer;
 
-	public TCPConnectionManager(Address addr, Address localID, TCP rcvr,
-			TCPConfig config) {
+	public TCPConnectionManager(JLiMEAddress addr, JLiMEAddress localID,
+			TCP rcvr, TCPConfig config) {
 		this.conn_limit = config.conn_limit;
 		this.time_limit = config.time_limit;
 		this.input_buffer = config.input_buffer;
@@ -179,7 +179,9 @@ class TCPConnectionManager {
 					log.debug("Created socket " + sock + " to " + addr);
 				OutputStream os = sock.getOutputStream();
 				os.write(StreamType.PACKET.getId());
-				os.write(new ByteBuffer().putUUID(localID.getId()).build());
+				ByteBuffer asbytes = new ByteBuffer();
+				asbytes.putUUID(localID.getId());
+				os.write(asbytes.build());
 				os.flush();
 				return addConnection(sock);
 			} catch (ConnectException e) {

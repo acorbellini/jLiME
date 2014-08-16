@@ -4,14 +4,15 @@ import java.util.HashMap;
 
 import org.apache.log4j.Logger;
 
+import edu.jlime.core.transport.Address;
 import edu.jlime.metrics.metric.Metrics;
-import edu.jlime.rpc.message.Address;
+import edu.jlime.rpc.message.JLiMEAddress;
 import edu.jlime.rpc.message.Message;
 import edu.jlime.rpc.message.MessageListener;
 import edu.jlime.rpc.message.MessageProcessor;
 import edu.jlime.rpc.message.MessageType;
 import edu.jlime.rpc.message.SimpleMessageProcessor;
-import edu.jlime.util.ByteBuffer;
+import edu.jlime.util.Buffer;
 
 public class FlowControl extends SimpleMessageProcessor {
 
@@ -33,7 +34,7 @@ public class FlowControl extends SimpleMessageProcessor {
 			public void rcv(Message msg, MessageProcessor origin)
 					throws Exception {
 				FlowControlPerNode fc = getFC(msg.getFrom());
-				ByteBuffer reader = msg.getHeaderBuffer();
+				Buffer reader = msg.getHeaderBuffer();
 				int max_send = reader.getInt();
 				fc.update(msg.getDataSize(), max_send);
 				notifyRcvd(Message.deEncapsulate(msg.getDataAsBytes(),
@@ -54,12 +55,12 @@ public class FlowControl extends SimpleMessageProcessor {
 
 	@Override
 	public void send(Message msg) throws Exception {
-		Address to = msg.getTo();
+		JLiMEAddress to = msg.getTo();
 		FlowControlPerNode fc = getFC(to);
 		fc.queue(msg);
 	}
 
-	private FlowControlPerNode getFC(Address to) throws Exception {
+	private FlowControlPerNode getFC(JLiMEAddress to) throws Exception {
 		FlowControlPerNode fc;
 		synchronized (fcPerNode) {
 			fc = fcPerNode.get(to);
@@ -73,7 +74,7 @@ public class FlowControl extends SimpleMessageProcessor {
 	}
 
 	@Override
-	public void cleanupOnFailedPeer(Address addr) {
+	public void cleanupOnFailedPeer(JLiMEAddress addr) {
 		try {
 			FlowControlPerNode fc = getFC(addr);
 			if (fc != null)

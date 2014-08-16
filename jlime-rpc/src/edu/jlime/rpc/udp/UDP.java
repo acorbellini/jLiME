@@ -15,12 +15,14 @@ import org.apache.log4j.Logger;
 
 import edu.jlime.core.stream.RemoteInputStream;
 import edu.jlime.core.stream.RemoteOutputStream;
+import edu.jlime.core.transport.Address;
 import edu.jlime.rpc.SocketFactory;
-import edu.jlime.rpc.message.Address;
 import edu.jlime.rpc.message.AddressType;
+import edu.jlime.rpc.message.JLiMEAddress;
 import edu.jlime.rpc.message.SocketAddress;
 import edu.jlime.rpc.np.DataPacket;
 import edu.jlime.rpc.np.NetworkProtocol;
+import edu.jlime.util.Buffer;
 import edu.jlime.util.ByteBuffer;
 import edu.jlime.util.RingQueue;
 
@@ -56,7 +58,7 @@ public class UDP extends NetworkProtocol implements PacketReceiver {
 
 	protected HashMap<Address, SocketAddress> currentSendAddress = new HashMap<>();
 
-	protected ConcurrentHashMap<UUID, HashMap<UUID, LinkedBlockingDeque<byte[]>>> streamData = new ConcurrentHashMap<>();
+	protected ConcurrentHashMap<Address, HashMap<UUID, LinkedBlockingDeque<byte[]>>> streamData = new ConcurrentHashMap<>();
 
 	private int max_bytes = 2000;
 
@@ -64,14 +66,14 @@ public class UDP extends NetworkProtocol implements PacketReceiver {
 
 	private DatagramReceiver rx;
 
-	public UDP(UUID id, String addr, int port, int range, int max_msg_size,
-			SocketFactory fact) {
-		this(id, addr, port, range, max_msg_size, false, fact);
+	public UDP(JLiMEAddress logical, String addr, int port, int range,
+			int max_msg_size, SocketFactory fact) {
+		this(logical, addr, port, range, max_msg_size, false, fact);
 	}
 
-	public UDP(UUID id, String addr, int port, int range, int max_msg_size,
-			boolean mcast, SocketFactory fact) {
-		super(addr, port, range, fact, id);
+	public UDP(JLiMEAddress logical, String addr, int port, int range,
+			int max_msg_size, boolean mcast, SocketFactory fact) {
+		super(addr, port, range, fact, logical);
 		this.max_bytes = max_msg_size + 100;
 	}
 
@@ -85,7 +87,7 @@ public class UDP extends NetworkProtocol implements PacketReceiver {
 					+ " local is " + getAddr());
 		}
 
-		ByteBuffer buffer = new ByteBuffer(p.getData(), p.getLength());
+		Buffer buffer = new ByteBuffer(p.getData(), p.getLength());
 		DatagramType dt = DatagramType.fromID(buffer.get());
 		if (dt.equals(DatagramType.DATA)) {
 			// byte[] data = new byte[p.getLength() - 1];
@@ -98,11 +100,12 @@ public class UDP extends NetworkProtocol implements PacketReceiver {
 			UUID fromID = buffer.getUUID();
 			// byte[] data = new byte[p.getLength() - 17];
 			// System.arraycopy(buffer.array(), 17, data, 0, data.length);
-			addToStream(buffer.getRawByteArray(), streamID, fromID);
+			addToStream(buffer.getRawByteArray(), streamID, new JLiMEAddress(
+					fromID));
 		}
 	}
 
-	private void addToStream(byte[] data, UUID streamID, UUID from) {
+	private void addToStream(byte[] data, UUID streamID, Address from) {
 		LinkedBlockingDeque<byte[]> list = null;
 		HashMap<UUID, LinkedBlockingDeque<byte[]>> sd = getStreamDataOf(from);
 		synchronized (sd) {
@@ -116,7 +119,8 @@ public class UDP extends NetworkProtocol implements PacketReceiver {
 		list.addFirst(data);
 	}
 
-	private HashMap<UUID, LinkedBlockingDeque<byte[]>> getStreamDataOf(UUID from) {
+	private HashMap<UUID, LinkedBlockingDeque<byte[]>> getStreamDataOf(
+			Address from) {
 		HashMap<UUID, LinkedBlockingDeque<byte[]>> sd = null;
 		synchronized (streamData) {
 			sd = streamData.get(from);
@@ -142,8 +146,8 @@ public class UDP extends NetworkProtocol implements PacketReceiver {
 	}
 
 	@Override
-	public void sendBytes(byte[] built, Address to, SocketAddress realSockAddr)
-			throws Exception {
+	public void sendBytes(byte[] built, JLiMEAddress to,
+			SocketAddress realSockAddr) throws Exception {
 		send(DatagramType.DATA, built, to, realSockAddr);
 	}
 
@@ -162,7 +166,7 @@ public class UDP extends NetworkProtocol implements PacketReceiver {
 				List<SocketAddress> bup = backup.get(to);
 				if (bup != null && !bup.isEmpty()) {
 					realSockAddr = bup.get((int) (Math.random() * bup.size()));
-				} else if (!to.equals(Address.noAddr())) {
+				} else if (!to.equals(JLiMEAddress.noAddr())) {
 					log.error("DEFAddress "
 							+ to
 							+ " was not in send table, and did not contain a physical address to send to.");
@@ -233,7 +237,7 @@ public class UDP extends NetworkProtocol implements PacketReceiver {
 	}
 
 	@Override
-	public void beforeProcess(DataPacket pkt, Address from, Address to) {
+	public void beforeProcess(DataPacket pkt, JLiMEAddress from, JLiMEAddress to) {
 		currentSendAddress.put(from, new SocketAddress(from, pkt.getAddr(),
 				getType()));
 	}
@@ -253,8 +257,7 @@ public class UDP extends NetworkProtocol implements PacketReceiver {
 			@Override
 			public int read() throws IOException {
 				if (currData == null || offset == currData.length) {
-					HashMap<UUID, LinkedBlockingDeque<byte[]>> streamData = getStreamDataOf(from
-							.getId());
+					HashMap<UUID, LinkedBlockingDeque<byte[]>> streamData = getStreamDataOf(from);
 					LinkedBlockingDeque<byte[]> list = null;
 					synchronized (streamData) {
 						list = streamData.get(streamId);
@@ -317,11 +320,6 @@ public class UDP extends NetworkProtocol implements PacketReceiver {
 				closed = true;
 			}
 		};
-	}
-
-	@Override
-	public void cleanupOnFailedPeer(Address addr) {
-		super.cleanupOnFailedPeer(addr);
 	}
 
 }

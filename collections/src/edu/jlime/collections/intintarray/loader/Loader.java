@@ -7,7 +7,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Properties;
-import java.util.concurrent.Semaphore;
 
 import org.apache.log4j.Logger;
 
@@ -29,6 +28,8 @@ public class Loader {
 
 	private Boolean prefix;
 
+	private Client jlime;
+
 	public Loader(String propFilePath) {
 		Properties prop = new Properties();
 		File propFile = new File(propFilePath);
@@ -43,9 +44,10 @@ public class Loader {
 			return;
 		}
 		try {
+			this.jlime = Client.build(8);
 			setClient(new BundlerClient(new StoreConfig(StoreType.LEVELDB,
 					"/home/acorbellini/TwitterDBV2", "TwitterLevelDB"), 100000,
-					Client.build(8).getCluster()));
+					jlime.getCluster()));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -61,7 +63,7 @@ public class Loader {
 	protected Logger log = Logger.getLogger(Loader.class);
 
 	protected void load() throws Exception {
-		// getClient().list();
+		//		getClient().list();
 
 		// System.in.read();
 		new Thread("Process Lines") {
@@ -78,6 +80,12 @@ public class Loader {
 									agregar(resolveKey(currentKey),
 											valueBuffer.toArray());
 									valueBuffer.clear();
+								}
+								try {
+									getClient().close();
+									jlime.close();
+								} catch (Exception e) {
+									e.printStackTrace();
 								}
 								return;
 							}
@@ -128,6 +136,7 @@ public class Loader {
 			e.printStackTrace();
 		}
 		queue.put(null);
+
 	}
 
 	protected Integer resolveKey(Integer f) {

@@ -111,6 +111,10 @@ public class Configuration {
 
 	}
 
+	public Configuration() {
+		this(null);
+	}
+
 	private float getFloat(String k, float defaultValue) {
 		if (prop != null && prop.getProperty(k) != null)
 			try {

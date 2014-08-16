@@ -7,15 +7,16 @@ import java.util.UUID;
 
 import org.apache.log4j.Logger;
 
+import edu.jlime.core.transport.Address;
 import edu.jlime.metrics.metric.Metrics;
 import edu.jlime.rpc.Option;
-import edu.jlime.rpc.message.Address;
+import edu.jlime.rpc.message.JLiMEAddress;
 import edu.jlime.rpc.message.Message;
 import edu.jlime.rpc.message.MessageListener;
 import edu.jlime.rpc.message.MessageProcessor;
 import edu.jlime.rpc.message.MessageType;
 import edu.jlime.rpc.message.SimpleMessageProcessor;
-import edu.jlime.util.ByteBuffer;
+import edu.jlime.util.Buffer;
 
 public class Fragmenter extends SimpleMessageProcessor {
 
@@ -49,10 +50,10 @@ public class Fragmenter extends SimpleMessageProcessor {
 			@Override
 			public void rcv(Message defMessage, MessageProcessor origin)
 					throws Exception {
-				ByteBuffer header = defMessage.getHeaderBuffer();
+				Buffer header = defMessage.getHeaderBuffer();
 
-				Address from = defMessage.getFrom();
-				Address to = defMessage.getTo();
+				JLiMEAddress from = defMessage.getFrom();
+				JLiMEAddress to = defMessage.getTo();
 				// Only the first four bytes.
 				UUID fragID = header.getUUID();
 				int offset = header.getInt();
@@ -127,7 +128,7 @@ public class Fragmenter extends SimpleMessageProcessor {
 				Message toSend = Message.newOutDataMessage(fragData,
 						MessageType.FRAG, msg.getTo());
 
-				ByteBuffer headerW = toSend.getHeaderBuffer();
+				Buffer headerW = toSend.getHeaderBuffer();
 
 				// Frag UUID
 				headerW.putUUID(fragid);
@@ -163,7 +164,7 @@ public class Fragmenter extends SimpleMessageProcessor {
 	}
 
 	@Override
-	public void cleanupOnFailedPeer(Address addr) {
+	public void cleanupOnFailedPeer(JLiMEAddress addr) {
 		synchronized (parts) {
 			HashSet<UUID> sentIDs = sent.get(addr);
 			if (sentIDs != null) {

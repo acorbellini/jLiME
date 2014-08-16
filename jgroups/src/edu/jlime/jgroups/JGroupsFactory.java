@@ -14,12 +14,13 @@ import edu.jlime.core.cluster.IP;
 import edu.jlime.core.cluster.Peer;
 import edu.jlime.core.cluster.ServerAddressParser;
 import edu.jlime.core.rpc.RPCDispatcher;
+import edu.jlime.core.rpc.RPCFactory;
+import edu.jlime.core.transport.Transport;
 import edu.jlime.jd.JobDispatcher;
-import edu.jlime.jd.JobDispatcherFactory;
 import edu.jlime.util.NetworkUtils;
 import edu.jlime.util.NetworkUtils.SelectedInterface;
 
-public class JGroupsFactory extends JobDispatcherFactory {
+public class JGroupsFactory implements RPCFactory {
 
 	public static enum JGroupsConfigType {
 
@@ -91,7 +92,7 @@ public class JGroupsFactory extends JobDispatcherFactory {
 	}
 
 	@Override
-	public JobDispatcher getJD() throws Exception {
+	public RPCDispatcher build() throws Exception {
 		List<SelectedInterface> addrList = NetworkUtils.getLocalAddressIPv4();
 
 		if (addrList.size() == 0)
@@ -130,7 +131,7 @@ public class JGroupsFactory extends JobDispatcherFactory {
 
 		rpc.setTransport(tr);
 
-		final JobDispatcher disp = new JobDispatcher(minPeers, cluster, rpc);
+		final JobDispatcher disp = new JobDispatcher(minPeers, rpc);
 
 		// ,tags, exec, null, disp);
 
@@ -144,6 +145,6 @@ public class JGroupsFactory extends JobDispatcherFactory {
 			}
 		});
 
-		return disp;
+		return rpc;
 	}
 }

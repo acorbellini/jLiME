@@ -7,12 +7,12 @@ import java.util.concurrent.Semaphore;
 import org.apache.log4j.Logger;
 
 import edu.jlime.metrics.metric.Metrics;
-import edu.jlime.rpc.message.Address;
+import edu.jlime.rpc.message.JLiMEAddress;
 import edu.jlime.rpc.message.Message;
 import edu.jlime.rpc.message.MessageProcessor;
 import edu.jlime.rpc.message.MessageType;
 import edu.jlime.rpc.message.SimpleMessageProcessor;
-import edu.jlime.util.ByteBuffer;
+import edu.jlime.util.Buffer;
 
 class FlowControlPerNode extends SimpleMessageProcessor {
 
@@ -26,17 +26,17 @@ class FlowControlPerNode extends SimpleMessageProcessor {
 
 	FCConfiguration config;
 
-	private Address addr;
+	private JLiMEAddress addr;
 
 	private Timer t;
 
-	public FlowControlPerNode(Address addr, MessageProcessor comm,
+	public FlowControlPerNode(JLiMEAddress to, MessageProcessor comm,
 			final FCConfiguration config) {
-		super(comm, "DEF Flow Control for " + addr);
-		this.addr = addr;
+		super(comm, "DEF Flow Control for " + to);
+		this.addr = to;
 		this.config = config;
 		this.max_send = config.max_send_initial;
-		t = new Timer("Resend ack from flow control to " + addr);
+		t = new Timer("Resend ack from flow control to " + to);
 		t.schedule(
 				new TimerTask() {
 					@Override
@@ -132,7 +132,7 @@ class FlowControlPerNode extends SimpleMessageProcessor {
 		getPermission(fc_msg.getDataSize());
 		lockWait.release();
 
-		ByteBuffer writer = fc_msg.getHeaderBuffer();
+		Buffer writer = fc_msg.getHeaderBuffer();
 		writer.putInt(max_send);
 		sendNext(fc_msg);
 	}

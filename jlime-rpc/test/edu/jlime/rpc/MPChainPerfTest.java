@@ -3,7 +3,7 @@ package edu.jlime.rpc;
 import java.util.UUID;
 
 import edu.jlime.metrics.metric.Metrics;
-import edu.jlime.rpc.message.Address;
+import edu.jlime.rpc.message.JLiMEAddress;
 import edu.jlime.rpc.message.Message;
 import edu.jlime.rpc.message.MessageProcessor;
 import edu.jlime.rpc.message.MessageType;
@@ -56,7 +56,7 @@ public class MPChainPerfTest {
 		init = System.nanoTime();
 		for (int i = 1; i <= MSGS; i++) {
 			first.queue(Message.newEmptyOutDataMessage(MessageType.ACK,
-					new Address(UUID.randomUUID())));
+					new JLiMEAddress(UUID.randomUUID())));
 		}
 
 	}

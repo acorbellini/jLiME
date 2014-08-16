@@ -1,8 +1,7 @@
 package edu.jlime.rpc;
 
-import java.util.UUID;
-
 import edu.jlime.rpc.message.AddressType;
+import edu.jlime.rpc.message.JLiMEAddress;
 import edu.jlime.rpc.np.NetworkProtocol;
 import edu.jlime.rpc.tcp.TCP;
 import edu.jlime.rpc.udp.UDP;
@@ -17,13 +16,13 @@ public abstract class NetworkProtocolFactory {
 
 	public abstract NetworkProtocol getProtocol(String addr);
 
-	public static NetworkProtocolFactory udp(final UUID localID,
+	public static NetworkProtocolFactory udp(final JLiMEAddress local,
 			final Configuration config) {
 		return new NetworkProtocolFactory(AddressType.MCAST) {
 
 			@Override
 			public NetworkProtocol getProtocol(String addr) {
-				return new UDP(localID, addr, config.port, config.port_range,
+				return new UDP(local, addr, config.port, config.port_range,
 						config.max_msg_size, SocketFactory.getUnicastFactory(
 								config.sendBuffer, config.rcvBuffer));
 			}
@@ -31,7 +30,7 @@ public abstract class NetworkProtocolFactory {
 		};
 	}
 
-	public static NetworkProtocolFactory tcp(final UUID localID,
+	public static NetworkProtocolFactory tcp(final JLiMEAddress localID,
 			final Configuration config) {
 		return new NetworkProtocolFactory(AddressType.TCP) {
 
@@ -44,13 +43,13 @@ public abstract class NetworkProtocolFactory {
 		};
 	}
 
-	public static NetworkProtocolFactory mcast(final UUID localID,
+	public static NetworkProtocolFactory mcast(final JLiMEAddress local,
 			final Configuration config) {
 		return new NetworkProtocolFactory(AddressType.UDP) {
 
 			@Override
 			public NetworkProtocol getProtocol(String addr) {
-				return new UDP(localID, config.mcast_addr, config.mcastport,
+				return new UDP(local, config.mcast_addr, config.mcastport,
 						config.mcast_port_range, config.max_msg_size, true,
 						SocketFactory.getMcastFactory(addr, config.sendBuffer,
 								config.rcvBuffer));

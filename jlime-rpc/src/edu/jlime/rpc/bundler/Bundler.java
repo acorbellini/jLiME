@@ -6,7 +6,7 @@ import java.util.TimerTask;
 
 import org.apache.log4j.Logger;
 
-import edu.jlime.rpc.message.Address;
+import edu.jlime.rpc.message.JLiMEAddress;
 import edu.jlime.rpc.message.Message;
 import edu.jlime.rpc.message.MessageProcessor;
 import edu.jlime.rpc.message.MessageType;
@@ -18,7 +18,7 @@ public class Bundler {
 
 	private int pos = 0;
 
-	private Address to;
+	private JLiMEAddress to;
 
 	private Timer t;
 
@@ -28,7 +28,7 @@ public class Bundler {
 
 	private MessageProcessor next;
 
-	public Bundler(MessageProcessor next, int max_size, Address addr, Timer t) {
+	public Bundler(MessageProcessor next, int max_size, JLiMEAddress addr, Timer t) {
 		this.max_size = max_size;
 		this.bundle = new byte[max_size];
 		this.to = addr;

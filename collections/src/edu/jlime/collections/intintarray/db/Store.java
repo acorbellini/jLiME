@@ -43,5 +43,9 @@ public abstract class Store implements Closeable {
 
 	public String list() throws Exception {
 		return "";
+	}
+
+	public int size() throws Exception {
+		return 0;
 	};
 }

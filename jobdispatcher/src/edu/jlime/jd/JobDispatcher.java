@@ -42,8 +42,6 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 
 	private static final int TIME_TO_SHOWUP = 20000;
 
-	private Cluster cluster;
-
 	private ExecEnvironment env;
 
 	private RPCDispatcher rpc;
@@ -78,20 +76,18 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 
 	private Metrics metrics;
 
+	private Cluster cluster;
+
 	public Map<UUID, ResultManager<?>> getJobMap() {
 		return jobMap;
 	}
 
-	public JobDispatcher(int minPeers, Cluster cluster, RPCDispatcher rpc) {
+	public JobDispatcher(int minPeers, RPCDispatcher rpc) {
 		this.minServers = minPeers;
 		this.env = new ExecEnvironment(this);
-		this.cluster = cluster;
 		this.rpc = rpc;
-
-		cluster.addChangeListener(this);
-		for (Peer peer : cluster) {
-			peerAdded(peer, cluster);
-		}
+		this.cluster = rpc.getCluster();
+		this.cluster.addChangeListener(this);
 
 		rpc.registerTarget(JOB_DISPATCHER, this);
 
@@ -99,21 +95,23 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 		final TypeConverters tc = rpc.getMarshaller().getTc();
 		tc.registerTypeConverter(JobContainer.class, new TypeConverter() {
 			@Override
-			public void toArray(Object o, ByteBuffer buffer) throws Exception {
+			public void toArray(Object o, ByteBuffer buffer, Peer cliID)
+					throws Exception {
 				JobContainer jc = (JobContainer) o;
-				tc.objectToByteArray(jc.getRequestor(), buffer);
-				tc.objectToByteArray(jc.getJob(), buffer);
+				tc.objectToByteArray(jc.getRequestor(), buffer, cliID);
+				tc.objectToByteArray(jc.getJob(), buffer, cliID);
 				buffer.putUUID(jc.getJobID());
 				buffer.putBoolean(jc.isNoresponse());
 			}
 
 			@Override
-			public Object fromArray(ByteBuffer buff, String originID,
-					String clientID) throws Exception {
-				JobNode p = (JobNode) tc.getObjectFromArray(buff, originID,
-						clientID);
+			public Object fromArray(ByteBuffer buff, Peer originID)
+					throws Exception {
+
+				JobNode p = (JobNode) tc.getObjectFromArray(buff, originID);
+
 				ClientJob<?> job = (ClientJob<?>) tc.getObjectFromArray(buff,
-						originID, clientID);
+						originID);
 				UUID id = buff.getUUID();
 				boolean isNoResponse = buff.getBoolean();
 				JobContainer jc = new JobContainer(job, p);
@@ -125,35 +123,36 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 
 		tc.registerTypeConverter(JobNode.class, new TypeConverter() {
 			@Override
-			public void toArray(Object o, ByteBuffer buffer) throws Exception {
+			public void toArray(Object o, ByteBuffer buffer, Peer cliID)
+					throws Exception {
 				JobNode jc = (JobNode) o;
-				tc.objectToByteArray(jc.getPeer(), buffer);
-				buffer.putString(jc.getClientID());
+				tc.objectToByteArray(jc.getPeer(), buffer, cliID);
+				tc.objectToByteArray(jc.getClient(), buffer, cliID);
 			}
 
 			@Override
-			public Object fromArray(ByteBuffer buff, String originID,
-					String clientID) throws Exception {
-				Peer p = (Peer) tc.getObjectFromArray(buff, originID, clientID);
-				String cliID = buff.getString();
-				JobNode jn = new JobNode(p, cliID, JobDispatcher.this);
+			public Object fromArray(ByteBuffer buff, Peer originID)
+					throws Exception {
+				Peer p = (Peer) tc.getObjectFromArray(buff, originID);
+				Peer client = (Peer) tc.getObjectFromArray(buff, originID);
+				JobNode jn = new JobNode(p, client, JobDispatcher.this);
 				return jn;
 			}
 		});
 
 		tc.registerTypeConverter(RemoteReference.class, new TypeConverter() {
 			@Override
-			public void toArray(Object o, ByteBuffer buffer) throws Exception {
+			public void toArray(Object o, ByteBuffer buffer, Peer cliID)
+					throws Exception {
 				RemoteReference rr = (RemoteReference) o;
-				tc.objectToByteArray(rr.getNode(), buffer);
+				tc.objectToByteArray(rr.getNode(), buffer, cliID);
 				buffer.putString(rr.getKey());
 			}
 
 			@Override
-			public Object fromArray(ByteBuffer buff, String originID,
-					String clientID) throws Exception {
-				JobNode p = (JobNode) tc.getObjectFromArray(buff, originID,
-						clientID);
+			public Object fromArray(ByteBuffer buff, Peer originID)
+					throws Exception {
+				JobNode p = (JobNode) tc.getObjectFromArray(buff, originID);
 				String key = buff.getString();
 				RemoteReference rr = new RemoteReference(p, key);
 				return rr;
@@ -191,11 +190,11 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 		// }
 		if (!copy.isEmpty()) {
 			JobContainer jw = new JobContainer(j, new JobNode(getLocalPeer(),
-					getID(), this));
+					getLocalPeer(), this));
 			jw.setNoResponse(true);
 
 			JobExecutorBroadcast other = factory.getBroadcast(copy,
-					j.getClientID());
+					j.getClient());
 			other.execute(jw);
 		}
 	}
@@ -217,13 +216,14 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 
 			Iterator<Peer> it = copy.iterator();
 			JobContainer jw = new JobContainer(j, new JobNode(getLocalPeer(),
-					j.getClientID(), this));
+					j.getClient(), this));
 			addJobMapping(rm, jw, peers);
 			if (log.isDebugEnabled())
 				log.debug("Checking if it's local.");
 			while (it.hasNext()) {
 				Peer peer = it.next();
-				JobExecutor localJD = DispatcherManager.getJD(peer.getID());
+				JobExecutor localJD = DispatcherManager
+						.getJD(peer.getAddress());
 				if (localJD != null) {
 					if (log.isDebugEnabled())
 						log.debug("Executing job on local JD " + j);
@@ -235,7 +235,7 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 				if (log.isDebugEnabled())
 					log.debug("Creating JobExecutorBroadcast");
 				JobExecutorBroadcast remote = factory.getBroadcast(copy,
-						j.getClientID());
+						j.getClient());
 				if (log.isDebugEnabled())
 					log.debug("Calling JobExecutorBroadcast");
 				remote.execute(jw);
@@ -261,9 +261,9 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 
 	public void execAsync(final JobNode dest, final ClientJob<?> j,
 			final ResultManager<?> m) throws Exception {
-		String cli = j.getClientID();
+		Peer cli = j.getClient();
 		if (!cluster.contains(cli)) {
-			log.error("Won't send job for " + j.getClientID()
+			log.error("Won't send job for " + j.getClient()
 					+ ", a server that has crashed.");
 			return;
 		}
@@ -293,13 +293,12 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 							+ " and type " + j.getClass());
 
 				JobExecutor remote = factory.get(dest.getPeer(), job.getJob()
-						.getClientID());
+						.getClient());
 				remote.execute(job);
 			}
 		} catch (Exception e) {
 			result(e, job.getJobID(), dest);
 		}
-
 	}
 
 	public <R> Future<R> execAsyncWithFuture(final JobNode address,
@@ -349,21 +348,21 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 
 	@Override
 	public void execute(JobContainer j) throws Exception {
-		if (!cluster.waitFor(j.getJob().getClientID(), TIME_TO_SHOWUP)) {
-			log.error("Won't execute a job for " + j.getJob().getClientID()
+		if (!cluster.waitFor(j.getJob().getClient(), TIME_TO_SHOWUP)) {
+			log.error("Won't execute a job for " + j.getJob().getClient()
 					+ ", a client that has crashed.");
 			throw new NotInClusterException();
 		}
 
 		if (log.isDebugEnabled())
 			log.info("Executing job " + j.getJobID() + " of client "
-					+ j.getJob().getClientID() + " and type "
+					+ j.getJob().getClient() + " and type "
 					+ j.getJob().getClass() + " from " + j.getRequestor());
 		try {
 			j.setSrv(this);
 			if (metrics != null)
 				metrics.counter("jlime.jobs.in").count();
-			String cli = j.getJob().getClientID();
+			Peer cli = j.getJob().getClient();
 			if (cli == null)
 				log.error("Client for job " + j.getJob().getClass()
 						+ " is null, jobID:" + j.getJobID());
@@ -373,7 +372,7 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 			else {
 				if (log.isDebugEnabled())
 					log.debug("Submitting job " + j.getJobID() + " of client "
-							+ j.getJob().getClientID() + " from "
+							+ j.getJob().getClient() + " from "
 							+ j.getRequestor());
 				cliEnv.execute(j);
 			}
@@ -383,15 +382,11 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 	}
 
 	public JobCluster getCluster() {
-		return new JobCluster(this, getID());
+		return new JobCluster(this, getLocalPeer());
 	}
 
 	public ExecEnvironment getEnv() {
 		return env;
-	}
-
-	public String getID() {
-		return cluster.getLocalPeer().getID();
 	}
 
 	public int getMinServers() {
@@ -403,6 +398,12 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 			throws Exception {
 		if (log.isDebugEnabled())
 			log.debug("Processing result of job " + jobID + " from " + req);
+
+		if (exec.isShutdown()) {
+			log.info("Can't process result, JobDispatcher is closed.");
+			return;
+		}
+
 		exec.execute(new Runnable() {
 			@Override
 			public void run() {
@@ -428,7 +429,7 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 		});
 	}
 
-	public void sendResult(Object res, JobNode req, UUID jobID, String cliID)
+	public void sendResult(Object res, JobNode req, UUID jobID, Peer cliID)
 			throws Exception {
 		JobExecutor localJD = DispatcherManager.getJD(req.getID());
 		if (localJD != null) {
@@ -451,7 +452,8 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 
 	public void start() throws Exception {
 		rpc.start();
-		initLock.acquire();
+		if (executorsSize() < minServers)
+			initLock.acquire();
 		DispatcherManager.registerJD(this);
 	}
 
@@ -462,6 +464,7 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 		for (CloseListener cl : closeListeners) {
 			cl.onStop();
 		}
+
 	}
 
 	@Override

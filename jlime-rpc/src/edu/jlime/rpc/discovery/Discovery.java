@@ -11,10 +11,11 @@ import java.util.UUID;
 
 import org.apache.log4j.Logger;
 
+import edu.jlime.core.transport.Address;
 import edu.jlime.rpc.AddressListProvider;
 import edu.jlime.rpc.Configuration;
-import edu.jlime.rpc.message.Address;
 import edu.jlime.rpc.message.AddressType;
+import edu.jlime.rpc.message.JLiMEAddress;
 import edu.jlime.rpc.message.Message;
 import edu.jlime.rpc.message.MessageListener;
 import edu.jlime.rpc.message.MessageProcessor;
@@ -42,13 +43,16 @@ public abstract class Discovery implements DiscoveryProvider, StackElement {
 
 	private Map<String, String> discAdditionData = new HashMap<>();
 
-	private UUID localID;
+	private JLiMEAddress localID;
+
+	private String localName;
 
 	// private AddressTester addressTester;
 
-	public Discovery(UUID localID, Configuration config,
+	public Discovery(JLiMEAddress localID, String name, Configuration config,
 			MessageProcessor discoveryInit, MessageProcessor discoveryData) {
 		this.localID = localID;
+		this.localName = name;
 		this.config = config;
 		this.discoveryInit = discoveryInit;
 		this.discoveryData = discoveryData;
@@ -74,7 +78,7 @@ public abstract class Discovery implements DiscoveryProvider, StackElement {
 						notifyAddressList(disco.getId(), disco.getAddresses());
 
 						discoveryMessageReceived(defMessage.getFrom(),
-								disco.getAdditional());
+								disco.getName(), disco.getAdditional());
 					}
 				});
 		discoveryData.addMessageListener(MessageType.DISCOVERY_RESPONSE,
@@ -93,7 +97,7 @@ public abstract class Discovery implements DiscoveryProvider, StackElement {
 
 						notifyAddressList(disco.getId(), disco.getAddresses());
 
-						discoveryMessageReceived(m.getFrom(),
+						discoveryMessageReceived(m.getFrom(), disco.getName(),
 								disco.getAdditional());
 
 						Message confirm = newDiscoveryConfirmMessage();
@@ -153,7 +157,7 @@ public abstract class Discovery implements DiscoveryProvider, StackElement {
 					// && addressTester.test(id, defSocketAddress))
 					byType.add(defSocketAddress);
 			}
-			alul.getValue().addressUpdate(new Address(id), byType);
+			alul.getValue().addressUpdate(new JLiMEAddress(id), byType);
 		}
 	}
 
@@ -175,7 +179,7 @@ public abstract class Discovery implements DiscoveryProvider, StackElement {
 	}
 
 	@Override
-	public void putData(HashMap<String, String> dataMap) {
+	public void putData(Map<String, String> dataMap) {
 		this.discAdditionData.putAll(dataMap);
 	}
 
@@ -184,7 +188,7 @@ public abstract class Discovery implements DiscoveryProvider, StackElement {
 		for (AddressListProvider alp : addressProviders.values())
 			addresses.addAll(alp.getAddresses());
 
-		Message discoMsg = DiscoveryMessage.createNew(t, localID,
+		Message discoMsg = DiscoveryMessage.createNew(t, localID, localName,
 				discAdditionData, addresses);
 
 		return discoMsg;
@@ -194,11 +198,11 @@ public abstract class Discovery implements DiscoveryProvider, StackElement {
 		addressProviders.put(alp.getType(), alp);
 	}
 
-	private void discoveryMessageReceived(Address from,
+	private void discoveryMessageReceived(Address from, String name,
 			Map<String, String> additional) throws Exception {
 		for (DiscoveryListener l : new ArrayList<>(listeners)) {
 			try {
-				l.memberMessage(from, additional);
+				l.memberMessage(from, name, additional);
 			} catch (UnknownHostException e) {
 				e.printStackTrace();
 			}
@@ -206,8 +210,13 @@ public abstract class Discovery implements DiscoveryProvider, StackElement {
 	}
 
 	@Override
+	public void cleanupOnFailedPeer(JLiMEAddress address) {
+	}
+
+	@Override
 	public void stop() throws Exception {
 	}
 
 	protected abstract void startDiscovery(List<SelectedInterface> added);
+
 }

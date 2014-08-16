@@ -15,12 +15,12 @@ public class JobExecutorBroadcastImpl implements JobExecutorBroadcast {
 
 	List<Peer> dest = new ArrayList<Peer>();
 
-	String cliID;
+	Peer cliID;
 
 	String targetID;
 
 	public JobExecutorBroadcastImpl(RPCDispatcher disp, List<Peer> dest,
-			String cliID, String targetID) {
+			Peer cliID, String targetID) {
 		this.disp = disp;
 		this.dest.addAll(dest);
 		this.cliID = cliID;

@@ -6,7 +6,8 @@ public class MessageSimple extends Message {
 
 	ByteBuffer data;
 
-	public MessageSimple(Header h, ByteBuffer data, Address from, Address to) {
+	public MessageSimple(Header h, ByteBuffer data, JLiMEAddress from,
+			JLiMEAddress to) {
 		super(h, from, to);
 		this.data = data;
 	}

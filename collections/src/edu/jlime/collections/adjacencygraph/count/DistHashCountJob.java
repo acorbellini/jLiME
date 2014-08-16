@@ -6,6 +6,7 @@ import edu.jlime.client.JobContext;
 import edu.jlime.collections.intintarray.client.PersistentIntIntArrayMap;
 import edu.jlime.jd.JobNode;
 import edu.jlime.jd.job.Job;
+import edu.jlime.util.Buffer;
 import edu.jlime.util.ByteBuffer;
 import gnu.trove.map.hash.TIntIntHashMap;
 
@@ -67,7 +68,7 @@ public class DistHashCountJob implements Job<byte[]> {
 
 	public static TIntIntHashMap fromBytes(byte[] bytes) {
 		TIntIntHashMap hash = new TIntIntHashMap();
-		ByteBuffer reader = new ByteBuffer(bytes);
+		Buffer reader = new ByteBuffer(bytes);
 		while (reader.hasRemaining()) {
 			hash.put(reader.getInt(), reader.getInt());
 		}

@@ -1,7 +1,13 @@
 package edu.jlime.util;
 
+import java.io.DataInput;
+import java.io.DataOutput;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInput;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 
 public class StreamUtils {
 	private static final int BUFFER_SIZE = 128 * 1024;
@@ -47,5 +53,58 @@ public class StreamUtils {
 				buffer.putRawByteArray(buffered, total);
 		}
 		return buffer.build();
+	}
+
+	public static void putString(DataOutput out, String name)
+			throws IOException {
+		byte[] bytes = name.getBytes();
+		putByteArray(out, bytes);
+
+	}
+
+	private static void putByteArray(DataOutput out, byte[] bytes)
+			throws IOException {
+		putInt(out, bytes.length);
+		out.write(bytes);
+	}
+
+	private static void putInt(DataOutput out, int length) throws IOException {
+		out.writeInt(length);
+	}
+
+	public static void putMap(DataOutput out, Map<String, String> data)
+			throws IOException {
+		int size = data.size();
+		putInt(out, size);
+		for (Entry<String, String> e : data.entrySet()) {
+			putString(out, e.getKey());
+			putString(out, e.getValue());
+		}
+	}
+
+	public static String readString(DataInput in) throws IOException {
+		int size = readInt(in);
+		return new String(readByteArray(in, size));
+	}
+
+	private static byte[] readByteArray(DataInput in, int size)
+			throws IOException {
+		byte[] bytes = new byte[size];
+		in.readFully(bytes);
+		return bytes;
+	}
+
+	private static int readInt(DataInput in) throws IOException {
+		return in.readInt();
+	}
+
+	public static Map<String, String> readMap(ObjectInput in)
+			throws IOException {
+		Map<String, String> map = new HashMap<>();
+		int size = readInt(in);
+		for (int i = 0; i < size; i++) {
+			map.put(readString(in), readString(in));
+		}
+		return map;
 	}
 }

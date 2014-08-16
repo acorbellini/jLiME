@@ -5,20 +5,22 @@ import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.UUID;
 
 import org.apache.log4j.Logger;
 
 import edu.jlime.core.cluster.IP;
+import edu.jlime.core.transport.Address;
+import edu.jlime.core.transport.Streamer;
 import edu.jlime.metrics.metric.Metrics;
 import edu.jlime.rpc.AddressListProvider;
 import edu.jlime.rpc.SocketFactory;
 import edu.jlime.rpc.SocketFactory.jLimeSocket;
-import edu.jlime.rpc.message.Address;
 import edu.jlime.rpc.message.AddressType;
+import edu.jlime.rpc.message.JLiMEAddress;
 import edu.jlime.rpc.message.Message;
 import edu.jlime.rpc.message.SimpleMessageProcessor;
 import edu.jlime.rpc.message.SocketAddress;
+import edu.jlime.util.Buffer;
 import edu.jlime.util.ByteBuffer;
 import edu.jlime.util.RingQueue;
 
@@ -39,7 +41,7 @@ public abstract class NetworkProtocol extends SimpleMessageProcessor implements
 
 	private SocketAddress localAddr;
 
-	private Address local;
+	private JLiMEAddress local;
 
 	private jLimeSocket socket;
 
@@ -48,9 +50,9 @@ public abstract class NetworkProtocol extends SimpleMessageProcessor implements
 	private Metrics metrics;
 
 	public NetworkProtocol(String addr, int port, int range,
-			SocketFactory fact, UUID id) {
+			SocketFactory fact, JLiMEAddress id) {
 		super(null, "DEF Network Protocol");
-		this.setLocal(new Address(id));
+		this.setLocal(id);
 		this.fact = fact;
 		this.setAddr(addr);
 		this.port = port;
@@ -81,12 +83,13 @@ public abstract class NetworkProtocol extends SimpleMessageProcessor implements
 	};
 
 	private void processPacket(DataPacket pkt) throws Exception {
-		ByteBuffer buff = pkt.reader;
-		Address from = new Address(buff.getUUID());
-		Address to = new Address(buff.getUUID());
+		Buffer buff = pkt.reader;
+		JLiMEAddress from = new JLiMEAddress(buff.getUUID());
+		JLiMEAddress to = new JLiMEAddress(buff.getUUID());
+
 		beforeProcess(pkt, from, to);
 
-		if (!to.equals(Address.noAddr()) && !to.equals(getLocal())) {
+		if (!to.equals(JLiMEAddress.noAddr()) && !to.equals(getLocal())) {
 			if (log.isDebugEnabled())
 				log.debug("Message from " + from + " to " + to
 						+ " wasn't for me (" + getLocal() + ")");
@@ -102,10 +105,11 @@ public abstract class NetworkProtocol extends SimpleMessageProcessor implements
 		notifyRcvd(msg);
 	}
 
-	protected abstract void beforeProcess(DataPacket pkt, Address from,
-			Address to);
+	protected abstract void beforeProcess(DataPacket pkt, JLiMEAddress from,
+			JLiMEAddress to);
 
 	public void start() throws Exception {
+
 		int tries = 0;
 		while (getSocket() == null && tries != portrange) {
 			try {
@@ -115,9 +119,13 @@ public abstract class NetworkProtocol extends SimpleMessageProcessor implements
 			}
 		}
 
-		if (getSocket() == null)
+		if (socket == null)
 			throw new Exception("Could not set port from " + port + " to "
 					+ (port + portrange));
+
+		if (metrics != null)
+			this.metrics.set("jlime.interface").update(
+					this.socket.getAddr() + ":" + this.socket.getPort());
 
 		port = port + tries;
 
@@ -134,13 +142,15 @@ public abstract class NetworkProtocol extends SimpleMessageProcessor implements
 
 	@Override
 	public void send(Message msg) throws Exception {
-		Address to = msg.getTo();
+		JLiMEAddress to = msg.getTo();
 		SocketAddress realSockAddr = null;
 		if (to == null) {
-			to = Address.noAddr();
+			to = JLiMEAddress.noAddr();
 			realSockAddr = localAddr;
-		} else if (to != null && to instanceof SocketAddress)
+
+		} else if (to != null && to instanceof SocketAddress) {
 			realSockAddr = ((SocketAddress) to);
+		}
 
 		byte[] array = msg.toByteArray();
 
@@ -177,19 +187,19 @@ public abstract class NetworkProtocol extends SimpleMessageProcessor implements
 
 	public abstract void onStart(Object sock);
 
-	public abstract void sendBytes(byte[] built, Address to,
+	public abstract void sendBytes(byte[] built, JLiMEAddress to,
 			SocketAddress realSockAddr) throws Exception;
 
 	public jLimeSocket getSocket() {
 		return socket;
 	}
 
-	public Address getLocal() {
+	public JLiMEAddress getLocal() {
 		return local;
 	}
 
-	public void setLocal(Address local) {
-		this.local = local;
+	public void setLocal(JLiMEAddress id) {
+		this.local = id;
 	}
 
 	@Override
@@ -209,6 +219,7 @@ public abstract class NetworkProtocol extends SimpleMessageProcessor implements
 		return true;
 	}
 
+	@Override
 	public void addressUpdate(Address id, List<SocketAddress> addresses) {
 
 		List<SocketAddress> update = new ArrayList<>();
@@ -223,7 +234,6 @@ public abstract class NetworkProtocol extends SimpleMessageProcessor implements
 	@Override
 	public void setMetrics(Metrics metrics) {
 		this.metrics = metrics;
-		this.metrics.set("jlime.interface").update(
-				this.socket.getAddr() + ":" + this.socket.getPort());
+
 	}
 }

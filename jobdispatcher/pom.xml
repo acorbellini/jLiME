@@ -26,6 +26,11 @@
   		<artifactId>core</artifactId>
   		<version>1.0</version>
   	</dependency>
+  	<dependency>
+  		<groupId>edu.jlime</groupId>
+  		<artifactId>jlime-rpc</artifactId>
+  		<version>1.0</version>
+  	</dependency>
   </dependencies>
   <name>jLiME JobDispatcher</name>
 </project>

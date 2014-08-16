@@ -24,6 +24,7 @@ import edu.jlime.jd.JobNode;
 import edu.jlime.jd.job.StreamJob;
 import edu.jlime.jd.task.ForkJoinTask;
 import edu.jlime.jd.task.ResultListener;
+import edu.jlime.util.Buffer;
 import edu.jlime.util.ByteBuffer;
 import edu.jlime.util.DataTypeUtils;
 import gnu.trove.iterator.TIntIntIterator;
@@ -157,6 +158,10 @@ public class PersistentIntIntArrayMap {
 	public TIntHashSet getSetOfUsers(int[] array) throws Exception {
 
 		HashMap<JobNode, TIntArrayList> byServer = hashKeys(array);
+		// HashMap<JobNode, TIntArrayList> byServer = new HashMap<>();
+		// for (JobNode i : cluster.getExecutors()) {
+		// byServer.put(i, new TIntArrayList(array));
+		// }
 		log.info("Starting getSetOfUsers");
 
 		ForkJoinTask<TIntHashSet> mgr = new ForkJoinTask<>();
@@ -490,7 +495,7 @@ public class PersistentIntIntArrayMap {
 					+ ") from store");
 			TIntArrayList set = new TIntArrayList();
 
-			ByteBuffer buffer = new ByteBuffer();
+			Buffer buffer = new ByteBuffer();
 			int max = 256 * 1024;
 			Store store = (Store) ctx.get(name);
 			TIntIterator it = kList.iterator();

@@ -3,11 +3,11 @@ package edu.jlime.rpc;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.ListIterator;
-import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
+import edu.jlime.core.transport.Streamer;
 import edu.jlime.metrics.metric.Metrics;
 import edu.jlime.rpc.data.DataProcessor;
 import edu.jlime.rpc.data.DataProvider;
@@ -17,12 +17,11 @@ import edu.jlime.rpc.fd.FailureProvider;
 import edu.jlime.rpc.fd.PingFailureDetection;
 import edu.jlime.rpc.fr.Acknowledge;
 import edu.jlime.rpc.frag.Fragmenter;
-import edu.jlime.rpc.message.Address;
 import edu.jlime.rpc.message.AddressType;
+import edu.jlime.rpc.message.JLiMEAddress;
 import edu.jlime.rpc.message.StackElement;
 import edu.jlime.rpc.multi.MultiInterface;
 import edu.jlime.rpc.np.NetworkProtocol;
-import edu.jlime.rpc.np.Streamer;
 import edu.jlime.util.NetworkUtils;
 import edu.jlime.util.RingQueue;
 
@@ -50,11 +49,11 @@ public class Stack {
 		stackElements.add(p);
 	}
 
-	public void cleanupOnFailedPeer(Address peer) {
+	public void cleanupOnFailedPeer(JLiMEAddress address) {
 		for (ListIterator<StackElement> iterator = stackElements
 				.listIterator(stackElements.size()); iterator.hasPrevious();) {
 			StackElement listElement = iterator.previous();
-			listElement.cleanupOnFailedPeer(peer);
+			listElement.cleanupOnFailedPeer(address);
 		}
 	}
 
@@ -104,17 +103,18 @@ public class Stack {
 		return fail;
 	}
 
-	public static Stack tcpStack(Configuration config, UUID localID) {
+	public static Stack tcpStack(Configuration config, JLiMEAddress local,
+			String name) {
 
 		String iface = NetworkUtils.getFirstHostAddress();
 
-		NetworkProtocol udp = NetworkProtocolFactory.udp(localID, config)
+		NetworkProtocol udp = NetworkProtocolFactory.udp(local, config)
 				.getProtocol(iface);
 
-		NetworkProtocol tcp = NetworkProtocolFactory.tcp(localID, config)
+		NetworkProtocol tcp = NetworkProtocolFactory.tcp(local, config)
 				.getProtocol(iface);
 
-		NetworkProtocol mcast = NetworkProtocolFactory.mcast(localID, config)
+		NetworkProtocol mcast = NetworkProtocolFactory.mcast(local, config)
 				.getProtocol(iface);
 
 		// NetworkProtocolFactory udpFactory =
@@ -142,8 +142,8 @@ public class Stack {
 
 		MultiDiscovery disco = new MultiDiscovery();
 
-		MultiCastDiscovery mcastDisco = new MultiCastDiscovery(localID, config,
-				mcast, udp);
+		MultiCastDiscovery mcastDisco = new MultiCastDiscovery(local, name,
+				config, mcast, udp);
 		mcastDisco.addAddressListProvider(tcp);
 		mcastDisco.addAddressListProvider(udp);
 		// mcastDisco.setAddressTester(new AddressTester() {
@@ -176,7 +176,8 @@ public class Stack {
 		return tcpStack;
 	}
 
-	public static Stack udpStack(Configuration config, UUID id) {
+	public static Stack udpStack(Configuration config, JLiMEAddress id,
+			String name) {
 
 		NetworkProtocolFactory udpFactory = NetworkProtocolFactory.udp(id,
 				config);
@@ -208,8 +209,8 @@ public class Stack {
 
 		MultiDiscovery disco = new MultiDiscovery();
 
-		MultiCastDiscovery mcastDisco = new MultiCastDiscovery(id, config,
-				mcast, udp);
+		MultiCastDiscovery mcastDisco = new MultiCastDiscovery(id, name,
+				config, mcast, udp);
 		mcastDisco.addAddressListProvider(udp);
 		mcastDisco.addAddressListProvider(tcp);
 		disco.addDisco(mcastDisco);

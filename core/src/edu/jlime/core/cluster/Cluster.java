@@ -3,19 +3,22 @@ package edu.jlime.core.cluster;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.log4j.Logger;
 
+import edu.jlime.core.transport.Address;
+
 public class Cluster implements Iterable<Peer> {
 
 	Logger log = Logger.getLogger(Cluster.class);
 
-	ArrayList<Peer> peers = new ArrayList<>();
+	HashSet<Peer> peers = new HashSet<>();
 
-	ConcurrentHashMap<String, Peer> byID = new ConcurrentHashMap<>();
+	ConcurrentHashMap<Address, Peer> byAddress = new ConcurrentHashMap<>();
 
 	HashMap<String, List<Peer>> byName = new HashMap<>();
 
@@ -37,12 +40,12 @@ public class Cluster implements Iterable<Peer> {
 		return byName.get(name);
 	}
 
-	public boolean contains(String id) {
-		return byID.containsKey(id);
+	public boolean contains(Peer p) {
+		return peers.contains(p);
 	}
 
-	public Peer getByID(String id) {
-		return byID.get(id);
+	public Peer getByAddress(Address address) {
+		return byAddress.get(address);
 	}
 
 	public void addChangeListener(ClusterChangeListener list) {
@@ -67,7 +70,7 @@ public class Cluster implements Iterable<Peer> {
 			return;
 
 		peers.add(peer);
-		byID.put(peer.getID(), peer);
+		byAddress.put(peer.getAddress(), peer);
 		if (!byName.containsKey(peer.getName()))
 			byName.put(peer.getName(), new ArrayList<Peer>());
 		byName.get(peer.getName()).add(peer);
@@ -79,7 +82,7 @@ public class Cluster implements Iterable<Peer> {
 		if (!peers.contains(peer))
 			peers.remove(peer);
 
-		byID.remove(peer.getID());
+		byAddress.remove(peer.getAddress());
 		byName.get(peer.getName()).remove(peer);
 
 		notifyPeerRemoved(peer);
@@ -114,7 +117,7 @@ public class Cluster implements Iterable<Peer> {
 		return getPeers().iterator();
 	}
 
-	public synchronized boolean waitFor(String clientID, long timeToShowup) {
+	public synchronized boolean waitFor(Peer clientID, long timeToShowup) {
 		long init = System.currentTimeMillis();
 		while (!contains(clientID)) {
 			try {

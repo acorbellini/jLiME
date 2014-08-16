@@ -9,9 +9,9 @@ public abstract class Message {
 
 	private Header header;
 
-	private Address from;
+	private JLiMEAddress from;
 
-	private Address to;
+	private JLiMEAddress to;
 
 	private HashSet<Option> sendOpts = new HashSet<Option>();
 
@@ -24,25 +24,25 @@ public abstract class Message {
 		return sendOpts.contains(opt);
 	}
 
-	public Message(Header h, Address from, Address to) {
+	public Message(Header h, JLiMEAddress from, JLiMEAddress to) {
 		this.from = from;
 		this.to = to;
 		header = h;
 	}
 
-	public Address getFrom() {
+	public JLiMEAddress getFrom() {
 		return from;
 	}
 
-	public Address getTo() {
+	public JLiMEAddress getTo() {
 		return to;
 	}
 
-	public void setFrom(Address from) {
+	public void setFrom(JLiMEAddress from) {
 		this.from = from;
 	}
 
-	public void setTo(Address to) {
+	public void setTo(JLiMEAddress to) {
 		this.to = to;
 	}
 
@@ -65,7 +65,7 @@ public abstract class Message {
 	// }
 
 	public static Message encapsulate(Message msg, MessageType type,
-			Address from, Address to) {
+			JLiMEAddress from, JLiMEAddress to) {
 		return new MessageEncap(new Header(type), from, to, msg);
 	};
 
@@ -73,8 +73,8 @@ public abstract class Message {
 		return header;
 	}
 
-	public static MessageSimple deEncapsulate(byte[] simple, Address from,
-			Address to) {
+	public static MessageSimple deEncapsulate(byte[] simple, JLiMEAddress from,
+			JLiMEAddress to) {
 		ByteBuffer reader = new ByteBuffer(simple);
 		Header h = Header.fromBytes(reader);
 		ByteBuffer d = new ByteBuffer(reader.getRawByteArray());
@@ -82,12 +82,12 @@ public abstract class Message {
 	};
 
 	public static Message newOutDataMessage(byte[] data, MessageType type,
-			Address to) {
+			JLiMEAddress to) {
 		return newFullDataMessage(data, type, null, to);
 	}
 
 	public static Message newFullDataMessage(byte[] data, MessageType type,
-			Address from, Address to) {
+			JLiMEAddress from, JLiMEAddress to) {
 		return new MessageSimple(new Header(type), new ByteBuffer(data), from,
 				to);
 	};
@@ -121,11 +121,12 @@ public abstract class Message {
 	}
 
 	public static Message encapsulateOut(Message msg, MessageType type,
-			Address to) {
+			JLiMEAddress to) {
 		return encapsulate(msg, type, null, to);
 	}
 
-	public static Message newEmptyOutDataMessage(MessageType type, Address to) {
+	public static Message newEmptyOutDataMessage(MessageType type,
+			JLiMEAddress to) {
 		return newOutDataMessage(new byte[] {}, type, to);
 	}
 

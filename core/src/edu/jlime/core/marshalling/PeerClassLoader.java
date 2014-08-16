@@ -5,23 +5,25 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.log4j.Logger;
 
+import edu.jlime.core.cluster.Peer;
+
 public class PeerClassLoader {
 
 	Map<String, byte[]> classDefCache = new ConcurrentHashMap<String, byte[]>();
 
-	Map<String, ClientClassLoader> classLoaders = new ConcurrentHashMap<String, ClientClassLoader>();
+	Map<Peer, ClientClassLoader> classLoaders = new ConcurrentHashMap<>();
 
 	Logger log = Logger.getLogger(PeerClassLoader.class);
 
-	public void add(String classSource, ClientClassLoader loader) {
+	public void add(Peer classSource, ClientClassLoader loader) {
 		classLoaders.put(classSource, loader);
 	}
 
-	public ClientClassLoader getCL(String addr) {
+	public ClientClassLoader getCL(Peer addr) {
 		return classLoaders.get(addr);
 	}
 
-	public void remove(String address) {
+	public void remove(Peer address) {
 		classLoaders.remove(address);
 	}
 

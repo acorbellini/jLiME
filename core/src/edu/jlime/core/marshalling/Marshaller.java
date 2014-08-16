@@ -2,8 +2,8 @@ package edu.jlime.core.marshalling;
 
 import org.apache.log4j.Logger;
 
+import edu.jlime.core.cluster.Peer;
 import edu.jlime.util.ByteBuffer;
-import edu.jlime.util.compression.Compression;
 
 public class Marshaller {
 
@@ -15,30 +15,26 @@ public class Marshaller {
 		this.tc = new TypeConverters(cl);
 	}
 
-	public Object getObject(byte[] array, String originID) throws Exception {
+	public Object getObject(byte[] array, Peer caller) throws Exception {
 		if (log.isDebugEnabled())
 			log.debug("Unmarshalling buffer of "
-					+ (array.length / (float) 1024) + " kb from " + originID);
+					+ (array.length / (float) 1024) + " kb from " + caller);
 		// ByteBuffer buff = new ByteBuffer(Compression.uncompress(array));
 
 		ByteBuffer buff = new ByteBuffer(array);
 
-		String clientID = buff.getString();
-
-		Object ret = tc.getObjectFromArray(buff, originID, clientID);
+		Object ret = tc.getObjectFromArray(buff, caller);
 
 		return ret;
 	}
 
 	public byte[] toByteArray(Object o) throws Exception {
-		return toByteArray(o, "");
+		return toByteArray(null, o);
 	}
 
-	public byte[] toByteArray(Object o, String cliID) throws Exception {
+	public byte[] toByteArray(Peer cliID, Object o) throws Exception {
 		ByteBuffer buffer = new ByteBuffer();
-		buffer.putString(cliID);
-		tc.objectToByteArray(o, buffer);
-		// return Compression.compress(buffer.build());
+		tc.objectToByteArray(o, buffer, cliID);
 		return buffer.build();
 	}
 

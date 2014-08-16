@@ -1,8 +1,8 @@
 package edu.jlime.rpc;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import edu.jlime.metrics.metric.Metrics;
 import edu.jlime.rpc.discovery.Discovery;
@@ -41,7 +41,7 @@ public class MultiDiscovery extends MessageProcessor implements
 	}
 
 	@Override
-	public void putData(HashMap<String, String> dataMap) {
+	public void putData(Map<String, String> dataMap) {
 		for (Discovery d : discos)
 			d.putData(dataMap);
 

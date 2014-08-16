@@ -24,7 +24,8 @@ import org.jgroups.blocks.Response;
 
 import edu.jlime.core.cluster.Peer;
 import edu.jlime.core.rpc.DataReceiver;
-import edu.jlime.core.rpc.Transport;
+import edu.jlime.core.transport.Streamer;
+import edu.jlime.core.transport.Transport;
 import edu.jlime.metrics.metric.Metrics;
 
 public class JgroupsTransport implements AsyncRequestHandler, Transport {
@@ -113,10 +114,9 @@ public class JgroupsTransport implements AsyncRequestHandler, Transport {
 			log.debug("Handling method call from " + msg.getSrc());
 		handleExecutor.execute(new Runnable() {
 			public void run() {
-				Address origin = null;
-				origin = msg.getSrc();
+				Address origin = msg.getSrc();
 				byte[] buff = msg.getBuffer();
-				byte[] resp = rcvr.process(origin.toString(), buff);
+				byte[] resp = rcvr.process(new JGroupsAddress(origin), buff);
 				if (response != null)
 					response.send(resp, false);
 			}
@@ -177,10 +177,9 @@ public class JgroupsTransport implements AsyncRequestHandler, Transport {
 				if (log.isDebugEnabled())
 					log.debug("Sending JGROUPS message to "
 							+ ((PeerJgroups) p).getAddress());
-				return disp
-						.sendMessage(new Message(
-								((PeerJgroups) p).getAddress(), marshalled),
-								opts);
+				return disp.sendMessage(
+						new Message(((Address) ((PeerJgroups) p).getAddress()),
+								marshalled), opts);
 			} catch (SuspectedException e) {
 				if (log.isDebugEnabled())
 					log.debug("Peer "
@@ -252,4 +251,11 @@ public class JgroupsTransport implements AsyncRequestHandler, Transport {
 	public void setMetrics(Metrics metrics) {
 		this.metrics = metrics;
 	}
+
+	@Override
+	public Streamer getStreamer() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

@@ -11,4 +11,4 @@ currMem=$(getMem)
 mem=$(( $currMem - 1000))
 OPTIONS=$OPTIONS" -Xmx"$mem"m"
 
-java -cp "$CP" $OPTIONS edu.jlime.server.Server
+nohup java -cp "$CP" $OPTIONS edu.jlime.server.Server > log.out 2>&1 &

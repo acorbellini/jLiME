@@ -10,14 +10,15 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.log4j.Logger;
 
 import edu.jlime.core.cache.jLiMELRUMap;
+import edu.jlime.core.transport.Address;
 import edu.jlime.metrics.metric.Metrics;
-import edu.jlime.rpc.message.Address;
+import edu.jlime.rpc.message.JLiMEAddress;
 import edu.jlime.rpc.message.Message;
 import edu.jlime.rpc.message.MessageListener;
 import edu.jlime.rpc.message.MessageProcessor;
 import edu.jlime.rpc.message.MessageType;
 import edu.jlime.rpc.message.SimpleMessageProcessor;
-import edu.jlime.util.ByteBuffer;
+import edu.jlime.util.Buffer;
 
 public class DataProcessor extends SimpleMessageProcessor implements
 		DataProvider {
@@ -59,7 +60,7 @@ public class DataProcessor extends SimpleMessageProcessor implements
 			return from;
 		}
 
-		public void setFrom(Address from) {
+		public void setFrom(JLiMEAddress from) {
 			this.from = from;
 		}
 	}
@@ -97,12 +98,13 @@ public class DataProcessor extends SimpleMessageProcessor implements
 	}
 
 	@Override
-	public byte[] sendData(byte[] msg, Address to, boolean waitForResponse)
+	public byte[] sendData(byte[] msg, JLiMEAddress to, boolean waitForResponse)
 			throws Exception {
 		Object lock = new Object();
 		UUID id = UUID.randomUUID();
+
 		Message toSend = Message.newOutDataMessage(msg, MessageType.DATA, to);
-		ByteBuffer headerWriter = toSend.getHeaderBuffer();
+		Buffer headerWriter = toSend.getHeaderBuffer();
 		headerWriter.putUUID(id);
 		headerWriter.putBoolean(waitForResponse);
 		if (log.isDebugEnabled())
@@ -143,7 +145,7 @@ public class DataProcessor extends SimpleMessageProcessor implements
 	}
 
 	@Override
-	public void cleanupOnFailedPeer(Address addr) {
+	public void cleanupOnFailedPeer(JLiMEAddress addr) {
 		synchronized (waitingResponse) {
 			HashSet<UUID> ids = calls.get(addr);
 			if (ids != null) {
@@ -151,7 +153,7 @@ public class DataProcessor extends SimpleMessageProcessor implements
 					Object o = waitingResponse.remove(uuid);
 					if (o != null) {
 						responses.put(uuid, Message.newEmptyOutDataMessage(
-								MessageType.DATA, new Address(uuid)));
+								MessageType.DATA, new JLiMEAddress(uuid)));
 						synchronized (o) {
 							o.notifyAll();
 						}
@@ -186,7 +188,7 @@ public class DataProcessor extends SimpleMessageProcessor implements
 	}
 
 	private void processData(final Message m) {
-		ByteBuffer head = m.getHeaderBuffer();
+		Buffer head = m.getHeaderBuffer();
 		UUID id = head.getUUID();
 		if (map.get(id) != null) {
 			// if (log.isDebugEnabled())

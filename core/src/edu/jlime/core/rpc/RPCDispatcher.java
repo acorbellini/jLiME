@@ -21,6 +21,9 @@ import edu.jlime.core.marshalling.ClassLoaderProvider;
 import edu.jlime.core.marshalling.ClientClassLoader;
 import edu.jlime.core.marshalling.Marshaller;
 import edu.jlime.core.marshalling.PeerClassLoader;
+import edu.jlime.core.transport.Address;
+import edu.jlime.core.transport.Streamer;
+import edu.jlime.core.transport.Transport;
 import edu.jlime.metrics.metric.Metrics;
 import edu.jlime.util.StreamUtils;
 
@@ -66,18 +69,18 @@ public class RPCDispatcher implements ClassLoaderProvider, DataReceiver {
 			this.tr.setMetrics(metrics);
 	}
 
-	public Object callSync(Peer dest, String clientID, MethodCall call)
+	public Object callSync(Peer dest, Peer clientID, MethodCall call)
 			throws Exception {
 		return call(dest, clientID, call, true);
 	}
 
-	public void callAsync(Peer dest, String clientID, MethodCall call)
+	public void callAsync(Peer dest, Peer clientID, MethodCall call)
 			throws Exception {
 		call(dest, clientID, call, false);
 	}
 
-	private Object call(Peer dest, String clientID, MethodCall call,
-			boolean sync) throws Exception {
+	private Object call(Peer dest, Peer clientID, MethodCall call, boolean sync)
+			throws Exception {
 		if (dest.equals(cluster.getLocalPeer())) {
 			if (log.isDebugEnabled())
 				log.debug("Dispatching methodcall to local target.");
@@ -85,14 +88,14 @@ public class RPCDispatcher implements ClassLoaderProvider, DataReceiver {
 			return obj;
 		}
 
-		byte[] marshalled = getMarshaller().toByteArray(call, clientID);
+		byte[] marshalled = getMarshaller().toByteArray(clientID, call);
 
 		try {
 			if (sync) {
 				if (log.isDebugEnabled())
 					log.debug("Dispatching SYNC call to " + dest);
 				return getMarshaller().getObject(tr.sendSync(dest, marshalled),
-						dest.getID());
+						dest);
 			} else {
 				if (log.isDebugEnabled())
 					log.debug("Dispatching ASYNC call to " + dest);
@@ -109,7 +112,7 @@ public class RPCDispatcher implements ClassLoaderProvider, DataReceiver {
 		this.marshaller = defMarshaller;
 	}
 
-	public void stop() {
+	public void stop() throws Exception {
 		broadcastExec.shutdown();
 		tr.stop();
 	};
@@ -146,19 +149,19 @@ public class RPCDispatcher implements ClassLoaderProvider, DataReceiver {
 				+ ". Object class: " + objClass.toString() + ".");
 	}
 
-	public void multiCallAsync(List<Peer> peers, String client, String target,
+	public void multiCallAsync(List<Peer> peers, Peer client, String target,
 			String method, Object[] objects) throws Exception {
 		multiCall(peers, client, new MethodCall(target, method, objects));
 	}
 
-	public Map<Peer, Object> multiCall(List<Peer> peers, String client,
+	public Map<Peer, Object> multiCall(List<Peer> peers, Peer client,
 			String target, String method, Object[] objects) throws Exception {
 		return multiCall(peers, client, new MethodCall(target, method, objects));
 	}
 
-	private Map<Peer, Object> multiCall(List<Peer> peers, String client,
+	private Map<Peer, Object> multiCall(List<Peer> peers, Peer client,
 			MethodCall call) throws Exception {
-		byte[] marshalled = getMarshaller().toByteArray(call, client);
+		byte[] marshalled = getMarshaller().toByteArray(client, call);
 		return broadcast(peers, marshalled);
 	}
 
@@ -168,7 +171,7 @@ public class RPCDispatcher implements ClassLoaderProvider, DataReceiver {
 			log.debug("Broadcasting " + marshalled.length + " bytes to "
 					+ peers);
 		final Semaphore sem = new Semaphore(-peers.size() + 1);
-		final Map<Peer, Object> ret = new HashMap<>();
+		final Map<Peer, Object> ret = new ConcurrentHashMap<>();
 		for (final Peer p : peers) {
 			broadcastExec.execute(new Runnable() {
 				@Override
@@ -179,7 +182,7 @@ public class RPCDispatcher implements ClassLoaderProvider, DataReceiver {
 									+ p);
 						ret.put(p,
 								getMarshaller().getObject(
-										tr.sendSync(p, marshalled), p.getID()));
+										tr.sendSync(p, marshalled), p));
 						if (log.isDebugEnabled())
 							log.debug("Finished sending broadcast message synchronously to "
 									+ p);
@@ -198,12 +201,12 @@ public class RPCDispatcher implements ClassLoaderProvider, DataReceiver {
 		return ret;
 	};
 
-	public Object callSync(Peer dest, String clientID, String objectKey,
+	public Object callSync(Peer dest, Peer clientID, String objectKey,
 			String method, Object[] args) throws Exception {
 		return callSync(dest, clientID, new MethodCall(objectKey, method, args));
 	}
 
-	public void callAsync(Peer addr, String clientID, String objectKey,
+	public void callAsync(Peer addr, Peer clientID, String objectKey,
 			String method, Object[] args) throws Exception {
 		callAsync(addr, clientID, new MethodCall(objectKey, method, args));
 	}
@@ -214,7 +217,6 @@ public class RPCDispatcher implements ClassLoaderProvider, DataReceiver {
 
 	public byte[] getClassDefinition(String n) throws ClassNotFoundException {
 		String rep = n.replace(".", "/") + ".class";
-		// System.out.println("Requesting " + rep);
 		InputStream is = null;
 		if (is == null)
 			try {
@@ -236,7 +238,7 @@ public class RPCDispatcher implements ClassLoaderProvider, DataReceiver {
 		try {
 			BufferedInputStream bis = new BufferedInputStream(is);
 			byte[] data = StreamUtils.readFully(bis);
-			
+
 			serialized = data;// Compression.compress(buffer.build());
 		} catch (IOException e) {
 			log.error("Error Compressing class file", e);
@@ -244,15 +246,15 @@ public class RPCDispatcher implements ClassLoaderProvider, DataReceiver {
 		return serialized;
 	}
 
-	public byte[] getClassFromSource(String name, String clientID)
+	public byte[] getClassFromSource(String name, Peer clientID)
 			throws Exception {
-		byte[] array = (byte[]) callSync(cluster.getByID(clientID), null, RPC,
+		byte[] array = (byte[]) callSync(clientID, null, RPC,
 				"getClassDefinition", new String[] { name });
 		// return Compression.uncompress(array);
 		return array;
 	}
 
-	public HashMap<String, byte[]> getClassLoaderData(String cliID) {
+	public HashMap<String, byte[]> getClassLoaderData(Peer cliID) {
 		ClientClassLoader cliCL = cl.getCL(cliID);
 		if (cliCL == null)
 			return new HashMap<>();
@@ -267,7 +269,7 @@ public class RPCDispatcher implements ClassLoaderProvider, DataReceiver {
 	}
 
 	@Override
-	public Class<?> loadClass(String classSource, String name)
+	public Class<?> loadClass(Peer classSource, String name)
 			throws ClassNotFoundException {
 		if (classSource == null)
 			return null;
@@ -286,9 +288,10 @@ public class RPCDispatcher implements ClassLoaderProvider, DataReceiver {
 	}
 
 	@Override
-	public byte[] process(String origin, byte[] buff) {
+	public byte[] process(Address origin, byte[] buff) {
 		try {
-			Object obj = getMarshaller().getObject(buff, origin.toString());
+			Peer peer = cluster.getByAddress(origin);
+			Object obj = getMarshaller().getObject(buff, peer);
 			if (log.isDebugEnabled())
 				log.debug("Finished unmarshalling data received");
 			if (Exception.class.isAssignableFrom(obj.getClass())) {
@@ -298,7 +301,7 @@ public class RPCDispatcher implements ClassLoaderProvider, DataReceiver {
 			MethodCall mc = (MethodCall) obj;
 			if (log.isDebugEnabled())
 				log.info("Received method call " + mc.getName() + " from "
-						+ cluster.getByID(origin) + ", invoking.");
+						+ cluster.getByAddress(origin) + ", invoking.");
 
 			return getMarshaller().toByteArray(callTarget(mc));
 		} catch (Exception e) {
@@ -319,5 +322,13 @@ public class RPCDispatcher implements ClassLoaderProvider, DataReceiver {
 	public void setMetrics(Metrics mgr) {
 		this.metrics = mgr;
 		this.tr.setMetrics(mgr);
+	}
+
+	public Cluster getCluster() {
+		return cluster;
+	}
+
+	public Streamer getStreamer() {
+		return tr.getStreamer();
 	}
 }

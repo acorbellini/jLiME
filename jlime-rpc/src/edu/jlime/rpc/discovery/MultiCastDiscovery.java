@@ -1,13 +1,12 @@
 package edu.jlime.rpc.discovery;
 
 import java.util.List;
-import java.util.UUID;
 
 import org.apache.log4j.Logger;
 
 import edu.jlime.metrics.metric.Metrics;
 import edu.jlime.rpc.Configuration;
-import edu.jlime.rpc.message.Address;
+import edu.jlime.rpc.message.JLiMEAddress;
 import edu.jlime.rpc.message.MessageProcessor;
 import edu.jlime.util.NetworkUtils.SelectedInterface;
 
@@ -22,9 +21,10 @@ public class MultiCastDiscovery extends Discovery {
 	// ,int announcedPort, String mcastaddr,
 	// int mcastport, long discDelay
 
-	public MultiCastDiscovery(UUID id, Configuration config,
-			MessageProcessor mcast, MessageProcessor unicast) {
-		super(id, config, mcast, unicast);
+	public MultiCastDiscovery(JLiMEAddress id, String name,
+			Configuration config, MessageProcessor mcast,
+			MessageProcessor unicast) {
+		super(id, name, config, mcast, unicast);
 	}
 
 	protected synchronized void startDiscovery(List<SelectedInterface> added) {
@@ -51,11 +51,6 @@ public class MultiCastDiscovery extends Discovery {
 
 		};
 		t.start();
-	}
-
-	@Override
-	public void cleanupOnFailedPeer(Address peer) {
-
 	}
 
 	@Override

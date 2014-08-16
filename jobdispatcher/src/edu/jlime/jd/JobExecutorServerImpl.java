@@ -13,11 +13,11 @@ public class JobExecutorServerImpl implements JobExecutor {
 
 	Peer dest;
 
-	String cliID;
+	Peer cliID;
 
 	String targetID;
 
-	public JobExecutorServerImpl(RPCDispatcher disp, Peer dest, String cliID,
+	public JobExecutorServerImpl(RPCDispatcher disp, Peer dest, Peer cliID,
 			String targetID) {
 		this.disp = disp;
 		this.dest = dest;

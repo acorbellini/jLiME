@@ -48,7 +48,7 @@
 		</dependency>
 		<dependency>
 			<groupId>edu.jlime</groupId>
-			<artifactId>jobdispatcher</artifactId>
+			<artifactId>core</artifactId>
 			<version>1.0</version>
 		</dependency>
 	</dependencies>

@@ -26,13 +26,13 @@ public class JobCluster implements Iterable<JobNode> {
 
 	private JobDispatcher disp;
 
-	private String clientID;
+	private Peer client;
 
 	private JobNode localPeer;
 
-	public JobCluster(JobDispatcher jobDispatcher, String clientID) {
+	public JobCluster(JobDispatcher jobDispatcher, Peer clientID) {
 		this.disp = jobDispatcher;
-		this.clientID = clientID;
+		this.client = clientID;
 		this.localPeer = new JobNode(jobDispatcher.getLocalPeer(), clientID,
 				disp);
 	}
@@ -41,7 +41,7 @@ public class JobCluster implements Iterable<JobNode> {
 		ArrayList<Peer> execs = new ArrayList<Peer>(disp.getExecutors());
 		ArrayList<JobNode> execCli = new ArrayList<>();
 		for (Peer jobNode : execs) {
-			execCli.add(new JobNode(jobNode, clientID, disp));
+			execCli.add(new JobNode(jobNode, client, disp));
 		}
 		return execCli;
 	}
@@ -52,13 +52,13 @@ public class JobCluster implements Iterable<JobNode> {
 
 	public <R> Map<JobNode, R> mcast(List<JobNode> p, Job<R> j)
 			throws BroadcastException {
-		ClientJob<R> cliJob = new ClientJob<R>(j, clientID);
+		ClientJob<R> cliJob = new ClientJob<R>(j, client);
 		return disp.mcast(p, cliJob);
 	}
 
 	public <R> void mcastAsync(Collection<JobNode> p, Job<R> j)
 			throws Exception {
-		ClientJob<R> cliJob = new ClientJob<R>(j, clientID);
+		ClientJob<R> cliJob = new ClientJob<R>(j, client);
 		disp.mcastAsync(p, cliJob);
 	}
 
@@ -79,7 +79,7 @@ public class JobCluster implements Iterable<JobNode> {
 		ArrayList<Peer> peers = disp.getPeers();
 		ArrayList<JobNode> copy = new ArrayList<>();
 		for (Peer jobNode : peers) {
-			copy.add(new JobNode(jobNode, clientID, disp));
+			copy.add(new JobNode(jobNode, client, disp));
 		}
 		return copy;
 	}

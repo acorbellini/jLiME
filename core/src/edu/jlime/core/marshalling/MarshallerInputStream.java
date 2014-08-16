@@ -7,16 +7,18 @@ import java.io.ObjectStreamClass;
 
 import org.apache.log4j.Logger;
 
+import edu.jlime.core.cluster.Peer;
+
 public class MarshallerInputStream extends ObjectInputStream {
 
-	private String classSource;
+	private Peer classSource;
 
 	private ClassLoaderProvider disp;
 
 	Logger log = Logger.getLogger(MarshallerInputStream.class);
 
 	public MarshallerInputStream(InputStream is, ClassLoaderProvider disp,
-			String classSourceID) throws IOException, SecurityException {
+			Peer classSourceID) throws IOException, SecurityException {
 		super(is);
 		this.disp = disp;
 		this.classSource = classSourceID;

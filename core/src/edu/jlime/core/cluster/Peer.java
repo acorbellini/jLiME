@@ -1,28 +1,38 @@
 package edu.jlime.core.cluster;
 
-import java.io.Serializable;
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Peer implements Serializable, Comparable<Peer> {
+import edu.jlime.core.transport.Address;
+import edu.jlime.util.StreamUtils;
+
+public class Peer implements Externalizable, Comparable<Peer> {
 
 	private static final long serialVersionUID = -1369404741700349661L;
 
 	public static final String NAME = "NAME";
 
-	private String id;
+	private Address address;
 
 	private String name;
 
-	private HashMap<String, String> data = new HashMap<>();
+	private Map<String, String> data = new HashMap<>();
 
-	public Peer(String id, String name) {
-		this.id = id;
-		this.name = name;
+	public Peer() {
 	}
 
-	public String getID() {
-		return id;
+	public Peer(Address address, String name) {
+		this(address, name, new HashMap<String, String>());
+	}
+
+	public Peer(Address addr, String name, Map<String, String> map) {
+		this.name = name;
+		this.address = addr;
+		this.data = map;
 	}
 
 	public String getName() {
@@ -34,14 +44,14 @@ public class Peer implements Serializable, Comparable<Peer> {
 	}
 
 	public void putData(Map<String, String> data) {
-		data.putAll(data);
+		this.data.putAll(data);
 	}
 
 	public String getData(String k) {
 		return data.get(k);
 	}
 
-	public HashMap<String, String> getDataMap() {
+	public Map<String, String> getDataMap() {
 		return data;
 	}
 
@@ -50,21 +60,40 @@ public class Peer implements Serializable, Comparable<Peer> {
 		if (!(obj instanceof Peer))
 			return false;
 		Peer srv = (Peer) obj;
-		return id.equals(srv.id);
+		return address.equals(srv.address);
 	}
 
 	@Override
 	public int hashCode() {
-		return id.hashCode();
+		return address.hashCode();
 	}
 
 	@Override
 	public String toString() {
-		return name + " " + id;
+		return name + " " + address;
 	}
 
 	@Override
 	public int compareTo(Peer o) {
 		return this.name.compareTo(o.name);
+	}
+
+	public Address getAddress() {
+		return address;
+	}
+
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		out.writeObject(address);
+		StreamUtils.putString(out, name);
+		StreamUtils.putMap(out, data);
+	}
+
+	@Override
+	public void readExternal(ObjectInput in) throws IOException,
+			ClassNotFoundException {
+		this.address = (Address) in.readObject();
+		this.name = StreamUtils.readString(in);
+		this.data = StreamUtils.readMap(in);
 	}
 }

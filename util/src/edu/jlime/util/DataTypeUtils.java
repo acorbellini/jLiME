@@ -52,6 +52,10 @@ public class DataTypeUtils {
 		return b;
 	}
 
+	public static long byteArrayToLong(byte[] bytes) {
+		return byteArrayToLong(bytes, 0);
+	}
+
 	public static long byteArrayToLong(byte[] bytes, int offset) {
 		long l = 0;
 		for (int i = offset; i < offset + 8; i++) {

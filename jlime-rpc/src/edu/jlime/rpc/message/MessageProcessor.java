@@ -148,8 +148,9 @@ public abstract class MessageProcessor implements StackElement {
 		all.add(new MessageQueue(defMessageListener, this, "All Messages"));
 
 	}
-
-	public void cleanupOnFailedPeer(Address peer) {
+	
+	@Override
+	public void cleanupOnFailedPeer(JLiMEAddress peer) {
 
 	}
 

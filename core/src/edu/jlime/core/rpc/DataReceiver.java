@@ -1,6 +1,8 @@
 package edu.jlime.core.rpc;
 
+import edu.jlime.core.transport.Address;
+
 public interface DataReceiver {
 
-	public byte[] process(String origin, byte[] data);
+	public byte[] process(Address origin, byte[] data);
 }

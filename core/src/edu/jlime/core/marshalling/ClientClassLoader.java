@@ -6,13 +6,14 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.log4j.Logger;
 
+import edu.jlime.core.cluster.Peer;
 import edu.jlime.core.rpc.RPCDispatcher;
 
 public class ClientClassLoader extends ClassLoader {
 
 	HashMap<String, byte[]> classLoaderData = new HashMap<>();
 
-	String clientID;
+	Peer clientAddress;
 
 	RPCDispatcher disp;
 
@@ -20,10 +21,10 @@ public class ClientClassLoader extends ClassLoader {
 
 	Logger log = Logger.getLogger(ClientClassLoader.class);
 
-	public ClientClassLoader(ClassLoader parent, String classSource,
+	public ClientClassLoader(ClassLoader parent, Peer classSource,
 			RPCDispatcher rpcDispatcher) {
 		super(parent);
-		this.clientID = classSource;
+		this.clientAddress = classSource;
 		this.disp = rpcDispatcher;
 	}
 
@@ -56,7 +57,7 @@ public class ClientClassLoader extends ClassLoader {
 			synchronized (lock) {
 				Class<?> c = loaded.get(name);
 				if (c == null) {
-					byte[] cl = disp.getClassFromSource(name, clientID);
+					byte[] cl = disp.getClassFromSource(name, clientAddress);
 					c = loadClassFromBytes(cl, name);
 					loaded.put(name, c);
 				}
@@ -70,8 +71,8 @@ public class ClientClassLoader extends ClassLoader {
 				+ name);
 	}
 
-	public String getClientID() {
-		return clientID;
+	public Peer getClientID() {
+		return clientAddress;
 	}
 
 	public HashMap<String, byte[]> getData() {

@@ -9,10 +9,11 @@ import java.util.Map;
 import java.util.UUID;
 
 import edu.jlime.rpc.message.AddressType;
+import edu.jlime.rpc.message.JLiMEAddress;
 import edu.jlime.rpc.message.Message;
 import edu.jlime.rpc.message.MessageType;
 import edu.jlime.rpc.message.SocketAddress;
-import edu.jlime.util.ByteBuffer;
+import edu.jlime.util.Buffer;
 
 public class DiscoveryMessage {
 
@@ -20,21 +21,25 @@ public class DiscoveryMessage {
 
 	private UUID id;
 
+	private String name;
+
 	private Map<String, String> additional;
 
-	public DiscoveryMessage(UUID id, Map<String, String> additional,
-			List<SocketAddress> addresses) {
+	public DiscoveryMessage(UUID id, String name,
+			Map<String, String> additional, List<SocketAddress> addresses) {
 		this.id = id;
+		this.name = name;
 		this.addresses = addresses;
 		this.additional = additional;
 	}
 
 	public static DiscoveryMessage fromMessage(Message m)
 			throws UnknownHostException {
-		ByteBuffer reader = m.getHeaderBuffer();
+		Buffer reader = m.getHeaderBuffer();
 		UUID id = reader.getUUID();
+		String name = reader.getString();
 
-		ByteBuffer data = m.getDataBuffer();
+		Buffer data = m.getDataBuffer();
 		Map<String, String> additional = data.getMap();
 		int sizeOfAddresses = data.getInt();
 		List<SocketAddress> addresses = new ArrayList<>();
@@ -45,7 +50,7 @@ public class DiscoveryMessage {
 			addresses.add(new SocketAddress(id, new InetSocketAddress(
 					InetAddress.getByName(ip), port), type));
 		}
-		return new DiscoveryMessage(id, additional, addresses);
+		return new DiscoveryMessage(id, name, additional, addresses);
 	}
 
 	public List<SocketAddress> getAddresses() {
@@ -68,13 +73,15 @@ public class DiscoveryMessage {
 		return additional;
 	}
 
-	public static Message createNew(MessageType t, UUID localID,
-			Map<String, String> discAdditionData, List<SocketAddress> addresses) {
+	public static Message createNew(MessageType t, JLiMEAddress localID,
+			String name, Map<String, String> discAdditionData,
+			List<SocketAddress> addresses) {
 		Message ret = Message.newEmptyBroadcastOutDataMessage(t);
-		ByteBuffer headerWriter = ret.getHeaderBuffer();
-		headerWriter.putUUID(localID);
-
-		ByteBuffer dataWriter = ret.getDataBuffer();
+		Buffer headerWriter = ret.getHeaderBuffer();
+		headerWriter.putUUID(localID.getId());
+		headerWriter.putString(name);
+		
+		Buffer dataWriter = ret.getDataBuffer();
 		dataWriter.putMap(discAdditionData);
 		dataWriter.putInt(addresses.size());
 		for (SocketAddress isa : addresses) {
@@ -83,5 +90,9 @@ public class DiscoveryMessage {
 			dataWriter.put(isa.getType().getId());
 		}
 		return ret;
+	}
+
+	public String getName() {
+		return name;
 	}
 }

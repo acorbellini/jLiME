@@ -10,7 +10,7 @@ import edu.jlime.core.cluster.Peer;
 
 public class ExecEnvironment {
 
-	ConcurrentHashMap<String, JobContextImpl> clientEnvs = new ConcurrentHashMap<>();
+	ConcurrentHashMap<Peer, JobContextImpl> clientEnvs = new ConcurrentHashMap<>();
 
 	Logger log = Logger.getLogger(ExecEnvironment.class);
 
@@ -20,7 +20,7 @@ public class ExecEnvironment {
 		this.srv = jobDispatcher;
 	}
 
-	public synchronized JobContextImpl getClientEnv(String client) {
+	public synchronized JobContextImpl getClientEnv(Peer client) {
 		JobContextImpl env = clientEnvs.get(client);
 		if (env == null) {
 			if (log.isDebugEnabled())
@@ -33,7 +33,7 @@ public class ExecEnvironment {
 	}
 
 	public void remove(Peer srv) {
-		JobContext cliEnv = clientEnvs.remove(srv.getID());
+		JobContext cliEnv = clientEnvs.remove(srv.getAddress());
 		if (cliEnv != null)
 			cliEnv.stop();
 	}

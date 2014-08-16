@@ -1,17 +1,18 @@
 package edu.jlime.jd;
 
 import edu.jlime.client.JobContext;
+import edu.jlime.core.cluster.Peer;
 import edu.jlime.jd.job.Job;
 
 public class ClientJob<R> implements Job<R> {
 
 	Job<R> contained;
 
-	String clientID;
+	Peer client;
 
-	public ClientJob(Job<R> contained, String client) {
+	public ClientJob(Job<R> contained, Peer client) {
 		this.contained = contained;
-		this.clientID = client;
+		this.client = client;
 	}
 
 	@Override
@@ -19,8 +20,8 @@ public class ClientJob<R> implements Job<R> {
 		return contained.call(env, peer);
 	}
 
-	public String getClientID() {
-		return clientID;
+	public Peer getClient() {
+		return client;
 	}
 
 	@Override

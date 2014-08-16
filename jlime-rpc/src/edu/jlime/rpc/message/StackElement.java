@@ -6,7 +6,7 @@ public interface StackElement {
 
 	public void start() throws Exception;
 
-	public void cleanupOnFailedPeer(Address peer);
+	public void cleanupOnFailedPeer(JLiMEAddress address);
 
 	public void stop() throws Exception;
 

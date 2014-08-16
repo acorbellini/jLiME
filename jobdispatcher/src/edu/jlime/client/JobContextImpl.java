@@ -10,6 +10,7 @@ import java.util.concurrent.ThreadFactory;
 
 import org.apache.log4j.Logger;
 
+import edu.jlime.core.cluster.Peer;
 import edu.jlime.jd.JobCluster;
 import edu.jlime.jd.JobContainer;
 
@@ -21,11 +22,11 @@ public class JobContextImpl implements JobContext {
 
 	private ExecutorService exec;
 
-	private String id;
+	private Peer id;
 
 	private JobCluster cluster;
 
-	public JobContextImpl(JobCluster c, String cliId) {
+	public JobContextImpl(JobCluster c, Peer cliId) {
 		this.id = cliId;
 		this.cluster = c;
 		exec = Executors.newFixedThreadPool(50, new ThreadFactory() {

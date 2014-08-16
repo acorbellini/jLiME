@@ -1,22 +1,26 @@
 package edu.jlime.client;
 
 import java.io.Closeable;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.util.Properties;
+import java.util.HashMap;
+import java.util.UUID;
 
+import edu.jlime.core.cluster.Peer;
+import edu.jlime.core.rpc.RPCDispatcher;
+import edu.jlime.core.stream.RemoteInputStream;
+import edu.jlime.core.stream.RemoteOutputStream;
 import edu.jlime.jd.JobCluster;
 import edu.jlime.jd.JobDispatcher;
-import edu.jlime.jd.JobDispatcherFactory;
+import edu.jlime.jd.StreamProvider;
+import edu.jlime.rpc.Configuration;
+import edu.jlime.rpc.JlimeFactory;
 
 public class Client implements Closeable {
 
 	JobDispatcher jd;
 
-	public Client(JobDispatcherFactory factory) throws Exception {
-		jd = factory.getJD();
+	public Client(JobDispatcher jd) throws Exception {
+		this.jd = jd;
 		jd.start();
 	}
 
@@ -25,19 +29,28 @@ public class Client implements Closeable {
 	}
 
 	public static Client build(int i) throws Exception {
+		HashMap<String, String> jdData = new HashMap<>();
+		jdData.put(JobDispatcher.ISEXEC, Boolean.valueOf(false).toString());
+		jdData.put(JobDispatcher.TAGS, "Client");
 
-		String config = System.getProperty("def.config");
-		Properties prop = null;
+		final RPCDispatcher rpc = new JlimeFactory(new Configuration(), jdData)
+				.build();
+		JobDispatcher jd = new JobDispatcher(i, rpc);
+		jd.setStreamer(new StreamProvider() {
 
-		if (config != null) {
-			prop = new Properties();
-			prop.load(new FileInputStream(new File(config)));
-		}
-		Class<?> c = Class.forName("edu.jlime.rpc.JlimeFactory");
-		Constructor<?> cons = c.getConstructors()[0];
-		JobDispatcherFactory fact = ((JobDispatcherFactory) cons.newInstance(i,
-				new String[] { "DefaultClient" }, false, prop));
-		return new Client(fact);
+			@Override
+			public RemoteOutputStream getOutputStream(UUID streamID, Peer to) {
+				return rpc.getStreamer().getOutputStream(streamID,
+						to.getAddress());
+			}
+
+			@Override
+			public RemoteInputStream getInputStream(UUID streamID, Peer to) {
+				return rpc.getStreamer().getInputStream(streamID,
+						to.getAddress());
+			}
+		});
+		return new Client(jd);
 	}
 
 	public JobCluster getCluster() {

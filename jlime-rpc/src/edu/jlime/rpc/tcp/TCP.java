@@ -18,8 +18,9 @@ import org.apache.log4j.Logger;
 
 import edu.jlime.core.stream.RemoteInputStream;
 import edu.jlime.core.stream.RemoteOutputStream;
-import edu.jlime.rpc.message.Address;
+import edu.jlime.core.transport.Address;
 import edu.jlime.rpc.message.AddressType;
+import edu.jlime.rpc.message.JLiMEAddress;
 import edu.jlime.rpc.message.SocketAddress;
 import edu.jlime.rpc.np.DataPacket;
 import edu.jlime.rpc.np.NetworkProtocol;
@@ -37,7 +38,8 @@ public class TCP extends NetworkProtocol implements DataReceiver {
 
 	private ConcurrentHashMap<Address, HashMap<UUID, InputStream>> streams = new ConcurrentHashMap<>();
 
-	public TCP(UUID id, String addr, int port, int range, TCPConfig config) {
+	public TCP(JLiMEAddress id, String addr, int port, int range,
+			TCPConfig config) {
 		super(addr, port, range, new TCPSocketFactory(config.tcp_rcv_buffer),
 				id);
 		this.config = config;
@@ -85,7 +87,7 @@ public class TCP extends NetworkProtocol implements DataReceiver {
 		StreamType type = StreamType.fromID((byte) inputStream.read());
 		UUID id = TCPConnectionManager.getID(inputStream);
 		if (type.equals(StreamType.PACKET)) {
-			TCPConnectionManager connList = getConnManager(new Address(id));
+			TCPConnectionManager connList = getConnManager(new JLiMEAddress(id));
 			if (log.isDebugEnabled())
 				log.debug("Received connection request from "
 						+ conn.getRemoteSocketAddress() + " with id " + id);
@@ -95,7 +97,7 @@ public class TCP extends NetworkProtocol implements DataReceiver {
 				log.debug("Received stream request from "
 						+ conn.getRemoteSocketAddress() + " with id " + id);
 			UUID streamID = TCPConnectionManager.getID(inputStream);
-			Address id2 = new Address(id);
+			JLiMEAddress id2 = new JLiMEAddress(id);
 			addStream(streamID, inputStream, id2);
 		}
 	}
@@ -128,7 +130,7 @@ public class TCP extends NetworkProtocol implements DataReceiver {
 	}
 
 	@Override
-	public void sendBytes(final byte[] built, final Address to,
+	public void sendBytes(final byte[] built, final JLiMEAddress to,
 			final SocketAddress realSockAddr) throws Exception {
 		if (log.isDebugEnabled())
 			log.debug("Sending " + built.length + " bytes to  " + to);
@@ -160,7 +162,7 @@ public class TCP extends NetworkProtocol implements DataReceiver {
 		return toSend;
 	}
 
-	private TCPConnectionManager getConnManager(Address to) {
+	private TCPConnectionManager getConnManager(JLiMEAddress to) {
 		TCPConnectionManager mgr = connections.get(to);
 		if (mgr == null)
 			synchronized (connections) {
@@ -190,7 +192,8 @@ public class TCP extends NetworkProtocol implements DataReceiver {
 	}
 
 	@Override
-	protected void beforeProcess(DataPacket pkt, Address from, Address to) {
+	protected void beforeProcess(DataPacket pkt, JLiMEAddress from,
+			JLiMEAddress to) {
 		if (lastAddress.get(from) != null
 				&& lastAddress.get(from).getSockTo().getAddress()
 						.equals(pkt.getAddr().getAddress())
@@ -213,7 +216,7 @@ public class TCP extends NetworkProtocol implements DataReceiver {
 	}
 
 	@Override
-	public void cleanupOnFailedPeer(Address addr) {
+	public void cleanupOnFailedPeer(JLiMEAddress addr) {
 		TCPConnectionManager mgr = connections.get(addr);
 		if (mgr != null)
 			mgr.stop();
@@ -224,7 +227,7 @@ public class TCP extends NetworkProtocol implements DataReceiver {
 		return AddressType.TCP;
 	}
 
-	public SocketAddress getLastAddress(Address to) {
+	public SocketAddress getLastAddress(JLiMEAddress to) {
 		return lastAddress.get(to);
 	}
 
@@ -299,9 +302,12 @@ public class TCP extends NetworkProtocol implements DataReceiver {
 				// sock.setTcpNoDelay(true);
 				OutputStream outputStream = sock.getOutputStream();
 				outputStream.write(StreamType.STREAM.getId());
-				outputStream.write(new ByteBuffer().putUUID(getLocal().getId())
-						.build());
-				outputStream.write(new ByteBuffer().putUUID(streamId).build());
+				ByteBuffer localBytes = new ByteBuffer();
+				localBytes.putUUID(getLocal().getId());
+				outputStream.write(localBytes.build());
+				ByteBuffer streamBytes = new ByteBuffer();
+				streamBytes.putUUID(streamId);
+				outputStream.write(streamBytes.build());
 				outputStream.flush();
 				return new TCPOutputStream(streamId, sock, outputStream);
 			} catch (Exception e) {

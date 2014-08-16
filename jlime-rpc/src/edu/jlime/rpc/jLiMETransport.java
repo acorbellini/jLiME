@@ -1,6 +1,5 @@
 package edu.jlime.rpc;
 
-import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -9,11 +8,14 @@ import org.apache.log4j.Logger;
 
 import edu.jlime.core.cluster.Peer;
 import edu.jlime.core.rpc.DataReceiver;
-import edu.jlime.core.rpc.Transport;
+import edu.jlime.core.transport.Address;
+import edu.jlime.core.transport.Streamer;
+import edu.jlime.core.transport.Transport;
 import edu.jlime.metrics.metric.Metrics;
 import edu.jlime.rpc.data.DataListener;
 import edu.jlime.rpc.data.DataProcessor.DataMessage;
 import edu.jlime.rpc.data.Response;
+import edu.jlime.rpc.message.JLiMEAddress;
 
 public class jLiMETransport implements DataListener, Transport {
 
@@ -41,28 +43,28 @@ public class jLiMETransport implements DataListener, Transport {
 	}
 
 	@Override
-	public void stop() {
+	public void stop() throws Exception {
+		commStack.stop();
 		handleExecutor.shutdown();
 	}
 
 	@Override
-	public void sendAsync(Peer p, byte[] marshalled) throws Exception {
-		PeerJlime pdef = (PeerJlime) p;
-		commStack.getData().sendData(marshalled, pdef.getAddr(), false);
+	public void sendAsync(Peer pdef, byte[] marshalled) throws Exception {
+		commStack.getData().sendData(marshalled,
+				(JLiMEAddress) pdef.getAddress(), false);
 	}
 
 	@Override
-	public byte[] sendSync(Peer p, byte[] marshalled) throws Exception {
+	public byte[] sendSync(Peer pdef, byte[] marshalled) throws Exception {
 		if (log.isDebugEnabled())
-			log.debug("Calling Synchronously " + p + ", sending "
+			log.debug("Calling Synchronously " + pdef + ", sending "
 					+ marshalled.length + " b.");
 
-		PeerJlime pdef = (PeerJlime) p;
-		byte[] resp = commStack.getData().sendData(marshalled, pdef.getAddr(),
-				true);
+		byte[] resp = commStack.getData().sendData(marshalled,
+				(JLiMEAddress) pdef.getAddress(), true);
 
 		if (log.isDebugEnabled())
-			log.debug("FINISHED synchronous call  to " + p + ", response "
+			log.debug("FINISHED synchronous call  to " + pdef + ", response "
 					+ (resp == null ? "NULL" : resp.length + " b."));
 
 		return resp;
@@ -74,12 +76,11 @@ public class jLiMETransport implements DataListener, Transport {
 			log.debug("Received data from processor");
 		handleExecutor.execute(new Runnable() {
 			public void run() {
-				UUID origin = msg.getFrom().getId();
+				Address origin = msg.getFrom();
 				byte[] buff = msg.getData();
 				if (log.isDebugEnabled())
 					log.debug("Unmarshalling data received");
-				byte[] rsp = rcvr.process(origin.toString(), buff);
-
+				byte[] rsp = rcvr.process(origin, buff);
 				if (handler != null) {
 					try {
 						handler.sendResponse(rsp);
@@ -105,5 +106,10 @@ public class jLiMETransport implements DataListener, Transport {
 	public void setMetrics(Metrics metrics) {
 		this.metrics = metrics;
 		this.commStack.setMetrics(metrics);
+	}
+
+	@Override
+	public Streamer getStreamer() {
+		return commStack.getStreamer();
 	}
 }

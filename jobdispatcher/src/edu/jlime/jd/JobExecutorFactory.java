@@ -16,11 +16,11 @@ public class JobExecutorFactory {
 		this.target = target;
 	}
 
-	public JobExecutorBroadcast getBroadcast(List<Peer> to, String cliID) {
+	public JobExecutorBroadcast getBroadcast(List<Peer> to, Peer cliID) {
 		return new JobExecutorBroadcastImpl(rpc, to, cliID, target);
 	}
 
-	public JobExecutor get(Peer to, String cliID) {
+	public JobExecutor get(Peer to, Peer cliID) {
 		return new JobExecutorServerImpl(rpc, to, cliID, target);
 	}
 }

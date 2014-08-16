@@ -1,5 +1,6 @@
 package edu.jlime.rpc.message;
 
+import edu.jlime.util.Buffer;
 import edu.jlime.util.ByteBuffer;
 
 public class Header {
@@ -30,7 +31,7 @@ public class Header {
 		return writer.build();
 	}
 
-	public static Header fromBytes(ByteBuffer reader) {
+	public static Header fromBytes(Buffer reader) {
 		MessageType type = MessageType.fromID(reader.get());
 		ByteBuffer headerData = new ByteBuffer(reader.getShortByteArray());
 		return new Header(type, headerData);

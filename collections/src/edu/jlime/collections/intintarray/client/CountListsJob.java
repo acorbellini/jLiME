@@ -16,6 +16,7 @@ import edu.jlime.collections.intintarray.client.jobs.MultiGetJob;
 import edu.jlime.collections.intintarray.db.Store;
 import edu.jlime.jd.JobNode;
 import edu.jlime.jd.job.Job;
+import edu.jlime.util.Buffer;
 import edu.jlime.util.ByteBuffer;
 import edu.jlime.util.DataTypeUtils;
 import edu.jlime.util.RingQueue;
@@ -109,7 +110,7 @@ public class CountListsJob implements Job<TIntIntHashMap> {
 
 	public static TIntIntHashMap fromBytes(byte[] bytes) {
 		TIntIntHashMap res = new TIntIntHashMap();
-		ByteBuffer reader = new ByteBuffer(bytes);
+		Buffer reader = new ByteBuffer(bytes);
 		int[] keys = DataTypeUtils.byteArrayToIntArray(reader.getByteArray());
 		int[] values = DataTypeUtils.byteArrayToIntArray(reader.getByteArray());
 		for (int i = 0; i < keys.length; i++) {

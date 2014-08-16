@@ -55,9 +55,16 @@ public class LevelDb extends Store {
 				if (db == null) {
 					options = new Options();
 					options.comparator(new DBComparator() {
-
 						@Override
 						public int compare(byte[] o1, byte[] o2) {
+							if (o1.length < 4)
+								System.out
+										.println("Key number 1 is shorter than 4.");
+							
+							if (o2.length < 4)
+								System.out
+										.println("Key number 2 is shorter than 4.");
+							
 							return Integer.compare(
 									DataTypeUtils.byteArrayToInt(o1),
 									DataTypeUtils.byteArrayToInt(o2));
@@ -109,10 +116,16 @@ public class LevelDb extends Store {
 	public List<byte[]> loadAll(int[] key) throws Exception {
 		Arrays.sort(key);
 		List<byte[]> res = new ArrayList<byte[]>();
-		DBIterator it = db.iterator();
+		System.out.println("Loading  " + key.length);
+		DBIterator it = getDb().iterator();
+
+		// if(key.length==1){
+		// System.out.println("Key[0]: " + load(key[0]));
+		// }
 		try {
 			int i = 0;
-			for (it.seek(intToBytes(key[0])); it.hasNext(); it
+			// it.seekToFirst();
+			for (it.seek(intToBytes(key[0])); it.hasNext() && i < key.length; it
 					.seek(intToBytes(key[i++]))) {
 				Entry<byte[], byte[]> e = it.peekNext();
 				res.add(e.getValue());
@@ -122,6 +135,7 @@ public class LevelDb extends Store {
 		} finally {
 			it.close();
 		}
+		System.out.println("Returning" + res.size());
 		return res;
 	}
 
@@ -235,6 +249,31 @@ public class LevelDb extends Store {
 			it.close();
 		}
 		return builder.toString();
+
+	}
+
+	@Override
+	public int size() throws Exception {
+		log.info("Getting Size");
+		int i = 0;
+		DBIterator it = getDb().iterator();
+
+		try {
+			it.seekToFirst();
+			while (it.hasNext()) {
+				Entry<byte[], byte[]> next = it.next();
+				i++;
+				// builder.append(DataTypeUtils.byteArrayToInt(next.getKey())
+				// + " "
+				// + DataTypeUtils.byteArrayToIntArray(next.getValue())
+				// + "\n");
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			it.close();
+		}
+		return i;
 
 	}
 }

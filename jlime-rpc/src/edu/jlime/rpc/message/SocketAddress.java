@@ -3,7 +3,7 @@ package edu.jlime.rpc.message;
 import java.net.InetSocketAddress;
 import java.util.UUID;
 
-public class SocketAddress extends Address {
+public class SocketAddress extends JLiMEAddress {
 
 	private AddressType type;
 
@@ -15,7 +15,8 @@ public class SocketAddress extends Address {
 		this.setType(type);
 	}
 
-	public SocketAddress(Address da, InetSocketAddress addr, AddressType type) {
+	public SocketAddress(JLiMEAddress da, InetSocketAddress addr,
+			AddressType type) {
 		this(da.getId(), addr, type);
 	}
 

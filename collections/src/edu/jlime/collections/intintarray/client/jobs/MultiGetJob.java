@@ -8,6 +8,7 @@ import edu.jlime.client.JobContext;
 import edu.jlime.collections.intintarray.db.Store;
 import edu.jlime.jd.JobNode;
 import edu.jlime.jd.job.Job;
+import edu.jlime.util.Buffer;
 import edu.jlime.util.ByteBuffer;
 import edu.jlime.util.DataTypeUtils;
 import gnu.trove.map.hash.TIntObjectHashMap;
@@ -49,7 +50,7 @@ public class MultiGetJob implements Job<byte[]> {
 
 	public static TIntObjectHashMap<int[]> fromBytes(byte[] bytes) {
 		TIntObjectHashMap<int[]> ret = new TIntObjectHashMap<>();
-		ByteBuffer reader = new ByteBuffer(bytes);
+		Buffer reader = new ByteBuffer(bytes);
 		while (reader.hasRemaining()) {
 			int user = reader.getInt();
 			byte[] array = reader.getByteArray();
