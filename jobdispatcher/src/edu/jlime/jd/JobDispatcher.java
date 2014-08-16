@@ -451,6 +451,9 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 	}
 
 	public void start() throws Exception {
+		for (Peer p : cluster) {
+			peerAdded(p, cluster);
+		}
 		rpc.start();
 		if (executorsSize() < minServers)
 			initLock.acquire();
@@ -507,7 +510,7 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 			log.info("Still waiting for "
 					+ (getMinServers() - executorsSize())
 					+ ((getMinServers() - executorsSize()) != 1 ? " executors "
-							: " executors") + " to show up.");
+							: " executor") + " to show up.");
 
 	}
 

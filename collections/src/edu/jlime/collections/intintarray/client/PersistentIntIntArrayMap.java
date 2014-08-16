@@ -54,33 +54,16 @@ public class PersistentIntIntArrayMap {
 	}
 
 	public void set(int k, int[] data) throws Exception {
-		// TIntArrayList list = new TIntArrayList();
-		// list.add(k);
-		// if (cache.get(list) == null) {
-		// TIntObjectHashMap<int[]> toAdd = new TIntObjectHashMap<>();
-		// toAdd.put(k, data);
-		// cache.put(list, toAdd);
-		// }
 		hashKey(k).execAsync(new SetJob(k, data, store));
 	}
 
 	public JobNode hashKey(int k) {
-		// ArrayList<JobNode> ordered = cluster.getExecutors();
-		// Collections.sort(ordered, new Comparator<JobNode>() {
-		// @Override
-		// public int compare(JobNode o1, JobNode o2) {
-		// Integer i1 = Integer.valueOf(o1.getName().replaceAll(
-		// "GridCluster", ""));
-		// Integer i2 = Integer.valueOf(o2.getName().replaceAll(
-		// "GridCluster", ""));
-		// return i1.compareTo(i2);
-		// }
-		// });
 		return getNode(k, cluster.getExecutors());
 	}
 
 	private JobNode getNode(int k, ArrayList<JobNode> ordered) {
-		return ordered.get(Math.abs(k % ordered.size()));
+		int index = Math.abs(k % ordered.size());
+		return ordered.get(index);
 	}
 
 	public int[] get(int k) throws Exception {
@@ -91,19 +74,8 @@ public class PersistentIntIntArrayMap {
 	}
 
 	public HashMap<JobNode, TIntArrayList> hashKeys(int[] userList) {
-		// ArrayList<JobNode> ordered = cluster.getExecutors();
-		// Collections.sort(ordered, new Comparator<JobNode>() {
-		// @Override
-		// public int compare(JobNode o1, JobNode o2) {
-		// Integer i1 = Integer.valueOf(o1.getName().replaceAll(
-		// "GridCluster", ""));
-		// Integer i2 = Integer.valueOf(o2.getName().replaceAll(
-		// "GridCluster", ""));
-		// return i1.compareTo(i2);
-		// }
-		// });
 		ArrayList<JobNode> ordered = cluster.getExecutors();
-		HashMap<JobNode, TIntArrayList> ret = new HashMap<JobNode, TIntArrayList>();
+		HashMap<JobNode, TIntArrayList> ret = new HashMap<>();
 		for (int u : userList) {
 			JobNode addr = getNode(u, ordered);
 			TIntArrayList l = ret.get(addr);
@@ -194,98 +166,6 @@ public class PersistentIntIntArrayMap {
 				res.printStackTrace();
 			}
 		});
-		// final TIntHashSet res = new TIntHashSet();
-		// final HashMap<JobNode, TIntArrayList> byServer = hashKeys(array);
-		//
-		// StreamForkJoin sfj = new StreamForkJoin() {
-		// @Override
-		// protected void send(RemoteOutputStream dos, JobNode p) {
-		// // BufferedOutputStream dos = new BufferedOutputStream(os);
-		// TIntArrayList list = byServer.get(p);
-		// try {
-		// dos.write(IntUtils.intArrayToByteArray(list.toArray()));
-		// dos.close();
-		// } catch (IOException e) {
-		// e.printStackTrace();
-		// }
-		// }
-		//
-		// @Override
-		// protected void receive(RemoteInputStream input, JobNode p) {
-		// // BufferedInputStream input = new BufferedInputStream(is);
-		// TIntHashSet cached = new TIntHashSet();
-		// try {
-		//
-		// byte[] buffer = new byte[READ_BUFFER_SIZE];
-		// int read = 0;
-		// while ((read = input.read(buffer)) != -1)
-		// for (int i = 0; i < read / 4; i++) {
-		// int k = IntUtils.byteArrayToInt(buffer, i * 4);
-		// cached.add(k);
-		// if (cached.size() > CACHED_THRESHOLD) {
-		// flushCache(res, cached);
-		// }
-		// }
-		// } catch (EOFException e) {
-		// if (log.isDebugEnabled())
-		// log.debug("Finished reading.");
-		// } catch (Exception e) {
-		// log.error("", e);
-		// } finally {
-		// try {
-		// input.close();
-		// } catch (IOException e) {
-		// e.printStackTrace();
-		// }
-		// }
-		// if (!cached.isEmpty())
-		// flushCache(res, cached);
-		// }
-		//
-		// private void flushCache(final TIntHashSet res, TIntHashSet cached) {
-		// synchronized (res) {
-		// for (int k : cached.toArray()) {
-		// res.add(k);
-		// }
-		// }
-		// cached.clear();
-		// }
-		// };
-		// sfj.execute(new ArrayList<>(byServer.keySet()), new
-		// StreamJobFactory() {
-		// @Override
-		// public StreamJob getStreamJob() {
-		// return new GetAdyacencyListStreamJob(store);
-		// }
-		// });
-
-		// if (log.isDebugEnabled())
-		// log.debug("Obtaining Futures of executing GetSetOfUsersJob for getSetOfUsers");
-		//
-		// for (Entry<Peer, TIntArrayList> map : byServer.entrySet()) {
-		// list.add(map.getKey().execAsyncWithFuture(
-		// new GetSetOfUsersJob(map.getValue().toArray(), store)));
-		// }
-		// while (!list.isEmpty()) {
-		// Future<int[]> future = null;
-		// for (Future<int[]> f : list)
-		// if (f.isDone())
-		// future = f;
-		//
-		// if (future == null) {
-		// if (log.isDebugEnabled())
-		// log.debug("No future finished, waiting 100 ms.");
-		// Thread.sleep(100);
-		// } else {
-		// if (log.isDebugEnabled())
-		// log.debug("Adding results from future.");
-		// res.addAll(future.get());
-		// list.remove(future);
-		// }
-		// }
-		// if (log.isDebugEnabled())
-		// log.info("Finished getSetOfUsers");
-		// return res;
 	}
 
 	public void set(final TIntObjectHashMap<int[]> orig) throws Exception {
@@ -390,79 +270,6 @@ public class PersistentIntIntArrayMap {
 						res.printStackTrace();
 					}
 				});
-		// final TIntIntHashMap hashToReturn = new TIntIntHashMap();
-		// final HashMap<JobNode, TIntArrayList> byServer = hashKeys(array);
-		// StreamForkJoin sfj = new StreamForkJoin() {
-		// @Override
-		// protected void send(RemoteOutputStream os, JobNode p) {
-		// BufferedOutputStream dos = new BufferedOutputStream(os);
-		// TIntArrayList list = byServer.get(p);
-		// try {
-		//
-		// log.info("Sending key stream to get from local store.");
-		// dos.write(IntUtils.intArrayToByteArray(list.toArray()));
-		// log.info("Finished sending key stream to get from local store.");
-		//
-		// dos.close();
-		// } catch (IOException e) {
-		// e.printStackTrace();
-		// }
-		// }
-		//
-		// @Override
-		// protected void receive(RemoteInputStream input, JobNode p) {
-		// // BufferedInputStream input = new BufferedInputStream(is);
-		// TIntIntHashMap cached = new TIntIntHashMap();
-		// try {
-		// byte[] buffer = new byte[READ_BUFFER_SIZE];
-		// int read = 0;
-		// while ((read = input.read(buffer)) != -1)
-		// for (int i = 0; i < read / 4; i++) {
-		// int k = IntUtils.byteArrayToInt(buffer, i * 4);
-		// cached.adjustOrPutValue(k, 1, 1);
-		// if (cached.size() > CACHED_THRESHOLD) {
-		// flushCache(hashToReturn, cached);
-		// }
-		// }
-		// } catch (EOFException e) {
-		// // if (log.isDebugEnabled())
-		//
-		// } catch (Exception e) {
-		// log.error("", e);
-		// } finally {
-		// try {
-		// input.close();
-		// } catch (IOException e) {
-		// e.printStackTrace();
-		// }
-		// }
-		// log.info("Finished obtaining remote store keys.");
-		// if (!cached.isEmpty())
-		// flushCache(hashToReturn, cached);
-		// }
-		//
-		// private void flushCache(final TIntIntHashMap hashToReturn,
-		// TIntIntHashMap cached) {
-		// synchronized (hashToReturn) {
-		// for (int cachedk : cached.keys()) {
-		// int cachedv = cached.get(cachedk);
-		// hashToReturn
-		// .adjustOrPutValue(cachedk, cachedv, cachedv);
-		// }
-		// }
-		// cached.clear();
-		// }
-		// };
-		// sfj.execute(new ArrayList<>(byServer.keySet()), new
-		// StreamJobFactory() {
-		// @Override
-		// public StreamJob getStreamJob() {
-		// return new GetAdyacencyListStreamJob(store);
-		// }
-		// });
-		// // if (log.isDebugEnabled())
-		// log.info("Returning count hash with " + hashToReturn.size());
-		// return hashToReturn;
 	}
 
 	private static class GetAdyacencyListStreamJob extends StreamJob {

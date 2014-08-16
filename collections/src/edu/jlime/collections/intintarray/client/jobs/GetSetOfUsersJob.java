@@ -1,7 +1,6 @@
 package edu.jlime.collections.intintarray.client.jobs;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -46,10 +45,8 @@ public class GetSetOfUsersJob implements Job<TIntHashSet> {
 			Arrays.sort(subset);
 			for (int u : subset) {
 				byte[] valAsBytes = store.load(u);
-				if (valAsBytes != null) {
+				if (valAsBytes != null)
 					hash.addAll(DataTypeUtils.byteArrayToIntArray(valAsBytes));
-				}
-				// res.put(u, new int[] {});
 			}
 			return hash;
 		}
@@ -83,23 +80,16 @@ public class GetSetOfUsersJob implements Job<TIntHashSet> {
 			}
 		});
 		exec.shutdown();
-		TIntHashSet hash = new TIntHashSet();
-//		Arrays.sort(kList);
-		List<byte[]> list = store.loadAll(kList);
-		for (byte[] valAsBytes : list) {
+
+		Arrays.sort(kList);
+		for (int k : kList) {
+			byte[] valAsBytes = store.load(k);
 			if (valAsBytes != null) {
-				// queue.put(valAsBytes);
-				int[] byteArrayToIntArray = DataTypeUtils
-						.byteArrayToIntArray((byte[]) valAsBytes);
-				hash.addAll(byteArrayToIntArray);
-				// int[] byteArrayToIntArray = DataTypeUtils
-				// .byteArrayToIntArray((byte[]) valAsBytes);
-				// hash.addAll(byteArrayToIntArray);
+				queue.put(valAsBytes);
 			}
 		}
-		// queue.put(null);
+		queue.put(null);
 
-		// return fut.get();
-		return hash;
+		return fut.get();
 	}
 }

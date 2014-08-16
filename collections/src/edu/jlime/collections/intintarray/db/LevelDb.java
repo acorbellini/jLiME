@@ -54,38 +54,6 @@ public class LevelDb extends Store {
 			synchronized (this) {
 				if (db == null) {
 					options = new Options();
-					options.comparator(new DBComparator() {
-						@Override
-						public int compare(byte[] o1, byte[] o2) {
-							if (o1.length < 4)
-								System.out
-										.println("Key number 1 is shorter than 4.");
-							
-							if (o2.length < 4)
-								System.out
-										.println("Key number 2 is shorter than 4.");
-							
-							return Integer.compare(
-									DataTypeUtils.byteArrayToInt(o1),
-									DataTypeUtils.byteArrayToInt(o2));
-						}
-
-						@Override
-						public String name() {
-							return "Integer comparator.";
-						}
-
-						@Override
-						public byte[] findShortestSeparator(byte[] s,
-								byte[] arg1) {
-							return s;
-						}
-
-						@Override
-						public byte[] findShortSuccessor(byte[] e) {
-							return e;
-						}
-					});
 					options.createIfMissing(true);
 					options.cacheSize(100 * 1024 * 1024);
 					options.blockSize(256 * 1024);

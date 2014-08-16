@@ -46,7 +46,7 @@ public class Loader {
 		try {
 			this.jlime = Client.build(8);
 			setClient(new BundlerClient(new StoreConfig(StoreType.LEVELDB,
-					"/home/acorbellini/TwitterDBV2", "TwitterLevelDB"), 100000,
+					"/home/acorbellini/TwitterDB", "TwitterLevelDB"), 100000,
 					jlime.getCluster()));
 		} catch (Exception e) {
 			e.printStackTrace();
