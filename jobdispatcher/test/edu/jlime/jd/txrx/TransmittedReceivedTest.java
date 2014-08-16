@@ -40,33 +40,6 @@ public class TransmittedReceivedTest {
 
 		@Override
 		public void run(JobContext env, JobNode origin) throws Exception {
-			// ArrayList<Peer> exec = env.getCluster().getExecutors();
-			//
-			// for (int i = 1; i <= 1000; i++) {
-			// final Semaphore sem = new Semaphore(-exec.size() + 1);
-			//
-			// for (Peer peer : exec) {
-			// peer.execAsync(new MessageJob("Message From "
-			// + env.getCluster().getLocal().getIPv4() + " round "
-			// + i), new ResultManager<Boolean>() {
-			//
-			// @Override
-			// protected void handleException(Exception res,
-			// String jobID, Peer fromID) {
-			// res.printStackTrace();
-			// sem.release();
-			// }
-			//
-			// @Override
-			// protected void handleResult(Boolean res, String jobID,
-			// Peer fromID) {
-			// sem.release();
-			// }
-			// });
-			// }
-			// System.out.println("Waiting for semaphore, round " + i);
-			// sem.acquire();
-			// }
 			System.out.println("Executing Transmission Job.");
 			JobCluster cluster = env.getCluster();
 

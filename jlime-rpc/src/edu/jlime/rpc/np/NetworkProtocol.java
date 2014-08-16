@@ -147,7 +147,6 @@ public abstract class NetworkProtocol extends SimpleMessageProcessor implements
 		if (to == null) {
 			to = JLiMEAddress.noAddr();
 			realSockAddr = localAddr;
-
 		} else if (to != null && to instanceof SocketAddress) {
 			realSockAddr = ((SocketAddress) to);
 		}

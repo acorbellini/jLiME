@@ -53,4 +53,13 @@ public class JGroupsAddress implements Address {
 		this.address = (org.jgroups.Address) in.readObject();
 	}
 
+	@Override
+	public int compareTo(Address o) {
+		return this.address.compareTo(((JGroupsAddress) o).address);
+	}
+
+	public org.jgroups.Address getAddress() {
+		return address;
+	}
+
 }

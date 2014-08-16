@@ -75,7 +75,10 @@ public class Peer implements Externalizable, Comparable<Peer> {
 
 	@Override
 	public int compareTo(Peer o) {
-		return this.name.compareTo(o.name);
+		int compareTo = this.name.compareTo(o.name);
+		if (compareTo == 0)
+			return this.address.compareTo(o.address);
+		return compareTo;
 	}
 
 	public Address getAddress() {

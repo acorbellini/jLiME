@@ -48,4 +48,9 @@ public class LocalAddress implements Address {
 		this.id = in.readInt();
 	}
 
+	@Override
+	public int compareTo(Address o) {
+		return Integer.compare(id, ((LocalAddress) o).id);
+	}
+
 }

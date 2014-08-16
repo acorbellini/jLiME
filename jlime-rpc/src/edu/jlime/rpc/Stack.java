@@ -11,6 +11,7 @@ import edu.jlime.core.transport.Streamer;
 import edu.jlime.metrics.metric.Metrics;
 import edu.jlime.rpc.data.DataProcessor;
 import edu.jlime.rpc.data.DataProvider;
+import edu.jlime.rpc.discovery.Discovery;
 import edu.jlime.rpc.discovery.DiscoveryProvider;
 import edu.jlime.rpc.discovery.MultiCastDiscovery;
 import edu.jlime.rpc.fd.FailureProvider;
@@ -79,11 +80,11 @@ public class Stack {
 		this.data = data;
 	}
 
-	private void setDisco(MultiDiscovery disco) {
+	private void setDisco(DiscoveryProvider disco) {
 		this.disco = disco;
 	}
 
-	private void setFD(PingFailureDetection fail) {
+	private void setFD(FailureProvider fail) {
 		this.fail = fail;
 	}
 
@@ -117,53 +118,12 @@ public class Stack {
 		NetworkProtocol mcast = NetworkProtocolFactory.mcast(local, config)
 				.getProtocol(iface);
 
-		// NetworkProtocolFactory udpFactory =
-		// NetworkProtocolFactory.udp(localID,
-		// config);
-		//
-		// NetworkProtocolFactory tcpFactory =
-		// NetworkProtocolFactory.tcp(localID,
-		// config);
-		//
-		// NetworkProtocolFactory mcastFactory = NetworkProtocolFactory.mcast(
-		// localID, config);
-		//
-		// MultiInterface udp = MultiInterface.create(AddressType.UDP, config,
-		// udpFactory);
-		//
-		// MultiInterface tcp = MultiInterface.create(AddressType.TCP, config,
-		// tcpFactory);
-		//
-		// MultiInterface mcast = MultiInterface.create(AddressType.MCAST,
-		// config,
-		// mcastFactory);
-
 		final DataProcessor data = new DataProcessor(tcp);
 
-		MultiDiscovery disco = new MultiDiscovery();
-
-		MultiCastDiscovery mcastDisco = new MultiCastDiscovery(local, name,
-				config, mcast, udp);
-		mcastDisco.addAddressListProvider(tcp);
-		mcastDisco.addAddressListProvider(udp);
-		// mcastDisco.setAddressTester(new AddressTester() {
-		//
-		// @Override
-		// public boolean test(UUID id, DEFSocketAddress defSocketAddress) {
-		// tcp.send(DEFMessage
-		// .encapsulate(msg, MessageType.TEST, from, to));
-		// DEFByteBuffer buff = new DEFByteBuffer();
-		// buff.putUUID(id);
-		// try {
-		// byte[] resp = data.sendData(buff.build(), defSocketAddress,
-		// true);
-		// return false;
-		// } catch (Exception e) {
-		// return false;
-		// }
-		// }
-		// });
-		disco.addDisco(mcastDisco);
+		MultiCastDiscovery disco = new MultiCastDiscovery(local, name, config,
+				mcast, udp);
+		disco.addAddressListProvider(tcp);
+		disco.addAddressListProvider(udp);
 
 		PingFailureDetection fail = new PingFailureDetection(udp);
 		fail.addPingProvider(tcp);
@@ -196,10 +156,6 @@ public class Stack {
 
 		MultiInterface mcast = MultiInterface.create(AddressType.MCAST, config,
 				mcastFactory);
-
-		// DEFMessageBundler bundler = new DEFMessageBundler(udp,
-		// config.max_msg_size);
-
 		Acknowledge ack = new Acknowledge(udp, config.max_msg_size,
 				config.nack_delay, config.ack_delay);
 

@@ -72,7 +72,6 @@ public class JlimeFactory implements RPCFactory {
 				if (p == null) {
 					log.info("New member found : " + name + " id " + from);
 					Peer peer = new Peer(from, name);
-
 					peer.putData(data);
 					cluster.addPeer(peer);
 					fail.addPeerToMonitor(peer);

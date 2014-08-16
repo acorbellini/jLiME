@@ -180,9 +180,12 @@ public class RPCDispatcher implements ClassLoaderProvider, DataReceiver {
 						if (log.isDebugEnabled())
 							log.debug("Sending broadcast message synchronously to "
 									+ p);
-						ret.put(p,
-								getMarshaller().getObject(
-										tr.sendSync(p, marshalled), p));
+						Object sendSync = getMarshaller().getObject(
+								tr.sendSync(p, marshalled), p);
+						if (sendSync != null)
+							ret.put(p, sendSync);
+						else
+							ret.put(p, new Object());
 						if (log.isDebugEnabled())
 							log.debug("Finished sending broadcast message synchronously to "
 									+ p);

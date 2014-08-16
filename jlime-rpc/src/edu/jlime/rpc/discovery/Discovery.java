@@ -47,8 +47,6 @@ public abstract class Discovery implements DiscoveryProvider, StackElement {
 
 	private String localName;
 
-	// private AddressTester addressTester;
-
 	public Discovery(JLiMEAddress localID, String name, Configuration config,
 			MessageProcessor discoveryInit, MessageProcessor discoveryData) {
 		this.localID = localID;
@@ -57,10 +55,6 @@ public abstract class Discovery implements DiscoveryProvider, StackElement {
 		this.discoveryInit = discoveryInit;
 		this.discoveryData = discoveryData;
 	}
-
-	// public void setAddressTester(AddressTester addressTester) {
-	// this.addressTester = addressTester;
-	// }
 
 	@Override
 	public void start() throws Exception {
@@ -117,10 +111,7 @@ public abstract class Discovery implements DiscoveryProvider, StackElement {
 
 						if (disco.getId().equals(localID))
 							return;
-
-						// discoveryMessageReceived(m.getFrom(),
-						// disco.getAdditional());
-
+						
 						if (log.isDebugEnabled())
 							log.debug("Discovery Message received from "
 									+ m.getFrom() + " with addresses "
@@ -154,7 +145,6 @@ public abstract class Discovery implements DiscoveryProvider, StackElement {
 			ArrayList<SocketAddress> byType = new ArrayList<>();
 			for (SocketAddress defSocketAddress : addresses) {
 				if (defSocketAddress.getType().equals(alul.getKey()))
-					// && addressTester.test(id, defSocketAddress))
 					byType.add(defSocketAddress);
 			}
 			alul.getValue().addressUpdate(new JLiMEAddress(id), byType);

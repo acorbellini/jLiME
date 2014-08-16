@@ -175,11 +175,11 @@ public class JgroupsTransport implements AsyncRequestHandler, Transport {
 		while (retry < MAX_RETRY) {
 			try {
 				if (log.isDebugEnabled())
-					log.debug("Sending JGROUPS message to "
-							+ ((PeerJgroups) p).getAddress());
+					log.debug("Sending JGROUPS message to " + p.getAddress());
 				return disp.sendMessage(
-						new Message(((Address) ((PeerJgroups) p).getAddress()),
-								marshalled), opts);
+						new Message(
+								((Address) ((JGroupsAddress) p.getAddress())
+										.getAddress()), marshalled), opts);
 			} catch (SuspectedException e) {
 				if (log.isDebugEnabled())
 					log.debug("Peer "

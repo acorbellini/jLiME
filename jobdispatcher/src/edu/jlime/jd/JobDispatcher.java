@@ -500,7 +500,7 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 	}
 
 	private void checkSize() {
-		if (executorsSize() >= getMinServers()) {
+		if (minServers >= 0 && executorsSize() >= getMinServers()) {
 			initLock.release();
 		} else
 			// ACA SE PUEDE AMPLIAR A ESPERAR POR CIERTOS TAGS A QUE APAREZCAN

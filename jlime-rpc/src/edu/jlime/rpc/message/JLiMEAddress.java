@@ -6,8 +6,6 @@ import java.io.ObjectOutput;
 import java.util.UUID;
 
 import edu.jlime.core.transport.Address;
-import edu.jlime.util.Buffer;
-import edu.jlime.util.ByteBuffer;
 
 public class JLiMEAddress implements Address {
 
@@ -60,5 +58,10 @@ public class JLiMEAddress implements Address {
 			ClassNotFoundException {
 		this.id = new UUID(in.readLong(), in.readLong());
 
+	}
+
+	@Override
+	public int compareTo(Address o) {
+		return this.id.compareTo(((JLiMEAddress) o).id);
 	}
 }

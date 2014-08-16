@@ -65,13 +65,12 @@ public class JGroupsFactory implements RPCFactory {
 		JGroupsFactory.jgroupsfile = jgroupsfile;
 	}
 
-	private static List<Peer> convertToPeerList(List<Address> members,
-			JobDispatcher disp) {
+	private static List<Peer> convertToPeerList(List<Address> members) {
 		List<Peer> ret = new ArrayList<>();
 		for (Address m : members) {
-			PeerJgroups srv;
+			Peer srv;
 			try {
-				srv = PeerJgroups.createNew(m, disp);
+				srv = PeerJgroups.createNew(m);
 				ret.add(srv);
 			} catch (Exception e) {
 				Logger log = Logger.getLogger(JGroupsFactory.class);
@@ -118,10 +117,14 @@ public class JGroupsFactory implements RPCFactory {
 		System.setProperty("def.iface_list", ifaces.substring(1));
 
 		System.setProperty("java.net.preferIPv4Stack", "true");
+
 		IP ip = IP.toIP(addrList.get(0).getInet().getHostAddress());
+
 		String id = ServerAddressParser.generate(tags, ip, exec);
 
-		PeerJgroups local = new PeerJgroups(id, ip, null);
+		// TODO Fix Jgroups Factory
+		// Peer local = PeerJgroups.createNew(id);
+		Peer local = null;
 
 		final Cluster cluster = new Cluster(local);
 
@@ -141,7 +144,7 @@ public class JGroupsFactory implements RPCFactory {
 
 			@Override
 			public void viewChanged(View view) {
-				cluster.update(convertToPeerList(view.getMembers(), disp));
+				cluster.update(convertToPeerList(view.getMembers()));
 			}
 		});
 

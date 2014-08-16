@@ -142,6 +142,9 @@ public class TCP extends NetworkProtocol implements DataReceiver {
 			toSend = getBestAddress(to);
 		}
 
+		if(toSend==null)
+			throw new Exception("Can't find address for " + to + " given realsockaddr is " + realSockAddr);
+		
 		if (!isEqualToLocalType(toSend.getSockTo())) {
 			if (log.isDebugEnabled())
 				log.debug("Won't send to different type of address " + toSend

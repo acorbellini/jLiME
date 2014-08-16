@@ -53,7 +53,7 @@ public class SimpleTest {
 		// } catch (Exception e) {
 		// e.printStackTrace();
 		// }
-		Client cl = Client.build();
+		Client cl = Client.build(1);
 
 		Thread.sleep(3000);
 
