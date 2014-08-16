@@ -7,7 +7,7 @@ import java.util.concurrent.ThreadFactory;
 import org.apache.log4j.Logger;
 
 import edu.jlime.core.cluster.Peer;
-import edu.jlime.core.rpc.DataReceiver;
+import edu.jlime.core.rpc.TransportListener;
 import edu.jlime.core.transport.Address;
 import edu.jlime.core.transport.Streamer;
 import edu.jlime.core.transport.Transport;
@@ -17,11 +17,11 @@ import edu.jlime.rpc.data.DataProcessor.DataMessage;
 import edu.jlime.rpc.data.Response;
 import edu.jlime.rpc.message.JLiMEAddress;
 
-public class jLiMETransport implements DataListener, Transport {
+public class jLiMETransport extends Transport implements DataListener {
 
 	private Logger log = Logger.getLogger(jLiMETransport.class);
 
-	private DataReceiver rcvr;
+	private Stack commStack;
 
 	private ExecutorService handleExecutor = Executors.newFixedThreadPool(4,
 			new ThreadFactory() {
@@ -33,13 +33,11 @@ public class jLiMETransport implements DataListener, Transport {
 				}
 			});
 
-	private Stack commStack;
-
-	private Metrics metrics;
-
-	public jLiMETransport(Stack commStack) {
+	public jLiMETransport(Peer local, Stack commStack) {
+		super(local, commStack.getDiscovery(), commStack.getFailureDetection(),
+				commStack.getStreamer());
 		this.commStack = commStack;
-		commStack.getData().addDataListener(this);
+		this.commStack.getData().addDataListener(this);
 	}
 
 	@Override
@@ -71,7 +69,7 @@ public class jLiMETransport implements DataListener, Transport {
 	}
 
 	@Override
-	public void dataRcvd(final DataMessage msg, final Response handler) {
+	public void messageReceived(final DataMessage msg, final Response handler) {
 		if (log.isDebugEnabled())
 			log.debug("Received data from processor");
 		handleExecutor.execute(new Runnable() {
@@ -80,7 +78,8 @@ public class jLiMETransport implements DataListener, Transport {
 				byte[] buff = msg.getData();
 				if (log.isDebugEnabled())
 					log.debug("Unmarshalling data received");
-				byte[] rsp = rcvr.process(origin, buff);
+				byte[] rsp = jLiMETransport.super.callTransportListener(origin,
+						buff);
 				if (handler != null) {
 					try {
 						handler.sendResponse(rsp);
@@ -93,23 +92,18 @@ public class jLiMETransport implements DataListener, Transport {
 	}
 
 	@Override
-	public void registerReceiver(DataReceiver rcvr) {
-		this.rcvr = rcvr;
-	}
-
-	@Override
 	public void start() throws Exception {
 		commStack.start();
 	}
 
 	@Override
 	public void setMetrics(Metrics metrics) {
-		this.metrics = metrics;
+		super.setMetrics(metrics);
 		this.commStack.setMetrics(metrics);
 	}
 
 	@Override
-	public Streamer getStreamer() {
-		return commStack.getStreamer();
+	protected void onFailedPeer(Peer peer) {
+		commStack.cleanup((JLiMEAddress) peer.getAddress());
 	}
 }

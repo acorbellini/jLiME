@@ -222,7 +222,7 @@ public class DataProcessor extends SimpleMessageProcessor implements
 					m.getTo(), m.getFrom());
 			if (log.isDebugEnabled())
 				log.debug("Sending data message to listener.");
-			l.dataRcvd(data, resp);
+			l.messageReceived(data, resp);
 		}
 	}
 

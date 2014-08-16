@@ -7,14 +7,14 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
+import edu.jlime.core.transport.DiscoveryProvider;
+import edu.jlime.core.transport.FailureProvider;
 import edu.jlime.core.transport.Streamer;
 import edu.jlime.metrics.metric.Metrics;
 import edu.jlime.rpc.data.DataProcessor;
 import edu.jlime.rpc.data.DataProvider;
 import edu.jlime.rpc.discovery.Discovery;
-import edu.jlime.rpc.discovery.DiscoveryProvider;
 import edu.jlime.rpc.discovery.MultiCastDiscovery;
-import edu.jlime.rpc.fd.FailureProvider;
 import edu.jlime.rpc.fd.PingFailureDetection;
 import edu.jlime.rpc.fr.Acknowledge;
 import edu.jlime.rpc.frag.Fragmenter;
@@ -50,7 +50,7 @@ public class Stack {
 		stackElements.add(p);
 	}
 
-	public void cleanupOnFailedPeer(JLiMEAddress address) {
+	public void cleanup(JLiMEAddress address) {
 		for (ListIterator<StackElement> iterator = stackElements
 				.listIterator(stackElements.size()); iterator.hasPrevious();) {
 			StackElement listElement = iterator.previous();

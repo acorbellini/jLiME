@@ -10,10 +10,10 @@ import edu.jlime.core.cluster.Peer;
 import edu.jlime.core.rpc.RPCDispatcher;
 import edu.jlime.core.rpc.RPCFactory;
 import edu.jlime.core.transport.Address;
-import edu.jlime.rpc.discovery.DiscoveryListener;
-import edu.jlime.rpc.discovery.DiscoveryProvider;
-import edu.jlime.rpc.fd.FailureListener;
-import edu.jlime.rpc.fd.FailureProvider;
+import edu.jlime.core.transport.DiscoveryListener;
+import edu.jlime.core.transport.DiscoveryProvider;
+import edu.jlime.core.transport.FailureListener;
+import edu.jlime.core.transport.FailureProvider;
 import edu.jlime.rpc.message.JLiMEAddress;
 
 public class JlimeFactory implements RPCFactory {
@@ -36,14 +36,9 @@ public class JlimeFactory implements RPCFactory {
 
 	@Override
 	public RPCDispatcher build() throws Exception {
-
 		JLiMEAddress localAddress = new JLiMEAddress();
-
 		Peer localPeer = new Peer(localAddress, config.name);
 		localPeer.putData(localData);
-
-		// CLUSTER
-		final Cluster cluster = new Cluster(localPeer);
 
 		// STACK
 		final Stack commStack = config.getProtocol().equals("tcp") ? Stack
@@ -51,43 +46,10 @@ public class JlimeFactory implements RPCFactory {
 				config, localAddress, config.name);
 
 		// RPC
-		jLiMETransport tr = new jLiMETransport(commStack);
+		jLiMETransport tr = new jLiMETransport(localPeer, commStack);
 
-		RPCDispatcher rpc = new RPCDispatcher(cluster);
-		
-		rpc.setTransport(tr);
+		RPCDispatcher rpc = new RPCDispatcher(tr);
 
-		DiscoveryProvider disco = commStack.getDiscovery();
-		disco.putData(localPeer.getDataMap());
-
-		final FailureProvider fail = commStack.getFailureDetection();
-
-		// DISCOVERY
-		disco.addListener(new DiscoveryListener() {
-
-			@Override
-			public synchronized void memberMessage(Address from, String name,
-					Map<String, String> data) throws Exception {
-				Peer p = cluster.getByAddress(from);
-				if (p == null) {
-					log.info("New member found : " + name + " id " + from);
-					Peer peer = new Peer(from, name);
-					peer.putData(data);
-					cluster.addPeer(peer);
-					fail.addPeerToMonitor(peer);
-				}
-
-			}
-		});
-
-		fail.addFailureListener(new FailureListener() {
-			@Override
-			public void nodeFailed(Peer peer) {
-				log.info("Node " + peer + " crashed. ");
-				cluster.removePeer(peer);
-				commStack.cleanupOnFailedPeer((JLiMEAddress) peer.getAddress());
-			}
-		});
 		return rpc;
 	}
 }

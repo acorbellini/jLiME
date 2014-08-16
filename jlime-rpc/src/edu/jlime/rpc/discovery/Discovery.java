@@ -12,6 +12,8 @@ import java.util.UUID;
 import org.apache.log4j.Logger;
 
 import edu.jlime.core.transport.Address;
+import edu.jlime.core.transport.DiscoveryListener;
+import edu.jlime.core.transport.DiscoveryProvider;
 import edu.jlime.rpc.AddressListProvider;
 import edu.jlime.rpc.Configuration;
 import edu.jlime.rpc.message.AddressType;

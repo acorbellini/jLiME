@@ -4,10 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import edu.jlime.core.transport.DiscoveryListener;
+import edu.jlime.core.transport.DiscoveryProvider;
 import edu.jlime.metrics.metric.Metrics;
 import edu.jlime.rpc.discovery.Discovery;
-import edu.jlime.rpc.discovery.DiscoveryListener;
-import edu.jlime.rpc.discovery.DiscoveryProvider;
 import edu.jlime.rpc.message.Message;
 import edu.jlime.rpc.message.MessageProcessor;
 

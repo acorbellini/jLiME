@@ -9,6 +9,8 @@ import org.apache.log4j.Logger;
 
 import edu.jlime.core.cluster.Peer;
 import edu.jlime.core.transport.Address;
+import edu.jlime.core.transport.FailureListener;
+import edu.jlime.core.transport.FailureProvider;
 import edu.jlime.metrics.metric.Metrics;
 import edu.jlime.rpc.message.JLiMEAddress;
 import edu.jlime.rpc.message.Message;
@@ -36,7 +38,7 @@ public class PingFailureDetection implements StackElement, FailureProvider {
 	private ConcurrentHashMap<JLiMEAddress, Peer> peers = new ConcurrentHashMap<>();
 
 	@Override
-	public void addFailureListener(FailureListener l) {
+	public void addListener(FailureListener l) {
 		list.add(l);
 	}
 

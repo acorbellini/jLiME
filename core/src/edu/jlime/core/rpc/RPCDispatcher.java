@@ -27,7 +27,7 @@ import edu.jlime.core.transport.Transport;
 import edu.jlime.metrics.metric.Metrics;
 import edu.jlime.util.StreamUtils;
 
-public class RPCDispatcher implements ClassLoaderProvider, DataReceiver {
+public class RPCDispatcher implements ClassLoaderProvider, TransportListener {
 
 	private static final String RPC = "RPC";
 
@@ -50,23 +50,15 @@ public class RPCDispatcher implements ClassLoaderProvider, DataReceiver {
 
 	private Logger log = Logger.getLogger(RPCDispatcher.class);
 
-	private Cluster cluster;
-
 	private Map<String, Object> targets = new ConcurrentHashMap<>();
 
 	private Metrics metrics;
 
-	public RPCDispatcher(Cluster c) {
-		this.cluster = c;
+	public RPCDispatcher(Transport tr) {
+		this.tr = tr;
 		this.marshaller = new Marshaller(this);
 		this.registerTarget(RPC, this);
-	}
-
-	public void setTransport(Transport tr) {
-		this.tr = tr;
-		this.tr.registerReceiver(this);
-		if (metrics != null)
-			this.tr.setMetrics(metrics);
+		this.tr.listen(this);
 	}
 
 	public Object callSync(Peer dest, Peer clientID, MethodCall call)
@@ -81,7 +73,7 @@ public class RPCDispatcher implements ClassLoaderProvider, DataReceiver {
 
 	private Object call(Peer dest, Peer clientID, MethodCall call, boolean sync)
 			throws Exception {
-		if (dest.equals(cluster.getLocalPeer())) {
+		if (dest.equals(getCluster().getLocalPeer())) {
 			if (log.isDebugEnabled())
 				log.debug("Dispatching methodcall to local target.");
 			Object obj = callTarget(call);
@@ -293,7 +285,7 @@ public class RPCDispatcher implements ClassLoaderProvider, DataReceiver {
 	@Override
 	public byte[] process(Address origin, byte[] buff) {
 		try {
-			Peer peer = cluster.getByAddress(origin);
+			Peer peer = getCluster().getByAddress(origin);
 			Object obj = getMarshaller().getObject(buff, peer);
 			if (log.isDebugEnabled())
 				log.debug("Finished unmarshalling data received");
@@ -304,7 +296,7 @@ public class RPCDispatcher implements ClassLoaderProvider, DataReceiver {
 			MethodCall mc = (MethodCall) obj;
 			if (log.isDebugEnabled())
 				log.info("Received method call " + mc.getName() + " from "
-						+ cluster.getByAddress(origin) + ", invoking.");
+						+ getCluster().getByAddress(origin) + ", invoking.");
 
 			return getMarshaller().toByteArray(callTarget(mc));
 		} catch (Exception e) {
@@ -328,7 +320,7 @@ public class RPCDispatcher implements ClassLoaderProvider, DataReceiver {
 	}
 
 	public Cluster getCluster() {
-		return cluster;
+		return tr.getCluster();
 	}
 
 	public Streamer getStreamer() {

@@ -19,6 +19,7 @@ import org.apache.log4j.Logger;
 import edu.jlime.core.stream.RemoteInputStream;
 import edu.jlime.core.stream.RemoteOutputStream;
 import edu.jlime.core.transport.Address;
+import edu.jlime.core.transport.DataReceiver;
 import edu.jlime.rpc.message.AddressType;
 import edu.jlime.rpc.message.JLiMEAddress;
 import edu.jlime.rpc.message.SocketAddress;

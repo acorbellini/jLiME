@@ -1,8 +1,6 @@
 package edu.jlime.jgroups;
 
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -10,31 +8,25 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 import org.jgroups.Address;
-import org.jgroups.JChannel;
 import org.jgroups.Message;
 import org.jgroups.Message.Flag;
-import org.jgroups.ReceiverAdapter;
 import org.jgroups.SuspectedException;
 import org.jgroups.TimeoutException;
-import org.jgroups.View;
 import org.jgroups.blocks.AsyncRequestHandler;
 import org.jgroups.blocks.MessageDispatcher;
 import org.jgroups.blocks.RequestOptions;
 import org.jgroups.blocks.Response;
 
 import edu.jlime.core.cluster.Peer;
-import edu.jlime.core.rpc.DataReceiver;
 import edu.jlime.core.transport.Streamer;
 import edu.jlime.core.transport.Transport;
-import edu.jlime.metrics.metric.Metrics;
+import edu.jlime.jgroups.JGroupsFactory.JgroupsMembership;
 
-public class JgroupsTransport implements AsyncRequestHandler, Transport {
+public class JgroupsTransport extends Transport implements AsyncRequestHandler {
 
 	private static final long FIRST_RETRY = 5;
 
 	private static final int MAX_RETRY = 5;
-
-	private JChannel channel;
 
 	private MessageDispatcher disp;
 
@@ -56,50 +48,22 @@ public class JgroupsTransport implements AsyncRequestHandler, Transport {
 
 	private Logger log = Logger.getLogger(JgroupsTransport.class);
 
-	private ArrayList<OnViewChangeListener> viewchangelisteners = new ArrayList<>();
-
 	private RequestOptions syncOpts = RequestOptions.SYNC().setFlags(Flag.OOB)
 			.setTimeout(Long.MAX_VALUE);
 
 	private RequestOptions asyncOpts = RequestOptions.ASYNC()
 			.setFlags(Flag.OOB).setTimeout(Long.MAX_VALUE);
 
-	public JgroupsTransport(String id, InputStream jg) throws Exception {
-		this.id = id;
-		this.jg = jg;
-		Thread vu = new Thread("View Updater") {
-			public void run() {
-				while (true) {
-					updateView();
+	public JgroupsTransport(Peer local, MessageDispatcher disp,
+			JgroupsMembership member, Streamer s) throws Exception {
+		super(local, member, member, s);
+		disp.setRequestHandler(this);
+		this.disp = disp;
 
-				}
-			};
-		};
-		// vu.setDaemon(true);
-		vu.start();
-	}
-
-	private ConcurrentLinkedDeque<View> updateQueue = new ConcurrentLinkedDeque<>();
-
-	private DataReceiver rcvr;
-
-	private Metrics metrics;
-
-	protected synchronized void updateView() {
-		while (updateQueue.isEmpty())
-			try {
-				wait();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		View view = updateQueue.pop();
-		for (OnViewChangeListener l : viewchangelisteners) {
-			l.viewChanged(view);
-		}
 	}
 
 	public Address getAddress() {
-		return channel.getAddress();
+		return disp.getChannel().getAddress();
 	}
 
 	@Override
@@ -116,41 +80,16 @@ public class JgroupsTransport implements AsyncRequestHandler, Transport {
 			public void run() {
 				Address origin = msg.getSrc();
 				byte[] buff = msg.getBuffer();
-				byte[] resp = rcvr.process(new JGroupsAddress(origin), buff);
+				byte[] resp = JgroupsTransport.super.callTransportListener(
+						new JGroupsAddress(origin), buff);
 				if (response != null)
 					response.send(resp, false);
 			}
 		});
 	}
 
-	public void onViewChange(OnViewChangeListener list) {
-		this.viewchangelisteners.add(list);
-	}
-
 	public void start() throws Exception {
 
-		channel = new JChannel(jg);
-
-		channel.setName(id);
-
-		ReceiverAdapter rcv = new ReceiverAdapter() {
-			@Override
-			public void viewAccepted(View view) {
-				super.viewAccepted(view);
-				viewChanged(view);
-			}
-		};
-
-		disp = new MessageDispatcher(channel, rcv, rcv, this);
-
-		disp.asyncDispatching(true);
-
-		channel.connect("DistributedExecutionService");
-	}
-
-	protected synchronized void viewChanged(View view) {
-		updateQueue.add(view);
-		notify();
 	}
 
 	public void onStop() {
@@ -236,26 +175,15 @@ public class JgroupsTransport implements AsyncRequestHandler, Transport {
 	// }
 
 	@Override
-	public void registerReceiver(DataReceiver rcvr) {
-		this.rcvr = rcvr;
-	}
-
-	@Override
 	public void stop() {
 		disp.stop();
-		channel.close();
+		disp.getChannel().close();
 		handleExecutor.shutdown();
 	}
 
 	@Override
-	public void setMetrics(Metrics metrics) {
-		this.metrics = metrics;
-	}
+	protected void onFailedPeer(Peer peer) {
 
-	@Override
-	public Streamer getStreamer() {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 }

@@ -4,5 +4,5 @@ import edu.jlime.rpc.data.DataProcessor.DataMessage;
 
 public interface DataListener {
 
-	public void dataRcvd(DataMessage data, Response rsp);
+	public void messageReceived(DataMessage data, Response rsp);
 }
