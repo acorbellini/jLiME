@@ -105,13 +105,11 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 			}
 
 			@Override
-			public Object fromArray(ByteBuffer buff, Peer originID)
-					throws Exception {
+			public Object fromArray(ByteBuffer buff) throws Exception {
 
-				JobNode p = (JobNode) tc.getObjectFromArray(buff, originID);
+				JobNode p = (JobNode) tc.getObjectFromArray(buff);
 
-				ClientJob<?> job = (ClientJob<?>) tc.getObjectFromArray(buff,
-						originID);
+				ClientJob<?> job = (ClientJob<?>) tc.getObjectFromArray(buff);
 				UUID id = buff.getUUID();
 				boolean isNoResponse = buff.getBoolean();
 				JobContainer jc = new JobContainer(job, p);
@@ -131,10 +129,9 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 			}
 
 			@Override
-			public Object fromArray(ByteBuffer buff, Peer originID)
-					throws Exception {
-				Peer p = (Peer) tc.getObjectFromArray(buff, originID);
-				Peer client = (Peer) tc.getObjectFromArray(buff, originID);
+			public Object fromArray(ByteBuffer buff) throws Exception {
+				Peer p = (Peer) tc.getObjectFromArray(buff);
+				Peer client = (Peer) tc.getObjectFromArray(buff);
 				JobNode jn = new JobNode(p, client, JobDispatcher.this);
 				return jn;
 			}
@@ -150,9 +147,8 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 			}
 
 			@Override
-			public Object fromArray(ByteBuffer buff, Peer originID)
-					throws Exception {
-				JobNode p = (JobNode) tc.getObjectFromArray(buff, originID);
+			public Object fromArray(ByteBuffer buff) throws Exception {
+				JobNode p = (JobNode) tc.getObjectFromArray(buff);
 				String key = buff.getString();
 				RemoteReference rr = new RemoteReference(p, key);
 				return rr;
@@ -297,6 +293,7 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 				remote.execute(job);
 			}
 		} catch (Exception e) {
+			log.error(e.getClass() + " " + e.getMessage());
 			result(e, job.getJobID(), dest);
 		}
 	}

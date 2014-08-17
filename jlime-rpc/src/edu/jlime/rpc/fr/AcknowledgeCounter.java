@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicReferenceArray;
 
 import org.apache.log4j.Logger;
 
-import edu.jlime.rpc.message.JLiMEAddress;
+import edu.jlime.core.transport.Address;
 import edu.jlime.rpc.message.Message;
 import edu.jlime.rpc.message.MessageType;
 
@@ -16,7 +16,7 @@ class AcknowledgeCounter {
 
 	private Logger log = Logger.getLogger(AcknowledgeCounter.class);
 
-	private JLiMEAddress to;
+	private Address to;
 
 	boolean[] rcvd;
 
@@ -59,7 +59,7 @@ class AcknowledgeCounter {
 		}
 	}
 
-	public AcknowledgeCounter(JLiMEAddress to, int max_nack_size,
+	public AcknowledgeCounter(Address to, int max_nack_size,
 			int nack_delay, int ack_delay) {
 		resendArray = new AtomicReferenceArray<>(max_resend_size);
 		this.to = to;

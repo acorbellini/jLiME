@@ -7,7 +7,6 @@ import org.apache.log4j.Logger;
 
 import edu.jlime.core.transport.Address;
 import edu.jlime.metrics.metric.Metrics;
-import edu.jlime.rpc.message.JLiMEAddress;
 import edu.jlime.rpc.message.Message;
 import edu.jlime.rpc.message.MessageListener;
 import edu.jlime.rpc.message.MessageProcessor;
@@ -69,9 +68,9 @@ public class MessageBundler extends SimpleMessageProcessor {
 			sendNext(msg);
 			return;
 		}
-		JLiMEAddress to = (JLiMEAddress) msg.getTo();
+		Address to = (Address) msg.getTo();
 		if (to == null)
-			to = JLiMEAddress.noAddr();
+			to = Address.noAddr();
 		Bundler bundler = bundles.get(to);
 		if (bundler == null)
 			synchronized (bundles) {
@@ -113,7 +112,7 @@ public class MessageBundler extends SimpleMessageProcessor {
 	// }
 
 	@Override
-	public void cleanupOnFailedPeer(JLiMEAddress addr) {
+	public void cleanupOnFailedPeer(Address addr) {
 		// synchronized (bundles) {
 		Bundler b = bundles.remove(addr);
 		if (b != null)

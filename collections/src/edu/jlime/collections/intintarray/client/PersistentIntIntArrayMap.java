@@ -136,21 +136,21 @@ public class PersistentIntIntArrayMap {
 		// }
 		log.info("Starting getSetOfUsers");
 
-		ForkJoinTask<TIntHashSet> mgr = new ForkJoinTask<>();
+		ForkJoinTask<int[]> mgr = new ForkJoinTask<>();
 		for (Entry<JobNode, TIntArrayList> map : byServer.entrySet()) {
 			JobNode p = map.getKey();
 			GetSetOfUsersJob j = new GetSetOfUsersJob(map.getValue().toArray(),
 					store);
 			mgr.putJob(j, p);
 		}
-		return mgr.execute(new ResultListener<TIntHashSet, TIntHashSet>() {
+		return mgr.execute(new ResultListener<int[], TIntHashSet>() {
 			TIntHashSet hashToReturn = null;
 
 			@Override
-			public void onSuccess(TIntHashSet res) {
+			public void onSuccess(int[] res) {
 				synchronized (this) {
 					if (hashToReturn == null)
-						hashToReturn = res;
+						hashToReturn = new TIntHashSet(res);
 					else
 						hashToReturn.addAll(res);
 				}

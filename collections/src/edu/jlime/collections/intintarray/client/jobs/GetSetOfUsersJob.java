@@ -1,11 +1,13 @@
 package edu.jlime.collections.intintarray.client.jobs;
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 
 import edu.jlime.client.JobContext;
@@ -16,7 +18,7 @@ import edu.jlime.util.DataTypeUtils;
 import edu.jlime.util.RingQueue;
 import gnu.trove.set.hash.TIntHashSet;
 
-public class GetSetOfUsersJob implements Job<TIntHashSet> {
+public class GetSetOfUsersJob implements Job<int[]> {
 
 	private static final long serialVersionUID = 3437379208216701568L;
 
@@ -53,7 +55,7 @@ public class GetSetOfUsersJob implements Job<TIntHashSet> {
 	}
 
 	@Override
-	public TIntHashSet call(JobContext ctx, JobNode peer) throws Exception {
+	public int[] call(JobContext ctx, JobNode peer) throws Exception {
 		ExecutorService exec = Executors.newCachedThreadPool();
 		final Logger log = Logger.getLogger(MultiGetJob.class);
 		log.info("Obtaining multiple keys (" + kList.length + ") from store");
@@ -81,15 +83,33 @@ public class GetSetOfUsersJob implements Job<TIntHashSet> {
 		});
 		exec.shutdown();
 
-		Arrays.sort(kList);
-		for (int k : kList) {
+		log.info("Sorting kList");
+		Integer[] sorted = ArrayUtils.toObject(kList);
+
+		Arrays.sort(sorted, new Comparator<Integer>() {
+
+			@Override
+			public int compare(Integer o1, Integer o2) {
+				byte[] b1 = DataTypeUtils.intToByteArray(o1);
+				byte[] b2 = DataTypeUtils.intToByteArray(o2);
+				for (int i = 0; i < 4; i++) {
+					int comp = Byte.compare(b1[i], b2[i]);
+					if (comp != 0)
+						return comp;
+				}
+				return 0;
+			}
+		});
+		log.info("Sorted kList");
+		for (int k : sorted) {
 			byte[] valAsBytes = store.load(k);
 			if (valAsBytes != null) {
 				queue.put(valAsBytes);
 			}
 		}
+		log.info("Finished loading from store");
 		queue.put(null);
 
-		return fut.get();
+		return fut.get().toArray();
 	}
 }

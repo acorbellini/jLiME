@@ -1,6 +1,7 @@
 package edu.jlime.jgroups;
 
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -53,12 +54,14 @@ public class JgroupsTransport extends Transport implements AsyncRequestHandler {
 
 	private RequestOptions asyncOpts = RequestOptions.ASYNC()
 			.setFlags(Flag.OOB).setTimeout(Long.MAX_VALUE);
+	HashMap<edu.jlime.core.transport.Address, Address> addrMap = new HashMap<>();
 
 	public JgroupsTransport(Peer local, MessageDispatcher disp,
 			JgroupsMembership member, Streamer s) throws Exception {
 		super(local, member, member, s);
 		disp.setRequestHandler(this);
 		this.disp = disp;
+		addrMap.put(local.getAddress(), disp.getChannel().getAddress());
 
 	}
 

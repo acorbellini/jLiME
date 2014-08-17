@@ -4,9 +4,9 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
+import edu.jlime.core.transport.Address;
 import edu.jlime.metrics.metric.Metrics;
 import edu.jlime.rpc.Configuration;
-import edu.jlime.rpc.message.JLiMEAddress;
 import edu.jlime.rpc.message.MessageProcessor;
 import edu.jlime.util.NetworkUtils.SelectedInterface;
 
@@ -21,7 +21,7 @@ public class MultiCastDiscovery extends Discovery {
 	// ,int announcedPort, String mcastaddr,
 	// int mcastport, long discDelay
 
-	public MultiCastDiscovery(JLiMEAddress id, String name,
+	public MultiCastDiscovery(Address id, String name,
 			Configuration config, MessageProcessor mcast,
 			MessageProcessor unicast) {
 		super(id, name, config, mcast, unicast);

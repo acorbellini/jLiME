@@ -2,8 +2,6 @@ package edu.jlime.core.transport;
 
 import java.util.Map;
 
-import javax.sound.sampled.DataLine;
-
 import org.apache.log4j.Logger;
 
 import edu.jlime.core.cluster.Cluster;

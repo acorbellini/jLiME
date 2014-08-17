@@ -6,7 +6,6 @@ import org.apache.log4j.Logger;
 
 import edu.jlime.core.transport.Address;
 import edu.jlime.metrics.metric.Metrics;
-import edu.jlime.rpc.message.JLiMEAddress;
 import edu.jlime.rpc.message.Message;
 import edu.jlime.rpc.message.MessageListener;
 import edu.jlime.rpc.message.MessageProcessor;
@@ -55,12 +54,12 @@ public class FlowControl extends SimpleMessageProcessor {
 
 	@Override
 	public void send(Message msg) throws Exception {
-		JLiMEAddress to = msg.getTo();
+		Address to = msg.getTo();
 		FlowControlPerNode fc = getFC(to);
 		fc.queue(msg);
 	}
 
-	private FlowControlPerNode getFC(JLiMEAddress to) throws Exception {
+	private FlowControlPerNode getFC(Address to) throws Exception {
 		FlowControlPerNode fc;
 		synchronized (fcPerNode) {
 			fc = fcPerNode.get(to);
@@ -74,7 +73,7 @@ public class FlowControl extends SimpleMessageProcessor {
 	}
 
 	@Override
-	public void cleanupOnFailedPeer(JLiMEAddress addr) {
+	public void cleanupOnFailedPeer(Address addr) {
 		try {
 			FlowControlPerNode fc = getFC(addr);
 			if (fc != null)

@@ -10,7 +10,6 @@ import org.apache.log4j.Logger;
 import edu.jlime.core.transport.Address;
 import edu.jlime.metrics.metric.Metrics;
 import edu.jlime.rpc.Option;
-import edu.jlime.rpc.message.JLiMEAddress;
 import edu.jlime.rpc.message.Message;
 import edu.jlime.rpc.message.MessageListener;
 import edu.jlime.rpc.message.MessageProcessor;
@@ -52,8 +51,8 @@ public class Fragmenter extends SimpleMessageProcessor {
 					throws Exception {
 				Buffer header = defMessage.getHeaderBuffer();
 
-				JLiMEAddress from = defMessage.getFrom();
-				JLiMEAddress to = defMessage.getTo();
+				Address from = defMessage.getFrom();
+				Address to = defMessage.getTo();
 				// Only the first four bytes.
 				UUID fragID = header.getUUID();
 				int offset = header.getInt();
@@ -164,7 +163,7 @@ public class Fragmenter extends SimpleMessageProcessor {
 	}
 
 	@Override
-	public void cleanupOnFailedPeer(JLiMEAddress addr) {
+	public void cleanupOnFailedPeer(Address addr) {
 		synchronized (parts) {
 			HashSet<UUID> sentIDs = sent.get(addr);
 			if (sentIDs != null) {

@@ -25,6 +25,10 @@ public class Peer implements Externalizable, Comparable<Peer> {
 	public Peer() {
 	}
 
+	public Peer(String name) {
+		this(new Address(), name);
+	}
+
 	public Peer(Address address, String name) {
 		this(address, name, new HashMap<String, String>());
 	}

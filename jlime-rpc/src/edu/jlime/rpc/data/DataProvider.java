@@ -1,11 +1,11 @@
 package edu.jlime.rpc.data;
 
-import edu.jlime.rpc.message.JLiMEAddress;
+import edu.jlime.core.transport.Address;
 
 public interface DataProvider {
 
 	public void addDataListener(DataListener list);
 
-	public byte[] sendData(byte[] msg, JLiMEAddress to, boolean waitForResponse)
+	public byte[] sendData(byte[] msg, Address to, boolean waitForResponse)
 			throws Exception;
 }

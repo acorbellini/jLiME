@@ -7,5 +7,5 @@ public interface TypeConverter {
 
 	void toArray(Object o, ByteBuffer buffer, Peer cliID) throws Exception;
 
-	Object fromArray(ByteBuffer buff, Peer originID) throws Exception;
+	Object fromArray(ByteBuffer buff) throws Exception;
 }

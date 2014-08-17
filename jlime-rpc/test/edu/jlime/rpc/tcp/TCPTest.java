@@ -1,7 +1,7 @@
 package edu.jlime.rpc.tcp;
 
+import edu.jlime.core.transport.Address;
 import edu.jlime.rpc.Configuration;
-import edu.jlime.rpc.message.JLiMEAddress;
 import edu.jlime.rpc.message.Message;
 import edu.jlime.rpc.message.MessageListener;
 import edu.jlime.rpc.message.MessageProcessor;
@@ -19,10 +19,12 @@ public class TCPTest {
 
 	private void run() throws Exception {
 		String addr = NetworkUtils.getFirstHostAddress();
-		final TCP tcp = new TCP(new JLiMEAddress(), addr, 8000, 1,
+		Address id = new Address();
+		Address id2 = new Address();
+		final TCP tcp = new TCP(id, addr, 8000, 1,
 				new Configuration(null).tcp_config);
 
-		TCP tcp2 = new TCP(new JLiMEAddress(), addr, 8001, 1,
+		TCP tcp2 = new TCP(id2, addr, 8001, 1,
 				new Configuration(null).tcp_config);
 		tcp.addAllMessageListener(new MessageListener() {
 
@@ -38,8 +40,10 @@ public class TCPTest {
 		tcp.start();
 		tcp2.start();
 
-		tcp2.send(Message.newFullDataMessage("Hola Nenenene".getBytes(),
-				MessageType.DATA, tcp2.getAddress(), tcp.getAddress()));
+		Message newFullDataMessage = Message.newFullDataMessage(
+				"Hola Nenenene".getBytes(), MessageType.DATA, id, id2);
+		newFullDataMessage.setInetSocketAddress(tcp2.getAddress());
+		tcp2.send(newFullDataMessage);
 
 	}
 }

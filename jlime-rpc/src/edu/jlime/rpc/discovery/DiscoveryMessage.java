@@ -8,8 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import edu.jlime.core.transport.Address;
 import edu.jlime.rpc.message.AddressType;
-import edu.jlime.rpc.message.JLiMEAddress;
 import edu.jlime.rpc.message.Message;
 import edu.jlime.rpc.message.MessageType;
 import edu.jlime.rpc.message.SocketAddress;
@@ -47,8 +47,8 @@ public class DiscoveryMessage {
 			String ip = data.getString();
 			int port = data.getInt();
 			AddressType type = AddressType.fromID(data.get());
-			addresses.add(new SocketAddress(id, new InetSocketAddress(
-					InetAddress.getByName(ip), port), type));
+			addresses.add(new SocketAddress(new InetSocketAddress(InetAddress
+					.getByName(ip), port), type));
 		}
 		return new DiscoveryMessage(id, name, additional, addresses);
 	}
@@ -73,14 +73,14 @@ public class DiscoveryMessage {
 		return additional;
 	}
 
-	public static Message createNew(MessageType t, JLiMEAddress localID,
+	public static Message createNew(MessageType t, Address localID,
 			String name, Map<String, String> discAdditionData,
 			List<SocketAddress> addresses) {
 		Message ret = Message.newEmptyBroadcastOutDataMessage(t);
 		Buffer headerWriter = ret.getHeaderBuffer();
 		headerWriter.putUUID(localID.getId());
 		headerWriter.putString(name);
-		
+
 		Buffer dataWriter = ret.getDataBuffer();
 		dataWriter.putMap(discAdditionData);
 		dataWriter.putInt(addresses.size());

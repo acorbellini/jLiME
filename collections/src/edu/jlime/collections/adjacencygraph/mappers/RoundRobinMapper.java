@@ -47,14 +47,10 @@ public class RoundRobinMapper extends Mapper {
 		HashMap<JobNode, TIntArrayList> div = new HashMap<JobNode, TIntArrayList>();
 
 		ArrayList<JobNode> serverList = new ArrayList<>();
-		serverList.add(new JobNode(new Peer(new LocalAddress(), "1"), null,
-				null));
-		serverList.add(new JobNode(new Peer(new LocalAddress(), "2"), null,
-				null));
-		serverList.add(new JobNode(new Peer(new LocalAddress(), "3"), null,
-				null));
-		serverList.add(new JobNode(new Peer(new LocalAddress(), "4"), null,
-				null));
+		serverList.add(new JobNode(new Peer("1"), null, null));
+		serverList.add(new JobNode(new Peer("2"), null, null));
+		serverList.add(new JobNode(new Peer("3"), null, null));
+		serverList.add(new JobNode(new Peer("4"), null, null));
 		int[] data = new int[] { 1, 2, 3, 4 };
 		System.out.println("Mapping " + data.length + " between "
 				+ serverList.size());

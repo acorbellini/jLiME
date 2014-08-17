@@ -17,13 +17,12 @@ public class Marshaller {
 
 	public Object getObject(byte[] array, Peer caller) throws Exception {
 		if (log.isDebugEnabled())
-			log.debug("Unmarshalling buffer of "
-					+ (array.length / (float) 1024) + " kb from " + caller);
-		// ByteBuffer buff = new ByteBuffer(Compression.uncompress(array));
+			log.debug("Unmarshalling buffer of " + array.length
+					+ " bytes from " + caller);
 
 		ByteBuffer buff = new ByteBuffer(array);
 
-		Object ret = tc.getObjectFromArray(buff, caller);
+		Object ret = tc.getObjectFromArray(buff);
 
 		return ret;
 	}
@@ -35,7 +34,11 @@ public class Marshaller {
 	public byte[] toByteArray(Peer cliID, Object o) throws Exception {
 		ByteBuffer buffer = new ByteBuffer();
 		tc.objectToByteArray(o, buffer, cliID);
-		return buffer.build();
+		byte[] build = buffer.build();
+		if (log.isDebugEnabled()) {
+			log.info("Converted " + o + " to bytes : " + build.length);
+		}
+		return build;
 	}
 
 	public TypeConverters getTc() {

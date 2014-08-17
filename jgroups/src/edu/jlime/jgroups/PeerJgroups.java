@@ -4,7 +4,6 @@ import org.jgroups.Address;
 
 import edu.jlime.core.cluster.Peer;
 import edu.jlime.core.cluster.ServerAddressParser;
-import edu.jlime.jd.JobDispatcher;
 
 public class PeerJgroups {
 

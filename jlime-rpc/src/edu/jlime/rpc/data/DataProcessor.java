@@ -12,7 +12,6 @@ import org.apache.log4j.Logger;
 import edu.jlime.core.cache.jLiMELRUMap;
 import edu.jlime.core.transport.Address;
 import edu.jlime.metrics.metric.Metrics;
-import edu.jlime.rpc.message.JLiMEAddress;
 import edu.jlime.rpc.message.Message;
 import edu.jlime.rpc.message.MessageListener;
 import edu.jlime.rpc.message.MessageProcessor;
@@ -60,7 +59,7 @@ public class DataProcessor extends SimpleMessageProcessor implements
 			return from;
 		}
 
-		public void setFrom(JLiMEAddress from) {
+		public void setFrom(Address from) {
 			this.from = from;
 		}
 	}
@@ -98,7 +97,7 @@ public class DataProcessor extends SimpleMessageProcessor implements
 	}
 
 	@Override
-	public byte[] sendData(byte[] msg, JLiMEAddress to, boolean waitForResponse)
+	public byte[] sendData(byte[] msg, Address to, boolean waitForResponse)
 			throws Exception {
 		Object lock = new Object();
 		UUID id = UUID.randomUUID();
@@ -145,7 +144,7 @@ public class DataProcessor extends SimpleMessageProcessor implements
 	}
 
 	@Override
-	public void cleanupOnFailedPeer(JLiMEAddress addr) {
+	public void cleanupOnFailedPeer(Address addr) {
 		synchronized (waitingResponse) {
 			HashSet<UUID> ids = calls.get(addr);
 			if (ids != null) {
@@ -153,7 +152,7 @@ public class DataProcessor extends SimpleMessageProcessor implements
 					Object o = waitingResponse.remove(uuid);
 					if (o != null) {
 						responses.put(uuid, Message.newEmptyOutDataMessage(
-								MessageType.DATA, new JLiMEAddress(uuid)));
+								MessageType.DATA, new Address(uuid)));
 						synchronized (o) {
 							o.notifyAll();
 						}

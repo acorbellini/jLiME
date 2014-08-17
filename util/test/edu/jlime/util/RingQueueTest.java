@@ -1,6 +1,5 @@
 package edu.jlime.util;
 
-import edu.jlime.util.RingQueue;
 
 public class RingQueueTest {
 

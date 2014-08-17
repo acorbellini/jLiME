@@ -149,7 +149,6 @@ public class Loader {
 		int count = 0;
 		while (!done)
 			try {
-
 				getClient().set(k, list);
 				// System.out.println("Clave " + k + ": se seteo lista de " +
 				// list.length + " seguidores/seguidos.");

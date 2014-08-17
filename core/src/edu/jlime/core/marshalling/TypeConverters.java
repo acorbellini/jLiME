@@ -1,16 +1,15 @@
 package edu.jlime.core.marshalling;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.UUID;
 
 import javax.lang.model.type.NullType;
 
+import org.apache.log4j.Logger;
+
 import edu.jlime.core.cluster.Peer;
 import edu.jlime.core.rpc.MethodCall;
+import edu.jlime.core.transport.Address;
 import edu.jlime.util.ByteBuffer;
 
 public class TypeConverters {
@@ -23,140 +22,29 @@ public class TypeConverters {
 
 	private byte count = 0;
 
-	private ClassLoaderProvider clp;
-
-	{
-		registerTypeConverter(Integer.class, new TypeConverter() {
-
-			@Override
-			public void toArray(Object o, ByteBuffer ByteBuffer, Peer cliID) {
-				ByteBuffer.putInt((Integer) o);
-			}
-
-			@Override
-			public Object fromArray(ByteBuffer buff, Peer originID) {
-				return buff.getInt();
-			}
-		});
-
-		registerTypeConverter(Boolean.class, new TypeConverter() {
-
-			@Override
-			public void toArray(Object o, ByteBuffer buff, Peer cliID) {
-				buff.putBoolean((Boolean) o);
-			}
-
-			@Override
-			public Object fromArray(ByteBuffer buff, Peer originID) {
-				return buff.getBoolean();
-			}
-		});
-
-		registerTypeConverter(String.class, new TypeConverter() {
-
-			@Override
-			public void toArray(Object o, ByteBuffer buff, Peer cliID) {
-				buff.putString((String) o);
-			}
-
-			@Override
-			public Object fromArray(ByteBuffer buff, Peer originID) {
-				return buff.getString();
-			}
-		});
-
-		registerTypeConverter(NullType.class, new TypeConverter() {
-
-			@Override
-			public void toArray(Object o, ByteBuffer buff, Peer cliID) {
-			}
-
-			@Override
-			public Object fromArray(ByteBuffer buff, Peer originID) {
-				return null;
-			}
-		});
-
-		registerTypeConverter(Object.class, new TypeConverter() {
-
-			@Override
-			public void toArray(Object o, ByteBuffer buff, Peer cliID)
-					throws IOException {
-				buff.putObject(cliID);
-				buff.putObject(o);
-			}
-
-			@Override
-			public Object fromArray(ByteBuffer buff, Peer originID)
-					throws Exception {
-				Peer client = (Peer) buff.getObject();
-				ByteArrayInputStream bis = new ByteArrayInputStream(buff
-						.getByteArray());
-				MarshallerInputStream stream = new MarshallerInputStream(bis,
-						clp, client);
-				Object ret = stream.readObject();
-				stream.close();
-				return ret;
-			}
-		});
-
-		registerTypeConverter(MethodCall.class, new TypeConverter() {
-
-			@Override
-			public void toArray(Object o, ByteBuffer buff, Peer cliID)
-					throws Exception {
-				MethodCall mc = (MethodCall) o;
-				buff.putString(mc.getName());
-				buff.putString(mc.getObjectKey());
-
-				Object[] objects = mc.getObjects();
-				buff.putInt(objects.length);
-				for (Object object : objects)
-					objectToByteArray(object, buff, cliID);
-			}
-
-			@Override
-			public Object fromArray(ByteBuffer buff, Peer originID)
-					throws Exception {
-				List<Object> objects = new ArrayList<>();
-				String name = buff.getString();
-				String k = buff.getString();
-				int num = buff.getInt();
-				for (int j = 0; j < num; j++)
-					objects.add(getObjectFromArray(buff, originID));
-				return new MethodCall(k, name, objects.toArray());
-			}
-		});
-
-		registerTypeConverter(UUID.class, new TypeConverter() {
-
-			@Override
-			public void toArray(Object o, ByteBuffer ByteBuffer, Peer cliID) {
-				ByteBuffer.putUUID((UUID) o);
-			}
-
-			@Override
-			public Object fromArray(ByteBuffer buff, Peer originID) {
-				return buff.getUUID();
-			}
-		});
-
-		registerTypeConverter(byte[].class, new TypeConverter() {
-
-			@Override
-			public void toArray(Object o, ByteBuffer ByteBuffer, Peer cliID) {
-				ByteBuffer.putByteArray((byte[]) o);
-			}
-
-			@Override
-			public Object fromArray(ByteBuffer buff, Peer originID) {
-				return buff.getByteArray();
-			}
-		});
-	}
+	ClassLoaderProvider clp;
 
 	public TypeConverters(ClassLoaderProvider cl) {
 		this.clp = cl;
+		registerTypeConverter(Integer.class, new IntegerConverter());
+
+		registerTypeConverter(Boolean.class, new BooleanConverter());
+
+		registerTypeConverter(String.class, new StringConverter());
+
+		registerTypeConverter(NullType.class, new NullConverter());
+
+		registerTypeConverter(Address.class, new AddressConverter());
+
+		registerTypeConverter(Object.class, new GenericObjectConverter(this));
+
+		registerTypeConverter(MethodCall.class, new MethodCallConverter(this));
+
+		registerTypeConverter(Peer.class, new PeerConverter(this));
+
+		registerTypeConverter(UUID.class, new UUIDConverter());
+
+		registerTypeConverter(byte[].class, new ByteArrayConverter());
 	}
 
 	public void registerTypeConverter(Class<?> classObj, TypeConverter conv) {
@@ -179,8 +67,12 @@ public class TypeConverters {
 		return ids.get(className);
 	}
 
+	Logger log = Logger.getLogger(TypeConverters.class);
+
 	public void objectToByteArray(Object o, ByteBuffer buffer, Peer client)
 			throws Exception {
+
+		int size = buffer.size();
 		Class<?> classOfObject = o == null ? NullType.class : o.getClass();
 		// Default converter
 		TypeConverter converter = getTypeConverter(classOfObject);
@@ -191,13 +83,17 @@ public class TypeConverters {
 		}
 		buffer.put(type);
 		converter.toArray(o, buffer, client);
+
+		if (log.isDebugEnabled())
+			log.info("Converted " + o + " of type " + classOfObject + " in "
+					+ (buffer.size() - size) + " bytes ");
+
 	}
 
-	public Object getObjectFromArray(ByteBuffer buff, Peer originID)
-			throws Exception {
+	public Object getObjectFromArray(ByteBuffer buff) throws Exception {
 		byte type = buff.get();
 		String className = types.get(type);
 		TypeConverter converter = convs.get(className);
-		return converter.fromArray(buff, originID);
+		return converter.fromArray(buff);
 	}
 }

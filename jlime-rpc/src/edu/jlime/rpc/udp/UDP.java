@@ -18,7 +18,6 @@ import edu.jlime.core.stream.RemoteOutputStream;
 import edu.jlime.core.transport.Address;
 import edu.jlime.rpc.SocketFactory;
 import edu.jlime.rpc.message.AddressType;
-import edu.jlime.rpc.message.JLiMEAddress;
 import edu.jlime.rpc.message.SocketAddress;
 import edu.jlime.rpc.np.DataPacket;
 import edu.jlime.rpc.np.NetworkProtocol;
@@ -66,12 +65,12 @@ public class UDP extends NetworkProtocol implements PacketReceiver {
 
 	private DatagramReceiver rx;
 
-	public UDP(JLiMEAddress logical, String addr, int port, int range,
+	public UDP(Address logical, String addr, int port, int range,
 			int max_msg_size, SocketFactory fact) {
 		this(logical, addr, port, range, max_msg_size, false, fact);
 	}
 
-	public UDP(JLiMEAddress logical, String addr, int port, int range,
+	public UDP(Address logical, String addr, int port, int range,
 			int max_msg_size, boolean mcast, SocketFactory fact) {
 		super(addr, port, range, fact, logical);
 		this.max_bytes = max_msg_size + 100;
@@ -100,8 +99,7 @@ public class UDP extends NetworkProtocol implements PacketReceiver {
 			UUID fromID = buffer.getUUID();
 			// byte[] data = new byte[p.getLength() - 17];
 			// System.arraycopy(buffer.array(), 17, data, 0, data.length);
-			addToStream(buffer.getRawByteArray(), streamID, new JLiMEAddress(
-					fromID));
+			addToStream(buffer.getRawByteArray(), streamID, new Address(fromID));
 		}
 	}
 
@@ -146,8 +144,8 @@ public class UDP extends NetworkProtocol implements PacketReceiver {
 	}
 
 	@Override
-	public void sendBytes(byte[] built, JLiMEAddress to,
-			SocketAddress realSockAddr) throws Exception {
+	public void sendBytes(byte[] built, Address to, SocketAddress realSockAddr)
+			throws Exception {
 		send(DatagramType.DATA, built, to, realSockAddr);
 	}
 
@@ -166,7 +164,7 @@ public class UDP extends NetworkProtocol implements PacketReceiver {
 				List<SocketAddress> bup = backup.get(to);
 				if (bup != null && !bup.isEmpty()) {
 					realSockAddr = bup.get((int) (Math.random() * bup.size()));
-				} else if (!to.equals(JLiMEAddress.noAddr())) {
+				} else if (!to.equals(Address.noAddr())) {
 					log.error("DEFAddress "
 							+ to
 							+ " was not in send table, and did not contain a physical address to send to.");
@@ -190,7 +188,7 @@ public class UDP extends NetworkProtocol implements PacketReceiver {
 		List<SocketAddress> list = new ArrayList<>();
 		InetSocketAddress sockAddr = (InetSocketAddress) getDatagramSocket()
 				.getLocalSocketAddress();
-		list.add(new SocketAddress(getLocal(), sockAddr, getType()));
+		list.add(new SocketAddress(sockAddr, getType()));
 		return list;
 	}
 
@@ -237,9 +235,9 @@ public class UDP extends NetworkProtocol implements PacketReceiver {
 	}
 
 	@Override
-	public void beforeProcess(DataPacket pkt, JLiMEAddress from, JLiMEAddress to) {
-		currentSendAddress.put(from, new SocketAddress(from, pkt.getAddr(),
-				getType()));
+	public void beforeProcess(DataPacket pkt, Address from, Address to) {
+		currentSendAddress.put(from,
+				new SocketAddress(pkt.getAddr(), getType()));
 	}
 
 	@Override

@@ -5,16 +5,10 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
-import edu.jlime.core.cluster.Cluster;
 import edu.jlime.core.cluster.Peer;
 import edu.jlime.core.rpc.RPCDispatcher;
 import edu.jlime.core.rpc.RPCFactory;
 import edu.jlime.core.transport.Address;
-import edu.jlime.core.transport.DiscoveryListener;
-import edu.jlime.core.transport.DiscoveryProvider;
-import edu.jlime.core.transport.FailureListener;
-import edu.jlime.core.transport.FailureProvider;
-import edu.jlime.rpc.message.JLiMEAddress;
 
 public class JlimeFactory implements RPCFactory {
 
@@ -36,7 +30,7 @@ public class JlimeFactory implements RPCFactory {
 
 	@Override
 	public RPCDispatcher build() throws Exception {
-		JLiMEAddress localAddress = new JLiMEAddress();
+		Address localAddress = new Address();
 		Peer localPeer = new Peer(localAddress, config.name);
 		localPeer.putData(localData);
 

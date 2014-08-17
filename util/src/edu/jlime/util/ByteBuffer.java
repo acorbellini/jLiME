@@ -4,7 +4,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.util.Arrays;
-import java.util.UUID;
 
 public class ByteBuffer extends Buffer {
 
@@ -104,13 +103,6 @@ public class ByteBuffer extends Buffer {
 
 	}
 
-	public void putFront(byte[] build) {
-		ensureCapacity(build.length);
-		System.arraycopy(buffered, 0, buffered, build.length, writePos);
-		writePos += build.length;
-		System.arraycopy(build, 0, buffered, 0, build.length);
-	}
-
 	@Override
 	public void putRawByteArray(byte[] data) {
 		putRawByteArray(data, data.length);
@@ -131,10 +123,6 @@ public class ByteBuffer extends Buffer {
 
 	public int getOffset() {
 		return readPos;
-	}
-
-	private void putLongFront(long l) {
-		putFront(DataTypeUtils.longToByteArray(l));
 	}
 
 	public void reset() {
@@ -161,11 +149,6 @@ public class ByteBuffer extends Buffer {
 		ensureCapacity(1);
 		buffered[writePos] = val;
 		writePos++;
-	}
-
-	public void putUUIDFront(UUID id) {
-		putLongFront(id.getLeastSignificantBits());
-		putLongFront(id.getMostSignificantBits());
 	}
 
 	public Object getObject() throws Exception {

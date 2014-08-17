@@ -2,8 +2,6 @@ package edu.jlime.util;
 
 import java.io.IOException;
 
-import edu.jlime.util.RingQueue;
-
 public class RingQueueTestMultiThread {
 
 	private static int max_threads = 4;

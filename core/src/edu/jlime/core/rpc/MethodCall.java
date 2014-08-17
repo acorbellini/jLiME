@@ -2,6 +2,7 @@ package edu.jlime.core.rpc;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.lang.model.type.NullType;
@@ -44,6 +45,12 @@ public class MethodCall implements Serializable {
 
 	public Object[] getObjects() {
 		return objects;
+	}
+
+	@Override
+	public String toString() {
+		return "MethodCall [objectKey=" + objectKey + ", name=" + name
+				+ ", objects=" + Arrays.toString(objects) + "]";
 	}
 
 }

@@ -21,7 +21,6 @@ import edu.jlime.core.stream.RemoteOutputStream;
 import edu.jlime.core.transport.Address;
 import edu.jlime.core.transport.DataReceiver;
 import edu.jlime.rpc.message.AddressType;
-import edu.jlime.rpc.message.JLiMEAddress;
 import edu.jlime.rpc.message.SocketAddress;
 import edu.jlime.rpc.np.DataPacket;
 import edu.jlime.rpc.np.NetworkProtocol;
@@ -39,8 +38,7 @@ public class TCP extends NetworkProtocol implements DataReceiver {
 
 	private ConcurrentHashMap<Address, HashMap<UUID, InputStream>> streams = new ConcurrentHashMap<>();
 
-	public TCP(JLiMEAddress id, String addr, int port, int range,
-			TCPConfig config) {
+	public TCP(Address id, String addr, int port, int range, TCPConfig config) {
 		super(addr, port, range, new TCPSocketFactory(config.tcp_rcv_buffer),
 				id);
 		this.config = config;
@@ -56,7 +54,7 @@ public class TCP extends NetworkProtocol implements DataReceiver {
 	SocketAddress getAddress() {
 		InetSocketAddress sockAddr = (InetSocketAddress) getServerSocket()
 				.getLocalSocketAddress();
-		return new SocketAddress(getLocal(), sockAddr, getType());
+		return new SocketAddress(sockAddr, getType());
 	}
 
 	@Override
@@ -88,7 +86,7 @@ public class TCP extends NetworkProtocol implements DataReceiver {
 		StreamType type = StreamType.fromID((byte) inputStream.read());
 		UUID id = TCPConnectionManager.getID(inputStream);
 		if (type.equals(StreamType.PACKET)) {
-			TCPConnectionManager connList = getConnManager(new JLiMEAddress(id));
+			TCPConnectionManager connList = getConnManager(new Address(id));
 			if (log.isDebugEnabled())
 				log.debug("Received connection request from "
 						+ conn.getRemoteSocketAddress() + " with id " + id);
@@ -98,7 +96,7 @@ public class TCP extends NetworkProtocol implements DataReceiver {
 				log.debug("Received stream request from "
 						+ conn.getRemoteSocketAddress() + " with id " + id);
 			UUID streamID = TCPConnectionManager.getID(inputStream);
-			JLiMEAddress id2 = new JLiMEAddress(id);
+			Address id2 = new Address(id);
 			addStream(streamID, inputStream, id2);
 		}
 	}
@@ -131,7 +129,7 @@ public class TCP extends NetworkProtocol implements DataReceiver {
 	}
 
 	@Override
-	public void sendBytes(final byte[] built, final JLiMEAddress to,
+	public void sendBytes(final byte[] built, final Address to,
 			final SocketAddress realSockAddr) throws Exception {
 		if (log.isDebugEnabled())
 			log.debug("Sending " + built.length + " bytes to  " + to);
@@ -143,9 +141,10 @@ public class TCP extends NetworkProtocol implements DataReceiver {
 			toSend = getBestAddress(to);
 		}
 
-		if(toSend==null)
-			throw new Exception("Can't find address for " + to + " given realsockaddr is " + realSockAddr);
-		
+		if (toSend == null)
+			throw new Exception("Can't find address for " + to
+					+ " given realsockaddr is " + realSockAddr);
+
 		if (!isEqualToLocalType(toSend.getSockTo())) {
 			if (log.isDebugEnabled())
 				log.debug("Won't send to different type of address " + toSend
@@ -166,7 +165,7 @@ public class TCP extends NetworkProtocol implements DataReceiver {
 		return toSend;
 	}
 
-	private TCPConnectionManager getConnManager(JLiMEAddress to) {
+	private TCPConnectionManager getConnManager(Address to) {
 		TCPConnectionManager mgr = connections.get(to);
 		if (mgr == null)
 			synchronized (connections) {
@@ -196,8 +195,7 @@ public class TCP extends NetworkProtocol implements DataReceiver {
 	}
 
 	@Override
-	protected void beforeProcess(DataPacket pkt, JLiMEAddress from,
-			JLiMEAddress to) {
+	protected void beforeProcess(DataPacket pkt, Address from, Address to) {
 		if (lastAddress.get(from) != null
 				&& lastAddress.get(from).getSockTo().getAddress()
 						.equals(pkt.getAddr().getAddress())
@@ -213,14 +211,14 @@ public class TCP extends NetworkProtocol implements DataReceiver {
 					if (log.isDebugEnabled())
 						log.debug("Changing last address of  " + from + " to "
 								+ pkt.getAddr());
-					lastAddress.put(from, new SocketAddress(from,
-							pkt.getAddr(), getType()));
+					lastAddress.put(from, new SocketAddress(pkt.getAddr(),
+							getType()));
 				}
 
 	}
 
 	@Override
-	public void cleanupOnFailedPeer(JLiMEAddress addr) {
+	public void cleanupOnFailedPeer(Address addr) {
 		TCPConnectionManager mgr = connections.get(addr);
 		if (mgr != null)
 			mgr.stop();
@@ -231,7 +229,7 @@ public class TCP extends NetworkProtocol implements DataReceiver {
 		return AddressType.TCP;
 	}
 
-	public SocketAddress getLastAddress(JLiMEAddress to) {
+	public SocketAddress getLastAddress(Address to) {
 		return lastAddress.get(to);
 	}
 

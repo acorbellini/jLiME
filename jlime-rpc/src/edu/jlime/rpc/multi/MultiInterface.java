@@ -17,7 +17,6 @@ import edu.jlime.rpc.AddressListProvider;
 import edu.jlime.rpc.Configuration;
 import edu.jlime.rpc.NetworkProtocolFactory;
 import edu.jlime.rpc.message.AddressType;
-import edu.jlime.rpc.message.JLiMEAddress;
 import edu.jlime.rpc.message.Message;
 import edu.jlime.rpc.message.MessageListener;
 import edu.jlime.rpc.message.MessageProcessor;
@@ -186,7 +185,7 @@ public class MultiInterface extends MessageProcessor implements
 	}
 
 	@Override
-	public void cleanupOnFailedPeer(JLiMEAddress peer) {
+	public void cleanupOnFailedPeer(Address peer) {
 		for (MessageProcessor mp : getProcessors()) {
 			mp.cleanupOnFailedPeer(peer);
 		}

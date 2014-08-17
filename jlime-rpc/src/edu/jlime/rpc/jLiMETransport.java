@@ -7,15 +7,12 @@ import java.util.concurrent.ThreadFactory;
 import org.apache.log4j.Logger;
 
 import edu.jlime.core.cluster.Peer;
-import edu.jlime.core.rpc.TransportListener;
 import edu.jlime.core.transport.Address;
-import edu.jlime.core.transport.Streamer;
 import edu.jlime.core.transport.Transport;
 import edu.jlime.metrics.metric.Metrics;
 import edu.jlime.rpc.data.DataListener;
 import edu.jlime.rpc.data.DataProcessor.DataMessage;
 import edu.jlime.rpc.data.Response;
-import edu.jlime.rpc.message.JLiMEAddress;
 
 public class jLiMETransport extends Transport implements DataListener {
 
@@ -49,7 +46,7 @@ public class jLiMETransport extends Transport implements DataListener {
 	@Override
 	public void sendAsync(Peer pdef, byte[] marshalled) throws Exception {
 		commStack.getData().sendData(marshalled,
-				(JLiMEAddress) pdef.getAddress(), false);
+				(Address) pdef.getAddress(), false);
 	}
 
 	@Override
@@ -59,7 +56,7 @@ public class jLiMETransport extends Transport implements DataListener {
 					+ marshalled.length + " b.");
 
 		byte[] resp = commStack.getData().sendData(marshalled,
-				(JLiMEAddress) pdef.getAddress(), true);
+				(Address) pdef.getAddress(), true);
 
 		if (log.isDebugEnabled())
 			log.debug("FINISHED synchronous call  to " + pdef + ", response "
@@ -104,6 +101,6 @@ public class jLiMETransport extends Transport implements DataListener {
 
 	@Override
 	protected void onFailedPeer(Peer peer) {
-		commStack.cleanup((JLiMEAddress) peer.getAddress());
+		commStack.cleanup((Address) peer.getAddress());
 	}
 }

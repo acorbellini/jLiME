@@ -6,7 +6,6 @@ import org.apache.log4j.Logger;
 
 import edu.jlime.core.transport.Address;
 import edu.jlime.metrics.metric.Metrics;
-import edu.jlime.rpc.message.JLiMEAddress;
 import edu.jlime.rpc.message.Message;
 import edu.jlime.rpc.message.MessageListener;
 import edu.jlime.rpc.message.MessageProcessor;
@@ -143,7 +142,7 @@ public class Acknowledge extends SimpleMessageProcessor {
 		}
 	}
 
-	private AcknowledgeCounter getCounter(JLiMEAddress to) throws Exception {
+	private AcknowledgeCounter getCounter(Address to) throws Exception {
 		AcknowledgeCounter counter = counters.get(to);
 		if (counter == null) {
 			synchronized (counters) {
@@ -164,7 +163,7 @@ public class Acknowledge extends SimpleMessageProcessor {
 	}
 
 	@Override
-	public void cleanupOnFailedPeer(JLiMEAddress addr) {
+	public void cleanupOnFailedPeer(Address addr) {
 		counters.remove(addr);
 	}
 

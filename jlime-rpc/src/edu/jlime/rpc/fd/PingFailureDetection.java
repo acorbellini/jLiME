@@ -12,7 +12,6 @@ import edu.jlime.core.transport.Address;
 import edu.jlime.core.transport.FailureListener;
 import edu.jlime.core.transport.FailureProvider;
 import edu.jlime.metrics.metric.Metrics;
-import edu.jlime.rpc.message.JLiMEAddress;
 import edu.jlime.rpc.message.Message;
 import edu.jlime.rpc.message.MessageListener;
 import edu.jlime.rpc.message.MessageProcessor;
@@ -33,9 +32,9 @@ public class PingFailureDetection implements StackElement, FailureProvider {
 
 	private MessageProcessor conn;
 
-	private ConcurrentHashMap<JLiMEAddress, Integer> tries = new ConcurrentHashMap<>();
+	private ConcurrentHashMap<Address, Integer> tries = new ConcurrentHashMap<>();
 
-	private ConcurrentHashMap<JLiMEAddress, Peer> peers = new ConcurrentHashMap<>();
+	private ConcurrentHashMap<Address, Peer> peers = new ConcurrentHashMap<>();
 
 	@Override
 	public void addListener(FailureListener l) {
@@ -66,8 +65,8 @@ public class PingFailureDetection implements StackElement, FailureProvider {
 
 	@Override
 	public void addPeerToMonitor(Peer peer) throws Exception {
-		tries.put((JLiMEAddress) peer.getAddress(), 0);
-		peers.put((JLiMEAddress) peer.getAddress(), peer);
+		tries.put((Address) peer.getAddress(), 0);
+		peers.put((Address) peer.getAddress(), peer);
 	}
 
 	@Override
@@ -80,7 +79,7 @@ public class PingFailureDetection implements StackElement, FailureProvider {
 					} catch (InterruptedException excep) {
 						excep.printStackTrace();
 					}
-					for (Entry<JLiMEAddress, Integer> e : new ArrayList<>(
+					for (Entry<Address, Integer> e : new ArrayList<>(
 							tries.entrySet())) {
 						try {
 							if (log.isDebugEnabled())
@@ -102,7 +101,7 @@ public class PingFailureDetection implements StackElement, FailureProvider {
 		Thread failure = new Thread("Failure Detect Thread") {
 			public void run() {
 				while (!stopped) {
-					for (Entry<JLiMEAddress, Integer> e : new ArrayList<>(
+					for (Entry<Address, Integer> e : new ArrayList<>(
 							tries.entrySet())) {
 						if (e.getValue() >= max_missed) {
 							tries.remove(e.getKey());
@@ -151,7 +150,7 @@ public class PingFailureDetection implements StackElement, FailureProvider {
 	}
 
 	@Override
-	public void cleanupOnFailedPeer(JLiMEAddress address) {
+	public void cleanupOnFailedPeer(Address address) {
 		// TODO Auto-generated method stub
 
 	}

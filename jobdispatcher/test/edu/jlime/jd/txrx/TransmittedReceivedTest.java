@@ -29,7 +29,7 @@ public class TransmittedReceivedTest {
 
 		@Override
 		public void run(JobContext env, JobNode origin) throws Exception {
-			System.out.println(msg);
+			// System.out.println(msg);
 		}
 
 	}
@@ -43,7 +43,7 @@ public class TransmittedReceivedTest {
 			System.out.println("Executing Transmission Job.");
 			JobCluster cluster = env.getCluster();
 
-			for (int i = 1; i <= 50; i++) {
+			for (int i = 1; i <= 200; i++) {
 				int[] data = new int[8000];
 				for (int j = 0; j < data.length; j++) {
 					data[i] = (int) (Math.random() * 1000000);

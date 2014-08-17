@@ -6,6 +6,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,7 +15,6 @@ import java.util.Map.Entry;
 import org.apache.log4j.Logger;
 import org.fusesource.leveldbjni.JniDBFactory;
 import org.iq80.leveldb.DB;
-import org.iq80.leveldb.DBComparator;
 import org.iq80.leveldb.DBException;
 import org.iq80.leveldb.DBIterator;
 import org.iq80.leveldb.Options;
@@ -55,9 +55,8 @@ public class LevelDb extends Store {
 				if (db == null) {
 					options = new Options();
 					options.createIfMissing(true);
-					options.cacheSize(100 * 1024 * 1024);
-					options.blockSize(256 * 1024);
-					JniDBFactory.pushMemoryPool(25 * 1024 * 1024);
+					options.cacheSize(300 * 1024 * 1024);
+					JniDBFactory.pushMemoryPool(300 * 1024 * 1024);
 
 					File dirDB = new File(sPath + "/" + sn);
 					if (!dirDB.exists())
@@ -81,22 +80,41 @@ public class LevelDb extends Store {
 	}
 
 	@Override
-	public List<byte[]> loadAll(int[] key) throws Exception {
-		Arrays.sort(key);
+	public List<byte[]> loadAll(int[] k) throws Exception {
+		Integer[] sorted = new Integer[k.length];
+		for (int i = 0; i < k.length; i++) {
+			sorted[i] = k[i];
+		}
+		Arrays.sort(sorted, new Comparator<Integer>() {
+
+			@Override
+			public int compare(Integer o1, Integer o2) {
+				byte[] b1 = DataTypeUtils.intToByteArray(o1);
+				byte[] b2 = DataTypeUtils.intToByteArray(o2);
+				for (int i = 0; i < 4; i++) {
+					int comp = Byte.compare(b1[i], b2[i]);
+					if (comp != 0)
+						return comp;
+				}
+				return 0;
+			}
+		});
 		List<byte[]> res = new ArrayList<byte[]>();
-		System.out.println("Loading  " + key.length);
+		System.out.println("Loading  " + sorted.length);
 		DBIterator it = getDb().iterator();
 
 		// if(key.length==1){
 		// System.out.println("Key[0]: " + load(key[0]));
 		// }
 		try {
-			int i = 0;
-			// it.seekToFirst();
-			for (it.seek(intToBytes(key[0])); it.hasNext() && i < key.length; it
-					.seek(intToBytes(key[i++]))) {
+			for (int i = 0; i < sorted.length; i++) {
+				it.seek(intToBytes(sorted[i]));
+				if (!it.hasNext())
+					break;
 				Entry<byte[], byte[]> e = it.peekNext();
-				res.add(e.getValue());
+				if (DataTypeUtils.byteArrayToInt(e.getKey()) == sorted[i])
+					res.add(e.getValue());
+
 			}
 		} catch (Exception e) {
 			e.printStackTrace();

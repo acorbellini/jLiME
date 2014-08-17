@@ -1,12 +1,13 @@
 package edu.jlime.rpc.message;
 
+import edu.jlime.core.transport.Address;
 import edu.jlime.util.ByteBuffer;
 
 public class MessageEncap extends Message {
 
 	Message msg;
 
-	public MessageEncap(Header h, JLiMEAddress from, JLiMEAddress to,
+	public MessageEncap(Header h, Address from, Address to,
 			Message msg) {
 		super(h, from, to);
 		this.msg = msg;

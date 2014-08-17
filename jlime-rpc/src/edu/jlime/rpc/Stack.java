@@ -7,19 +7,18 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
+import edu.jlime.core.transport.Address;
 import edu.jlime.core.transport.DiscoveryProvider;
 import edu.jlime.core.transport.FailureProvider;
 import edu.jlime.core.transport.Streamer;
 import edu.jlime.metrics.metric.Metrics;
 import edu.jlime.rpc.data.DataProcessor;
 import edu.jlime.rpc.data.DataProvider;
-import edu.jlime.rpc.discovery.Discovery;
 import edu.jlime.rpc.discovery.MultiCastDiscovery;
 import edu.jlime.rpc.fd.PingFailureDetection;
 import edu.jlime.rpc.fr.Acknowledge;
 import edu.jlime.rpc.frag.Fragmenter;
 import edu.jlime.rpc.message.AddressType;
-import edu.jlime.rpc.message.JLiMEAddress;
 import edu.jlime.rpc.message.StackElement;
 import edu.jlime.rpc.multi.MultiInterface;
 import edu.jlime.rpc.np.NetworkProtocol;
@@ -50,7 +49,7 @@ public class Stack {
 		stackElements.add(p);
 	}
 
-	public void cleanup(JLiMEAddress address) {
+	public void cleanup(Address address) {
 		for (ListIterator<StackElement> iterator = stackElements
 				.listIterator(stackElements.size()); iterator.hasPrevious();) {
 			StackElement listElement = iterator.previous();
@@ -104,7 +103,7 @@ public class Stack {
 		return fail;
 	}
 
-	public static Stack tcpStack(Configuration config, JLiMEAddress local,
+	public static Stack tcpStack(Configuration config, Address local,
 			String name) {
 
 		String iface = NetworkUtils.getFirstHostAddress();
@@ -136,7 +135,7 @@ public class Stack {
 		return tcpStack;
 	}
 
-	public static Stack udpStack(Configuration config, JLiMEAddress id,
+	public static Stack udpStack(Configuration config, Address id,
 			String name) {
 
 		NetworkProtocolFactory udpFactory = NetworkProtocolFactory.udp(id,

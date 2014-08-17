@@ -17,7 +17,6 @@ import edu.jlime.core.transport.DiscoveryProvider;
 import edu.jlime.rpc.AddressListProvider;
 import edu.jlime.rpc.Configuration;
 import edu.jlime.rpc.message.AddressType;
-import edu.jlime.rpc.message.JLiMEAddress;
 import edu.jlime.rpc.message.Message;
 import edu.jlime.rpc.message.MessageListener;
 import edu.jlime.rpc.message.MessageProcessor;
@@ -45,11 +44,11 @@ public abstract class Discovery implements DiscoveryProvider, StackElement {
 
 	private Map<String, String> discAdditionData = new HashMap<>();
 
-	private JLiMEAddress localID;
+	private Address localID;
 
 	private String localName;
 
-	public Discovery(JLiMEAddress localID, String name, Configuration config,
+	public Discovery(Address localID, String name, Configuration config,
 			MessageProcessor discoveryInit, MessageProcessor discoveryData) {
 		this.localID = localID;
 		this.localName = name;
@@ -113,7 +112,7 @@ public abstract class Discovery implements DiscoveryProvider, StackElement {
 
 						if (disco.getId().equals(localID))
 							return;
-						
+
 						if (log.isDebugEnabled())
 							log.debug("Discovery Message received from "
 									+ m.getFrom() + " with addresses "
@@ -123,7 +122,8 @@ public abstract class Discovery implements DiscoveryProvider, StackElement {
 
 						for (SocketAddress sock : disco.getAddresses()) {
 							Message response = newDiscoveryResponseMessage();
-							response.setTo(sock);
+							response.setTo(new Address(disco.getId()));
+							response.setInetSocketAddress(sock);
 							discoveryData.queue(response);
 						}
 					}
@@ -149,7 +149,7 @@ public abstract class Discovery implements DiscoveryProvider, StackElement {
 				if (defSocketAddress.getType().equals(alul.getKey()))
 					byType.add(defSocketAddress);
 			}
-			alul.getValue().addressUpdate(new JLiMEAddress(id), byType);
+			alul.getValue().addressUpdate(new Address(id), byType);
 		}
 	}
 
@@ -202,7 +202,7 @@ public abstract class Discovery implements DiscoveryProvider, StackElement {
 	}
 
 	@Override
-	public void cleanupOnFailedPeer(JLiMEAddress address) {
+	public void cleanupOnFailedPeer(Address address) {
 	}
 
 	@Override

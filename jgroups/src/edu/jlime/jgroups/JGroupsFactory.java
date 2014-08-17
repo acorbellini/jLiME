@@ -3,6 +3,7 @@ package edu.jlime.jgroups;
 import java.io.InputStream;
 import java.net.Inet4Address;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -204,8 +205,7 @@ public class JGroupsFactory implements RPCFactory {
 
 		channel.connect("DistributedExecutionService");
 
-		Peer local = new Peer(
-				new JGroupsAddress(disp.getChannel().getAddress()),
+		Peer local = new Peer(new edu.jlime.core.transport.Address(),
 				ip.toString());
 
 		JgroupsTransport tr = new JgroupsTransport(local, disp, member, null);

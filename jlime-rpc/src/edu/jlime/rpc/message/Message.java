@@ -1,7 +1,9 @@
 package edu.jlime.rpc.message;
 
+import java.net.InetSocketAddress;
 import java.util.HashSet;
 
+import edu.jlime.core.transport.Address;
 import edu.jlime.rpc.Option;
 import edu.jlime.util.ByteBuffer;
 
@@ -9,11 +11,13 @@ public abstract class Message {
 
 	private Header header;
 
-	private JLiMEAddress from;
+	private Address from;
 
-	private JLiMEAddress to;
+	private Address to;
 
 	private HashSet<Option> sendOpts = new HashSet<Option>();
+
+	private SocketAddress sock;
 
 	public Message setOption(Option opt) {
 		sendOpts.add(opt);
@@ -24,25 +28,25 @@ public abstract class Message {
 		return sendOpts.contains(opt);
 	}
 
-	public Message(Header h, JLiMEAddress from, JLiMEAddress to) {
+	public Message(Header h, Address from, Address to) {
 		this.from = from;
 		this.to = to;
 		header = h;
 	}
 
-	public JLiMEAddress getFrom() {
+	public Address getFrom() {
 		return from;
 	}
 
-	public JLiMEAddress getTo() {
+	public Address getTo() {
 		return to;
 	}
 
-	public void setFrom(JLiMEAddress from) {
+	public void setFrom(Address from) {
 		this.from = from;
 	}
 
-	public void setTo(JLiMEAddress to) {
+	public void setTo(Address to) {
 		this.to = to;
 	}
 
@@ -65,7 +69,7 @@ public abstract class Message {
 	// }
 
 	public static Message encapsulate(Message msg, MessageType type,
-			JLiMEAddress from, JLiMEAddress to) {
+			Address from, Address to) {
 		return new MessageEncap(new Header(type), from, to, msg);
 	};
 
@@ -73,8 +77,8 @@ public abstract class Message {
 		return header;
 	}
 
-	public static MessageSimple deEncapsulate(byte[] simple, JLiMEAddress from,
-			JLiMEAddress to) {
+	public static MessageSimple deEncapsulate(byte[] simple, Address from,
+			Address to) {
 		ByteBuffer reader = new ByteBuffer(simple);
 		Header h = Header.fromBytes(reader);
 		ByteBuffer d = new ByteBuffer(reader.getRawByteArray());
@@ -82,12 +86,12 @@ public abstract class Message {
 	};
 
 	public static Message newOutDataMessage(byte[] data, MessageType type,
-			JLiMEAddress to) {
+			Address to) {
 		return newFullDataMessage(data, type, null, to);
 	}
 
 	public static Message newFullDataMessage(byte[] data, MessageType type,
-			JLiMEAddress from, JLiMEAddress to) {
+			Address from, Address to) {
 		return new MessageSimple(new Header(type), new ByteBuffer(data), from,
 				to);
 	};
@@ -121,12 +125,11 @@ public abstract class Message {
 	}
 
 	public static Message encapsulateOut(Message msg, MessageType type,
-			JLiMEAddress to) {
+			Address to) {
 		return encapsulate(msg, type, null, to);
 	}
 
-	public static Message newEmptyOutDataMessage(MessageType type,
-			JLiMEAddress to) {
+	public static Message newEmptyOutDataMessage(MessageType type, Address to) {
 		return newOutDataMessage(new byte[] {}, type, to);
 	}
 
@@ -145,5 +148,17 @@ public abstract class Message {
 	@Override
 	public String toString() {
 		return header + "," + to + "," + from + "," + getSize() + "b";
+	}
+
+	public boolean hasSock() {
+		return sock != null;
+	}
+
+	public SocketAddress getSock() {
+		return sock;
+	}
+
+	public void setInetSocketAddress(SocketAddress sock) {
+		this.sock = sock;
 	}
 }

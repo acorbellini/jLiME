@@ -1,7 +1,7 @@
 package edu.jlime.rpc;
 
+import edu.jlime.core.transport.Address;
 import edu.jlime.rpc.message.AddressType;
-import edu.jlime.rpc.message.JLiMEAddress;
 import edu.jlime.rpc.np.NetworkProtocol;
 import edu.jlime.rpc.tcp.TCP;
 import edu.jlime.rpc.udp.UDP;
@@ -16,7 +16,7 @@ public abstract class NetworkProtocolFactory {
 
 	public abstract NetworkProtocol getProtocol(String addr);
 
-	public static NetworkProtocolFactory udp(final JLiMEAddress local,
+	public static NetworkProtocolFactory udp(final Address local,
 			final Configuration config) {
 		return new NetworkProtocolFactory(AddressType.MCAST) {
 
@@ -30,7 +30,7 @@ public abstract class NetworkProtocolFactory {
 		};
 	}
 
-	public static NetworkProtocolFactory tcp(final JLiMEAddress localID,
+	public static NetworkProtocolFactory tcp(final Address localID,
 			final Configuration config) {
 		return new NetworkProtocolFactory(AddressType.TCP) {
 
@@ -43,7 +43,7 @@ public abstract class NetworkProtocolFactory {
 		};
 	}
 
-	public static NetworkProtocolFactory mcast(final JLiMEAddress local,
+	public static NetworkProtocolFactory mcast(final Address local,
 			final Configuration config) {
 		return new NetworkProtocolFactory(AddressType.UDP) {
 

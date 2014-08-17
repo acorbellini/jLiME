@@ -9,6 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.log4j.Logger;
 
+import edu.jlime.core.transport.Address;
 import edu.jlime.util.RingQueue;
 
 public abstract class MessageProcessor implements StackElement {
@@ -150,7 +151,7 @@ public abstract class MessageProcessor implements StackElement {
 	}
 	
 	@Override
-	public void cleanupOnFailedPeer(JLiMEAddress peer) {
+	public void cleanupOnFailedPeer(Address peer) {
 
 	}
 

@@ -6,8 +6,8 @@ import java.util.concurrent.Semaphore;
 
 import org.apache.log4j.Logger;
 
+import edu.jlime.core.transport.Address;
 import edu.jlime.metrics.metric.Metrics;
-import edu.jlime.rpc.message.JLiMEAddress;
 import edu.jlime.rpc.message.Message;
 import edu.jlime.rpc.message.MessageProcessor;
 import edu.jlime.rpc.message.MessageType;
@@ -26,11 +26,11 @@ class FlowControlPerNode extends SimpleMessageProcessor {
 
 	FCConfiguration config;
 
-	private JLiMEAddress addr;
+	private Address addr;
 
 	private Timer t;
 
-	public FlowControlPerNode(JLiMEAddress to, MessageProcessor comm,
+	public FlowControlPerNode(Address to, MessageProcessor comm,
 			final FCConfiguration config) {
 		super(comm, "DEF Flow Control for " + to);
 		this.addr = to;
