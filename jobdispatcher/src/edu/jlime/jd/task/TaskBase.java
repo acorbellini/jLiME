@@ -4,7 +4,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.Semaphore;
 
-import edu.jlime.jd.JobNode;
+import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.job.Job;
 import edu.jlime.jd.job.ResultManager;
 
@@ -13,18 +13,18 @@ public abstract class TaskBase<T> implements Task<T> {
 	@Override
 	public <R> R execute(final ResultListener<T, R> listener) {
 
-		Map<Job<T>, JobNode> map = getMap();
+		Map<Job<T>, ClientNode> map = getMap();
 
 		final Semaphore sem = new Semaphore(-map.keySet().size() + 1);
 
-		for (Entry<Job<T>, JobNode> entry : map.entrySet()) {
+		for (Entry<Job<T>, ClientNode> entry : map.entrySet()) {
 			try {
 				entry.getValue().execAsync(entry.getKey(),
 						new ResultManager<T>() {
 
 							@Override
 							public void handleException(Exception res,
-									String job, JobNode peer) {
+									String job, ClientNode peer) {
 								listener.onFailure(res);
 								sem.release();
 
@@ -32,7 +32,7 @@ public abstract class TaskBase<T> implements Task<T> {
 
 							@Override
 							public void handleResult(T res, String job,
-									JobNode peer) {
+									ClientNode peer) {
 								listener.onSuccess(res);
 								sem.release();
 							}
@@ -50,6 +50,6 @@ public abstract class TaskBase<T> implements Task<T> {
 		return listener.onFinished();
 	}
 
-	protected abstract Map<Job<T>, JobNode> getMap();
+	protected abstract Map<Job<T>, ClientNode> getMap();
 
 }

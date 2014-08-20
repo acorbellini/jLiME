@@ -12,8 +12,8 @@ import org.apache.log4j.Logger;
 
 import edu.jlime.client.JobContext;
 import edu.jlime.collections.hash.SimpleIntIntHash;
-import edu.jlime.jd.JobCluster;
-import edu.jlime.jd.JobNode;
+import edu.jlime.jd.ClientCluster;
+import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.job.Job;
 import edu.jlime.jd.job.ResultManager;
 import gnu.trove.iterator.TIntIterator;
@@ -28,7 +28,7 @@ public class DistIntIntHashtable implements Iterable<int[]> {
 
 	private String internalHashName;
 
-	private JobCluster cluster;
+	private ClientCluster cluster;
 
 	private Logger log = Logger.getLogger(DistIntIntHashtable.class);
 
@@ -49,7 +49,7 @@ public class DistIntIntHashtable implements Iterable<int[]> {
 		}
 
 		@Override
-		public Void call(JobContext ctx, JobNode peer) throws Exception {
+		public Void call(JobContext ctx, ClientNode peer) throws Exception {
 			SimpleIntIntHash hash = (SimpleIntIntHash) ctx.get(hashName);
 			synchronized (hash) {
 				hash.adjustOrPutValue(k, c, c);
@@ -69,7 +69,7 @@ public class DistIntIntHashtable implements Iterable<int[]> {
 		}
 
 		@Override
-		public SimpleIntIntHash call(JobContext ctx, JobNode peer)
+		public SimpleIntIntHash call(JobContext ctx, ClientNode peer)
 				throws Exception {
 			SimpleIntIntHash hash = (SimpleIntIntHash) ctx.get(hashName);
 			if (hash == null) {
@@ -91,7 +91,7 @@ public class DistIntIntHashtable implements Iterable<int[]> {
 		}
 
 		@Override
-		public Boolean call(JobContext ctx, JobNode peer) throws Exception {
+		public Boolean call(JobContext ctx, ClientNode peer) throws Exception {
 			SimpleIntIntHash inthash = ((SimpleIntIntHash) ctx.get(internal));
 			if (inthash != null) {
 				// inthash.clear();
@@ -113,7 +113,7 @@ public class DistIntIntHashtable implements Iterable<int[]> {
 		}
 
 		@Override
-		public Boolean call(JobContext ctx, JobNode peer) throws Exception {
+		public Boolean call(JobContext ctx, ClientNode peer) throws Exception {
 			DistIntIntHashtable disthash = (DistIntIntHashtable) ctx.get(hash);
 			if (disthash != null) {
 				ctx.getCluster().broadcast(
@@ -136,7 +136,7 @@ public class DistIntIntHashtable implements Iterable<int[]> {
 		}
 
 		@Override
-		public Boolean call(JobContext ctx, JobNode peer) throws Exception {
+		public Boolean call(JobContext ctx, ClientNode peer) throws Exception {
 			Logger log = Logger.getLogger(IntIntHashInitJob.class);
 			log.info("Instantiting Simple Int Int Hash called " + hashName
 					+ " requested from " + peer);
@@ -149,7 +149,7 @@ public class DistIntIntHashtable implements Iterable<int[]> {
 
 	TIntIntHashMap queue = new TIntIntHashMap();
 
-	public DistIntIntHashtable(JobCluster cluster2) throws Exception {
+	public DistIntIntHashtable(ClientCluster cluster2) throws Exception {
 		this("DistHash - " + UUID.randomUUID().toString(), cluster2);
 		// timer = new Timer("Distributed Hash Table Flush", true);
 		// timer.schedule(new TimerTask() {
@@ -164,7 +164,7 @@ public class DistIntIntHashtable implements Iterable<int[]> {
 
 	}
 
-	public DistIntIntHashtable(String name, JobCluster iCluster)
+	public DistIntIntHashtable(String name, ClientCluster iCluster)
 			throws Exception {
 		hash = new ConsistentHash(iCluster);
 		this.internalHashName = "InternalHash - " + name;
@@ -184,10 +184,10 @@ public class DistIntIntHashtable implements Iterable<int[]> {
 
 	public void putOrAdd(TIntIntHashMap count) throws Exception {
 		log.info("Putting into distributed hash " + count.size() + " pairs.");
-		HashMap<JobNode, TIntArrayList> keysPerServer = resolveServers(count
+		HashMap<ClientNode, TIntArrayList> keysPerServer = resolveServers(count
 				.keys());
 
-		for (JobNode srv : keysPerServer.keySet()) {
+		for (ClientNode srv : keysPerServer.keySet()) {
 			TIntIntHashMap subMap = new TIntIntHashMap();
 			TIntIterator it = keysPerServer.get(srv).iterator();
 			while (it.hasNext()) {
@@ -201,7 +201,7 @@ public class DistIntIntHashtable implements Iterable<int[]> {
 
 						@Override
 						public void handleException(Exception res,
-								String jobID, JobNode fromID) {
+								String jobID, ClientNode fromID) {
 							Logger.getLogger(DistIntIntHashtable.class).error(
 									"", res);
 							maxSend.release();
@@ -209,17 +209,17 @@ public class DistIntIntHashtable implements Iterable<int[]> {
 
 						@Override
 						public void handleResult(Boolean res, String jobID,
-								JobNode fromID) {
+								ClientNode fromID) {
 							maxSend.release();
 						}
 					});
 		}
 	}
 
-	private HashMap<JobNode, TIntArrayList> resolveServers(int[] keys) {
-		HashMap<JobNode, TIntArrayList> serverList = new HashMap<>();
+	private HashMap<ClientNode, TIntArrayList> resolveServers(int[] keys) {
+		HashMap<ClientNode, TIntArrayList> serverList = new HashMap<>();
 		for (int i : keys) {
-			JobNode s = getServerForKey(i);
+			ClientNode s = getServerForKey(i);
 			if (!serverList.containsKey(s))
 				serverList.put(s, new TIntArrayList());
 			serverList.get(s).add(i);
@@ -227,26 +227,26 @@ public class DistIntIntHashtable implements Iterable<int[]> {
 		return serverList;
 	}
 
-	private JobNode getServerForKey(int k) {
+	private ClientNode getServerForKey(int k) {
 		// Aqui se deberia proveer algun soporte de virtual nodes, de manera que
 		// no se cambie la ubicacion de las claves si cambia la estructura de la
 		// red.
 		return hash.getServerForKey(k);
 	}
 
-	public JobCluster getCluster() {
+	public ClientCluster getCluster() {
 		return cluster;
 	}
 
 	public static class HashTableIterator implements Iterator<int[]> {
 
-		Iterator<JobNode> currServerIt;
+		Iterator<ClientNode> currServerIt;
 
 		Iterator<int[]> hashMapIt = null;
 
 		private DistIntIntHashtable disthash;
 
-		private JobNode currServer;
+		private ClientNode currServer;
 
 		public HashTableIterator(DistIntIntHashtable hash) {
 			this.disthash = hash;
@@ -304,18 +304,18 @@ public class DistIntIntHashtable implements Iterable<int[]> {
 		return (DistIntIntHashtable) env.get(hash);
 	}
 
-	public static void delete(String hash, JobCluster c) throws Exception {
+	public static void delete(String hash, ClientCluster c) throws Exception {
 		c.broadcast(new ClearJob(hash));
 	}
 
 	public void removeAll(int[] toremove) throws InterruptedException,
 			ExecutionException {
 
-		HashMap<JobNode, TIntArrayList> keysPerServer = resolveServers(toremove);
+		HashMap<ClientNode, TIntArrayList> keysPerServer = resolveServers(toremove);
 
 		ArrayList<Future<Boolean>> list = new ArrayList<>();
 
-		for (JobNode srv : keysPerServer.keySet()) {
+		for (ClientNode srv : keysPerServer.keySet()) {
 			TIntArrayList toRemove = keysPerServer.get(srv);
 			list.add(srv.execAsyncWithFuture(new RemoveJob(toRemove.toArray(),
 					internalHashName)));

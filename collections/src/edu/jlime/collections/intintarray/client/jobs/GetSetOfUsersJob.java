@@ -2,6 +2,7 @@ package edu.jlime.collections.intintarray.client.jobs;
 
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -12,7 +13,7 @@ import org.apache.log4j.Logger;
 
 import edu.jlime.client.JobContext;
 import edu.jlime.collections.intintarray.db.Store;
-import edu.jlime.jd.JobNode;
+import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.job.Job;
 import edu.jlime.util.DataTypeUtils;
 import edu.jlime.util.RingQueue;
@@ -55,7 +56,7 @@ public class GetSetOfUsersJob implements Job<int[]> {
 	}
 
 	@Override
-	public int[] call(JobContext ctx, JobNode peer) throws Exception {
+	public int[] call(JobContext ctx, ClientNode peer) throws Exception {
 		ExecutorService exec = Executors.newCachedThreadPool();
 		final Logger log = Logger.getLogger(MultiGetJob.class);
 		log.info("Obtaining multiple keys (" + kList.length + ") from store");
@@ -83,33 +84,46 @@ public class GetSetOfUsersJob implements Job<int[]> {
 		});
 		exec.shutdown();
 
-		log.info("Sorting kList");
-		Integer[] sorted = ArrayUtils.toObject(kList);
+		// log.info("Sorting kList");
+		// Integer[] sorted = ArrayUtils.toObject(kList);
+		//
+		// Arrays.sort(sorted, new Comparator<Integer>() {
+		//
+		// @Override
+		// public int compare(Integer o1, Integer o2) {
+		// byte[] b1 = DataTypeUtils.intToByteArray(o1);
+		// byte[] b2 = DataTypeUtils.intToByteArray(o2);
+		// for (int i = 0; i < 4; i++) {
+		// int comp = Byte.compare(b1[i], b2[i]);
+		// if (comp != 0)
+		// return comp;
+		// }
+		// return 0;
+		// }
+		// });
+		// log.info("Sorted kList");
+		// for (int k : sorted) {
+		// byte[] valAsBytes = store.load(k);
+		// if (valAsBytes != null) {
+		// queue.put(valAsBytes);
+		// }
+		// }
+		// log.info("Finished loading from store");
+		// queue.put(null);
+		// return fut.get().toArray();
+		TIntHashSet hash = new TIntHashSet();
 
-		Arrays.sort(sorted, new Comparator<Integer>() {
-
-			@Override
-			public int compare(Integer o1, Integer o2) {
-				byte[] b1 = DataTypeUtils.intToByteArray(o1);
-				byte[] b2 = DataTypeUtils.intToByteArray(o2);
-				for (int i = 0; i < 4; i++) {
-					int comp = Byte.compare(b1[i], b2[i]);
-					if (comp != 0)
-						return comp;
-				}
-				return 0;
-			}
-		});
-		log.info("Sorted kList");
-		for (int k : sorted) {
-			byte[] valAsBytes = store.load(k);
+		log.info("Loading kList.");
+		List<byte[]> loadAll = store.loadAll(kList);
+		log.info("Loaded kList.");
+		for (byte[] valAsBytes : loadAll) {
 			if (valAsBytes != null) {
-				queue.put(valAsBytes);
+				int[] byteArrayToIntArray = DataTypeUtils
+						.byteArrayToIntArray((byte[]) valAsBytes);
+				hash.addAll(byteArrayToIntArray);
 			}
 		}
-		log.info("Finished loading from store");
-		queue.put(null);
 
-		return fut.get().toArray();
+		return hash.toArray();
 	}
 }

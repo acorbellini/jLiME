@@ -56,4 +56,9 @@ public final class Address implements Comparable<Address>, Serializable {
 		return noAddr;
 	}
 
+	@Override
+	public String toString() {
+		return "Address [id=" + id + "]";
+	}
+
 }

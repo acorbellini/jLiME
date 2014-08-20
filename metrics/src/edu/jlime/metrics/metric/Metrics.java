@@ -191,4 +191,8 @@ public class Metrics implements Serializable, IMetrics {
 
 		return builder.toString();
 	}
+
+	public void gauge(String string, float f) {
+		this.gauge(string).update(f);
+	}
 }

@@ -7,12 +7,12 @@ import edu.jlime.collections.adjacencygraph.AdjacencyGraph;
 import edu.jlime.collections.adjacencygraph.RemoteAdjacencyGraph;
 import edu.jlime.collections.adjacencygraph.mappers.LocationMapper;
 import edu.jlime.collections.util.IntArrayUtils;
-import edu.jlime.jd.JobCluster;
+import edu.jlime.jd.ClientCluster;
 import edu.jlime.linkprediction.TwitterStoreConfig;
 
 public class QueryTest {
 
-	private JobCluster cluster;
+	private ClientCluster cluster;
 
 	private AdjacencyGraph graph;
 

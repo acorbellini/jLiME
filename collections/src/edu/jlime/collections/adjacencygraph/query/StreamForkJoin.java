@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 import edu.jlime.core.cluster.StreamResult;
 import edu.jlime.core.stream.RemoteInputStream;
 import edu.jlime.core.stream.RemoteOutputStream;
-import edu.jlime.jd.JobNode;
+import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.job.StreamJob;
 
 public abstract class StreamForkJoin {
@@ -20,13 +20,13 @@ public abstract class StreamForkJoin {
 		public StreamJob getStreamJob();
 	}
 
-	public void execute(List<JobNode> peers, StreamJobFactory factory)
+	public void execute(List<ClientNode> peers, StreamJobFactory factory)
 			throws Exception {
 		ExecutorService execOutput = Executors.newCachedThreadPool();
 		ExecutorService execInput = Executors.newCachedThreadPool();
 
 		List<InputStream> input = new ArrayList<InputStream>();
-		for (final JobNode p : peers) {
+		for (final ClientNode p : peers) {
 			final StreamResult res = p.stream(factory.getStreamJob());
 			input.add(res.getIs());
 			execOutput.execute(new Runnable() {
@@ -51,8 +51,8 @@ public abstract class StreamForkJoin {
 		execInput.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
 	}
 
-	protected abstract void send(RemoteOutputStream os, JobNode p);
+	protected abstract void send(RemoteOutputStream os, ClientNode p);
 
-	protected abstract void receive(RemoteInputStream is, JobNode p);
+	protected abstract void receive(RemoteInputStream is, ClientNode p);
 
 }

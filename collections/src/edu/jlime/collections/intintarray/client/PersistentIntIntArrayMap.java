@@ -19,8 +19,8 @@ import edu.jlime.collections.intintarray.client.jobs.StoreConfig;
 import edu.jlime.collections.intintarray.db.Store;
 import edu.jlime.core.stream.RemoteInputStream;
 import edu.jlime.core.stream.RemoteOutputStream;
-import edu.jlime.jd.JobCluster;
-import edu.jlime.jd.JobNode;
+import edu.jlime.jd.ClientCluster;
+import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.job.StreamJob;
 import edu.jlime.jd.task.ForkJoinTask;
 import edu.jlime.jd.task.ResultListener;
@@ -42,11 +42,11 @@ public class PersistentIntIntArrayMap {
 
 	Logger log = Logger.getLogger(PersistentIntIntArrayMap.class);
 
-	private JobCluster cluster;
+	private ClientCluster cluster;
 
 	private String store;
 
-	public PersistentIntIntArrayMap(StoreConfig config, JobCluster cluster)
+	public PersistentIntIntArrayMap(StoreConfig config, ClientCluster cluster)
 			throws Exception {
 		this.cluster = cluster;
 		this.store = getName(config.getStoreName());
@@ -57,11 +57,11 @@ public class PersistentIntIntArrayMap {
 		hashKey(k).execAsync(new SetJob(k, data, store));
 	}
 
-	public JobNode hashKey(int k) {
+	public ClientNode hashKey(int k) {
 		return getNode(k, cluster.getExecutors());
 	}
 
-	private JobNode getNode(int k, ArrayList<JobNode> ordered) {
+	private ClientNode getNode(int k, ArrayList<ClientNode> ordered) {
 		int index = Math.abs(k % ordered.size());
 		return ordered.get(index);
 	}
@@ -73,11 +73,11 @@ public class PersistentIntIntArrayMap {
 		return arr;
 	}
 
-	public HashMap<JobNode, TIntArrayList> hashKeys(int[] userList) {
-		ArrayList<JobNode> ordered = cluster.getExecutors();
-		HashMap<JobNode, TIntArrayList> ret = new HashMap<>();
+	public HashMap<ClientNode, TIntArrayList> hashKeys(int[] userList) {
+		ArrayList<ClientNode> ordered = cluster.getExecutors();
+		HashMap<ClientNode, TIntArrayList> ret = new HashMap<>();
 		for (int u : userList) {
-			JobNode addr = getNode(u, ordered);
+			ClientNode addr = getNode(u, ordered);
 			TIntArrayList l = ret.get(addr);
 			if (l == null) {
 				l = new TIntArrayList();
@@ -91,10 +91,10 @@ public class PersistentIntIntArrayMap {
 	public TIntObjectHashMap<int[]> get(int[] array) throws Exception {
 		ArrayList<Future<byte[]>> list = new ArrayList<>();
 		TIntObjectHashMap<int[]> res = new TIntObjectHashMap<int[]>();
-		HashMap<JobNode, TIntArrayList> byServer = hashKeys(array);
+		HashMap<ClientNode, TIntArrayList> byServer = hashKeys(array);
 		if (log.isDebugEnabled())
 			log.debug("Obtaining Futures of executing MultiGetJob");
-		for (Entry<JobNode, TIntArrayList> map : byServer.entrySet()) {
+		for (Entry<ClientNode, TIntArrayList> map : byServer.entrySet()) {
 			list.add(map.getKey().execAsyncWithFuture(
 					new MultiGetJob(map.getValue().toArray(), store)));
 		}
@@ -129,16 +129,12 @@ public class PersistentIntIntArrayMap {
 
 	public TIntHashSet getSetOfUsers(int[] array) throws Exception {
 
-		HashMap<JobNode, TIntArrayList> byServer = hashKeys(array);
-		// HashMap<JobNode, TIntArrayList> byServer = new HashMap<>();
-		// for (JobNode i : cluster.getExecutors()) {
-		// byServer.put(i, new TIntArrayList(array));
-		// }
+		HashMap<ClientNode, TIntArrayList> byServer = hashKeys(array);
 		log.info("Starting getSetOfUsers");
 
 		ForkJoinTask<int[]> mgr = new ForkJoinTask<>();
-		for (Entry<JobNode, TIntArrayList> map : byServer.entrySet()) {
-			JobNode p = map.getKey();
+		for (Entry<ClientNode, TIntArrayList> map : byServer.entrySet()) {
+			ClientNode p = map.getKey();
 			GetSetOfUsersJob j = new GetSetOfUsersJob(map.getValue().toArray(),
 					store);
 			mgr.putJob(j, p);
@@ -169,9 +165,9 @@ public class PersistentIntIntArrayMap {
 	}
 
 	public void set(final TIntObjectHashMap<int[]> orig) throws Exception {
-		HashMap<JobNode, TIntArrayList> byServer = hashKeys(orig.keys());
+		HashMap<ClientNode, TIntArrayList> byServer = hashKeys(orig.keys());
 
-		for (Entry<JobNode, TIntArrayList> map : byServer.entrySet()) {
+		for (Entry<ClientNode, TIntArrayList> map : byServer.entrySet()) {
 			final TIntObjectHashMap<int[]> toAdd = new TIntObjectHashMap<>();
 			map.getValue().forEach(new TIntProcedure() {
 				@Override
@@ -229,12 +225,12 @@ public class PersistentIntIntArrayMap {
 	}
 
 	public TIntIntHashMap countLists(int[] array) throws Exception {
-		HashMap<JobNode, TIntArrayList> byServer = hashKeys(array);
+		HashMap<ClientNode, TIntArrayList> byServer = hashKeys(array);
 		log.info("Starting CountListsJob");
 
 		ForkJoinTask<TIntIntHashMap> mgr = new ForkJoinTask<>();
-		for (Entry<JobNode, TIntArrayList> map : byServer.entrySet()) {
-			JobNode p = map.getKey();
+		for (Entry<ClientNode, TIntArrayList> map : byServer.entrySet()) {
+			ClientNode p = map.getKey();
 			CountListsJob j = new CountListsJob(map.getValue().toArray(), store);
 			mgr.putJob(j, p);
 		}
@@ -328,8 +324,8 @@ public class PersistentIntIntArrayMap {
 
 	public void list() throws Exception {
 		ForkJoinTask<Boolean> mgr = new ForkJoinTask<>();
-		for (JobNode j : cluster.getExecutors()) {
-			JobNode p = j;
+		for (ClientNode j : cluster.getExecutors()) {
+			ClientNode p = j;
 			ListJob list = new ListJob(store);
 			mgr.putJob(list, p);
 		}

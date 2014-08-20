@@ -7,7 +7,7 @@ import org.junit.Test;
 
 import edu.jlime.client.Client;
 import edu.jlime.client.JobContext;
-import edu.jlime.jd.JobNode;
+import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.job.Job;
 import edu.jlime.jd.task.ResultListener;
 import edu.jlime.jd.task.RoundRobinTask;
@@ -25,7 +25,7 @@ public class SharedTest {
 		}
 
 		@Override
-		public String call(JobContext env, JobNode peer) throws Exception {
+		public String call(JobContext env, ClientNode peer) throws Exception {
 			Thread.sleep((long) (Math.random() * 3000));
 			return msg + " - " + env.waitFor("data");
 		}

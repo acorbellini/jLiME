@@ -32,7 +32,7 @@ public class JobExecutorBroadcastImpl implements JobExecutorBroadcast {
 				new Object[] { jobcontainer });
 	}
 
-	public void result(Object object, UUID uuid, JobNode jobnode)
+	public void result(Object object, UUID uuid, ClientNode jobnode)
 			throws Exception {
 		disp.multiCallAsync(dest, cliID, targetID, "result", new Object[] {
 				object, uuid, jobnode });

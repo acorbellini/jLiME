@@ -6,7 +6,7 @@ import java.util.Map;
 
 import edu.jlime.client.JobContext;
 import edu.jlime.collections.util.IntArrayUtils;
-import edu.jlime.jd.JobNode;
+import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.job.Job;
 import edu.jlime.jd.mapreduce.MapReduceTask;
 
@@ -29,7 +29,7 @@ public class IntersectQuery extends RemoteListQuery {
 		}
 
 		@Override
-		public int[] call(JobContext ctx, JobNode peer) throws Exception {
+		public int[] call(JobContext ctx, ClientNode peer) throws Exception {
 			return q.exec(ctx);
 		}
 	}
@@ -44,9 +44,9 @@ public class IntersectQuery extends RemoteListQuery {
 		}
 
 		@Override
-		public Map<Job<int[]>, JobNode> map(RemoteListQuery[] data, JobContext c)
+		public Map<Job<int[]>, ClientNode> map(RemoteListQuery[] data, JobContext c)
 				throws Exception {
-			Map<Job<int[]>, JobNode> res = new HashMap<>();
+			Map<Job<int[]>, ClientNode> res = new HashMap<>();
 			for (RemoteListQuery query : data) {
 				res.put(new IntersectJob(query), c.getCluster()
 						.getAnyExecutor());

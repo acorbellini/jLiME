@@ -9,7 +9,8 @@ import org.apache.log4j.Logger;
 
 import edu.jlime.client.JobContext;
 import edu.jlime.collections.adjacencygraph.Mapper;
-import edu.jlime.jd.JobNode;
+import edu.jlime.jd.ClientNode;
+import edu.jlime.metrics.metric.CompositeMetrics;
 import edu.jlime.metrics.sysinfo.filter.SysInfoFilter;
 import gnu.trove.list.array.TIntArrayList;
 
@@ -17,35 +18,36 @@ public class CriteriaMapper extends Mapper {
 
 	private static final long serialVersionUID = -821812463957389816L;
 
-	private SysInfoFilter<JobNode> filter;
+	private SysInfoFilter<ClientNode> filter;
 
-	public CriteriaMapper(SysInfoFilter<JobNode> ext) {
+	public CriteriaMapper(SysInfoFilter<ClientNode> ext) {
 		this.filter = ext;
 	}
 
 	@Override
-	public Map<JobNode, TIntArrayList> map(int[] data, JobContext env)
+	public Map<ClientNode, TIntArrayList> map(int[] data, JobContext env)
 			throws Exception {
 		Logger log = Logger.getLogger(CriteriaMapper.class);
-		HashMap<JobNode, TIntArrayList> div = new HashMap<JobNode, TIntArrayList>();
+		HashMap<ClientNode, TIntArrayList> div = new HashMap<ClientNode, TIntArrayList>();
 
-		HashMap<JobNode, Float> infoValues = filter.extract(env.getCluster()
-				.getInfo());
+		CompositeMetrics<ClientNode> info = env.getCluster().getInfo();
+
+		HashMap<ClientNode, Float> infoValues = filter.extract(info);
 
 		log.info("Obtained Info for Criteria Mapper  : " + infoValues);
 
 		// Normalize to [0,1]
 		float sum = 0;
-		for (Entry<JobNode, Float> val : infoValues.entrySet()) {
+		for (Entry<ClientNode, Float> val : infoValues.entrySet()) {
 			sum += val.getValue();
 		}
-		for (Entry<JobNode, Float> val : infoValues.entrySet()) {
+		for (Entry<ClientNode, Float> val : infoValues.entrySet()) {
 			infoValues.put(val.getKey(), val.getValue() / sum);
 		}
 
 		int count = 0;
 		int init = 0;
-		for (Entry<JobNode, Float> e : infoValues.entrySet()) {
+		for (Entry<ClientNode, Float> e : infoValues.entrySet()) {
 			count++;
 			int end = (int) Math.ceil(init + data.length * e.getValue());
 			if (end >= data.length || count == infoValues.size())

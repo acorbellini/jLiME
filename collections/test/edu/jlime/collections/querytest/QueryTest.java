@@ -12,12 +12,12 @@ import edu.jlime.collections.adjacencygraph.query.RemoteListQuery;
 import edu.jlime.collections.adjacencygraph.query.TopQuery;
 import edu.jlime.collections.intintarray.client.jobs.StoreConfig;
 import edu.jlime.collections.intintarray.db.StoreFactory.StoreType;
-import edu.jlime.jd.JobCluster;
+import edu.jlime.jd.ClientCluster;
 import edu.jlime.util.StringUtils;
 
 public class QueryTest {
 
-	private JobCluster cluster;
+	private ClientCluster cluster;
 
 	@Test
 	public void queryTest() throws Exception {

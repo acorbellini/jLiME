@@ -6,7 +6,7 @@ import java.util.List;
 
 import edu.jlime.client.Client;
 import edu.jlime.client.JobContext;
-import edu.jlime.jd.JobNode;
+import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.job.Job;
 import edu.jlime.jd.task.ResultListener;
 import edu.jlime.jd.task.RoundRobinTask;
@@ -80,7 +80,7 @@ public class MatrixMult {
 		}
 
 		@Override
-		public MultRes call(JobContext env, JobNode peer) throws Exception {
+		public MultRes call(JobContext env, ClientNode peer) throws Exception {
 			float[][] cols = (float[][]) env.waitFor("B");
 
 			System.out.println("Multiplying " + cols.length + " cols by a "

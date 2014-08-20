@@ -14,7 +14,7 @@ final class BroadcastResultManager<R> extends ResultManager<R> {
 	private final BroadcastException exception = new BroadcastException(
 			"Broadcast Exception");
 
-	private final Map<JobNode, R> resultMap = new Hashtable<>();
+	private final Map<ClientNode, R> resultMap = new Hashtable<>();
 
 	private final Semaphore sem;
 
@@ -26,13 +26,13 @@ final class BroadcastResultManager<R> extends ResultManager<R> {
 	}
 
 	@Override
-	public void handleException(Exception res, String jobID, JobNode fromID) {
+	public void handleException(Exception res, String jobID, ClientNode fromID) {
 		exception.add(res);
 		sem.release();
 	}
 
 	@Override
-	public void handleResult(R res, String jobID, JobNode from) {
+	public void handleResult(R res, String jobID, ClientNode from) {
 		if (res != null) {
 			resultMap.put(from, res);
 		} else
@@ -62,7 +62,7 @@ final class BroadcastResultManager<R> extends ResultManager<R> {
 		return exception;
 	}
 
-	public Map<JobNode, R> getRes() {
+	public Map<ClientNode, R> getRes() {
 		return resultMap;
 	}
 

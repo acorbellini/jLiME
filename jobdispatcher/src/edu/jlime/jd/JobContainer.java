@@ -14,13 +14,13 @@ public class JobContainer implements Runnable, Serializable {
 
 	private boolean noresponse = false;
 
-	JobNode origin;
+	ClientNode origin;
 
 	private ClientJob<?> rJ;
 
 	transient JobDispatcher srv;
 
-	public JobContainer(ClientJob<?> j, JobNode requestor) {
+	public JobContainer(ClientJob<?> j, ClientNode requestor) {
 		this.origin = requestor;
 		this.jobID = UUID.randomUUID();
 		this.rJ = j;
@@ -34,7 +34,7 @@ public class JobContainer implements Runnable, Serializable {
 		return jobID;
 	}
 
-	public JobNode getRequestor() {
+	public ClientNode getRequestor() {
 		return origin;
 	}
 

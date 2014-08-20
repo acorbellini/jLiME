@@ -13,7 +13,7 @@ import edu.jlime.client.JobContext;
 import edu.jlime.collections.adjacencygraph.GraphMR;
 import edu.jlime.collections.adjacencygraph.Mapper;
 import edu.jlime.collections.adjacencygraph.get.GetType;
-import edu.jlime.jd.JobNode;
+import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.job.Job;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.TIntIntHashMap;
@@ -53,7 +53,7 @@ public class DistHashCountMR extends GraphMR<TIntIntHashMap, byte[]> {
 	}
 
 	@Override
-	public Map<Job<byte[]>, JobNode> map(int[] data, JobContext cluster)
+	public Map<Job<byte[]>, ClientNode> map(int[] data, JobContext cluster)
 			throws Exception {
 
 		int[] inverted = Arrays.copyOf(data, data.length);
@@ -63,9 +63,9 @@ public class DistHashCountMR extends GraphMR<TIntIntHashMap, byte[]> {
 				inverted[i] = -1 * data[i];
 			}
 
-		Map<Job<byte[]>, JobNode> res = new HashMap<>();
-		Map<JobNode, TIntArrayList> map = getMapper().map(inverted, cluster);
-		for (Entry<JobNode, TIntArrayList> e : map.entrySet()) {
+		Map<Job<byte[]>, ClientNode> res = new HashMap<>();
+		Map<ClientNode, TIntArrayList> map = getMapper().map(inverted, cluster);
+		for (Entry<ClientNode, TIntArrayList> e : map.entrySet()) {
 			res.put(new DistHashCountJob(e.getValue().toArray(), hash,
 					getMapName()), e.getKey());
 		}

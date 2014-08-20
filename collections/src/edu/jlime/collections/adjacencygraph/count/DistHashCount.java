@@ -4,7 +4,7 @@ import java.util.Iterator;
 
 import edu.jlime.client.JobContext;
 import edu.jlime.collections.intint.DistIntIntHashtable;
-import edu.jlime.jd.JobCluster;
+import edu.jlime.jd.ClientCluster;
 
 public class DistHashCount extends CountResult {
 
@@ -25,7 +25,7 @@ public class DistHashCount extends CountResult {
 		return null;
 	}
 
-	public void delete(JobCluster c) throws Exception {
+	public void delete(ClientCluster c) throws Exception {
 		DistIntIntHashtable.delete(table, c);
 	}
 }

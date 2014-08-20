@@ -1,6 +1,6 @@
 package edu.jlime.client;
 
-import edu.jlime.jd.JobCluster;
+import edu.jlime.jd.ClientCluster;
 
 public interface JobContext {
 
@@ -8,7 +8,7 @@ public interface JobContext {
 
 	public abstract Object get(String prop);
 
-	public abstract JobCluster getCluster();
+	public abstract ClientCluster getCluster();
 
 	public abstract void put(String prop, Object val);
 

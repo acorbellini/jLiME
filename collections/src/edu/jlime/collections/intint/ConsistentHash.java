@@ -2,8 +2,8 @@ package edu.jlime.collections.intint;
 
 import java.io.Serializable;
 
-import edu.jlime.jd.JobCluster;
-import edu.jlime.jd.JobNode;
+import edu.jlime.jd.ClientCluster;
+import edu.jlime.jd.ClientNode;
 
 //Version preliminar de consistent hashing.
 //Falta agregar Merkle Trees para chequeo de r�plicas.
@@ -16,23 +16,23 @@ public class ConsistentHash implements Serializable {
 
 	private int clusterSize;
 
-	private JobNode[] serversPerToken;
+	private ClientNode[] serversPerToken;
 
-	public ConsistentHash(JobCluster iCluster) throws Exception {
+	public ConsistentHash(ClientCluster iCluster) throws Exception {
 		this.clusterSize = iCluster.executorsSize();
 		if (clusterSize == 0)
 			throw new Exception("I can't performn consistent hashing using ");
-		serversPerToken = new JobNode[ring_size];
+		serversPerToken = new ClientNode[ring_size];
 		int i = 0;
 		while (i != serversPerToken.length) {
-			for (JobNode p : iCluster) {
+			for (ClientNode p : iCluster) {
 				if (i < serversPerToken.length)
 					serversPerToken[i++] = p;
 			}
 		}
 	}
 
-	public JobNode getServerForKey(int k) {
+	public ClientNode getServerForKey(int k) {
 		long hash = k * 5700357409661598721L;
 		int pos = Math.abs((int) (hash % ring_size));
 		return serversPerToken[pos];

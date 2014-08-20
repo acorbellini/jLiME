@@ -6,22 +6,22 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import edu.jlime.jd.JobCluster;
-import edu.jlime.jd.JobNode;
+import edu.jlime.jd.ClientCluster;
+import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.SetEnvironment;
 import edu.jlime.jd.job.Job;
 
 public abstract class BroadcastTask<T> extends TaskBase<T> {
 
-	private JobCluster cluster;
+	private ClientCluster cluster;
 
 	private int maxPeers = -1;
 
-	ArrayList<JobNode> peers;
+	ArrayList<ClientNode> peers;
 
 	private List<? extends Job<T>> jobs;
 
-	public BroadcastTask(List<? extends Job<T>> jobs, JobCluster c) {
+	public BroadcastTask(List<? extends Job<T>> jobs, ClientCluster c) {
 		this.cluster = c;
 		peers = c.getExecutors();
 		this.jobs = jobs;
@@ -32,7 +32,7 @@ public abstract class BroadcastTask<T> extends TaskBase<T> {
 	}
 
 	public void set(String k, Object v, boolean chain) {
-		HashSet<JobNode> peers = new HashSet<>(getMap().values());
+		HashSet<ClientNode> peers = new HashSet<>(getMap().values());
 		SetEnvironment senv = new SetEnvironment(k, v);
 		try {
 			if (chain)
@@ -49,22 +49,22 @@ public abstract class BroadcastTask<T> extends TaskBase<T> {
 	}
 
 	@Override
-	protected Map<Job<T>, JobNode> getMap() {
+	protected Map<Job<T>, ClientNode> getMap() {
 		return split(limitPeers(peers), jobs);
 	}
 
-	private List<JobNode> limitPeers(ArrayList<JobNode> peers) {
+	private List<ClientNode> limitPeers(ArrayList<ClientNode> peers) {
 		if (maxPeers == -1)
 			return peers;
-		ArrayList<JobNode> copy = new ArrayList<>(peers);
-		ArrayList<JobNode> limited = new ArrayList<>();
+		ArrayList<ClientNode> copy = new ArrayList<>(peers);
+		ArrayList<ClientNode> limited = new ArrayList<>();
 		for (int i = 0; i < maxPeers; i++)
 			limited.add(copy.remove((int) (Math.random() * copy.size())));
 		return limited;
 	}
 
-	public abstract <J extends Job<T>> HashMap<Job<T>, JobNode> split(
-			List<JobNode> peers, List<J> jobs);
+	public abstract <J extends Job<T>> HashMap<Job<T>, ClientNode> split(
+			List<ClientNode> peers, List<J> jobs);
 
 	public static String getID(String k, String sharedID) {
 		return k + "-" + sharedID;

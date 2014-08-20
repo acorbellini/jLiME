@@ -15,7 +15,7 @@ import edu.jlime.client.JobContext;
 import edu.jlime.core.cluster.StreamResult;
 import edu.jlime.core.stream.RemoteInputStream;
 import edu.jlime.core.stream.RemoteOutputStream;
-import edu.jlime.jd.JobNode;
+import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.job.StreamJob;
 import edu.jlime.util.RingQueue;
 
@@ -78,7 +78,7 @@ public class StreamTest {
 
 		long init = System.nanoTime();
 
-		JobNode peer = cli.getCluster().getAnyExecutor();
+		ClientNode peer = cli.getCluster().getAnyExecutor();
 
 		StreamTestJob stream = new StreamTestJob();
 

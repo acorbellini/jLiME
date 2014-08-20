@@ -12,7 +12,8 @@ public class MetricsQuery implements Job<Metrics> {
 	}
 
 	@Override
-	public Metrics call(JobContext env, JobNode peer) throws Exception {
-		return env.getCluster().getMetrics();
+	public Metrics call(JobContext env, ClientNode peer) throws Exception {
+		Metrics metrics = env.getCluster().getMetrics();
+		return metrics;
 	}
 }

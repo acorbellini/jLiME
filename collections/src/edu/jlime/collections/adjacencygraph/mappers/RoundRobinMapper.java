@@ -9,7 +9,7 @@ import org.apache.log4j.Logger;
 import edu.jlime.client.JobContext;
 import edu.jlime.collections.adjacencygraph.Mapper;
 import edu.jlime.core.cluster.Peer;
-import edu.jlime.jd.JobNode;
+import edu.jlime.jd.ClientNode;
 import gnu.trove.list.array.TIntArrayList;
 
 //Simple Round Robin
@@ -19,17 +19,17 @@ public class RoundRobinMapper extends Mapper {
 	private static final long serialVersionUID = -2914997038447380314L;
 
 	@Override
-	public Map<JobNode, TIntArrayList> map(int[] data, JobContext env) {
+	public Map<ClientNode, TIntArrayList> map(int[] data, JobContext env) {
 		Logger log = Logger.getLogger(RoundRobinMapper.class);
-		HashMap<JobNode, TIntArrayList> div = new HashMap<JobNode, TIntArrayList>();
+		HashMap<ClientNode, TIntArrayList> div = new HashMap<ClientNode, TIntArrayList>();
 
-		ArrayList<JobNode> serverList = env.getCluster().getExecutors();
+		ArrayList<ClientNode> serverList = env.getCluster().getExecutors();
 		if (log.isDebugEnabled())
 			log.debug("Mapping " + data.length + " between "
 					+ serverList.size());
 		int count = 0;
 		for (int i : data) {
-			JobNode p = serverList.get(count);
+			ClientNode p = serverList.get(count);
 			count = (count + 1) % serverList.size();
 			TIntArrayList uList = div.get(p);
 			if (uList == null) {
@@ -44,19 +44,19 @@ public class RoundRobinMapper extends Mapper {
 	}
 
 	public static void main(String[] args) {
-		HashMap<JobNode, TIntArrayList> div = new HashMap<JobNode, TIntArrayList>();
+		HashMap<ClientNode, TIntArrayList> div = new HashMap<ClientNode, TIntArrayList>();
 
-		ArrayList<JobNode> serverList = new ArrayList<>();
-		serverList.add(new JobNode(new Peer("1"), null, null));
-		serverList.add(new JobNode(new Peer("2"), null, null));
-		serverList.add(new JobNode(new Peer("3"), null, null));
-		serverList.add(new JobNode(new Peer("4"), null, null));
+		ArrayList<ClientNode> serverList = new ArrayList<>();
+		serverList.add(new ClientNode(new Peer("1"), null, null));
+		serverList.add(new ClientNode(new Peer("2"), null, null));
+		serverList.add(new ClientNode(new Peer("3"), null, null));
+		serverList.add(new ClientNode(new Peer("4"), null, null));
 		int[] data = new int[] { 1, 2, 3, 4 };
 		System.out.println("Mapping " + data.length + " between "
 				+ serverList.size());
 		int count = 0;
 		for (int i : data) {
-			JobNode p = serverList.get(count);
+			ClientNode p = serverList.get(count);
 			count = (count + 1) % serverList.size();
 			TIntArrayList uList = div.get(p);
 			if (uList == null) {

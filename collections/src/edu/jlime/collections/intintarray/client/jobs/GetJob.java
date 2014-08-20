@@ -2,7 +2,7 @@ package edu.jlime.collections.intintarray.client.jobs;
 
 import edu.jlime.client.JobContext;
 import edu.jlime.collections.intintarray.db.Store;
-import edu.jlime.jd.JobNode;
+import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.job.Job;
 import edu.jlime.util.DataTypeUtils;
 
@@ -20,7 +20,7 @@ public class GetJob implements Job<int[]> {
 	}
 
 	@Override
-	public int[] call(JobContext ctx, JobNode peer) throws Exception {
+	public int[] call(JobContext ctx, ClientNode peer) throws Exception {
 		Store store = (Store) ctx.get(storeName);
 		return DataTypeUtils.byteArrayToIntArray(store.load(k));
 	}

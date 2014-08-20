@@ -6,7 +6,7 @@ import java.io.Serializable;
 
 import edu.jlime.collections.adjacencygraph.query.UserQuery;
 import edu.jlime.collections.intintarray.client.jobs.StoreConfig;
-import edu.jlime.jd.JobCluster;
+import edu.jlime.jd.ClientCluster;
 
 public class RemoteAdjacencyGraph implements Closeable, AdjacencyGraph,
 		Serializable {
@@ -22,7 +22,7 @@ public class RemoteAdjacencyGraph implements Closeable, AdjacencyGraph,
 
 	private StoreConfig config;
 
-	private transient JobCluster cluster;
+	private transient ClientCluster cluster;
 
 	@Override
 	public UserQuery getUser(int id) {
@@ -34,7 +34,7 @@ public class RemoteAdjacencyGraph implements Closeable, AdjacencyGraph,
 		return new UserQuery(this, ids);
 	}
 
-	public RemoteAdjacencyGraph(StoreConfig config, JobCluster cluster,
+	public RemoteAdjacencyGraph(StoreConfig config, ClientCluster cluster,
 			Mapper mapper) throws Exception {
 		this.map = config.getStoreName();
 		this.mapper = mapper;
@@ -61,7 +61,7 @@ public class RemoteAdjacencyGraph implements Closeable, AdjacencyGraph,
 		return map;
 	}
 
-	public JobCluster getCluster() {
+	public ClientCluster getCluster() {
 		return cluster;
 	}
 

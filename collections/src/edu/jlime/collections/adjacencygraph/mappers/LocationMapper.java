@@ -8,7 +8,7 @@ import org.apache.log4j.Logger;
 import edu.jlime.client.JobContext;
 import edu.jlime.collections.adjacencygraph.Mapper;
 import edu.jlime.collections.intintarray.client.PersistentIntIntArrayMap;
-import edu.jlime.jd.JobNode;
+import edu.jlime.jd.ClientNode;
 import gnu.trove.list.array.TIntArrayList;
 
 public class LocationMapper extends Mapper {
@@ -22,7 +22,7 @@ public class LocationMapper extends Mapper {
 	}
 
 	@Override
-	public Map<JobNode, TIntArrayList> map(int[] data, JobContext cluster) {
+	public Map<ClientNode, TIntArrayList> map(int[] data, JobContext cluster) {
 
 		Logger log = Logger.getLogger(LocationMapper.class);
 		log.info("Mapping " + data.length + " keys by location.");
@@ -30,7 +30,7 @@ public class LocationMapper extends Mapper {
 		PersistentIntIntArrayMap simple = PersistentIntIntArrayMap.getMap(
 				mapName, cluster);
 
-		HashMap<JobNode, TIntArrayList> map = simple.hashKeys(data);
+		HashMap<ClientNode, TIntArrayList> map = simple.hashKeys(data);
 		log.info("Finished mapping " + data.length + " keys by location.");
 		return map;
 	}

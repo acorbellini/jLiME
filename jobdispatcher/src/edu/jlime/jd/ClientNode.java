@@ -16,7 +16,7 @@ import edu.jlime.jd.job.ResultManager;
 import edu.jlime.jd.job.StreamJob;
 import edu.jlime.metrics.metric.IMetrics;
 
-public class JobNode implements Serializable {
+public class ClientNode implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
@@ -26,7 +26,7 @@ public class JobNode implements Serializable {
 
 	transient private JobDispatcher jd;
 
-	public JobNode(Peer p, Peer clientID, JobDispatcher disp) {
+	public ClientNode(Peer p, Peer clientID, JobDispatcher disp) {
 		this.peer = p;
 		this.clientID = clientID;
 		this.jd = disp;
@@ -87,14 +87,14 @@ public class JobNode implements Serializable {
 
 				@Override
 				public void handleException(Exception res, String jobID,
-						JobNode fromID) {
+						ClientNode fromID) {
 					res.printStackTrace();
 					stream.setFinished(true);
 				}
 
 				@Override
 				public void handleResult(Boolean res, String jobID,
-						JobNode fromID) {
+						ClientNode fromID) {
 					stream.setFinished(true);
 				}
 			});
@@ -109,8 +109,8 @@ public class JobNode implements Serializable {
 		return peer.getAddress();
 	}
 
-	public static JobNode copy(JobNode req, JobDispatcher disp) {
-		return new JobNode(req.getPeer(), req.clientID, disp);
+	public static ClientNode copy(ClientNode req, JobDispatcher disp) {
+		return new ClientNode(req.getPeer(), req.clientID, disp);
 	}
 
 	public String getName() {
@@ -119,9 +119,9 @@ public class JobNode implements Serializable {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (!(obj instanceof JobNode))
+		if (!(obj instanceof ClientNode))
 			return false;
-		JobNode other = (JobNode) obj;
+		ClientNode other = (ClientNode) obj;
 		return peer.equals(other.getPeer());
 	}
 

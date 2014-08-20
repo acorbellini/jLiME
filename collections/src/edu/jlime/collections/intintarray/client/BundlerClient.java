@@ -4,14 +4,14 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import edu.jlime.collections.intintarray.client.jobs.StoreConfig;
-import edu.jlime.jd.JobCluster;
+import edu.jlime.jd.ClientCluster;
 import gnu.trove.map.hash.TIntObjectHashMap;
 
 public class BundlerClient extends PersistentIntIntArrayMap {
 
 	private int bundle;
 
-	public BundlerClient(StoreConfig config, int bundleSize, JobCluster cluster)
+	public BundlerClient(StoreConfig config, int bundleSize, ClientCluster cluster)
 			throws Exception {
 		super(config, cluster);
 		this.bundle = bundleSize;

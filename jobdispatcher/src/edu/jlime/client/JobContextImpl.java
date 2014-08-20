@@ -11,7 +11,7 @@ import java.util.concurrent.ThreadFactory;
 import org.apache.log4j.Logger;
 
 import edu.jlime.core.cluster.Peer;
-import edu.jlime.jd.JobCluster;
+import edu.jlime.jd.ClientCluster;
 import edu.jlime.jd.JobContainer;
 
 public class JobContextImpl implements JobContext {
@@ -24,9 +24,9 @@ public class JobContextImpl implements JobContext {
 
 	private Peer id;
 
-	private JobCluster cluster;
+	private ClientCluster cluster;
 
-	public JobContextImpl(JobCluster c, Peer cliId) {
+	public JobContextImpl(ClientCluster c, Peer cliId) {
 		this.id = cliId;
 		this.cluster = c;
 		exec = Executors.newFixedThreadPool(50, new ThreadFactory() {
@@ -54,7 +54,7 @@ public class JobContextImpl implements JobContext {
 	}
 
 	@Override
-	public JobCluster getCluster() {
+	public ClientCluster getCluster() {
 		return cluster;
 	}
 

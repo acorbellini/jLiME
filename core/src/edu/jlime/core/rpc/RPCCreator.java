@@ -1,12 +1,37 @@
-package edu.jlime.rpc;
+package edu.jlime.core.rpc;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 
-public class RPCServerClassCreator {
+public class RPCCreator {
+
+	private static class MethodSignature {
+		public MethodSignature(String code, MethodParams params) {
+			this.code = code;
+			this.params = params;
+		}
+
+		String code;
+		MethodParams params;
+	}
+
+	private static class MethodParams {
+		public MethodParams(String string, List<String> argsNames) {
+			this.code = string;
+			this.arguments = argsNames;
+		}
+
+		String code;
+		List<String> arguments;
+	}
 
 	public static void main(String[] args) throws ClassNotFoundException,
 			IOException {
@@ -52,15 +77,15 @@ public class RPCServerClassCreator {
 		writer.write("  }\n");
 
 		writer.write("  public " + bcast
-				+ " getBroadcast(List<Peer> to, String cliID){\n");
+				+ " getBroadcast(List<Peer> to, Peer client){\n");
 		writer.write("    return new " + bcast
-				+ "Impl(rpc, to, cliID, target);\n");
+				+ "Impl(rpc, to, client, target);\n");
 		writer.write("  }\n");
 
 		writer.write("  public " + serverInterface.getSimpleName()
-				+ " get(Peer to, String cliID){\n");
+				+ " get(Peer to, Peer client){\n");
 		writer.write("    return new " + iface
-				+ "Impl(rpc, to, cliID, target);\n");
+				+ "Impl(rpc, to, client, target);\n");
 		writer.write("  }\n");
 		writer.write("}");
 		writer.close();
@@ -85,19 +110,23 @@ public class RPCServerClassCreator {
 		writer.write(getBroadcastConstructor(name));
 
 		for (Method method : serverInterface.getMethods()) {
-			writer.write(getBroadcastMethodSignature(method.getName(), method));
-			writer.write(getBroadcastBody(method.getName(), method));
+			MethodSignature broadcastMethodSignature = getBroadcastMethodSignature(
+					method.getName(), method);
+			writer.write(broadcastMethodSignature.code);
+			writer.write(getBroadcastBody(method.getName(), method,
+					broadcastMethodSignature.params.arguments));
 		}
 		writer.write("}");
 		writer.close();
 	}
 
-	private static String getBroadcastBody(String name, Method method) {
+	private static String getBroadcastBody(String name, Method method,
+			List<String> arguments) {
 		StringBuilder builder = new StringBuilder();
 		builder.append(" {\n");
 		StringBuilder args = new StringBuilder();
-		for (Class<?> arg : method.getParameterTypes()) {
-			args.append("," + arg.getSimpleName().toLowerCase());
+		for (String arg : arguments) {
+			args.append("," + arg);
 		}
 		boolean sync = !method.getReturnType().getSimpleName().equals("void");
 		String retType = method.getReturnType().getSimpleName();
@@ -107,7 +136,7 @@ public class RPCServerClassCreator {
 			builder.append("    return Map<Peer," + retType + "> ");
 		else
 			builder.append("    ");
-		builder.append("disp." + singleCall + "( dest, cliID, targetID, \""
+		builder.append("disp." + singleCall + "( dest, client, targetID, \""
 				+ method.getName() + "\",new Object[] { " + args.substring(1)
 				+ " });\n");
 		builder.append("  }\n\n");
@@ -133,8 +162,11 @@ public class RPCServerClassCreator {
 		writer.write(getConstructor(name));
 
 		for (Method method : serverInterface.getMethods()) {
-			writer.write(getMethodSignature(method.getName(), method));
-			writer.write(getBody(method.getName(), method));
+			MethodSignature methodSignature = getMethodSignature(
+					method.getName(), method);
+			writer.write(methodSignature.code);
+			writer.write(getBody(method.getName(), method,
+					methodSignature.params.arguments));
 		}
 		writer.write("}");
 		writer.close();
@@ -151,7 +183,8 @@ public class RPCServerClassCreator {
 		writer.write("public interface " + name + " { \n\n");
 
 		for (Method m : ifaceClass.getMethods())
-			writer.write(getBroadcastMethodSignature(m.getName(), m) + "; \n\n");
+			writer.write(getBroadcastMethodSignature(m.getName(), m).code
+					+ "; \n\n");
 
 		writer.write("}");
 		writer.close();
@@ -166,7 +199,7 @@ public class RPCServerClassCreator {
 		field.append("  RPCDispatcher disp;\n");
 		field.append("  Peer local;\n");
 		field.append("  Peer dest;\n");
-		field.append("  String cliID;\n");
+		field.append("  Peer client;\n");
 		field.append("  String targetID;\n\n");
 		return field.toString();
 	}
@@ -176,7 +209,7 @@ public class RPCServerClassCreator {
 		field.append("  RPCDispatcher disp;\n");
 		field.append("  Peer local;\n");
 		field.append("  List<Peer> dest = new ArrayList<Peer>();\n");
-		field.append("  String cliID;\n");
+		field.append("  Peer client;\n");
 		field.append("  String targetID;\n\n");
 		return field.toString();
 	}
@@ -187,10 +220,10 @@ public class RPCServerClassCreator {
 		constructor
 				.append("  public "
 						+ name
-						+ "(RPCDispatcher disp, Peer dest, String cliID, String targetID) {\n");
+						+ "(RPCDispatcher disp, Peer dest, Peer client, String targetID) {\n");
 		constructor.append("    this.disp = disp;\n");
 		constructor.append("    this.dest = dest;\n");
-		constructor.append("    this.cliID = cliID;\n");
+		constructor.append("    this.client = client;\n");
 		constructor.append("    this.targetID = targetID;\n");
 		constructor.append("  }\n\n");
 		return constructor.toString();
@@ -201,36 +234,38 @@ public class RPCServerClassCreator {
 		constructor
 				.append("  public "
 						+ name
-						+ "(RPCDispatcher disp, List<Peer> dest, String cliID, String targetID) {\n");
+						+ "(RPCDispatcher disp, List<Peer> dest, Peer client, String targetID) {\n");
 		constructor.append("    this.disp = disp;\n");
 		constructor.append("    this.dest.addAll(dest);\n");
-		constructor.append("    this.cliID = cliID;\n");
+		constructor.append("    this.client = client;\n");
 		constructor.append("    this.targetID = targetID;\n");
 		constructor.append("  }\n\n");
 		return constructor.toString();
 	}
 
-	private static String getMethodSignature(String name, Method method)
+	private static MethodSignature getMethodSignature(String name, Method method)
 			throws IOException {
 		StringBuilder ret = new StringBuilder();
 		ret.append("  public " + method.getReturnType().getSimpleName() + " "
 				+ name + "(");
-		ret.append(getParameters(method));
+		MethodParams parameters = getParameters(method);
+		ret.append(parameters.code);
 		ret.append(") ");
 		ret.append(getExceptions(method));
-		return ret.toString();
+		return new MethodSignature(ret.toString(), parameters);
 	}
 
-	private static String getBroadcastMethodSignature(String name, Method method)
-			throws IOException {
+	private static MethodSignature getBroadcastMethodSignature(String name,
+			Method method) throws IOException {
 		StringBuilder ret = new StringBuilder();
 		String returnType = method.getReturnType().getSimpleName()
 				.equals("void") ? "void" : "Map<Peer,"
 				+ method.getReturnType().getSimpleName() + "> ";
 		ret.append("  public " + returnType + " " + name + "(");
-		ret.append(getParameters(method));
+		MethodParams parameters = getParameters(method);
+		ret.append(parameters.code);
 		ret.append(") throws Exception");
-		return ret.toString();
+		return new MethodSignature(ret.toString(), parameters);
 	}
 
 	private static String getExceptions(Method method) {
@@ -247,36 +282,55 @@ public class RPCServerClassCreator {
 		return ret.toString();
 	}
 
-	private static String getParameters(Method method) {
+	private static MethodParams getParameters(Method method) {
+		HashMap<String, HashSet<String>> used = new HashMap<>();
+		List<String> argsNames = new ArrayList<>();
 		StringBuilder ret = new StringBuilder();
-		Class<?>[] args = method.getParameterTypes();
+		Parameter[] args = method.getParameters();
 		if (args.length != 0) {
 			StringBuilder argsBuilder = new StringBuilder();
-			for (Class<?> c : args) {
-				argsBuilder.append(", " + c.getSimpleName() + " "
-						+ c.getSimpleName().toLowerCase());
+			for (Parameter c : args) {
+				int count = 0;
+				String type = c.getType().getSimpleName();
+				String arg = c.getName();
+				HashSet<String> set = used.get(type);
+				if (set == null) {
+					set = new HashSet<>();
+					used.put(type, set);
+				}
+				while (arg == null || set.contains(arg) || type.equals(arg)) {
+					if (arg == null)
+						arg = c.getType().getSimpleName().toLowerCase();
+					else {
+						arg = arg + count;
+						count++;
+					}
+				}
+				set.add(arg);
+				argsNames.add(arg);
+				argsBuilder.append(", " + type + " " + arg);
 			}
 			ret.append(argsBuilder.substring(2));
 		}
-		return ret.toString();
+		return new MethodParams(ret.toString(), argsNames);
 	}
 
 	private static String getImports(Class<?> ifaceClass) {
 		StringBuilder imports = new StringBuilder();
 		imports.append("import " + ifaceClass.getName() + ";\n");
 		imports.append("import edu.jlime.core.rpc.RPCDispatcher;\n");
-		imports.append("import edu.jlime.cluster.Peer;\n");
+		imports.append("import edu.jlime.core.cluster.Peer;\n");
 		imports.append("import java.util.List;\n");
 		imports.append("import java.util.ArrayList;\n");
 
 		for (Method m : ifaceClass.getMethods()) {
 			for (Class<?> arg : m.getParameterTypes()) {
-				if (!arg.isPrimitive()) {
-					imports.append("import " + arg.getCanonicalName() + ";\n");
+				if (!isPrimitive(arg)) {
+					imports.append("import " + getName(arg) + ";\n");
 				}
 				Class<?> ret = m.getReturnType();
-				if (!ret.isPrimitive())
-					imports.append("import " + ret.getCanonicalName() + ";\n");
+				if (!isPrimitive(ret))
+					imports.append("import " + getName(ret) + ";\n");
 			}
 			for (Class<?> ex : m.getExceptionTypes()) {
 				imports.append("import " + ex.getCanonicalName() + ";\n");
@@ -285,12 +339,31 @@ public class RPCServerClassCreator {
 		return imports.toString() + "\n";
 	}
 
-	private static String getBody(String rpcmethod, Method method) {
+	private static String getName(Class<?> arg) {
+		Class<?> curr = arg;
+		while (curr.isArray())
+			curr = curr.getComponentType();
+		return curr.getName();
+	}
+
+	private static boolean isPrimitive(Class<?> arg) {
+		Class<?> curr = arg;
+		while (!curr.isPrimitive()) {
+			if (curr.isArray())
+				curr = curr.getComponentType();
+			else
+				return false;
+		}
+		return true;
+	}
+
+	private static String getBody(String rpcmethod, Method method,
+			List<String> arguments) {
 		StringBuilder builder = new StringBuilder();
 		builder.append(" {\n");
 		StringBuilder args = new StringBuilder();
-		for (Class<?> arg : method.getParameterTypes()) {
-			args.append("," + arg.getSimpleName().toLowerCase());
+		for (String arg : arguments) {
+			args.append("," + arg);
 		}
 		boolean sync = !method.getReturnType().getSimpleName().equals("void");
 		String retType = method.getReturnType().getSimpleName();
@@ -299,7 +372,7 @@ public class RPCServerClassCreator {
 			builder.append("    return (" + retType + ") ");
 		else
 			builder.append("    ");
-		builder.append("disp." + singleCall + "(dest, cliID, targetID, \""
+		builder.append("disp." + singleCall + "(dest, client, targetID, \""
 				+ method.getName() + "\",new Object[] { " + args.substring(1)
 				+ " });\n");
 		builder.append("  }\n\n");

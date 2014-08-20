@@ -5,7 +5,7 @@ import java.util.UUID;
 import org.apache.log4j.Logger;
 
 import edu.jlime.jd.JobDispatcher;
-import edu.jlime.jd.JobNode;
+import edu.jlime.jd.ClientNode;
 
 public abstract class ResultManager<R> {
 
@@ -25,9 +25,9 @@ public abstract class ResultManager<R> {
 	}
 
 	protected abstract void handleException(Exception res, String jobID,
-			JobNode fromID);
+			ClientNode fromID);
 
-	protected abstract void handleResult(R res, String jobID, JobNode fromID);
+	protected abstract void handleResult(R res, String jobID, ClientNode fromID);
 
 	@Override
 	public String toString() {
@@ -35,7 +35,7 @@ public abstract class ResultManager<R> {
 				+ getClass();
 	}
 
-	public void manageResult(JobDispatcher jd, UUID jobID, R res, JobNode req) {
+	public void manageResult(JobDispatcher jd, UUID jobID, R res, ClientNode req) {
 		int current_remaining;
 		synchronized (this) {
 			current_remaining = remainingResults--;
@@ -59,12 +59,12 @@ public abstract class ResultManager<R> {
 				log.debug("Handling exception for " + jobID + " from server "
 						+ req);
 			handleException((Exception) res, jobID.toString(),
-					JobNode.copy(req, jd));
+					ClientNode.copy(req, jd));
 		} else {
 			if (log.isDebugEnabled())
 				log.debug("Handling result for " + jobID + " from server "
 						+ req);
-			handleResult(res, jobID.toString(), JobNode.copy(req, jd));
+			handleResult(res, jobID.toString(), ClientNode.copy(req, jd));
 		}
 	}
 }

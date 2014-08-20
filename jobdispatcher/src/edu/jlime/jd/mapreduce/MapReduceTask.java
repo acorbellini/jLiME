@@ -8,8 +8,8 @@ import java.util.concurrent.Semaphore;
 import org.apache.log4j.Logger;
 
 import edu.jlime.client.JobContext;
-import edu.jlime.jd.JobCluster;
-import edu.jlime.jd.JobNode;
+import edu.jlime.jd.ClientCluster;
+import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.job.Job;
 import edu.jlime.jd.job.ResultManager;
 
@@ -27,12 +27,12 @@ public abstract class MapReduceTask<T, R, SR> implements Job<R> {
 		}
 
 		@Override
-		public void handleException(Exception res, String jid, JobNode from) {
+		public void handleException(Exception res, String jid, ClientNode from) {
 			task.error(res);
 		}
 
 		@Override
-		public void handleResult(SR res, String jid, JobNode from) {
+		public void handleResult(SR res, String jid, ClientNode from) {
 			task.result(res);
 		}
 	}
@@ -52,7 +52,7 @@ public abstract class MapReduceTask<T, R, SR> implements Job<R> {
 	}
 
 	@Override
-	public R call(JobContext env, JobNode peer) throws Exception {
+	public R call(JobContext env, ClientNode peer) throws Exception {
 		return exec(data, env);
 	}
 
@@ -61,7 +61,7 @@ public abstract class MapReduceTask<T, R, SR> implements Job<R> {
 		lock.release();
 	}
 
-	public R exec(JobCluster c) throws Exception {
+	public R exec(ClientCluster c) throws Exception {
 		if (c.getLocalNode().isExec())
 			return c.getLocalNode().exec(this);
 		else
@@ -72,11 +72,11 @@ public abstract class MapReduceTask<T, R, SR> implements Job<R> {
 
 		Logger log = Logger.getLogger(getClass());
 
-		Map<Job<SR>, JobNode> m = map(data, c);
+		Map<Job<SR>, ClientNode> m = map(data, c);
 
 		lock = new Semaphore(-m.size() + 1);
 
-		for (Entry<Job<SR>, JobNode> jobServer : m.entrySet()) {
+		for (Entry<Job<SR>, ClientNode> jobServer : m.entrySet()) {
 			try {
 				jobServer.getValue().execAsync(jobServer.getKey(),
 						new TaskResultManager(this));
@@ -102,7 +102,7 @@ public abstract class MapReduceTask<T, R, SR> implements Job<R> {
 			return red(new ArrayList<SR>());
 	};
 
-	public abstract Map<Job<SR>, JobNode> map(T data, JobContext cluster)
+	public abstract Map<Job<SR>, ClientNode> map(T data, JobContext cluster)
 			throws Exception;
 
 	public void processSubResult(SR subres) {

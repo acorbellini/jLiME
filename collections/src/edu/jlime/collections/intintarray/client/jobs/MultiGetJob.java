@@ -6,7 +6,7 @@ import org.apache.log4j.Logger;
 
 import edu.jlime.client.JobContext;
 import edu.jlime.collections.intintarray.db.Store;
-import edu.jlime.jd.JobNode;
+import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.job.Job;
 import edu.jlime.util.Buffer;
 import edu.jlime.util.ByteBuffer;
@@ -27,7 +27,7 @@ public class MultiGetJob implements Job<byte[]> {
 	}
 
 	@Override
-	public byte[] call(JobContext ctx, JobNode peer) throws Exception {
+	public byte[] call(JobContext ctx, ClientNode peer) throws Exception {
 		Logger log = Logger.getLogger(MultiGetJob.class);
 		log.info("Obtaining multiple keys (" + kList.length + ") from store");
 		ByteBuffer writer = new ByteBuffer();

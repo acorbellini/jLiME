@@ -3,7 +3,8 @@ package edu.jlime.metrics.sysinfo.filter;
 import java.util.HashMap;
 
 import edu.jlime.metrics.metric.CompositeMetrics;
-import edu.jlime.metrics.metric.IMetrics;
+import edu.jlime.metrics.metric.Metric;
+import edu.jlime.metrics.metric.Metrics;
 
 public class SimpleInfoFilter<T> implements SysInfoFilter<T> {
 
@@ -24,8 +25,9 @@ public class SimpleInfoFilter<T> implements SysInfoFilter<T> {
 		return vals;
 	}
 
-	public Float get(IMetrics info) {
-		return Float.valueOf(info.get(sel).toString());
+	public Float get(Metrics info) {
+		Metric<?> metric = info.get(sel);
+		return Float.valueOf(metric.get());
 	}
 
 }

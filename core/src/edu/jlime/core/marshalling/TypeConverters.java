@@ -45,6 +45,8 @@ public class TypeConverters {
 		registerTypeConverter(UUID.class, new UUIDConverter());
 
 		registerTypeConverter(byte[].class, new ByteArrayConverter());
+		
+		registerTypeConverter(int[].class, new IntArrayConverter());
 	}
 
 	public void registerTypeConverter(Class<?> classObj, TypeConverter conv) {

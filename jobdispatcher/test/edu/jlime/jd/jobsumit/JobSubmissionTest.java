@@ -4,8 +4,8 @@ import org.junit.Test;
 
 import edu.jlime.client.Client;
 import edu.jlime.client.JobContext;
-import edu.jlime.jd.JobCluster;
-import edu.jlime.jd.JobNode;
+import edu.jlime.jd.ClientCluster;
+import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.job.Job;
 
 public class JobSubmissionTest {
@@ -21,14 +21,14 @@ public class JobSubmissionTest {
 		}
 
 		@Override
-		public String[] call(JobContext env, JobNode peer) throws Exception {
+		public String[] call(JobContext env, ClientNode peer) throws Exception {
 			return toSplit.split("\\s");
 		}
 	}
 
 	@Test
 	public void submitTest() throws Exception {
-		JobCluster c = Client.build().getCluster();
+		ClientCluster c = Client.build().getCluster();
 		String[] res = c.getAnyExecutor().exec(new SplitJob("Hola que tal"));
 		for (String string : res) {
 			System.out.println(string);

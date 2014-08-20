@@ -14,8 +14,8 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import edu.jlime.jd.JobCluster;
-import edu.jlime.jd.JobNode;
+import edu.jlime.jd.ClientCluster;
+import edu.jlime.jd.ClientNode;
 import edu.jlime.metrics.metric.CompositeMetrics;
 import edu.jlime.util.CSV;
 
@@ -25,13 +25,13 @@ public class ClusterProfiler {
 
 	long freq;
 
-	HashMap<Date, CompositeMetrics<JobNode>> info = new HashMap<>();
+	HashMap<Date, CompositeMetrics<ClientNode>> info = new HashMap<>();
 
 	Timer timer;
 
-	private JobCluster c;
+	private ClientCluster c;
 
-	public ClusterProfiler(JobCluster c, long freq) {
+	public ClusterProfiler(ClientCluster c, long freq) {
 		super();
 		this.freq = freq;
 		this.c = c;
@@ -43,7 +43,7 @@ public class ClusterProfiler {
 			@Override
 			public void run() {
 				try {
-					CompositeMetrics<JobNode> clusterMetrics = c.getInfo();
+					CompositeMetrics<ClientNode> clusterMetrics = c.getInfo();
 //					System.out.println(clusterMetrics);
 					info.put(Calendar.getInstance().getTime(), clusterMetrics);
 				} catch (Exception e) {
@@ -54,24 +54,24 @@ public class ClusterProfiler {
 	}
 
 	public void csv(CSV csv, MetricExtractor ext) {
-		HashMap<Date, CompositeMetrics<JobNode>> info = new HashMap<>(this.info);
+		HashMap<Date, CompositeMetrics<ClientNode>> info = new HashMap<>(this.info);
 
-		HashSet<JobNode> peersUsed = new HashSet<>();
+		HashSet<ClientNode> peersUsed = new HashSet<>();
 		for (Date ci : info.keySet()) {
 			peersUsed.addAll(info.get(ci).getKeys());
 		}
-		List<JobNode> sorted = new ArrayList<>(peersUsed);
+		List<ClientNode> sorted = new ArrayList<>(peersUsed);
 
-		Collections.sort(sorted, new Comparator<JobNode>() {
+		Collections.sort(sorted, new Comparator<ClientNode>() {
 
 			@Override
-			public int compare(JobNode o1, JobNode o2) {
+			public int compare(ClientNode o1, ClientNode o2) {
 				return o1.getName().compareTo(o2.getName());
 			}
 		});
 
 		csv.put("Time/Node");
-		for (JobNode peer : sorted) {
+		for (ClientNode peer : sorted) {
 			csv.put(peer.getName());
 		}
 		csv.newLine();
@@ -80,8 +80,8 @@ public class ClusterProfiler {
 		Collections.sort(dates);
 		for (Date date : dates) {
 			csv.put(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(date));
-			for (JobNode peer : sorted) {
-				CompositeMetrics<JobNode> i = info.get(date);
+			for (ClientNode peer : sorted) {
+				CompositeMetrics<ClientNode> i = info.get(date);
 				if (i.contains(peer))
 					csv.put(ext.get(i.get(peer)));
 

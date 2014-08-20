@@ -6,7 +6,7 @@ import java.util.Calendar;
 import edu.jlime.client.JobContext;
 import edu.jlime.collections.adjacencygraph.Mapper;
 import edu.jlime.collections.adjacencygraph.RemoteAdjacencyGraph;
-import edu.jlime.jd.JobCluster;
+import edu.jlime.jd.ClientCluster;
 
 public abstract class RemoteQuery<R> implements Serializable, Query<R> {
 
@@ -16,7 +16,7 @@ public abstract class RemoteQuery<R> implements Serializable, Query<R> {
 
 	private boolean cacheQuery = true;
 
-	private transient JobCluster cluster;
+	private transient ClientCluster cluster;
 
 	private RemoteAdjacencyGraph graph;
 
@@ -33,7 +33,7 @@ public abstract class RemoteQuery<R> implements Serializable, Query<R> {
 		return graph.getMapName();
 	}
 
-	public JobCluster getCluster() {
+	public ClientCluster getCluster() {
 		return cluster;
 	}
 

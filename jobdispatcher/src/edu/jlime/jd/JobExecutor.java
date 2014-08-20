@@ -6,7 +6,7 @@ public interface JobExecutor {
 
 	public abstract void execute(JobContainer j) throws Exception;
 
-	public abstract void result(Object res, UUID jobID, JobNode req)
+	public abstract void result(Object res, UUID jobID, ClientNode req)
 			throws Exception;
 
 }

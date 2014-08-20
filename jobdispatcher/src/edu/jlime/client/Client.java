@@ -9,7 +9,7 @@ import edu.jlime.core.cluster.Peer;
 import edu.jlime.core.rpc.RPCDispatcher;
 import edu.jlime.core.stream.RemoteInputStream;
 import edu.jlime.core.stream.RemoteOutputStream;
-import edu.jlime.jd.JobCluster;
+import edu.jlime.jd.ClientCluster;
 import edu.jlime.jd.JobDispatcher;
 import edu.jlime.jd.StreamProvider;
 import edu.jlime.rpc.Configuration;
@@ -53,7 +53,7 @@ public class Client implements Closeable {
 		return new Client(jd);
 	}
 
-	public JobCluster getCluster() {
+	public ClientCluster getCluster() {
 		return jd.getCluster();
 	}
 

@@ -4,7 +4,7 @@ import org.apache.log4j.Logger;
 
 import edu.jlime.client.JobContext;
 import edu.jlime.collections.hash.SimpleIntIntHash;
-import edu.jlime.jd.JobNode;
+import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.job.RunJob;
 import gnu.trove.map.hash.TIntIntHashMap;
 
@@ -22,7 +22,7 @@ public class MultiPutJob extends RunJob {
 	}
 
 	@Override
-	public void run(JobContext ctx, JobNode origin) throws Exception {
+	public void run(JobContext ctx, ClientNode origin) throws Exception {
 		Logger log = Logger.getLogger(MultiPutJob.class);
 		log.info("Executing multiputjob, putting into hash " + map.size()
 				+ " pairs.");

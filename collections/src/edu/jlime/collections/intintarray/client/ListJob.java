@@ -4,7 +4,7 @@ import org.apache.log4j.Logger;
 
 import edu.jlime.client.JobContext;
 import edu.jlime.collections.intintarray.db.Store;
-import edu.jlime.jd.JobNode;
+import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.job.Job;
 
 public class ListJob implements Job<Boolean> {
@@ -16,7 +16,7 @@ public class ListJob implements Job<Boolean> {
 	}
 
 	@Override
-	public Boolean call(JobContext env, JobNode peer) throws Exception {
+	public Boolean call(JobContext env, ClientNode peer) throws Exception {
 		Logger log = Logger.getLogger(ListJob.class);
 		Store store = (Store) env.get(storename);
 //		log.info(store.list());

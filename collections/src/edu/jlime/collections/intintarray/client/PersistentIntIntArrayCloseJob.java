@@ -2,7 +2,7 @@ package edu.jlime.collections.intintarray.client;
 
 import edu.jlime.client.JobContext;
 import edu.jlime.collections.intintarray.db.Store;
-import edu.jlime.jd.JobNode;
+import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.job.Job;
 
 public class PersistentIntIntArrayCloseJob implements Job<Boolean> {
@@ -16,7 +16,7 @@ public class PersistentIntIntArrayCloseJob implements Job<Boolean> {
 	}
 
 	@Override
-	public Boolean call(JobContext ctx, JobNode peer) throws Exception {
+	public Boolean call(JobContext ctx, ClientNode peer) throws Exception {
 		System.out.println("Removing DKVS Store.");
 		Store store = (Store) ctx.remove(storeName);
 		if (store != null)

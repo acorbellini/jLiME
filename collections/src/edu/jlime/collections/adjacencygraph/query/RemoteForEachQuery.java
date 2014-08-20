@@ -14,7 +14,7 @@ import org.apache.log4j.Logger;
 import edu.jlime.client.JobContext;
 import edu.jlime.collections.adjacencygraph.Mapper;
 import edu.jlime.collections.adjacencygraph.RemoteAdjacencyGraph;
-import edu.jlime.jd.JobNode;
+import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.job.Job;
 import edu.jlime.jd.mapreduce.MapReduceTask;
 import gnu.trove.list.array.TIntArrayList;
@@ -65,7 +65,7 @@ public class RemoteForEachQuery<T> extends RemoteQuery<Map<Integer, T>> {
 		}
 
 		@Override
-		public Map<Integer, T> call(final JobContext ctx, JobNode peer)
+		public Map<Integer, T> call(final JobContext ctx, ClientNode peer)
 				throws Exception {
 			final Logger log = Logger.getLogger(ForEachJob.class);
 			if (log.isDebugEnabled())
@@ -125,12 +125,12 @@ public class RemoteForEachQuery<T> extends RemoteQuery<Map<Integer, T>> {
 		}
 
 		@Override
-		public Map<Job<Map<Integer, T>>, JobNode> map(int[] data, JobContext env)
+		public Map<Job<Map<Integer, T>>, ClientNode> map(int[] data, JobContext env)
 				throws Exception {
-			Map<Job<Map<Integer, T>>, JobNode> res = new HashMap<>();
-			Map<JobNode, TIntArrayList> map = graph.getMapper().map(data, env);
+			Map<Job<Map<Integer, T>>, ClientNode> res = new HashMap<>();
+			Map<ClientNode, TIntArrayList> map = graph.getMapper().map(data, env);
 
-			for (JobNode p : map.keySet()) {
+			for (ClientNode p : map.keySet()) {
 				res.put(new ForEachJob<T>(map.get(p).toArray(), proc, graph), p);
 			}
 

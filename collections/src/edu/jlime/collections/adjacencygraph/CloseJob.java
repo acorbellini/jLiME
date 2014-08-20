@@ -5,7 +5,7 @@ import org.apache.log4j.Logger;
 import edu.jlime.client.JobContext;
 import edu.jlime.collections.intintarray.client.PersistentIntIntArrayMap;
 import edu.jlime.collections.intintarray.client.jobs.StoreConfig;
-import edu.jlime.jd.JobNode;
+import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.job.RunJob;
 
 public class CloseJob extends RunJob {
@@ -19,7 +19,7 @@ public class CloseJob extends RunJob {
 	}
 
 	@Override
-	public void run(JobContext ctx, JobNode origin) throws Exception {
+	public void run(JobContext ctx, ClientNode origin) throws Exception {
 		Logger log = Logger.getLogger(CloseJob.class);
 		log.info("Executing graph closing job.");
 		PersistentIntIntArrayMap pmap = (PersistentIntIntArrayMap) ctx

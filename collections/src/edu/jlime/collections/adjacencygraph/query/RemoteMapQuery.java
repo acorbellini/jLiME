@@ -11,7 +11,7 @@ import org.apache.log4j.Logger;
 import edu.jlime.client.JobContext;
 import edu.jlime.collections.adjacencygraph.Mapper;
 import edu.jlime.collections.adjacencygraph.RemoteAdjacencyGraph;
-import edu.jlime.jd.JobNode;
+import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.job.Job;
 import edu.jlime.jd.mapreduce.MapReduceTask;
 import gnu.trove.list.array.TIntArrayList;
@@ -46,7 +46,7 @@ public class RemoteMapQuery<T> extends CompositeQuery<int[], Map<Integer, T>>
 		}
 
 		@Override
-		public Map<Integer, T> call(JobContext ctx, JobNode peer)
+		public Map<Integer, T> call(JobContext ctx, ClientNode peer)
 				throws Exception {
 			Logger.getLogger(MapJob.class).info("Calling map procedure.");
 			return proc.process(new UserQuery(graph, usersid));
@@ -77,13 +77,13 @@ public class RemoteMapQuery<T> extends CompositeQuery<int[], Map<Integer, T>>
 		}
 
 		@Override
-		public Map<Job<Map<Integer, T>>, JobNode> map(int[] data, JobContext env)
+		public Map<Job<Map<Integer, T>>, ClientNode> map(int[] data, JobContext env)
 				throws Exception {
-			Map<Job<Map<Integer, T>>, JobNode> res = new HashMap<>();
-			Map<JobNode, TIntArrayList> map = mapper.map(data, env);
+			Map<Job<Map<Integer, T>>, ClientNode> res = new HashMap<>();
+			Map<ClientNode, TIntArrayList> map = mapper.map(data, env);
 			Logger log = Logger.getLogger(MapMR.class);
 			log.info("Mapping " + map.size() + " groups .");
-			for (JobNode p : map.keySet()) {
+			for (ClientNode p : map.keySet()) {
 				if (log.isDebugEnabled())
 					log.debug("Sending " + map.get(p).size() + " elements to "
 							+ p);

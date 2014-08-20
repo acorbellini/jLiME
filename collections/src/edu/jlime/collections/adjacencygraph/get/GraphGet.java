@@ -2,7 +2,7 @@ package edu.jlime.collections.adjacencygraph.get;
 
 import edu.jlime.client.JobContext;
 import edu.jlime.collections.intintarray.client.PersistentIntIntArrayMap;
-import edu.jlime.jd.JobNode;
+import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.job.Job;
 import gnu.trove.set.hash.TIntHashSet;
 
@@ -20,7 +20,7 @@ public class GraphGet implements Job<TIntHashSet> {
 	}
 
 	@Override
-	public TIntHashSet call(JobContext ctx, JobNode peer) throws Exception {
+	public TIntHashSet call(JobContext ctx, ClientNode peer) throws Exception {
 		PersistentIntIntArrayMap dkvs = PersistentIntIntArrayMap.getMap(map,
 				ctx);
 		return dkvs.getSetOfUsers(data);

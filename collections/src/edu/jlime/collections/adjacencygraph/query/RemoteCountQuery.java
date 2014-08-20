@@ -6,7 +6,7 @@ import edu.jlime.collections.adjacencygraph.query.StreamForkJoin.StreamJobFactor
 import edu.jlime.collections.intintarray.client.PersistentIntIntArrayMap;
 import edu.jlime.core.stream.RemoteInputStream;
 import edu.jlime.core.stream.RemoteOutputStream;
-import edu.jlime.jd.JobNode;
+import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.RemoteReference;
 import edu.jlime.jd.job.Job;
 import edu.jlime.jd.job.StreamJob;
@@ -37,7 +37,7 @@ public class RemoteCountQuery extends CompositeQuery<int[], TIntIntHashMap>
 		}
 
 		@Override
-		public RemoteReference<TIntIntHashMap> call(JobContext ctx, JobNode peer)
+		public RemoteReference<TIntIntHashMap> call(JobContext ctx, ClientNode peer)
 				throws Exception {
 			Logger log = Logger.getLogger(CountJob.class);
 			PersistentIntIntArrayMap dkvs = PersistentIntIntArrayMap.getMap(
@@ -55,9 +55,9 @@ public class RemoteCountQuery extends CompositeQuery<int[], TIntIntHashMap>
 
 	}
 
-	private static final int READ_BUFFER_SIZE = 32 * 1024;
+	private static final int READ_BUFFER_SIZE = 256 * 1024;
 
-	private static final int CACHE_THRESHOLD = 1000000;
+	private static final int CACHE_THRESHOLD = 2000000;
 
 	private static final long serialVersionUID = 5030949972656440876L;
 
@@ -76,16 +76,16 @@ public class RemoteCountQuery extends CompositeQuery<int[], TIntIntHashMap>
 		final Logger log = Logger.getLogger(RemoteCountQuery.class);
 		int[] data = getQuery().exec(c);
 		int[] inverted = Arrays.copyOf(data, data.length);
-		if (type.equals(GetType.FOLLOWERS))
+		if (type.equals(GetType.FOLLOWEES))
 			for (int i = 0; i < data.length; i++)
 				inverted[i] = -1 * data[i];
 
-		final Map<JobNode, TIntArrayList> map = getMapper().map(inverted, c);
+		final Map<ClientNode, TIntArrayList> map = getMapper().map(inverted, c);
 
 		final TIntIntHashMap res = new TIntIntHashMap();
 		StreamForkJoin sfj = new StreamForkJoin() {
 			@Override
-			protected void send(RemoteOutputStream os, JobNode p) {
+			protected void send(RemoteOutputStream os, ClientNode p) {
 				// log.info("Sending followers/followees to count to " + p);
 				try {
 					os.write(DataTypeUtils.intArrayToByteArray(map.get(p)
@@ -100,7 +100,7 @@ public class RemoteCountQuery extends CompositeQuery<int[], TIntIntHashMap>
 			}
 
 			@Override
-			protected void receive(RemoteInputStream input, JobNode p) {
+			protected void receive(RemoteInputStream input, ClientNode p) {
 				// log.info("Receiving Count Stream Job from " + p);
 				int[] cached = new int[CACHE_THRESHOLD];
 				int count = 0;

@@ -26,7 +26,7 @@ public class ExecEnvironment {
 			if (log.isDebugEnabled())
 				log.debug("Creating new client environment for client "
 						+ client);
-			env = new JobContextImpl(new JobCluster(srv, client), client);
+			env = new JobContextImpl(new ClientCluster(srv, client), client);
 			clientEnvs.put(client, env);
 		}
 		return env;

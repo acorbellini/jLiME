@@ -17,11 +17,11 @@ import edu.jlime.collections.adjacencygraph.mappers.RoundRobinMapper;
 import edu.jlime.collections.adjacencygraph.query.UserQuery;
 import edu.jlime.collections.intintarray.client.jobs.StoreConfig;
 import edu.jlime.collections.intintarray.db.StoreFactory.StoreType;
-import edu.jlime.jd.JobCluster;
+import edu.jlime.jd.ClientCluster;
 
 public class AddISToResults {
 
-	private JobCluster cluster;
+	private ClientCluster cluster;
 
 	private Connection conn;
 

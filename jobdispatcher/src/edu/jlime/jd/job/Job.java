@@ -3,7 +3,7 @@ package edu.jlime.jd.job;
 import java.io.Serializable;
 
 import edu.jlime.client.JobContext;
-import edu.jlime.jd.JobNode;
+import edu.jlime.jd.ClientNode;
 
 public interface Job<R> extends Serializable {
 	//
@@ -27,5 +27,5 @@ public interface Job<R> extends Serializable {
 	// return clientID;
 	// }
 
-	public abstract R call(JobContext env, JobNode peer) throws Exception;
+	public abstract R call(JobContext env, ClientNode peer) throws Exception;
 }

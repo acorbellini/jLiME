@@ -5,7 +5,7 @@ import org.apache.log4j.Logger;
 import edu.jlime.client.JobContext;
 import edu.jlime.collections.intintarray.client.PersistentIntIntArrayMap;
 import edu.jlime.collections.intintarray.client.jobs.StoreConfig;
-import edu.jlime.jd.JobNode;
+import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.job.Job;
 
 public class AdyacencyGraphInitJob implements Job<Boolean> {
@@ -22,7 +22,7 @@ public class AdyacencyGraphInitJob implements Job<Boolean> {
 	}
 
 	@Override
-	public Boolean call(JobContext ctx, JobNode peer) throws Exception {
+	public Boolean call(JobContext ctx, ClientNode peer) throws Exception {
 		Logger log = Logger.getLogger(RemoteAdjacencyGraph.class);
 		if (log.isDebugEnabled())
 			log.debug("Initializing adyacency graph, requested from peer "

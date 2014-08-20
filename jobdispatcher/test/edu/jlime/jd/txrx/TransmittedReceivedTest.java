@@ -7,8 +7,8 @@ import org.junit.Test;
 
 import edu.jlime.client.Client;
 import edu.jlime.client.JobContext;
-import edu.jlime.jd.JobCluster;
-import edu.jlime.jd.JobNode;
+import edu.jlime.jd.ClientCluster;
+import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.job.ResultManager;
 import edu.jlime.jd.job.RunJob;
 
@@ -28,7 +28,7 @@ public class TransmittedReceivedTest {
 		}
 
 		@Override
-		public void run(JobContext env, JobNode origin) throws Exception {
+		public void run(JobContext env, ClientNode origin) throws Exception {
 			// System.out.println(msg);
 		}
 
@@ -39,9 +39,9 @@ public class TransmittedReceivedTest {
 		private static final long serialVersionUID = 4843051203459150275L;
 
 		@Override
-		public void run(JobContext env, JobNode origin) throws Exception {
+		public void run(JobContext env, ClientNode origin) throws Exception {
 			System.out.println("Executing Transmission Job.");
-			JobCluster cluster = env.getCluster();
+			ClientCluster cluster = env.getCluster();
 
 			for (int i = 1; i <= 200; i++) {
 				int[] data = new int[8000];
@@ -58,21 +58,21 @@ public class TransmittedReceivedTest {
 	public void txrx() throws Exception {
 		long init = System.currentTimeMillis();
 		Client cli = Client.build(2);
-		ArrayList<JobNode> exec = cli.getCluster().getExecutors();
+		ArrayList<ClientNode> exec = cli.getCluster().getExecutors();
 		final Semaphore sem = new Semaphore(-exec.size() + 1);
-		for (JobNode peer : exec) {
+		for (ClientNode peer : exec) {
 			System.out.println("Executing transmission Job on " + peer);
 			peer.execAsync(new TransmissionJob(), new ResultManager<Boolean>() {
 
 				@Override
 				public void handleException(Exception res, String jobID,
-						JobNode fromID) {
+						ClientNode fromID) {
 					sem.release();
 				}
 
 				@Override
 				public void handleResult(Boolean res, String jobID,
-						JobNode fromID) {
+						ClientNode fromID) {
 					sem.release();
 				}
 			});

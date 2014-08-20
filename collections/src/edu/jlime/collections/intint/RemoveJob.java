@@ -2,7 +2,7 @@ package edu.jlime.collections.intint;
 
 import edu.jlime.client.JobContext;
 import edu.jlime.collections.hash.SimpleIntIntHash;
-import edu.jlime.jd.JobNode;
+import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.job.Job;
 
 public class RemoveJob implements Job<Boolean> {
@@ -19,7 +19,7 @@ public class RemoveJob implements Job<Boolean> {
 	}
 
 	@Override
-	public Boolean call(JobContext ctx, JobNode peer) throws Exception {
+	public Boolean call(JobContext ctx, ClientNode peer) throws Exception {
 		SimpleIntIntHash intHash = (SimpleIntIntHash) ctx.get(internal);
 		for (int i : toRemove) {
 			intHash.remove(i);

@@ -30,7 +30,7 @@ public class JobExecutorServerImpl implements JobExecutor {
 				new Object[] { jobcontainer });
 	}
 
-	public void result(Object object, UUID uuid, JobNode jobnode)
+	public void result(Object object, UUID uuid, ClientNode jobnode)
 			throws Exception {
 		disp.callAsync(dest, cliID, targetID, "result", new Object[] { object,
 				uuid, jobnode });

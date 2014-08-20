@@ -8,7 +8,7 @@ import org.junit.Test;
 
 import edu.jlime.client.Client;
 import edu.jlime.client.JobContext;
-import edu.jlime.jd.JobNode;
+import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.job.Job;
 import edu.jlime.jd.mapreduce.MapReduceTask;
 
@@ -24,11 +24,11 @@ public class SimpleTest {
 		}
 
 		@Override
-		public Map<Job<Integer>, JobNode> map(int[] data, JobContext env) {
-			Map<Job<Integer>, JobNode> res = new HashMap<>();
+		public Map<Job<Integer>, ClientNode> map(int[] data, JobContext env) {
+			Map<Job<Integer>, ClientNode> res = new HashMap<>();
 			int countData = 0;
 			while (countData != data.length) {
-				for (JobNode peer : env.getCluster()) {
+				for (ClientNode peer : env.getCluster()) {
 					res.put(new MyRealJob(data[countData++]), peer);
 					if (countData == data.length)
 						break;

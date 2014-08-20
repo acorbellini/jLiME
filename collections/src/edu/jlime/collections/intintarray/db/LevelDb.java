@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 import org.fusesource.leveldbjni.JniDBFactory;
 import org.iq80.leveldb.DB;
@@ -81,10 +82,8 @@ public class LevelDb extends Store {
 
 	@Override
 	public List<byte[]> loadAll(int[] k) throws Exception {
-		Integer[] sorted = new Integer[k.length];
-		for (int i = 0; i < k.length; i++) {
-			sorted[i] = k[i];
-		}
+		log.info("Sorting input list");
+		Integer[] sorted = ArrayUtils.toObject(k);
 		Arrays.sort(sorted, new Comparator<Integer>() {
 
 			@Override
@@ -99,6 +98,7 @@ public class LevelDb extends Store {
 				return 0;
 			}
 		});
+		log.info("Sorted input list");
 		List<byte[]> res = new ArrayList<byte[]>();
 		System.out.println("Loading  " + sorted.length);
 		DBIterator it = getDb().iterator();

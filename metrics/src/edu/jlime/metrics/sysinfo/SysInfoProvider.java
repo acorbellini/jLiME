@@ -32,7 +32,6 @@ public abstract class SysInfoProvider extends InfoProvider {
 			Metric<?> ifdata = mgr.get("sysinfo.net." + iFaceName
 					+ ".sent_total");
 			total += Long.valueOf(ifdata.toString());
-
 		}
 		return total;
 	}

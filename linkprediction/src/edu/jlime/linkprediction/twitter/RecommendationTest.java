@@ -13,7 +13,7 @@ import edu.jlime.collections.adjacencygraph.RemoteAdjacencyGraph;
 import edu.jlime.collections.adjacencygraph.query.RemoteListQuery;
 import edu.jlime.collections.adjacencygraph.query.TopQuery;
 import edu.jlime.collections.intintarray.client.jobs.StoreConfig;
-import edu.jlime.jd.JobCluster;
+import edu.jlime.jd.ClientCluster;
 import edu.jlime.jd.profiler.ClusterProfiler;
 import edu.jlime.jd.profiler.MetricExtractor;
 import edu.jlime.linkprediction.TwitterStoreConfig;
@@ -24,7 +24,7 @@ import edu.jlime.util.StringUtils;
 
 public class RecommendationTest {
 
-	private JobCluster cluster;
+	private ClientCluster cluster;
 
 	// static String DEF_HOME = "../DEF/dist/def";
 

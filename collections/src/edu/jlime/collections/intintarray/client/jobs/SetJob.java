@@ -2,7 +2,7 @@ package edu.jlime.collections.intintarray.client.jobs;
 
 import edu.jlime.client.JobContext;
 import edu.jlime.collections.intintarray.db.Store;
-import edu.jlime.jd.JobNode;
+import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.job.Job;
 import edu.jlime.util.DataTypeUtils;
 
@@ -23,7 +23,7 @@ public class SetJob implements Job<Boolean> {
 	}
 
 	@Override
-	public Boolean call(JobContext ctx, JobNode peer) throws Exception {
+	public Boolean call(JobContext ctx, ClientNode peer) throws Exception {
 		final Store store = (Store) ctx.get(storeName);
 		store.store(k, DataTypeUtils.intArrayToByteArray(d));
 		return true;

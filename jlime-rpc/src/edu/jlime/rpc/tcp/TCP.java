@@ -253,7 +253,7 @@ public class TCP extends NetworkProtocol implements DataReceiver {
 	public RemoteOutputStream getOutputStream(UUID streamId, final Address to) {
 		if (getLocal().equals(to)) {
 			try {
-				final PipedInputStream is = new PipedInputStream(2048);
+				final PipedInputStream is = new PipedInputStream(10*1024*1024);
 				final PipedOutputStream bos = new PipedOutputStream(is);
 				RemoteOutputStream os = new RemoteOutputStream(streamId) {
 					@Override

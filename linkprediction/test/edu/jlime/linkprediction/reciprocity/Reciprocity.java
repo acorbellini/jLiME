@@ -10,7 +10,7 @@ import edu.jlime.collections.adjacencygraph.AdjacencyGraph;
 import edu.jlime.collections.adjacencygraph.RemoteAdjacencyGraph;
 import edu.jlime.collections.adjacencygraph.mappers.LocationMapper;
 import edu.jlime.collections.adjacencygraph.query.ListQuery;
-import edu.jlime.jd.JobCluster;
+import edu.jlime.jd.ClientCluster;
 import edu.jlime.linkprediction.SimilarityTest;
 import edu.jlime.linkprediction.TwitterStoreConfig;
 
@@ -20,7 +20,7 @@ public class Reciprocity {
 
 	private static Client cli;
 
-	private static JobCluster cluster;
+	private static ClientCluster cluster;
 
 	private static AdjacencyGraph graph;
 

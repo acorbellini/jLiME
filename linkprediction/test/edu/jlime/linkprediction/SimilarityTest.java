@@ -22,7 +22,7 @@ import edu.jlime.collections.adjacencygraph.query.ListQuery;
 import edu.jlime.collections.adjacencygraph.query.Query;
 import edu.jlime.collections.intintarray.db.StoreFactory;
 import edu.jlime.collections.intintarray.db.StoreFactory.StoreType;
-import edu.jlime.jd.JobCluster;
+import edu.jlime.jd.ClientCluster;
 import edu.jlime.linkprediction.structural.SimilarityNeighboursSorensen;
 import gnu.trove.list.array.TIntArrayList;
 
@@ -34,7 +34,7 @@ public class SimilarityTest {
 
 	private int[] usersIds;
 
-	private JobCluster cluster;
+	private ClientCluster cluster;
 
 	// private DEFClient cli;
 

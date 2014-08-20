@@ -19,18 +19,21 @@ public class JVMMemoryProvider extends InfoProvider {
 
 	@Override
 	public void load(Metrics mgr) throws Exception {
+		mgr.simple("jvminfo.mem.max").update(max);
+		updateInfo(mgr);
 		mgr.createTimedSensor(new SensorMeasure() {
-
 			@Override
 			public void proc(Metrics mgr) throws Exception {
-				float free = (rt.freeMemory() / mb);
-				float total = rt.totalMemory() / mb;
-				mgr.gauge("jvminfo.mem.total").update(total);
-				mgr.gauge("jvminfo.mem.used").update(total - free);
-				mgr.gauge("jvminfo.mem.free").update(free);
-				mgr.simple("jvminfo.mem.max").update(max);
+				updateInfo(mgr);
 			}
 		});
+	}
 
+	private void updateInfo(Metrics mgr) {
+		float free = (rt.freeMemory() / mb);
+		float total = rt.totalMemory() / mb;
+		mgr.gauge("jvminfo.mem.total").update(total);
+		mgr.gauge("jvminfo.mem.used").update(total - free);
+		mgr.gauge("jvminfo.mem.free").update(free);
 	}
 }

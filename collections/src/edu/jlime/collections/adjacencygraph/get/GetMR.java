@@ -11,7 +11,7 @@ import org.apache.log4j.Logger;
 import edu.jlime.client.JobContext;
 import edu.jlime.collections.adjacencygraph.GraphMR;
 import edu.jlime.collections.adjacencygraph.Mapper;
-import edu.jlime.jd.JobNode;
+import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.job.Job;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.set.hash.TIntHashSet;
@@ -33,20 +33,20 @@ public class GetMR extends GraphMR<TIntHashSet, TIntHashSet> {
 	}
 
 	@Override
-	public Map<Job<TIntHashSet>, JobNode> map(int[] data, JobContext env)
+	public Map<Job<TIntHashSet>, ClientNode> map(int[] data, JobContext env)
 			throws Exception {
 		TIntHashSet toSearch = new TIntHashSet();
-		if (type.equals(GetType.FOLLOWERS) || type.equals(GetType.NEIGHBOURS))
+		if (type.equals(GetType.FOLLOWEES) || type.equals(GetType.NEIGHBOURS))
 			for (int i = 0; i < data.length; i++) {
 				toSearch.add(-1 * data[i]);
 			}
-		if (type.equals(GetType.FOLLOWEES) || type.equals(GetType.NEIGHBOURS))
+		if (type.equals(GetType.FOLLOWERS) || type.equals(GetType.NEIGHBOURS))
 			toSearch.addAll(data);
 
-		HashMap<Job<TIntHashSet>, JobNode> res = new HashMap<>();
-		Map<JobNode, TIntArrayList> mapped = getMapper().map(
+		HashMap<Job<TIntHashSet>, ClientNode> res = new HashMap<>();
+		Map<ClientNode, TIntArrayList> mapped = getMapper().map(
 				toSearch.toArray(), env);
-		for (Entry<JobNode, TIntArrayList> e : mapped.entrySet()) {
+		for (Entry<ClientNode, TIntArrayList> e : mapped.entrySet()) {
 			res.put(new GraphGet(getMapName(), e.getValue().toArray()),
 					e.getKey());
 		}

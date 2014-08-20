@@ -22,26 +22,26 @@ import edu.jlime.metrics.metric.Metrics;
 
 //This is a proxy to the JobCluster, one per client exists in servers.
 
-public class JobCluster implements Iterable<JobNode> {
+public class ClientCluster implements Iterable<ClientNode> {
 
 	private JobDispatcher disp;
 
 	private Peer client;
 
-	private JobNode localPeer;
+	private ClientNode localPeer;
 
-	public JobCluster(JobDispatcher jobDispatcher, Peer clientID) {
+	public ClientCluster(JobDispatcher jobDispatcher, Peer clientID) {
 		this.disp = jobDispatcher;
 		this.client = clientID;
-		this.localPeer = new JobNode(jobDispatcher.getLocalPeer(), clientID,
+		this.localPeer = new ClientNode(jobDispatcher.getLocalPeer(), clientID,
 				disp);
 	}
 
-	public ArrayList<JobNode> getExecutors() {
+	public ArrayList<ClientNode> getExecutors() {
 		ArrayList<Peer> execs = new ArrayList<Peer>(disp.getExecutors());
-		ArrayList<JobNode> execCli = new ArrayList<>();
+		ArrayList<ClientNode> execCli = new ArrayList<>();
 		for (Peer jobNode : execs) {
-			execCli.add(new JobNode(jobNode, client, disp));
+			execCli.add(new ClientNode(jobNode, client, disp));
 		}
 		return execCli;
 	}
@@ -50,36 +50,36 @@ public class JobCluster implements Iterable<JobNode> {
 		return disp.getMetrics();
 	}
 
-	public <R> Map<JobNode, R> mcast(List<JobNode> p, Job<R> j)
+	public <R> Map<ClientNode, R> mcast(List<ClientNode> p, Job<R> j)
 			throws BroadcastException {
 		ClientJob<R> cliJob = new ClientJob<R>(j, client);
 		return disp.mcast(p, cliJob);
 	}
 
-	public <R> void mcastAsync(Collection<JobNode> p, Job<R> j)
+	public <R> void mcastAsync(Collection<ClientNode> p, Job<R> j)
 			throws Exception {
 		ClientJob<R> cliJob = new ClientJob<R>(j, client);
 		disp.mcastAsync(p, cliJob);
 	}
 
-	public RemoteInputStream getInputStream(UUID streamID, JobNode from) {
+	public RemoteInputStream getInputStream(UUID streamID, ClientNode from) {
 		return disp.getInputStream(streamID, from);
 	}
 
 	public RemoteOutputStream getOutputStream(UUID streamID,
-			JobNode streamSource) {
+			ClientNode streamSource) {
 		return disp.getOutputStream(streamID, streamSource);
 	}
 
-	public JobNode getLocalNode() {
+	public ClientNode getLocalNode() {
 		return localPeer;
 	}
 
-	public ArrayList<JobNode> getPeers() {
+	public ArrayList<ClientNode> getPeers() {
 		ArrayList<Peer> peers = disp.getPeers();
-		ArrayList<JobNode> copy = new ArrayList<>();
+		ArrayList<ClientNode> copy = new ArrayList<>();
 		for (Peer jobNode : peers) {
-			copy.add(new JobNode(jobNode, client, disp));
+			copy.add(new ClientNode(jobNode, client, disp));
 		}
 		return copy;
 	}
@@ -90,7 +90,7 @@ public class JobCluster implements Iterable<JobNode> {
 
 	private Random rand = new Random();
 
-	public <R> Map<JobNode, R> broadcast(Job<R> j) throws Exception {
+	public <R> Map<ClientNode, R> broadcast(Job<R> j) throws Exception {
 		return mcast(getExecutors(), j);
 	}
 
@@ -102,17 +102,17 @@ public class JobCluster implements Iterable<JobNode> {
 		return mcastStream(getExecutors(), j);
 	}
 
-	public JobNode getAnyExecutor() throws Exception {
-		ArrayList<JobNode> copy = new ArrayList<>(getExecutors());
+	public ClientNode getAnyExecutor() throws Exception {
+		ArrayList<ClientNode> copy = new ArrayList<>(getExecutors());
 		if (copy.isEmpty())
 			throw new Exception("Empty Server List");
 		return copy.get(rand.nextInt(copy.size()));
 
 	}
 
-	public MCastStreamResult mcastStream(ArrayList<JobNode> peers, StreamJob j) {
+	public MCastStreamResult mcastStream(ArrayList<ClientNode> peers, StreamJob j) {
 		List<StreamResult> results = new ArrayList<>();
-		for (JobNode peer : peers)
+		for (ClientNode peer : peers)
 			results.add(peer.stream(j));
 
 		List<RemoteOutputStream> streams = new ArrayList<>();
@@ -128,7 +128,7 @@ public class JobCluster implements Iterable<JobNode> {
 		return res;
 	}
 
-	public <R> Map<JobNode, R> chain(Job<R> j) throws Exception {
+	public <R> Map<ClientNode, R> chain(Job<R> j) throws Exception {
 		return chain(getExecutors(), j, false);
 	}
 
@@ -136,13 +136,13 @@ public class JobCluster implements Iterable<JobNode> {
 		chain(getExecutors(), j, true);
 	}
 
-	public <R> Map<JobNode, R> chain(Collection<JobNode> list, Job<R> j,
+	public <R> Map<ClientNode, R> chain(Collection<ClientNode> list, Job<R> j,
 			boolean async) throws Exception {
-		ArrayList<JobNode> remaining = new ArrayList<>();
-		for (JobNode jobNode : list) {
-			remaining.add(JobNode.copy(jobNode, disp));
+		ArrayList<ClientNode> remaining = new ArrayList<>();
+		for (ClientNode jobNode : list) {
+			remaining.add(ClientNode.copy(jobNode, disp));
 		}
-		JobNode current = remaining.remove(0);
+		ClientNode current = remaining.remove(0);
 		ChainJob<R> chain = new ChainJob<R>(j, remaining);
 		if (async) {
 			current.execAsync(chain);
@@ -151,22 +151,22 @@ public class JobCluster implements Iterable<JobNode> {
 			return current.exec(chain);
 	}
 
-	public <R> Map<JobNode, R> chain(Collection<JobNode> peers, Job<R> j)
+	public <R> Map<ClientNode, R> chain(Collection<ClientNode> peers, Job<R> j)
 			throws Exception {
 		return chain(peers, j, false);
 	}
 
-	public <R> void chainAsync(Collection<JobNode> peers, Job<R> j)
+	public <R> void chainAsync(Collection<ClientNode> peers, Job<R> j)
 			throws Exception {
 		chain(peers, j, true);
 	}
 
-	public CompositeMetrics<JobNode> getInfo() throws Exception {
-		return new CompositeMetrics<JobNode>(broadcast(new MetricsQuery()));
+	public CompositeMetrics<ClientNode> getInfo() throws Exception {
+		return new CompositeMetrics<ClientNode>(broadcast(new MetricsQuery()));
 	}
 
 	@Override
-	public Iterator<JobNode> iterator() {
+	public Iterator<ClientNode> iterator() {
 		return getPeers().iterator();
 	}
 }
