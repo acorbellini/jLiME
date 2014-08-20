@@ -8,8 +8,21 @@ import javax.lang.model.type.NullType;
 import org.apache.log4j.Logger;
 
 import edu.jlime.core.cluster.Peer;
+import edu.jlime.core.marshalling.converters.AddressConverter;
+import edu.jlime.core.marshalling.converters.BooleanConverter;
+import edu.jlime.core.marshalling.converters.ByteArrayConverter;
+import edu.jlime.core.marshalling.converters.GenericObjectConverter;
+import edu.jlime.core.marshalling.converters.IntArrayConverter;
+import edu.jlime.core.marshalling.converters.IntegerConverter;
+import edu.jlime.core.marshalling.converters.MethodCallConverter;
+import edu.jlime.core.marshalling.converters.MetricConverter;
+import edu.jlime.core.marshalling.converters.NullConverter;
+import edu.jlime.core.marshalling.converters.PeerConverter;
+import edu.jlime.core.marshalling.converters.StringConverter;
+import edu.jlime.core.marshalling.converters.UUIDConverter;
 import edu.jlime.core.rpc.MethodCall;
 import edu.jlime.core.transport.Address;
+import edu.jlime.metrics.metric.Metrics;
 import edu.jlime.util.ByteBuffer;
 
 public class TypeConverters {
@@ -23,6 +36,10 @@ public class TypeConverters {
 	private byte count = 0;
 
 	ClassLoaderProvider clp;
+
+	public ClassLoaderProvider getClp() {
+		return clp;
+	}
 
 	public TypeConverters(ClassLoaderProvider cl) {
 		this.clp = cl;
@@ -43,9 +60,11 @@ public class TypeConverters {
 		registerTypeConverter(Peer.class, new PeerConverter(this));
 
 		registerTypeConverter(UUID.class, new UUIDConverter());
+		
+		registerTypeConverter(Metrics.class, new MetricConverter(this));
 
 		registerTypeConverter(byte[].class, new ByteArrayConverter());
-		
+
 		registerTypeConverter(int[].class, new IntArrayConverter());
 	}
 

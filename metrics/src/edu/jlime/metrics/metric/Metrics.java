@@ -2,6 +2,7 @@ package edu.jlime.metrics.metric;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -24,13 +25,21 @@ public class Metrics implements Serializable, IMetrics {
 
 	// This ones are fixed.
 
-	private TreeMap<String, Metric<?>> metrics = new TreeMap<>();
+	private SortedMap<String, Metric<?>> metrics = Collections
+			.synchronizedSortedMap(new TreeMap<String, Metric<?>>());
 
 	private transient Timer timer = new Timer(true);
 
 	private transient ArrayList<MetricsListener> listeners = new ArrayList<>();
 
 	private static final long FREQ = 5000;
+
+	public Metrics() {
+	}
+	
+	public Metrics(TreeMap<String, Metric<?>> map) {
+		metrics.putAll(map);
+	}
 
 	public void stop() {
 		timer.cancel();
@@ -50,7 +59,7 @@ public class Metrics implements Serializable, IMetrics {
 		return g;
 	}
 
-	private synchronized void put(String k, Metric<?> m) {
+	private void put(String k, Metric<?> m) {
 		metrics.put(k, m);
 		notifyMetricAdded(k, m);
 	}
@@ -70,12 +79,12 @@ public class Metrics implements Serializable, IMetrics {
 	}
 
 	@Override
-	public synchronized Metric<?> get(String k) {
+	public Metric<?> get(String k) {
 		return metrics.get(k);
 	}
 
 	@Override
-	public synchronized MetricList list(String k) {
+	public MetricList list(String k) {
 		MetricList ret = new MetricList(k, this);
 
 		Map<String, Metric<?>> m = getAll(k);
@@ -132,7 +141,7 @@ public class Metrics implements Serializable, IMetrics {
 		return builder.toString();
 	}
 
-	public synchronized void deleteAll(String k) {
+	public void deleteAll(String k) {
 		SortedMap<String, Metric<?>> m = metrics.tailMap(k);
 		Iterator<Entry<String, Metric<?>>> it = m.entrySet().iterator();
 		while (it.hasNext()) {
@@ -183,7 +192,7 @@ public class Metrics implements Serializable, IMetrics {
 	}
 
 	@Override
-	public synchronized String toString() {
+	public String toString() {
 		StringBuilder builder = new StringBuilder();
 		builder.append("Update every " + FREQ + ": \n");
 		for (Entry<String, Metric<?>> e : metrics.entrySet())

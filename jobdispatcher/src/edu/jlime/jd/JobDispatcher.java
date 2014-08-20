@@ -2,10 +2,12 @@ package edu.jlime.jd;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.Callable;
@@ -48,7 +50,8 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 
 	private Semaphore initLock = new Semaphore(0);
 
-	private TreeSet<Peer> executors = new TreeSet<>();
+	private Set<Peer> executors = Collections
+			.synchronizedSet(new TreeSet<Peer>());
 
 	private HashMap<String, List<Peer>> byTag = new HashMap<>();
 
@@ -185,8 +188,8 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 		// }
 		// }
 		if (!copy.isEmpty()) {
-			JobContainer jw = new JobContainer(j, new ClientNode(getLocalPeer(),
-					getLocalPeer(), this));
+			JobContainer jw = new JobContainer(j, new ClientNode(
+					getLocalPeer(), getLocalPeer(), this));
 			jw.setNoResponse(true);
 
 			JobExecutorBroadcast other = factory.getBroadcast(copy,
@@ -211,8 +214,8 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 		try {
 
 			Iterator<Peer> it = copy.iterator();
-			JobContainer jw = new JobContainer(j, new ClientNode(getLocalPeer(),
-					j.getClient(), this));
+			JobContainer jw = new JobContainer(j, new ClientNode(
+					getLocalPeer(), j.getClient(), this));
 			addJobMapping(rm, jw, peers);
 			if (log.isDebugEnabled())
 				log.debug("Checking if it's local.");
@@ -310,13 +313,15 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 		return exec.submit(task);
 	}
 
-	public <R> R execSync(ClientNode address, ClientJob<R> job) throws Exception {
+	public <R> R execSync(ClientNode address, ClientJob<R> job)
+			throws Exception {
 		final Semaphore lock = new Semaphore(0);
 		final ArrayList<R> finalRes = new ArrayList<>();
 		final List<Exception> exceptionList = new ArrayList<>();
 		execAsync(address, job, new ResultManager<R>() {
 			@Override
-			public void handleException(Exception res, String job, ClientNode peer) {
+			public void handleException(Exception res, String job,
+					ClientNode peer) {
 				exceptionList.add(res);
 				lock.release();
 			}
@@ -439,7 +444,8 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 				log.debug("Sending result for job " + jobID + " to " + req);
 
 			JobExecutor remote = factory.get(req.getPeer(), null);
-			remote.result(res, jobID, new ClientNode(getLocalPeer(), cliID, this));
+			remote.result(res, jobID, new ClientNode(getLocalPeer(), cliID,
+					this));
 		}
 	}
 
@@ -527,7 +533,7 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 		return cluster.getLocalPeer();
 	}
 
-	public TreeSet<Peer> getExecutors() {
+	public Set<Peer> getExecutors() {
 		return executors;
 	}
 
