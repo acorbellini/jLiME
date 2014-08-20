@@ -35,27 +35,35 @@ public class RPCCreator {
 
 	public static void main(String[] args) throws ClassNotFoundException,
 			IOException {
-		String iface = args[0];
+		for (String iface : args) {
 
-		Class<?> serverInterface = Class.forName(iface);
+			Class<?> serverInterface = Class.forName(iface);
 
-		createBroadcastIface(serverInterface);
+			// createBroadcastIface(serverInterface);
 
-		createServer(serverInterface);
+			createServer(serverInterface);
 
-		createBroadcastServer(serverInterface);
+			createBroadcastServer(serverInterface);
 
-		createFactory(serverInterface);
+			createFactory(serverInterface);
+		}
 
 	}
 
+	/**
+	 * @param serverInterface
+	 * @throws IOException
+	 */
 	private static void createFactory(Class<?> serverInterface)
 			throws IOException {
+
+		String iface = serverInterface.getSimpleName();
+
 		String name = serverInterface.getSimpleName() + "Factory";
 
 		String bcast = serverInterface.getSimpleName() + "Broadcast";
 
-		String iface = serverInterface.getSimpleName() + "Server";
+		String server = serverInterface.getSimpleName() + "Server";
 
 		BufferedWriter writer = new BufferedWriter(new FileWriter(new File(name
 				+ ".java")));
@@ -63,9 +71,12 @@ public class RPCCreator {
 		writer.write(getPackage(serverInterface));
 		writer.write("import edu.jlime.core.cluster.Peer;\n");
 		writer.write("import edu.jlime.core.rpc.RPCDispatcher;\n");
+		writer.write("import edu.jlime.core.rpc.ClientFactory;\n");
 
 		writer.write("import java.util.List;\n");
-		writer.write("public class " + name + " {\n\n");
+
+		writer.write("public class " + name + " implements ClientFactory<"
+				+ iface + ">{\n\n");
 
 		writer.write("  private RPCDispatcher rpc;\n\n");
 		writer.write("  private String target;\n\n");
@@ -76,15 +87,13 @@ public class RPCCreator {
 		writer.write("     this.target = target;\n");
 		writer.write("  }\n");
 
-		writer.write("  public " + bcast
+		writer.write("  public " + iface
 				+ " getBroadcast(List<Peer> to, Peer client){\n");
-		writer.write("    return new " + bcast
-				+ "Impl(rpc, to, client, target);\n");
+		writer.write("    return new " + bcast + "(rpc, to, client, target);\n");
 		writer.write("  }\n");
 
-		writer.write("  public " + serverInterface.getSimpleName()
-				+ " get(Peer to, Peer client){\n");
-		writer.write("    return new " + iface
+		writer.write("  public " + iface + " get(Peer to, Peer client){\n");
+		writer.write("    return new " + server
 				+ "Impl(rpc, to, client, target);\n");
 		writer.write("  }\n");
 		writer.write("}");
@@ -93,7 +102,7 @@ public class RPCCreator {
 
 	private static void createBroadcastServer(Class<?> serverInterface)
 			throws IOException {
-		String name = serverInterface.getSimpleName() + "BroadcastImpl";
+		String name = serverInterface.getSimpleName() + "Broadcast";
 
 		BufferedWriter writer = new BufferedWriter(new FileWriter(new File(name
 				+ ".java")));
@@ -103,7 +112,7 @@ public class RPCCreator {
 		writer.write(getImports(serverInterface));
 
 		writer.write("public class " + name + " implements "
-				+ serverInterface.getSimpleName() + "Broadcast {\n\n");
+				+ serverInterface.getSimpleName() + " {\n\n");
 
 		writer.write(getBroadcastFields());
 
@@ -154,10 +163,10 @@ public class RPCCreator {
 
 		writer.write(getImports(serverInterface));
 
-		writer.write("public class " + name + " implements "
+		writer.write("public class " + name + " extends RPCClient implements "
 				+ serverInterface.getSimpleName() + " {\n\n");
 
-		writer.write(getFields());
+		// writer.write(getFields());
 
 		writer.write(getConstructor(name));
 
@@ -172,36 +181,8 @@ public class RPCCreator {
 		writer.close();
 	}
 
-	private static void createBroadcastIface(Class<?> ifaceClass)
-			throws IOException {
-		String name = ifaceClass.getSimpleName() + "Broadcast";
-		BufferedWriter writer = new BufferedWriter(new FileWriter(new File(name
-				+ ".java")));
-		writer.write(getPackage(ifaceClass));
-		writer.write("import edu.jlime.core.cluster.BroadcastException;");
-		writer.write(getImports(ifaceClass));
-		writer.write("public interface " + name + " { \n\n");
-
-		for (Method m : ifaceClass.getMethods())
-			writer.write(getBroadcastMethodSignature(m.getName(), m).code
-					+ "; \n\n");
-
-		writer.write("}");
-		writer.close();
-	}
-
 	private static String getPackage(Class<?> ifaceClass) {
 		return ifaceClass.getPackage() + ";\n\n";
-	}
-
-	private static String getFields() {
-		StringBuilder field = new StringBuilder();
-		field.append("  RPCDispatcher disp;\n");
-		field.append("  Peer local;\n");
-		field.append("  Peer dest;\n");
-		field.append("  Peer client;\n");
-		field.append("  String targetID;\n\n");
-		return field.toString();
 	}
 
 	private static String getBroadcastFields() {
@@ -221,10 +202,7 @@ public class RPCCreator {
 				.append("  public "
 						+ name
 						+ "(RPCDispatcher disp, Peer dest, Peer client, String targetID) {\n");
-		constructor.append("    this.disp = disp;\n");
-		constructor.append("    this.dest = dest;\n");
-		constructor.append("    this.client = client;\n");
-		constructor.append("    this.targetID = targetID;\n");
+		constructor.append(" super(disp, dest, client, targetID);\n");
 		constructor.append("  }\n\n");
 		return constructor.toString();
 	}
@@ -319,6 +297,7 @@ public class RPCCreator {
 		StringBuilder imports = new StringBuilder();
 		imports.append("import " + ifaceClass.getName() + ";\n");
 		imports.append("import edu.jlime.core.rpc.RPCDispatcher;\n");
+		imports.append("import edu.jlime.core.rpc.RPCClient;\n");
 		imports.append("import edu.jlime.core.cluster.Peer;\n");
 		imports.append("import java.util.List;\n");
 		imports.append("import java.util.ArrayList;\n");
