@@ -20,4 +20,11 @@
   	<artifactId>jlime</artifactId>
   	<relativePath>../jlime</relativePath>
   </parent>
+  <dependencies>
+  	<dependency>
+  		<groupId>edu.jlime</groupId>
+  		<artifactId>core</artifactId>
+  		<version>1.0</version>
+  	</dependency>
+  </dependencies>
 </project>
