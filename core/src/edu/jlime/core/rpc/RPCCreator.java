@@ -76,7 +76,7 @@ public class RPCCreator {
 		writer.write("import java.util.List;\n");
 
 		writer.write("public class " + name + " implements ClientFactory<"
-				+ iface + ">{\n\n");
+				+ iface + "," + bcast + ">{\n\n");
 
 		writer.write("  private RPCDispatcher rpc;\n\n");
 		writer.write("  private String target;\n\n");
@@ -87,9 +87,10 @@ public class RPCCreator {
 		writer.write("     this.target = target;\n");
 		writer.write("  }\n");
 
-		writer.write("  public " + iface
+		writer.write("  public " + bcast
 				+ " getBroadcast(List<Peer> to, Peer client){\n");
-		writer.write("    return new " + bcast + "(rpc, to, client, target);\n");
+		writer.write("    return new " + bcast
+				+ "Impl(rpc, to, client, target);\n");
 		writer.write("  }\n");
 
 		writer.write("  public " + iface + " get(Peer to, Peer client){\n");
@@ -102,17 +103,20 @@ public class RPCCreator {
 
 	private static void createBroadcastServer(Class<?> serverInterface)
 			throws IOException {
-		String name = serverInterface.getSimpleName() + "Broadcast";
+
+		createBroadcastIface(serverInterface);
+
+		String name = serverInterface.getSimpleName() + "BroadcastImpl";
 
 		BufferedWriter writer = new BufferedWriter(new FileWriter(new File(name
 				+ ".java")));
 
 		writer.write(getPackage(serverInterface));
-		writer.write("import edu.jlime.core.cluster.BroadcastException;");
+		writer.write("import edu.jlime.core.cluster.BroadcastException;\n");
 		writer.write(getImports(serverInterface));
 
 		writer.write("public class " + name + " implements "
-				+ serverInterface.getSimpleName() + " {\n\n");
+				+ serverInterface.getSimpleName() + "Broadcast {\n\n");
 
 		writer.write(getBroadcastFields());
 
@@ -122,27 +126,31 @@ public class RPCCreator {
 			MethodSignature broadcastMethodSignature = getBroadcastMethodSignature(
 					method.getName(), method);
 			writer.write(broadcastMethodSignature.code);
-			writer.write(getBroadcastBody(method.getName(), method,
+			writer.write(getBroadcastBody(method,
 					broadcastMethodSignature.params.arguments));
 		}
 		writer.write("}");
 		writer.close();
 	}
 
-	private static String getBroadcastBody(String name, Method method,
-			List<String> arguments) {
+	private static String getBroadcastBody(Method method, List<String> arguments) {
 		StringBuilder builder = new StringBuilder();
 		builder.append(" {\n");
 		StringBuilder args = new StringBuilder();
 		for (String arg : arguments) {
 			args.append("," + arg);
 		}
-		boolean sync = !method.getReturnType().getSimpleName().equals("void");
-		String retType = method.getReturnType().getSimpleName();
-		String singleCall = sync ? "multiCallSync" : "multiCallAsync";
+		boolean sync = false;
+		if (!method.getReturnType().getSimpleName().equals("void"))
+			sync = true;
+		else if (method.getAnnotation(Sync.class) != null)
+			sync = true;
 
-		if (sync)
-			builder.append("    return Map<Peer," + retType + "> ");
+		String singleCall = sync ? "multiCall" : "multiCallAsync";
+
+		if (!method.getReturnType().getSimpleName().equals("void"))
+			builder.append("    return ");
+		// Map<Peer," + retType + ">
 		else
 			builder.append("    ");
 		builder.append("disp." + singleCall + "( dest, client, targetID, \""
@@ -236,9 +244,10 @@ public class RPCCreator {
 	private static MethodSignature getBroadcastMethodSignature(String name,
 			Method method) throws IOException {
 		StringBuilder ret = new StringBuilder();
-		String returnType = method.getReturnType().getSimpleName()
-				.equals("void") ? "void" : "Map<Peer,"
-				+ method.getReturnType().getSimpleName() + "> ";
+		String returnType = "void";
+		if (!method.getReturnType().getSimpleName().equals("void"))
+			returnType = "Map<Peer," + method.getReturnType().getSimpleName()
+					+ "> ";
 		ret.append("  public " + returnType + " " + name + "(");
 		MethodParams parameters = getParameters(method);
 		ret.append(parameters.code);
@@ -301,6 +310,7 @@ public class RPCCreator {
 		imports.append("import edu.jlime.core.cluster.Peer;\n");
 		imports.append("import java.util.List;\n");
 		imports.append("import java.util.ArrayList;\n");
+		imports.append("import java.util.Map;\n");
 
 		for (Method m : ifaceClass.getMethods()) {
 			for (Class<?> arg : m.getParameterTypes()) {
@@ -344,10 +354,14 @@ public class RPCCreator {
 		for (String arg : arguments) {
 			args.append("," + arg);
 		}
-		boolean sync = !method.getReturnType().getSimpleName().equals("void");
+		boolean sync = false;
+		if (!method.getReturnType().getSimpleName().equals("void"))
+			sync = true;
+		else if (method.getAnnotation(Sync.class) != null)
+			sync = true;
 		String retType = method.getReturnType().getSimpleName();
 		String singleCall = sync ? "callSync" : "callAsync";
-		if (sync)
+		if (!retType.equals("void"))
 			builder.append("    return (" + retType + ") ");
 		else
 			builder.append("    ");
@@ -356,5 +370,23 @@ public class RPCCreator {
 				+ " });\n");
 		builder.append("  }\n\n");
 		return builder.toString();
+	}
+
+	private static void createBroadcastIface(Class<?> ifaceClass)
+			throws IOException {
+		String name = ifaceClass.getSimpleName() + "Broadcast";
+		BufferedWriter writer = new BufferedWriter(new FileWriter(new File(name
+				+ ".java")));
+		writer.write(getPackage(ifaceClass));
+		writer.write("import edu.jlime.core.cluster.BroadcastException;");
+		writer.write(getImports(ifaceClass));
+		writer.write("public interface " + name + " { \n\n");
+
+		for (Method m : ifaceClass.getMethods())
+			writer.write(getBroadcastMethodSignature(m.getName(), m).code
+					+ "; \n\n");
+
+		writer.write("}");
+		writer.close();
 	}
 }

@@ -1,10 +1,10 @@
-package edu.jlime.pregel.coordinator;
+package edu.jlime.pregel.coordinator.rpc;
 
 import edu.jlime.core.cluster.Peer;
 import edu.jlime.core.rpc.RPCDispatcher;
 import edu.jlime.core.rpc.ClientFactory;
 import java.util.List;
-public class CoordinatorFactory implements ClientFactory<Coordinator>{
+public class CoordinatorFactory implements ClientFactory<Coordinator,CoordinatorBroadcast>{
 
   private RPCDispatcher rpc;
 
@@ -14,8 +14,8 @@ public class CoordinatorFactory implements ClientFactory<Coordinator>{
      this.rpc = rpc;
      this.target = target;
   }
-  public Coordinator getBroadcast(List<Peer> to, Peer client){
-    return new CoordinatorBroadcast(rpc, to, client, target);
+  public CoordinatorBroadcast getBroadcast(List<Peer> to, Peer client){
+    return new CoordinatorBroadcastImpl(rpc, to, client, target);
   }
   public Coordinator get(Peer to, Peer client){
     return new CoordinatorServerImpl(rpc, to, client, target);

@@ -15,6 +15,7 @@ import java.util.concurrent.ThreadFactory;
 
 import org.apache.log4j.Logger;
 
+import edu.jlime.core.cluster.BroadcastException;
 import edu.jlime.core.cluster.Cluster;
 import edu.jlime.core.cluster.Peer;
 import edu.jlime.core.marshalling.ClassLoaderProvider;
@@ -146,24 +147,28 @@ public class RPCDispatcher implements ClassLoaderProvider, TransportListener {
 		multiCall(peers, client, new MethodCall(target, method, objects));
 	}
 
-	public Map<Peer, Object> multiCall(List<Peer> peers, Peer client,
+	public <T> Map<Peer, T> multiCall(List<Peer> peers, Peer client,
 			String target, String method, Object[] objects) throws Exception {
 		return multiCall(peers, client, new MethodCall(target, method, objects));
 	}
 
-	private Map<Peer, Object> multiCall(List<Peer> peers, Peer client,
+	private <T> Map<Peer, T> multiCall(List<Peer> peers, Peer client,
 			MethodCall call) throws Exception {
 		byte[] marshalled = getMarshaller().toByteArray(client, call);
 		return broadcast(peers, marshalled);
 	}
 
-	public Map<Peer, Object> broadcast(List<Peer> peers, final byte[] marshalled)
+	public <T> Map<Peer, T> broadcast(List<Peer> peers, final byte[] marshalled)
 			throws Exception {
 		if (log.isDebugEnabled())
 			log.debug("Broadcasting " + marshalled.length + " bytes to "
 					+ peers);
 		final Semaphore sem = new Semaphore(-peers.size() + 1);
-		final Map<Peer, Object> ret = new ConcurrentHashMap<>();
+
+		final BroadcastException exception = new BroadcastException(
+				"Broadcast Exception");
+
+		final Map<Peer, T> ret = new ConcurrentHashMap<>();
 		for (final Peer p : peers) {
 			broadcastExec.execute(new Runnable() {
 				@Override
@@ -172,17 +177,18 @@ public class RPCDispatcher implements ClassLoaderProvider, TransportListener {
 						if (log.isDebugEnabled())
 							log.debug("Sending broadcast message synchronously to "
 									+ p);
-						Object sendSync = getMarshaller().getObject(
+						@SuppressWarnings("unchecked")
+						T sendSync = (T) getMarshaller().getObject(
 								tr.sendSync(p, marshalled), p);
 						if (sendSync != null)
 							ret.put(p, sendSync);
-						else
-							ret.put(p, new Object());
+						// else
+						// ret.put(p, new Object());
 						if (log.isDebugEnabled())
 							log.debug("Finished sending broadcast message synchronously to "
 									+ p);
 					} catch (Exception e) {
-						ret.put(p, e);
+						exception.add(e);
 						e.printStackTrace();
 					}
 					sem.release();
@@ -193,6 +199,8 @@ public class RPCDispatcher implements ClassLoaderProvider, TransportListener {
 		if (log.isDebugEnabled())
 			log.debug("FINISHED broadcasting " + marshalled.length
 					+ " bytes to " + peers);
+		if (!exception.isEmpty())
+			throw exception;
 		return ret;
 	};
 
@@ -325,5 +333,21 @@ public class RPCDispatcher implements ClassLoaderProvider, TransportListener {
 
 	public Streamer getStreamer() {
 		return tr.getStreamer();
+	}
+
+	public <T, B> ClientManager<T, B> manage(ClientFactory<T, B> factory,
+			PeerFilter filter) {
+		return new ClientManager<T, B>(this, factory, filter);
+	}
+
+	public <T, B> ClientManager<T, B> manage(
+			ClientFactory<T, B> coordinatorFactory) {
+		return this.manage(coordinatorFactory, new PeerFilter() {
+
+			@Override
+			public boolean verify(Peer p) {
+				return true;
+			}
+		});
 	}
 }
