@@ -1,40 +1,70 @@
 package edu.jlime.pregel.worker;
 
 import java.util.HashMap;
+import java.util.List;
+import java.util.UUID;
 
+import edu.jlime.core.rpc.ClientManager;
 import edu.jlime.pregel.coordinator.rpc.Coordinator;
+import edu.jlime.pregel.coordinator.rpc.CoordinatorBroadcast;
 import edu.jlime.pregel.graph.PregelGraph;
 import edu.jlime.pregel.graph.Vertex;
 import edu.jlime.pregel.graph.VertexFunction;
 import edu.jlime.pregel.worker.rpc.Worker;
+import edu.jlime.pregel.worker.rpc.WorkerBroadcast;
 
 public class WorkerImpl implements Worker {
-	HashMap<Integer, VertexFunction> vertexMap = new HashMap<>();
-	private Coordinator coord;
 
-	public WorkerImpl(Coordinator coord) {
-		this.coord = coord;
+	HashMap<UUID, WorkerTask> contexts = new HashMap<>();
+
+	private ClientManager<Coordinator, CoordinatorBroadcast> coordCli;
+
+	private UUID id = UUID.randomUUID();
+
+	private ClientManager<Worker, WorkerBroadcast> workerCli;
+
+	public WorkerImpl(ClientManager<Coordinator, CoordinatorBroadcast> coord,
+			ClientManager<Worker, WorkerBroadcast> workers) {
+		this.coordCli = coord;
+		this.workerCli = workers;
 	}
 
 	@Override
-	public void sendDataToVertex(Vertex vertexid, byte[] data) throws Exception {
-
+	public void sendDataToVertex(Vertex from, Vertex to, byte[] data,
+			UUID taskID) throws Exception {
+		contexts.get(taskID).queueVertexData(from, to, data);
 	}
 
 	@Override
-	public void nextSuperstep(int superstep) throws Exception {
-
+	public UUID getID() throws Exception {
+		return id;
 	}
 
 	@Override
-	public void schedule(Vertex vertexid, VertexFunction vertex)
-			throws Exception {
-		
+	public void nextSuperstep(int superstep, UUID taskID) throws Exception {
+		contexts.get(taskID).nextStep(superstep);
 	}
 
 	@Override
-	public void setGraph(PregelGraph input) throws Exception {
-		// TODO Auto-generated method stub
+	public void createTask(PregelGraph input, VertexFunction func, UUID taskID,
+			HashMap<Vertex, byte[]> init) throws Exception {
+		contexts.put(taskID, new WorkerTask(input, this, coordCli.first(), func,
+				taskID, init));
+	}
+
+	@Override
+	public boolean hasWork(UUID taskID) throws Exception {
+		return contexts.get(taskID).hasWork();
+	}
+
+	@Override
+	public PregelGraph getResult(UUID taskID) throws Exception {
+		return contexts.get(taskID).getResultGraph();
+	}
+
+	public Worker getWorker(Vertex v) {
+		List<Worker> workers = workerCli.getAll();
+		return workers.get(v.getId() % workers.size());
 
 	}
 

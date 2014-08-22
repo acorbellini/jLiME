@@ -1,31 +1,32 @@
 package edu.jlime.pregel.coordinator;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
-import edu.jlime.core.cluster.Peer;
-import edu.jlime.core.rpc.ClientManager;
-import edu.jlime.core.rpc.PeerFilter;
 import edu.jlime.core.rpc.RPCDispatcher;
 import edu.jlime.pregel.coordinator.rpc.Coordinator;
 import edu.jlime.pregel.graph.PregelGraph;
 import edu.jlime.pregel.graph.Vertex;
 import edu.jlime.pregel.graph.VertexFunction;
 import edu.jlime.pregel.worker.rpc.Worker;
-import edu.jlime.pregel.worker.rpc.WorkerBroadcast;
-import edu.jlime.pregel.worker.rpc.WorkerFactory;
 
 public class CoordinatorImpl implements Coordinator {
 
+	private HashMap<UUID, CoordinatorTask> tasks;
 	private RPCDispatcher rpc;
-	private List<Worker> workers;
+	private HashMap<Worker, UUID> workersMap;
+	private List<Worker> workersList;
 
-	public CoordinatorImpl(List<Worker> workers) {
-		this.workers = workers;
+	public CoordinatorImpl(List<Worker> workers) throws Exception {
+		for (Worker worker : workers) {
+			this.workersMap.put(worker, worker.getID());
+		}
+		this.workersList = workers;
 	}
 
-	private Worker getWorker(Vertex v) {
-		return workers.get(v.getId() % workers.size());
+	public Worker getWorker(Vertex v) {
+		return workersList.get(v.getId() % workersList.size());
 
 	}
 
@@ -34,23 +35,21 @@ public class CoordinatorImpl implements Coordinator {
 	}
 
 	@Override
-	public void finished(UUID workerID) throws Exception {
-		// TODO Auto-generated method stub
-
+	public void finished(UUID taskID, UUID workerID) throws Exception {
+		tasks.get(taskID).finished(workerID);
 	}
 
 	@Override
-	public PregelGraph execute(List<Vertex> vertex, VertexFunction func)
-			throws Exception {
-		for (Vertex vertexID : vertex) {
-			getWorker(vertexID).schedule(vertexID, func);
-		}
-		return null;
+	public PregelGraph execute(PregelGraph input, HashMap<Vertex, byte[]> data,
+			VertexFunction func, int superSteps) throws Exception {
+
+		CoordinatorTask task = new CoordinatorTask(this);
+		tasks.put(task.taskID, task);
+		return task.execute(input, data, func, superSteps);
+
 	}
 
-	@Override
-	public void setGraph(PregelGraph input) throws Exception {
-		// TODO Auto-generated method stub
-
+	public List<Worker> getWorkers() {
+		return workersList;
 	}
 }

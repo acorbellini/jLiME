@@ -13,7 +13,22 @@ import java.util.List;
 
 public class RPCCreator {
 
-	private static class MethodSignature {
+	HashMap<Class, Class> wrappers = new HashMap<>();
+
+	{
+		wrappers.put(boolean.class, Boolean.class);
+		wrappers.put(int.class, Integer.class);
+		wrappers.put(float.class, Float.class);
+		wrappers.put(double.class, Double.class);
+		wrappers.put(char.class, Character.class);
+		wrappers.put(byte.class, Byte.class);
+		wrappers.put(long.class, Long.class);
+		wrappers.put(short.class, Short.class);
+		wrappers.put(void.class, Void.class);
+
+	}
+
+	private class MethodSignature {
 		public MethodSignature(String code, MethodParams params) {
 			this.code = code;
 			this.params = params;
@@ -23,7 +38,7 @@ public class RPCCreator {
 		MethodParams params;
 	}
 
-	private static class MethodParams {
+	private class MethodParams {
 		public MethodParams(String string, List<String> argsNames) {
 			this.code = string;
 			this.arguments = argsNames;
@@ -33,8 +48,12 @@ public class RPCCreator {
 		List<String> arguments;
 	}
 
-	public static void main(String[] args) throws ClassNotFoundException,
-			IOException {
+	public static void main(String[] args) throws Exception {
+		new RPCCreator().exec(args);
+
+	}
+
+	private void exec(String[] args) throws Exception {
 		for (String iface : args) {
 
 			Class<?> serverInterface = Class.forName(iface);
@@ -47,15 +66,13 @@ public class RPCCreator {
 
 			createFactory(serverInterface);
 		}
-
 	}
 
 	/**
 	 * @param serverInterface
 	 * @throws IOException
 	 */
-	private static void createFactory(Class<?> serverInterface)
-			throws IOException {
+	private void createFactory(Class<?> serverInterface) throws IOException {
 
 		String iface = serverInterface.getSimpleName();
 
@@ -101,7 +118,7 @@ public class RPCCreator {
 		writer.close();
 	}
 
-	private static void createBroadcastServer(Class<?> serverInterface)
+	private void createBroadcastServer(Class<?> serverInterface)
 			throws IOException {
 
 		createBroadcastIface(serverInterface);
@@ -133,12 +150,17 @@ public class RPCCreator {
 		writer.close();
 	}
 
-	private static String getBroadcastBody(Method method, List<String> arguments) {
+	private String getBroadcastBody(Method method, List<String> arguments) {
 		StringBuilder builder = new StringBuilder();
 		builder.append(" {\n");
 		StringBuilder args = new StringBuilder();
+		boolean firstArg = true;
 		for (String arg : arguments) {
-			args.append("," + arg);
+			if (firstArg)
+				firstArg = false;
+			else
+				args.append(",");
+			args.append(arg);
 		}
 		boolean sync = false;
 		if (!method.getReturnType().getSimpleName().equals("void"))
@@ -154,14 +176,12 @@ public class RPCCreator {
 		else
 			builder.append("    ");
 		builder.append("disp." + singleCall + "( dest, client, targetID, \""
-				+ method.getName() + "\",new Object[] { " + args.substring(1)
-				+ " });\n");
+				+ method.getName() + "\",new Object[] { " + args + " });\n");
 		builder.append("  }\n\n");
 		return builder.toString();
 	}
 
-	private static void createServer(Class<?> serverInterface)
-			throws IOException {
+	private void createServer(Class<?> serverInterface) throws IOException {
 		String name = serverInterface.getSimpleName() + "ServerImpl";
 
 		BufferedWriter writer = new BufferedWriter(new FileWriter(new File(name
@@ -174,7 +194,7 @@ public class RPCCreator {
 		writer.write("public class " + name + " extends RPCClient implements "
 				+ serverInterface.getSimpleName() + " {\n\n");
 
-		// writer.write(getFields());
+		writer.write(getFields(serverInterface.getMethods()));
 
 		writer.write(getConstructor(name));
 
@@ -189,11 +209,21 @@ public class RPCCreator {
 		writer.close();
 	}
 
-	private static String getPackage(Class<?> ifaceClass) {
+	private String getFields(Method[] methods) {
+		StringBuilder builder = new StringBuilder();
+		for (Method method : methods)
+			if (method.getAnnotation(Cache.class) != null
+					&& !method.getReturnType().getSimpleName().equals("void"))
+				builder.append("   " + method.getReturnType().getSimpleName()
+						+ " " + method.getName() + "Cached = null;\n");
+		return builder.toString();
+	}
+
+	private String getPackage(Class<?> ifaceClass) {
 		return ifaceClass.getPackage() + ";\n\n";
 	}
 
-	private static String getBroadcastFields() {
+	private String getBroadcastFields() {
 		StringBuilder field = new StringBuilder();
 		field.append("  RPCDispatcher disp;\n");
 		field.append("  Peer local;\n");
@@ -203,7 +233,7 @@ public class RPCCreator {
 		return field.toString();
 	}
 
-	private static String getConstructor(String name) {
+	private String getConstructor(String name) {
 		StringBuilder constructor = new StringBuilder();
 
 		constructor
@@ -215,7 +245,7 @@ public class RPCCreator {
 		return constructor.toString();
 	}
 
-	private static String getBroadcastConstructor(String name) {
+	private String getBroadcastConstructor(String name) {
 		StringBuilder constructor = new StringBuilder();
 		constructor
 				.append("  public "
@@ -229,7 +259,7 @@ public class RPCCreator {
 		return constructor.toString();
 	}
 
-	private static MethodSignature getMethodSignature(String name, Method method)
+	private MethodSignature getMethodSignature(String name, Method method)
 			throws IOException {
 		StringBuilder ret = new StringBuilder();
 		ret.append("  public " + method.getReturnType().getSimpleName() + " "
@@ -241,13 +271,17 @@ public class RPCCreator {
 		return new MethodSignature(ret.toString(), parameters);
 	}
 
-	private static MethodSignature getBroadcastMethodSignature(String name,
+	private MethodSignature getBroadcastMethodSignature(String name,
 			Method method) throws IOException {
 		StringBuilder ret = new StringBuilder();
 		String returnType = "void";
-		if (!method.getReturnType().getSimpleName().equals("void"))
-			returnType = "Map<Peer," + method.getReturnType().getSimpleName()
-					+ "> ";
+		if (!method.getReturnType().getSimpleName().equals("void")) {
+			String simpleName = method.getReturnType().getSimpleName();
+			Class wrapper = wrappers.get(method.getReturnType());
+			if (wrapper != null)
+				simpleName = wrapper.getSimpleName();
+			returnType = "Map<Peer," + simpleName + "> ";
+		}
 		ret.append("  public " + returnType + " " + name + "(");
 		MethodParams parameters = getParameters(method);
 		ret.append(parameters.code);
@@ -255,7 +289,7 @@ public class RPCCreator {
 		return new MethodSignature(ret.toString(), parameters);
 	}
 
-	private static String getExceptions(Method method) {
+	private String getExceptions(Method method) {
 		StringBuilder ret = new StringBuilder();
 		Class<?>[] types = method.getExceptionTypes();
 		if (types.length != 0) {
@@ -269,7 +303,7 @@ public class RPCCreator {
 		return ret.toString();
 	}
 
-	private static MethodParams getParameters(Method method) {
+	private MethodParams getParameters(Method method) {
 		HashMap<String, HashSet<String>> used = new HashMap<>();
 		List<String> argsNames = new ArrayList<>();
 		StringBuilder ret = new StringBuilder();
@@ -302,7 +336,7 @@ public class RPCCreator {
 		return new MethodParams(ret.toString(), argsNames);
 	}
 
-	private static String getImports(Class<?> ifaceClass) {
+	private String getImports(Class<?> ifaceClass) {
 		StringBuilder imports = new StringBuilder();
 		imports.append("import " + ifaceClass.getName() + ";\n");
 		imports.append("import edu.jlime.core.rpc.RPCDispatcher;\n");
@@ -313,14 +347,14 @@ public class RPCCreator {
 		imports.append("import java.util.Map;\n");
 
 		for (Method m : ifaceClass.getMethods()) {
-			for (Class<?> arg : m.getParameterTypes()) {
-				if (!isPrimitive(arg)) {
+			for (Class<?> arg : m.getParameterTypes())
+				if (!isPrimitive(arg))
 					imports.append("import " + getName(arg) + ";\n");
-				}
-				Class<?> ret = m.getReturnType();
-				if (!isPrimitive(ret))
-					imports.append("import " + getName(ret) + ";\n");
-			}
+
+			Class<?> ret = m.getReturnType();
+			if (!isPrimitive(ret))
+				imports.append("import " + getName(ret) + ";\n");
+
 			for (Class<?> ex : m.getExceptionTypes()) {
 				imports.append("import " + ex.getCanonicalName() + ";\n");
 			}
@@ -328,14 +362,14 @@ public class RPCCreator {
 		return imports.toString() + "\n";
 	}
 
-	private static String getName(Class<?> arg) {
+	private String getName(Class<?> arg) {
 		Class<?> curr = arg;
 		while (curr.isArray())
 			curr = curr.getComponentType();
 		return curr.getName();
 	}
 
-	private static boolean isPrimitive(Class<?> arg) {
+	private boolean isPrimitive(Class<?> arg) {
 		Class<?> curr = arg;
 		while (!curr.isPrimitive()) {
 			if (curr.isArray())
@@ -346,34 +380,55 @@ public class RPCCreator {
 		return true;
 	}
 
-	private static String getBody(String rpcmethod, Method method,
+	private String getBody(String rpcmethod, Method method,
 			List<String> arguments) {
 		StringBuilder builder = new StringBuilder();
 		builder.append(" {\n");
 		StringBuilder args = new StringBuilder();
+		boolean firstArg = true;
 		for (String arg : arguments) {
-			args.append("," + arg);
+			if (firstArg)
+				firstArg = false;
+			else
+				args.append(",");
+			args.append(arg);
 		}
 		boolean sync = false;
 		if (!method.getReturnType().getSimpleName().equals("void"))
 			sync = true;
 		else if (method.getAnnotation(Sync.class) != null)
 			sync = true;
+
+		boolean cached = false;
+		if (method.getAnnotation(Cache.class) != null)
+			cached = true;
+
 		String retType = method.getReturnType().getSimpleName();
+
 		String singleCall = sync ? "callSync" : "callAsync";
-		if (!retType.equals("void"))
-			builder.append("    return (" + retType + ") ");
+
+		String callCode = "disp." + singleCall + "(dest, client, targetID, \""
+				+ method.getName() + "\",new Object[] { " + args + " });\n";
+
+		if (cached && !retType.equals("void")) {
+			builder.append("    if (" + method.getName() + "Cached==null){\n");
+			builder.append("    	synchronized(this){\n");
+			builder.append("    		if (" + method.getName() + "Cached==null)\n");
+			builder.append("    			" + method.getName() + "Cached=(" + retType
+					+ ") " + callCode + "\n");
+			builder.append("    	}\n");
+			builder.append("    }\n");
+			builder.append("	return " + method.getName() + "Cached;\n");
+		} else if (!retType.equals("void"))
+			builder.append("    return (" + retType + ") " + callCode);
 		else
-			builder.append("    ");
-		builder.append("disp." + singleCall + "(dest, client, targetID, \""
-				+ method.getName() + "\",new Object[] { " + args.substring(1)
-				+ " });\n");
+			builder.append("    " + callCode);
+
 		builder.append("  }\n\n");
 		return builder.toString();
 	}
 
-	private static void createBroadcastIface(Class<?> ifaceClass)
-			throws IOException {
+	private void createBroadcastIface(Class<?> ifaceClass) throws IOException {
 		String name = ifaceClass.getSimpleName() + "Broadcast";
 		BufferedWriter writer = new BufferedWriter(new FileWriter(new File(name
 				+ ".java")));
