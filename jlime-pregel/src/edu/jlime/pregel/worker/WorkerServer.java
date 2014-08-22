@@ -9,29 +9,56 @@ import edu.jlime.core.rpc.RPCDispatcher;
 import edu.jlime.pregel.coordinator.rpc.Coordinator;
 import edu.jlime.pregel.coordinator.rpc.CoordinatorBroadcast;
 import edu.jlime.pregel.coordinator.rpc.CoordinatorFactory;
+import edu.jlime.pregel.worker.rpc.Worker;
+import edu.jlime.pregel.worker.rpc.WorkerBroadcast;
+import edu.jlime.pregel.worker.rpc.WorkerFactory;
 import edu.jlime.rpc.Configuration;
 import edu.jlime.rpc.JlimeFactory;
 
 public class WorkerServer {
-	public static void main(String[] args) throws Exception {
+	RPCDispatcher disp;
+	private ClientManager<Coordinator, CoordinatorBroadcast> coord;
+	private ClientManager<Worker, WorkerBroadcast> workers;
+
+	public WorkerServer() throws Exception {
 		Configuration config = new Configuration();
 		config.port = 4040;
 		config.mcastport = 5050;
-		
-		HashMap<String, String> data = new HashMap<>();		
+
+		HashMap<String, String> data = new HashMap<>();
 		data.put("type", "worker");
-		
-		JlimeFactory fact = new JlimeFactory(config);		
-		RPCDispatcher disp = fact.build();
-		
-		ClientManager<Coordinator, CoordinatorBroadcast> coord = disp.manage(new CoordinatorFactory(disp, "coordinator"), new PeerFilter() {
-			
-			@Override
-			public boolean verify(Peer p) {
-				return p.getData("type").equals("coordinator");
-			}
-		});
-		
-		disp.registerTarget("worker", new WorkerImpl(coord.first()));
+
+		JlimeFactory fact = new JlimeFactory(config);
+		disp = fact.build();
+
+		coord = disp.manage(new CoordinatorFactory(disp, "coordinator"),
+				new PeerFilter() {
+
+					@Override
+					public boolean verify(Peer p) {
+						return p.getData("type").equals("coordinator");
+					}
+				});
+
+		workers = disp.manage(new WorkerFactory(disp, "worker"),
+				new PeerFilter() {
+
+					@Override
+					public boolean verify(Peer p) {
+						return p.getData("type").equals("worker");
+					}
+				});
+
+	}
+
+	public static void main(String[] args) throws Exception {
+		new WorkerServer().start();
+	}
+
+	public void start() throws Exception {
+		disp.start();
+
+		disp.registerTarget("worker",
+				new WorkerImpl(coord, workers));
 	}
 }

@@ -20,10 +20,10 @@ public class CoordinatorServer {
 		Configuration config = new Configuration();
 		config.port = 4040;
 		config.mcastport = 5050;
-		
-		HashMap<String, String> data = new HashMap<>();		
+
+		HashMap<String, String> data = new HashMap<>();
 		data.put("type", "coordinator");
-		
+
 		this.rpc = new JlimeFactory(config, data).build();
 
 		this.workers = rpc.manage(new WorkerFactory(rpc, "worker"),
@@ -35,8 +35,12 @@ public class CoordinatorServer {
 					}
 				});
 
+	}
+
+	public void start() throws Exception {
+		this.rpc.start();
+
 		this.rpc.registerTarget("coordinator",
 				new CoordinatorImpl(workers.getAll()));
-
 	}
 }
