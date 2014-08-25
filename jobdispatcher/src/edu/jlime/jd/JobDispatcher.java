@@ -454,13 +454,15 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 	}
 
 	public void start() throws Exception {
+		DispatcherManager.registerJD(this);
+
 		for (Peer p : cluster) {
 			peerAdded(p, cluster);
 		}
 		rpc.start();
 		if (executorsSize() < minServers)
 			initLock.acquire();
-		DispatcherManager.registerJD(this);
+
 	}
 
 	public void stop() throws Exception {

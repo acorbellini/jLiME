@@ -4,29 +4,30 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
+import edu.jlime.core.rpc.ClientManager;
 import edu.jlime.core.rpc.RPCDispatcher;
 import edu.jlime.pregel.coordinator.rpc.Coordinator;
 import edu.jlime.pregel.graph.PregelGraph;
 import edu.jlime.pregel.graph.Vertex;
 import edu.jlime.pregel.graph.VertexFunction;
+import edu.jlime.pregel.worker.VertexData;
 import edu.jlime.pregel.worker.rpc.Worker;
+import edu.jlime.pregel.worker.rpc.WorkerBroadcast;
 
 public class CoordinatorImpl implements Coordinator {
 
-	private HashMap<UUID, CoordinatorTask> tasks;
+	private HashMap<UUID, CoordinatorTask> tasks = new HashMap<>();
 	private RPCDispatcher rpc;
-	private HashMap<Worker, UUID> workersMap;
-	private List<Worker> workersList;
+	private ClientManager<Worker, WorkerBroadcast> workersList;
 
-	public CoordinatorImpl(List<Worker> workers) throws Exception {
-		for (Worker worker : workers) {
-			this.workersMap.put(worker, worker.getID());
-		}
+	public CoordinatorImpl(ClientManager<Worker, WorkerBroadcast> workers)
+			throws Exception {
 		this.workersList = workers;
 	}
 
 	public Worker getWorker(Vertex v) {
-		return workersList.get(v.getId() % workersList.size());
+		List<Worker> all = workersList.getAll();
+		return all.get(v.getId() % all.size());
 
 	}
 
@@ -40,9 +41,9 @@ public class CoordinatorImpl implements Coordinator {
 	}
 
 	@Override
-	public PregelGraph execute(PregelGraph input, HashMap<Vertex, byte[]> data,
-			VertexFunction func, int superSteps) throws Exception {
-
+	public PregelGraph execute(PregelGraph input,
+			HashMap<Vertex, VertexData> data, VertexFunction func,
+			Integer superSteps) throws Exception {
 		CoordinatorTask task = new CoordinatorTask(this);
 		tasks.put(task.taskID, task);
 		return task.execute(input, data, func, superSteps);
@@ -50,6 +51,6 @@ public class CoordinatorImpl implements Coordinator {
 	}
 
 	public List<Worker> getWorkers() {
-		return workersList;
+		return workersList.getAll();
 	}
 }

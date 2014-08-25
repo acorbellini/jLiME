@@ -29,8 +29,7 @@ public class SocketAddress {
 
 	@Override
 	public String toString() {
-		return super.toString() + " Socket Address " + to + " Address Type "
-				+ type;
+		return "SocketAddress [type=" + type + ", to=" + to + "]";
 	}
 
 }

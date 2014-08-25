@@ -1,16 +1,16 @@
 package edu.jlime.pregel.coordinator;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
+
+import org.apache.log4j.Logger;
 
 import edu.jlime.pregel.graph.PregelGraph;
 import edu.jlime.pregel.graph.Vertex;
 import edu.jlime.pregel.graph.VertexFunction;
+import edu.jlime.pregel.worker.VertexData;
 import edu.jlime.pregel.worker.rpc.Worker;
 
 public class CoordinatorTask {
@@ -20,39 +20,51 @@ public class CoordinatorTask {
 
 	private CoordinatorImpl coord;
 
+	private Logger log = Logger.getLogger(CoordinatorTask.class);
+
 	public CoordinatorTask(CoordinatorImpl coordinatorImpl) {
 		this.coord = coordinatorImpl;
 	}
 
 	public synchronized void finished(UUID workerID) {
+		if (log.isDebugEnabled())
+			log.debug("Received finished  from worker : " + workerID);
 		currentStep.remove(workerID);
 		notify();
+		if (log.isDebugEnabled())
+			log.debug("Remaining in step: " + currentStep.size());
 	}
 
 	public PregelGraph execute(PregelGraph input,
-			HashMap<Vertex, byte[]> initialData, VertexFunction func,
+			HashMap<Vertex, VertexData> initialData, VertexFunction func,
 			int supersteps) throws Exception {
 
 		// Divide vertex list.
-		HashMap<Worker, List<Vertex>> divided = new HashMap<>();
+		HashMap<Worker, HashMap<Vertex, VertexData>> divided = new HashMap<>();
 		for (Vertex vertexID : initialData.keySet()) {
 			Worker worker = coord.getWorker(vertexID);
-			List<Vertex> sublist = divided.get(worker);
+			HashMap<Vertex, VertexData> sublist = divided.get(worker);
 			if (sublist == null) {
-				sublist = new ArrayList<>();
+				sublist = new HashMap<>();
 				divided.put(worker, sublist);
 			}
-			sublist.add(vertexID);
+			sublist.put(vertexID, initialData.get(vertexID));
 		}
 
 		// Init workers
-		for (Entry<Worker, List<Vertex>> e : divided.entrySet()) {
-			currentStep.add(e.getKey().getID());
-			e.getKey().createTask(input, func, taskID, initialData);
+		// for (Entry<Worker, HashMap<Vertex, byte[]>> e : divided.entrySet()) {
+		for (Worker w : coord.getWorkers()) {
+			currentStep.add(w.getID());
+			if (divided.containsKey(w))
+				w.createTask(input, func, taskID, divided.get(w));
+			else
+				w.createTask(input, func, taskID, new HashMap<>());
 		}
 
 		for (int i = 0; i < supersteps; i++) {
-
+			if (log.isDebugEnabled())
+				log.debug("Running superstep " + i + " Remaining "
+						+ currentStep.size());
 			for (Worker w : coord.getWorkers()) {
 				w.nextSuperstep(i, taskID);
 			}
@@ -61,6 +73,10 @@ public class CoordinatorTask {
 				while (!currentStep.isEmpty())
 					wait();
 			}
+
+			// if (log.isDebugEnabled())
+			log.info("Finished superstep " + i);
+
 			boolean finished = true;
 			for (Worker w : coord.getWorkers()) {
 				if (w.hasWork(taskID)) {
@@ -68,18 +84,20 @@ public class CoordinatorTask {
 					finished = false;
 				}
 			}
+
 			if (finished)
 				break;
 		}
-
+		log.info("Finished");
 		return mergeGraph();
 	}
 
 	private PregelGraph mergeGraph() throws Exception {
+		if (log.isDebugEnabled())
+			log.debug("Merging Graph");
 		PregelGraph ret = new PregelGraph();
-		for (Worker w : coord.getWorkers()) {
+		for (Worker w : coord.getWorkers())
 			ret.merge(w.getResult(taskID));
-		}
 		return ret;
 	}
 }

@@ -1,10 +1,9 @@
 package edu.jlime.pregel.coordinator.rpc;
 
-import java.util.List;
-
 import edu.jlime.core.cluster.Peer;
-import edu.jlime.core.rpc.ClientFactory;
 import edu.jlime.core.rpc.RPCDispatcher;
+import edu.jlime.core.rpc.ClientFactory;
+import java.util.List;
 public class CoordinatorFactory implements ClientFactory<Coordinator,CoordinatorBroadcast>{
 
   private RPCDispatcher rpc;

@@ -12,6 +12,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.log4j.Logger;
 
@@ -111,20 +112,30 @@ public class RPCDispatcher implements ClassLoaderProvider, TransportListener {
 	};
 
 	protected Object callTarget(MethodCall mc) throws Exception {
-		Object target = targets.get(mc.getObjectKey());
-		Class<?> objClass = target.getClass();
-		Method m = findMethod(objClass, mc);
-		return m.invoke(target, mc.getObjects());
+		try {
+			Object target = targets.get(mc.getObjectKey());
+			Class<?> objClass = target.getClass();
+			Method m = findMethod(objClass, mc);
+			return m.invoke(target, mc.getObjects());
+		} catch (Exception e) {
+			throw new Exception("Error calling " + mc + " ", e.getCause());
+		}
 	}
 
 	private boolean checkParams(MethodCall mc, Method m) throws Exception {
 		Class<?>[] types = m.getParameterTypes();
-		List<Class<?>> searchedTypes = mc.getArgTypes();
+		Class<?>[] searchedTypes = mc.getArgTypes();
 		if (m.getName().equals(mc.getName())
-				&& types.length == searchedTypes.size()) {
+				&& types.length == searchedTypes.length) {
 			for (int i = 0; i < types.length; i++) {
-				if (!types[i].isAssignableFrom(searchedTypes.get(i)))
-					return false;
+				if (!types[i].isAssignableFrom(searchedTypes[i]))
+					if (Wrappers.get(types[i]) != null
+							&& Wrappers.get(types[i]).isAssignableFrom(
+									searchedTypes[i]))
+						// mc.unwrapArgument(i);
+						;
+					else
+						return false;
 			}
 			return true;
 		} else
@@ -318,7 +329,15 @@ public class RPCDispatcher implements ClassLoaderProvider, TransportListener {
 		}
 	}
 
+	AtomicBoolean started = new AtomicBoolean(false);
+
 	public void start() throws Exception {
+		synchronized (started) {
+			if (started.get())
+				return;
+			else
+				started.set(true);
+		}
 		tr.start();
 	}
 

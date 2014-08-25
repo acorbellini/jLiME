@@ -1,32 +1,37 @@
 package edu.jlime.pregel.worker;
 
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
+import org.apache.log4j.Logger;
+
+import edu.jlime.pregel.client.TaskContext;
 import edu.jlime.pregel.coordinator.rpc.Coordinator;
 import edu.jlime.pregel.graph.PregelGraph;
 import edu.jlime.pregel.graph.Vertex;
 import edu.jlime.pregel.graph.VertexFunction;
-import edu.jlime.pregel.worker.rpc.Worker;
 
-public class WorkerTask {
+public class WorkerTask implements TaskContext {
+
+	private static final int MAX_THREADS = 10;
 
 	public static class StepData {
-		public HashMap<Vertex, byte[]> adyacents = new HashMap<>();
+		public HashMap<Vertex, VertexData> adyacents = new HashMap<>();
 	}
 
-	ArrayList<Vertex> modified = new ArrayList<>();
-
-	ExecutorService exec = Executors.newFixedThreadPool(10);
+	Set<Vertex> modified = new HashSet<>();
 
 	private PregelGraph graph;
 
-	private UUID id;
+	private UUID taskid;
 
 	private Coordinator coord;
 
@@ -34,21 +39,24 @@ public class WorkerTask {
 
 	private VertexFunction f;
 
-	private Worker worker;
+	private WorkerImpl worker;
 
-	public WorkerTask(PregelGraph input, Worker w, Coordinator coord, VertexFunction f,
-			UUID taskID, HashMap<Vertex, byte[]> init) {
+	protected Logger log = Logger.getLogger(WorkerTask.class);
+
+	public WorkerTask(PregelGraph input, WorkerImpl w, Coordinator coord,
+			VertexFunction f, UUID taskID, HashMap<Vertex, VertexData> init) {
 		this.graph = input;
 		this.worker = w;
 		this.coord = coord;
-		this.id = taskID;
+		this.taskid = taskID;
 		this.f = f;
-		for (Entry<Vertex, byte[]> e : init.entrySet()) {
+		for (Entry<Vertex, VertexData> e : init.entrySet()) {
 			this.graph.setVal(e.getKey(), e.getValue());
+			this.queue.put(e.getKey(), new StepData());
 		}
 	}
 
-	public void queueVertexData(Vertex from, Vertex to, byte[] data) {
+	public void queueVertexData(Vertex from, Vertex to, VertexData data) {
 		StepData vertexData = queue.get(to);
 		if (vertexData == null) {
 			synchronized (this) {
@@ -62,22 +70,44 @@ public class WorkerTask {
 		vertexData.adyacents.put(from, data);
 	}
 
-	public void nextStep(int superstep) {
+	public void nextStep(int superstep) throws Exception {
+
+		ExecutorService exec = Executors.newFixedThreadPool(MAX_THREADS);
+
+		Semaphore execCount = new Semaphore(MAX_THREADS);
+
 		HashMap<Vertex, StepData> current = new HashMap<>(this.queue);
-		this.queue = new HashMap<>();
+		this.queue.clear();
 		for (Entry<Vertex, StepData> vertex : current.entrySet()) {
 			modified.add(vertex.getKey());
+			execCount.acquire();
 			exec.execute(new Runnable() {
 				@Override
 				public void run() {
-					f.execute(vertex.getKey(), vertex.getValue(), graph);
+					try {
+						if (log.isDebugEnabled())
+							log.debug("Executing function on vertex "
+									+ vertex.getKey());
+						f.execute(vertex.getKey(), vertex.getValue(),
+								WorkerTask.this);
+						if (log.isDebugEnabled())
+							log.debug("Finished executing function on vertex "
+									+ vertex.getKey());
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+					execCount.release();
 				}
 			});
 		}
+		exec.shutdown();
+		exec.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
+
+		coord.finished(taskid, this.worker.getID());
 	}
 
 	public boolean hasWork() {
-		return queue.isEmpty();
+		return !queue.isEmpty();
 	}
 
 	public PregelGraph getResultGraph() {
@@ -91,5 +121,15 @@ public class WorkerTask {
 
 		}
 		return ret;
+	}
+
+	@Override
+	public PregelGraph getGraph() {
+		return graph;
+	}
+
+	@Override
+	public void send(Vertex from, Vertex to, VertexData data) throws Exception {
+		worker.getWorker(to).sendDataToVertex(from, to, data, taskid);
 	}
 }

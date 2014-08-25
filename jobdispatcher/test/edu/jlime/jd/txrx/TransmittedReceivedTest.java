@@ -44,6 +44,7 @@ public class TransmittedReceivedTest {
 			ClientCluster cluster = env.getCluster();
 
 			for (int i = 1; i <= 200; i++) {
+				// System.out.println("Executing round " + i);
 				int[] data = new int[8000];
 				for (int j = 0; j < data.length; j++) {
 					data[i] = (int) (Math.random() * 1000000);

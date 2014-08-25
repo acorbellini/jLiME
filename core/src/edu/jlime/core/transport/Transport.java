@@ -39,7 +39,8 @@ public abstract class Transport implements DiscoveryListener, FailureListener {
 			Map<String, String> data) throws Exception {
 		Peer p = cluster.getByAddress(from);
 		if (p == null) {
-			log.info("New member found : " + name + " id " + from);
+			if (log.isDebugEnabled())
+				log.info("New member found : " + name + " id " + from);
 			Peer peer = new Peer(from, name);
 			peer.putData(data);
 			cluster.addPeer(peer);

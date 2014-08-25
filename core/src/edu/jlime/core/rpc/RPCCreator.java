@@ -6,28 +6,14 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
 public class RPCCreator {
-
-	HashMap<Class, Class> wrappers = new HashMap<>();
-
-	{
-		wrappers.put(boolean.class, Boolean.class);
-		wrappers.put(int.class, Integer.class);
-		wrappers.put(float.class, Float.class);
-		wrappers.put(double.class, Double.class);
-		wrappers.put(char.class, Character.class);
-		wrappers.put(byte.class, Byte.class);
-		wrappers.put(long.class, Long.class);
-		wrappers.put(short.class, Short.class);
-		wrappers.put(void.class, Void.class);
-
-	}
-
 	private class MethodSignature {
 		public MethodSignature(String code, MethodParams params) {
 			this.code = code;
@@ -119,7 +105,7 @@ public class RPCCreator {
 	}
 
 	private void createBroadcastServer(Class<?> serverInterface)
-			throws IOException {
+			throws Exception {
 
 		createBroadcastIface(serverInterface);
 
@@ -181,7 +167,7 @@ public class RPCCreator {
 		return builder.toString();
 	}
 
-	private void createServer(Class<?> serverInterface) throws IOException {
+	private void createServer(Class<?> serverInterface) throws Exception {
 		String name = serverInterface.getSimpleName() + "ServerImpl";
 
 		BufferedWriter writer = new BufferedWriter(new FileWriter(new File(name
@@ -260,7 +246,7 @@ public class RPCCreator {
 	}
 
 	private MethodSignature getMethodSignature(String name, Method method)
-			throws IOException {
+			throws Exception {
 		StringBuilder ret = new StringBuilder();
 		ret.append("  public " + method.getReturnType().getSimpleName() + " "
 				+ name + "(");
@@ -272,12 +258,12 @@ public class RPCCreator {
 	}
 
 	private MethodSignature getBroadcastMethodSignature(String name,
-			Method method) throws IOException {
+			Method method) throws Exception {
 		StringBuilder ret = new StringBuilder();
 		String returnType = "void";
 		if (!method.getReturnType().getSimpleName().equals("void")) {
 			String simpleName = method.getReturnType().getSimpleName();
-			Class wrapper = wrappers.get(method.getReturnType());
+			Class wrapper = Wrappers.get(method.getReturnType());
 			if (wrapper != null)
 				simpleName = wrapper.getSimpleName();
 			returnType = "Map<Peer," + simpleName + "> ";
@@ -303,7 +289,7 @@ public class RPCCreator {
 		return ret.toString();
 	}
 
-	private MethodParams getParameters(Method method) {
+	private MethodParams getParameters(Method method) throws Exception {
 		HashMap<String, HashSet<String>> used = new HashMap<>();
 		List<String> argsNames = new ArrayList<>();
 		StringBuilder ret = new StringBuilder();
@@ -313,6 +299,24 @@ public class RPCCreator {
 			for (Parameter c : args) {
 				int count = 0;
 				String type = c.getType().getSimpleName();
+
+				if (c.getType().isPrimitive())
+					throw new Exception("Primitive arguments not supported");
+
+				if (c.getType().getTypeParameters().length > 0) {
+					type = type + "<";
+					boolean first = true;
+					ParameterizedType t = (ParameterizedType) c
+							.getParameterizedType();
+					for (Type parameter : t.getActualTypeArguments()) {
+						if (first)
+							first = false;
+						else
+							type += ",";
+						type = type + parameter.getTypeName();
+					}
+					type = type + ">";
+				}
 				String arg = c.getName();
 				HashSet<String> set = used.get(type);
 				if (set == null) {
@@ -428,7 +432,7 @@ public class RPCCreator {
 		return builder.toString();
 	}
 
-	private void createBroadcastIface(Class<?> ifaceClass) throws IOException {
+	private void createBroadcastIface(Class<?> ifaceClass) throws Exception {
 		String name = ifaceClass.getSimpleName() + "Broadcast";
 		BufferedWriter writer = new BufferedWriter(new FileWriter(new File(name
 				+ ".java")));

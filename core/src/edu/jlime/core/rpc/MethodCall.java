@@ -27,13 +27,15 @@ public class MethodCall implements Serializable {
 		return objectKey;
 	}
 
-	public List<Class<?>> getArgTypes() {
-		List<Class<?>> classes = new ArrayList<Class<?>>();
-		for (Object o : objects) {
-			if (o != null)
-				classes.add(o.getClass());
+	public Class<?>[] getArgTypes() {
+		if (objects.length == 0)
+			return new Class<?>[] {};
+		Class<?>[] classes = new Class<?>[objects.length];
+		for (int i = 0; i < objects.length; i++) {
+			if (objects[i] != null)
+				classes[i] = objects[i].getClass();
 			else
-				classes.add(NullType.class);
+				classes[i] = Object.class;
 
 		}
 		return classes;
@@ -51,6 +53,10 @@ public class MethodCall implements Serializable {
 	public String toString() {
 		return "MethodCall [objectKey=" + objectKey + ", name=" + name
 				+ ", objects=" + Arrays.toString(objects) + "]";
+	}
+
+	public void unwrapArgument(int i) {
+		objects[i] = Wrappers.unwrap(objects[i]);
 	}
 
 }

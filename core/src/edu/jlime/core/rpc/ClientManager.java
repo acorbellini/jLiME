@@ -27,6 +27,9 @@ public class ClientManager<T, B> implements ClusterChangeListener {
 		this.filter = filter;
 		this.factory = factory;
 		this.rpc.getCluster().addChangeListener(this);
+		for (Peer p : rpc.getCluster()) {
+			peerAdded(p, rpc.getCluster());
+		}
 
 	}
 
@@ -37,8 +40,12 @@ public class ClientManager<T, B> implements ClusterChangeListener {
 
 	@Override
 	public void peerAdded(Peer peer, Cluster c) {
-		if (filter.verify(peer))
-			clients.put(peer, factory.get(peer, c.getLocalPeer()));
+		if (filter.verify(peer)) {
+			synchronized (this) {
+				clients.put(peer, factory.get(peer, c.getLocalPeer()));
+				notify();
+			}
+		}
 	}
 
 	public List<T> getAll() {
@@ -58,6 +65,20 @@ public class ClientManager<T, B> implements ClusterChangeListener {
 
 	public T first() {
 		return clients.values().iterator().next();
+	}
+
+	public T waitFirst() throws Exception {
+		return wait(1).get(0);
+	}
+
+	public List<T> wait(int min) throws Exception {
+		synchronized (this) {
+			while (clients.size() < min)
+				wait();
+		}
+
+		return getAll();
+
 	}
 
 	public B broadcast() {

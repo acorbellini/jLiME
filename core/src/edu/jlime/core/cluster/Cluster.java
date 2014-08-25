@@ -49,41 +49,52 @@ public class Cluster implements Iterable<Peer> {
 	}
 
 	public void addChangeListener(ClusterChangeListener list) {
-		listeners.add(list);
+		synchronized (listeners) {
+			listeners.add(list);
+		}
 	}
 
 	protected void notifyPeerRemoved(Peer peer) {
-		for (ClusterChangeListener l : listeners) {
-			l.peerRemoved(peer, this);
+		synchronized (listeners) {
+			for (ClusterChangeListener l : listeners) {
+				l.peerRemoved(peer, this);
+			}
 		}
 	};
 
-	protected synchronized void notifyPeerAdded(Peer peer) {
-		notifyAll();
-		for (ClusterChangeListener l : listeners) {
-			l.peerAdded(peer, this);
+	protected void notifyPeerAdded(Peer peer) {
+		synchronized (listeners) {
+			for (ClusterChangeListener l : listeners) {
+				l.peerAdded(peer, this);
+			}
 		}
 	};
 
 	public void addPeer(Peer peer) {
-		if (peers.contains(peer))
-			return;
+		synchronized (peers) {
+			if (peers.contains(peer))
+				return;
+			peers.add(peer);
+			peers.notifyAll();
 
-		peers.add(peer);
-		byAddress.put(peer.getAddress(), peer);
-		if (!byName.containsKey(peer.getName()))
-			byName.put(peer.getName(), new ArrayList<Peer>());
-		byName.get(peer.getName()).add(peer);
+			byAddress.put(peer.getAddress(), peer);
+			if (!byName.containsKey(peer.getName()))
+				byName.put(peer.getName(), new ArrayList<Peer>());
+			byName.get(peer.getName()).add(peer);
+		}
 
 		notifyPeerAdded(peer);
 	};
 
 	public void removePeer(Peer peer) {
-		if (!peers.contains(peer))
-			peers.remove(peer);
+		synchronized (peers) {
+			if (!peers.contains(peer))
+				peers.remove(peer);
 
-		byAddress.remove(peer.getAddress());
-		byName.get(peer.getName()).remove(peer);
+			byAddress.remove(peer.getAddress());
+			byName.get(peer.getName()).remove(peer);
+
+		}
 
 		notifyPeerRemoved(peer);
 		// stop(peer);
@@ -98,18 +109,23 @@ public class Cluster implements Iterable<Peer> {
 			}
 		}
 		ArrayList<Peer> toRemove = new ArrayList<>();
-		for (Peer peer : peers) {
-			if (!list.contains(peer)) {
-				toRemove.add(peer);
+		synchronized (peers) {
+			for (Peer peer : peers) {
+				if (!list.contains(peer)) {
+					toRemove.add(peer);
+				}
 			}
 		}
+
 		for (Peer peer : toRemove) {
 			removePeer(peer);
 		}
 	}
 
 	public ArrayList<Peer> getPeers() {
-		return new ArrayList<>(peers);
+		synchronized (peers) {
+			return new ArrayList<>(peers);
+		}
 	}
 
 	@Override
@@ -117,17 +133,20 @@ public class Cluster implements Iterable<Peer> {
 		return getPeers().iterator();
 	}
 
-	public synchronized boolean waitFor(Peer clientID, long timeToShowup) {
+	public boolean waitFor(Peer clientID, long timeToShowup) {
 		long init = System.currentTimeMillis();
-		while (!contains(clientID)) {
-			try {
-				wait(timeToShowup);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
+		synchronized (peers) {
+			while (!contains(clientID)) {
+				try {
+					peers.wait(timeToShowup);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				if (System.currentTimeMillis() - init > timeToShowup)
+					return false;
 			}
-			if (System.currentTimeMillis() - init > timeToShowup)
-				return false;
 		}
+
 		return true;
 	}
 }

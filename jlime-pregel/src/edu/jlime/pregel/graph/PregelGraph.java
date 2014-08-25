@@ -1,16 +1,20 @@
 package edu.jlime.pregel.graph;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map.Entry;
 
-public class PregelGraph {
+import edu.jlime.pregel.worker.VertexData;
+
+public class PregelGraph implements Serializable {
 
 	int id = 0;
 
 	HashMap<Vertex, List<Vertex>> adyacency = new HashMap<>();
 
-	private HashMap<Vertex, byte[]> values = new HashMap<>();
+	private HashMap<Vertex, VertexData> data = new HashMap<>();
 
 	public Vertex vertex() {
 		return new Vertex(id++);
@@ -30,11 +34,57 @@ public class PregelGraph {
 	}
 
 	public List<Vertex> getAdyacency(Vertex vertex) {
-		return adyacency.get(vertex);
+		List<Vertex> list = adyacency.get(vertex);
+		if (list == null)
+			return new ArrayList<Vertex>();
+		return list;
 	}
 
-	public void setVal(Vertex v, byte[] bs) {
-		this.values.put(v, bs);
+	public void setVal(Vertex v, String k, Object val) {
 
+		VertexData vData = this.data.get(v);
+		if (vData == null) {
+			vData = this.data.get(v);
+			synchronized (data) {
+				if (vData == null) {
+					vData = new VertexData();
+					this.data.put(v, vData);
+				}
+			}
+		}
+
+		vData.put(k, val);
 	}
+
+	public boolean isTrue(Vertex v, String string) {
+		VertexData vertexData = data.get(v);
+		if (vertexData != null) {
+			Object data2 = vertexData.getData(string);
+			if (data2 != null)
+				return (Boolean) data2;
+		}
+		return false;
+	}
+
+	public void setVal(Vertex v, VertexData value) {
+		for (Entry<String, Object> e : value.getData().entrySet())
+			setVal(v, e.getKey(), e.getValue());
+	}
+
+	public void setTrue(Vertex v, String string) {
+		setVal(v, string, new Boolean(true));
+	}
+
+	public void removeLink(Vertex v, Vertex toRemove) {
+		List<Vertex> list = adyacency.get(v);
+		if (list != null)
+			list.remove(toRemove);
+	}
+
+	@Override
+	public String toString() {
+		return "PregelGraph [id=" + id + ", adyacency=" + adyacency + ", data="
+				+ data + "]";
+	}
+
 }

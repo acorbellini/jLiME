@@ -30,7 +30,7 @@ public class WorkerImpl implements Worker {
 	}
 
 	@Override
-	public void sendDataToVertex(Vertex from, Vertex to, byte[] data,
+	public void sendDataToVertex(Vertex from, Vertex to, VertexData data,
 			UUID taskID) throws Exception {
 		contexts.get(taskID).queueVertexData(from, to, data);
 	}
@@ -41,15 +41,15 @@ public class WorkerImpl implements Worker {
 	}
 
 	@Override
-	public void nextSuperstep(int superstep, UUID taskID) throws Exception {
+	public void nextSuperstep(Integer superstep, UUID taskID) throws Exception {
 		contexts.get(taskID).nextStep(superstep);
 	}
 
 	@Override
 	public void createTask(PregelGraph input, VertexFunction func, UUID taskID,
-			HashMap<Vertex, byte[]> init) throws Exception {
-		contexts.put(taskID, new WorkerTask(input, this, coordCli.first(), func,
-				taskID, init));
+			HashMap<Vertex, VertexData> init) throws Exception {
+		contexts.put(taskID, new WorkerTask(input, this, coordCli.first(),
+				func, taskID, init));
 	}
 
 	@Override

@@ -129,7 +129,8 @@ public abstract class NetworkProtocol extends SimpleMessageProcessor implements
 		port = port + tries;
 
 		if (log.isDebugEnabled())
-			log.debug("Socket Created : " + getAddr() + " with port " + port);
+			log.debug("Socket TYPE " + getType() + " Created : " + getAddr()
+					+ " with port " + port + " on peer " + local);
 
 		localAddr = new SocketAddress(new InetSocketAddress(
 				InetAddress.getByName(getAddr()), port), getType());
@@ -219,7 +220,9 @@ public abstract class NetworkProtocol extends SimpleMessageProcessor implements
 
 	@Override
 	public void addressUpdate(Address id, List<SocketAddress> addresses) {
-
+		if (log.isDebugEnabled())
+			log.debug("Updating addresses for address " + id + " with "
+					+ addresses);
 		List<SocketAddress> update = new ArrayList<>();
 		for (SocketAddress defSocketAddress : addresses) {
 			if (isEqualToLocalType(defSocketAddress.getSockTo()))
