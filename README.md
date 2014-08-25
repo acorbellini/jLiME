@@ -28,9 +28,13 @@ A custom Transport implementation that can be configured to use UDP, TCP and/or 
 
 Factory that configures and creates an RPCDispatcher using the jLiME Transport implementation.
 
-##JobDispatcher
+#JobDispatcher
 
 A class that uses RPCDispatcher to call other JobDispatcher to execute Jobs.
+
+#jLiME Pregel
+
+A simple Pregel implementation using the RPCDispatcher.
 
 
 
