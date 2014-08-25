@@ -1,8 +1,0 @@
-grid1
-grid3
-grid4
-grid5
-grid7
-grid10
-grid11
-grid12
