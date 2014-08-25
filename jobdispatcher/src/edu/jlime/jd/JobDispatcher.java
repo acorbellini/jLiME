@@ -221,8 +221,7 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 				log.debug("Checking if it's local.");
 			while (it.hasNext()) {
 				Peer peer = it.next();
-				JobExecutor localJD = DispatcherManager
-						.getJD(peer.getAddress());
+				JobExecutor localJD = DispatcherManager.getJD(peer);
 				if (localJD != null) {
 					if (log.isDebugEnabled())
 						log.debug("Executing job on local JD " + j);
@@ -277,7 +276,7 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 			job.setNoResponse(true);
 
 		try {
-			JobExecutor localJD = DispatcherManager.getJD(dest.getID());
+			JobExecutor localJD = DispatcherManager.getJD(dest.getPeer());
 			if (localJD != null) {
 				if (log.isDebugEnabled())
 					log.debug("Invoking LOCAL execute method for job "
@@ -433,7 +432,7 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 
 	public void sendResult(Object res, ClientNode req, UUID jobID, Peer cliID)
 			throws Exception {
-		JobExecutor localJD = DispatcherManager.getJD(req.getID());
+		JobExecutor localJD = DispatcherManager.getJD(req.getPeer());
 		if (localJD != null) {
 			if (log.isDebugEnabled())
 				log.debug("Sending result for job " + jobID

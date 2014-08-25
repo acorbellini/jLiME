@@ -18,7 +18,7 @@ public class DispatcherManager {
 		localDispatchers.remove(jobDispatcher.getLocalPeer());
 	}
 
-	public static JobExecutor getJD(Address id) {
+	public static JobExecutor getJD(Peer id) {
 		return localDispatchers.get(id);
 	}
 
