@@ -110,7 +110,7 @@ public abstract class Discovery implements DiscoveryProvider, StackElement {
 						DiscoveryMessage disco = DiscoveryMessage
 								.fromMessage(m);
 
-						if (disco.getId().equals(localID))
+						if (new Address(disco.getId()).equals(localID))
 							return;
 
 						if (log.isDebugEnabled())
@@ -155,7 +155,7 @@ public abstract class Discovery implements DiscoveryProvider, StackElement {
 
 	@Override
 	public void addListener(DiscoveryListener l) {
-		listeners.add(l);
+		this.listeners.add(l);
 	}
 
 	protected Message newDiscoveryConfirmMessage() {

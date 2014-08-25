@@ -163,14 +163,11 @@ public class RPCDispatcher implements ClassLoaderProvider, TransportListener {
 		return multiCall(peers, client, new MethodCall(target, method, objects));
 	}
 
-	private <T> Map<Peer, T> multiCall(List<Peer> peers, Peer client,
-			MethodCall call) throws Exception {
-		byte[] marshalled = getMarshaller().toByteArray(client, call);
-		return broadcast(peers, marshalled);
-	}
+	private <T> Map<Peer, T> multiCall(List<Peer> peers, final Peer client,
+			final MethodCall call) throws Exception {
 
-	public <T> Map<Peer, T> broadcast(List<Peer> peers, final byte[] marshalled)
-			throws Exception {
+		final byte[] marshalled = getMarshaller().toByteArray(client, call);
+
 		if (log.isDebugEnabled())
 			log.debug("Broadcasting " + marshalled.length + " bytes to "
 					+ peers);
@@ -182,15 +179,19 @@ public class RPCDispatcher implements ClassLoaderProvider, TransportListener {
 		final Map<Peer, T> ret = new ConcurrentHashMap<>();
 		for (final Peer p : peers) {
 			broadcastExec.execute(new Runnable() {
+				@SuppressWarnings("unchecked")
 				@Override
 				public void run() {
 					try {
 						if (log.isDebugEnabled())
 							log.debug("Sending broadcast message synchronously to "
 									+ p);
-						@SuppressWarnings("unchecked")
-						T sendSync = (T) getMarshaller().getObject(
-								tr.sendSync(p, marshalled), p);
+						T sendSync = null;
+						if (p.equals(getCluster().getLocalPeer()))
+							sendSync = (T) callSync(p, client, call);
+						else
+							sendSync = (T) getMarshaller().getObject(
+									tr.sendSync(p, marshalled), p);
 						if (sendSync != null)
 							ret.put(p, sendSync);
 						// else

@@ -44,23 +44,6 @@ public class PingFailureDetection implements StackElement, FailureProvider {
 	public PingFailureDetection(final MessageProcessor conn) {
 		this.conn = conn;
 		addPingProvider(conn);
-		// conn.addMessageListener(MessageType.PING, new DEFMessageListener() {
-		// @Override
-		// public void rcv(DEFMessage defMessage, MessageProcessor origin)
-		// throws Exception {
-		// DEFMessage msg = DEFMessage.newEmptyOutDataMessage(
-		// MessageType.PONG, defMessage.getFrom());
-		// conn.queue(msg);
-		// }
-		// });
-		// conn.addMessageListener(MessageType.PONG, new DEFMessageListener() {
-		// @Override
-		// public void rcv(DEFMessage defMessage, MessageProcessor origin)
-		// throws Exception {
-		// pongArrived(defMessage);
-		// }
-		// });
-
 	}
 
 	@Override
@@ -79,8 +62,8 @@ public class PingFailureDetection implements StackElement, FailureProvider {
 					} catch (InterruptedException excep) {
 						excep.printStackTrace();
 					}
-					for (Entry<Address, Integer> e : new ArrayList<>(
-							tries.entrySet())) {
+					for (Entry<Address, Peer> e : new ArrayList<>(
+							peers.entrySet())) {
 						try {
 							if (log.isDebugEnabled())
 								log.debug("Sending ping to " + e.getKey()
@@ -91,7 +74,7 @@ public class PingFailureDetection implements StackElement, FailureProvider {
 						} catch (Exception excep) {
 							excep.printStackTrace();
 						}
-						tries.put(e.getKey(), e.getValue() + 1);
+						tries.put(e.getKey(), tries.get(e.getKey()) + 1);
 					}
 				}
 			};

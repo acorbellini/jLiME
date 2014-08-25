@@ -37,8 +37,6 @@ public class Stack {
 
 	private Streamer streamer;
 
-	private HashMap<String, Bus> buses = new HashMap<>();
-
 	public void start() throws Exception {
 		for (StackElement m : stackElements) {
 			m.start();
@@ -135,8 +133,7 @@ public class Stack {
 		return tcpStack;
 	}
 
-	public static Stack udpStack(Configuration config, Address id,
-			String name) {
+	public static Stack udpStack(Configuration config, Address id, String name) {
 
 		NetworkProtocolFactory udpFactory = NetworkProtocolFactory.udp(id,
 				config);
@@ -181,88 +178,6 @@ public class Stack {
 		tcpStack.setData(data);
 		tcpStack.setStreamer(tcp);
 		return tcpStack;
-	}
-
-	public interface BusAction extends Runnable {
-
-		public void run();
-	}
-
-	public static class Bus {
-
-		private ExecutorService exec = Executors
-				.newCachedThreadPool(new ThreadFactory() {
-					@Override
-					public Thread newThread(Runnable r) {
-						Thread t = Executors.defaultThreadFactory()
-								.newThread(r);
-						t.setName("Bus Thread Pool");
-						return t;
-					}
-				});
-
-		private volatile boolean stopped = false;
-
-		private RingQueue in = new RingQueue();
-
-		private RingQueue out = new RingQueue();
-
-		public Bus() {
-			Thread tIn = new Thread("Bus in") {
-				public void run() {
-					while (!stopped) {
-						Object[] els = in.take();
-						if (stopped)
-							return;
-						for (Object object : els) {
-							out.put(object);
-						}
-					}
-				};
-			};
-
-			Thread tOut = new Thread("Bus out") {
-				public void run() {
-					while (!stopped) {
-						Object[] els = out.take();
-						if (stopped)
-							return;
-						for (Object object : els) {
-							BusAction buse = (BusAction) object;
-							exec.execute(buse);
-						}
-					}
-				};
-			};
-			tIn.start();
-			tOut.start();
-		}
-
-		public void stop() {
-			stopped = true;
-			in.put(new Object());
-			out.put(new Object());
-		}
-
-		public void add(BusAction act) {
-			in.put(act);
-		}
-
-	}
-
-	public void add(String queue, BusAction act) {
-		// queue = "ONLY";
-		Bus b = buses.get(queue);
-		if (b == null) {
-			synchronized (this) {
-				b = buses.get(queue);
-				if (b == null) {
-					b = new Bus();
-					buses.put(queue, b);
-				}
-			}
-		}
-		b.add(act);
 	}
 
 	public void setMetrics(Metrics metrics) {
