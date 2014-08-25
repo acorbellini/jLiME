@@ -1,6 +1,6 @@
 package edu.jlime.jd;
 
-import edu.jlime.client.JobContext;
+import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.RunJob;
 
 public class SetEnvironment extends RunJob {

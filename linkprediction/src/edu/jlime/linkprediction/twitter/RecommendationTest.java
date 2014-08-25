@@ -7,13 +7,13 @@ import java.util.Iterator;
 
 import org.springframework.context.support.FileSystemXmlApplicationContext;
 
-import edu.jlime.client.Client;
 import edu.jlime.collections.adjacencygraph.Mapper;
 import edu.jlime.collections.adjacencygraph.RemoteAdjacencyGraph;
 import edu.jlime.collections.adjacencygraph.query.RemoteListQuery;
 import edu.jlime.collections.adjacencygraph.query.TopQuery;
 import edu.jlime.collections.intintarray.client.jobs.StoreConfig;
 import edu.jlime.jd.ClientCluster;
+import edu.jlime.jd.client.Client;
 import edu.jlime.jd.profiler.ClusterProfiler;
 import edu.jlime.jd.profiler.MetricExtractor;
 import edu.jlime.linkprediction.TwitterStoreConfig;

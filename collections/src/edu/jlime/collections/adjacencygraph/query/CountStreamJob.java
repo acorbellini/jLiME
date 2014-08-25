@@ -4,10 +4,10 @@ import java.io.EOFException;
 
 import org.apache.log4j.Logger;
 
-import edu.jlime.client.JobContext;
 import edu.jlime.collections.intintarray.client.PersistentIntIntArrayMap;
 import edu.jlime.core.stream.RemoteInputStream;
 import edu.jlime.core.stream.RemoteOutputStream;
+import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.StreamJob;
 import edu.jlime.util.DataTypeUtils;
 import gnu.trove.iterator.TIntIntIterator;

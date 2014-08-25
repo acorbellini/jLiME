@@ -2,8 +2,8 @@ package edu.jlime.collections;
 
 import org.junit.Test;
 
-import edu.jlime.client.Client;
 import edu.jlime.collections.intint.DistIntIntHashtable;
+import edu.jlime.jd.client.Client;
 
 public class DistIntIntHashTest {
 

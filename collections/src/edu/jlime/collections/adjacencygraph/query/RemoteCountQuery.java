@@ -1,6 +1,5 @@
 package edu.jlime.collections.adjacencygraph.query;
 
-import edu.jlime.client.JobContext;
 import edu.jlime.collections.adjacencygraph.get.GetType;
 import edu.jlime.collections.adjacencygraph.query.StreamForkJoin.StreamJobFactory;
 import edu.jlime.collections.intintarray.client.PersistentIntIntArrayMap;
@@ -8,6 +7,7 @@ import edu.jlime.core.stream.RemoteInputStream;
 import edu.jlime.core.stream.RemoteOutputStream;
 import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.RemoteReference;
+import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.Job;
 import edu.jlime.jd.job.StreamJob;
 import edu.jlime.util.DataTypeUtils;

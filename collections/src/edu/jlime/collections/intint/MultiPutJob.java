@@ -2,9 +2,9 @@ package edu.jlime.collections.intint;
 
 import org.apache.log4j.Logger;
 
-import edu.jlime.client.JobContext;
 import edu.jlime.collections.hash.SimpleIntIntHash;
 import edu.jlime.jd.ClientNode;
+import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.RunJob;
 import gnu.trove.map.hash.TIntIntHashMap;
 

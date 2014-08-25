@@ -3,8 +3,8 @@ package edu.jlime.collections.adjacencygraph;
 import java.io.Serializable;
 import java.util.Map;
 
-import edu.jlime.client.JobContext;
 import edu.jlime.jd.ClientNode;
+import edu.jlime.jd.client.JobContext;
 import gnu.trove.list.array.TIntArrayList;
 
 public abstract class Mapper implements Serializable {

@@ -1,8 +1,8 @@
 package edu.jlime.collections.intintarray.client;
 
-import edu.jlime.client.JobContext;
 import edu.jlime.collections.intintarray.db.Store;
 import edu.jlime.jd.ClientNode;
+import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.Job;
 
 public class PersistentIntIntArrayCloseJob implements Job<Boolean> {

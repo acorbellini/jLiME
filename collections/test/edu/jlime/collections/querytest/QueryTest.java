@@ -4,7 +4,6 @@ import java.util.Iterator;
 
 import org.junit.Test;
 
-import edu.jlime.client.Client;
 import edu.jlime.collections.adjacencygraph.Mapper;
 import edu.jlime.collections.adjacencygraph.RemoteAdjacencyGraph;
 import edu.jlime.collections.adjacencygraph.mappers.MapperFactory;
@@ -13,6 +12,7 @@ import edu.jlime.collections.adjacencygraph.query.TopQuery;
 import edu.jlime.collections.intintarray.client.jobs.StoreConfig;
 import edu.jlime.collections.intintarray.db.StoreFactory.StoreType;
 import edu.jlime.jd.ClientCluster;
+import edu.jlime.jd.client.Client;
 import edu.jlime.util.StringUtils;
 
 public class QueryTest {

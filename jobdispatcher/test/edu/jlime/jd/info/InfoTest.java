@@ -2,7 +2,7 @@ package edu.jlime.jd.info;
 
 import org.junit.Test;
 
-import edu.jlime.client.Client;
+import edu.jlime.jd.client.Client;
 import edu.jlime.jd.profiler.ClusterProfiler;
 import edu.jlime.jd.profiler.MetricExtractor;
 import edu.jlime.metrics.metric.Metrics;

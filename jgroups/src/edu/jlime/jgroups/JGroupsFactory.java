@@ -2,14 +2,12 @@ package edu.jlime.jgroups;
 
 import java.io.InputStream;
 import java.net.Inet4Address;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
-import org.jgroups.Address;
 import org.jgroups.JChannel;
 import org.jgroups.ReceiverAdapter;
 import org.jgroups.View;
@@ -17,53 +15,12 @@ import org.jgroups.blocks.MessageDispatcher;
 
 import edu.jlime.core.cluster.IP;
 import edu.jlime.core.cluster.Peer;
-import edu.jlime.core.cluster.ServerAddressParser;
 import edu.jlime.core.rpc.RPCDispatcher;
 import edu.jlime.core.rpc.RPCFactory;
-import edu.jlime.core.transport.DiscoveryListener;
-import edu.jlime.core.transport.DiscoveryProvider;
-import edu.jlime.core.transport.FailureListener;
-import edu.jlime.core.transport.FailureProvider;
 import edu.jlime.util.NetworkUtils;
 import edu.jlime.util.NetworkUtils.SelectedInterface;
 
 public class JGroupsFactory implements RPCFactory {
-
-	public static class JgroupsMembership implements DiscoveryProvider,
-			FailureProvider {
-
-		private FailureListener fail;
-		private DiscoveryListener disco;
-
-		@Override
-		public void addListener(FailureListener l) {
-			this.fail = l;
-		}
-
-		@Override
-		public void addPeerToMonitor(Peer peer) throws Exception {
-		}
-
-		@Override
-		public void addListener(DiscoveryListener l) {
-			this.disco = l;
-
-		}
-
-		@Override
-		public void putData(Map<String, String> dataMap) {
-		}
-
-		public void nodeDeleted(Peer p) {
-			fail.nodeFailed(p);
-		}
-
-		public void nodeAdded(edu.jlime.core.transport.Address addr,
-				String name, Map<String, String> data) throws Exception {
-			disco.memberMessage(addr, name, data);
-		}
-
-	}
 
 	public static enum JGroupsConfigType {
 
@@ -88,18 +45,11 @@ public class JGroupsFactory implements RPCFactory {
 
 	private InputStream jg;
 
-	private int minPeers;
+	private HashMap<String, String> data;
 
-	private String[] tags;
-
-	private boolean exec;
-
-	public JGroupsFactory(InputStream jg, int minPeers, String[] tags,
-			boolean isExec) {
+	public JGroupsFactory(InputStream jg, HashMap<String, String> data) {
 		this.jg = jg;
-		this.minPeers = minPeers;
-		this.tags = tags;
-		this.exec = isExec;
+		this.data = data;
 	}
 
 	private static JGroupsConfigType jgroupsfile = JGroupsConfigType.TCP;
@@ -108,20 +58,20 @@ public class JGroupsFactory implements RPCFactory {
 		JGroupsFactory.jgroupsfile = jgroupsfile;
 	}
 
-	private static List<Peer> convertToPeerList(List<Address> members) {
-		List<Peer> ret = new ArrayList<>();
-		for (Address m : members) {
-			Peer srv;
-			try {
-				srv = PeerJgroups.createNew(m);
-				ret.add(srv);
-			} catch (Exception e) {
-				Logger log = Logger.getLogger(JGroupsFactory.class);
-				log.info("Address parse error" + e.getMessage());
-			}
-		}
-		return ret;
-	}
+	// private static List<Peer> convertToPeerList(List<Address> members) {
+	// List<Peer> ret = new ArrayList<>();
+	// for (Address m : members) {
+	// Peer srv;
+	// try {
+	// srv = PeerJgroups.createNew(m);
+	// ret.add(srv);
+	// } catch (Exception e) {
+	// Logger log = Logger.getLogger(JGroupsFactory.class);
+	// log.info("Address parse error" + e.getMessage());
+	// }
+	// }
+	// return ret;
+	// }
 
 	static Logger log = Logger.getLogger(JGroupsFactory.class);
 
@@ -163,11 +113,21 @@ public class JGroupsFactory implements RPCFactory {
 
 		IP ip = IP.toIP(addrList.get(0).getInet().getHostAddress());
 
-		String id = ServerAddressParser.generate(tags, ip, exec);
+		StringBuilder id = new StringBuilder();
+		id.append(ip + "/");
+
+		boolean first = true;
+		for (Entry<String, String> e : data.entrySet()) {
+			if (first)
+				first = false;
+			else
+				id.append(",");
+			id.append(e.getKey() + "=" + e.getValue());
+		}
 
 		JChannel channel = new JChannel(jg);
 
-		channel.setName(id);
+		channel.setName(id.toString());
 
 		final JgroupsMembership member = new JgroupsMembership();
 
@@ -177,25 +137,29 @@ public class JGroupsFactory implements RPCFactory {
 			@Override
 			public void viewAccepted(View view) {
 				super.viewAccepted(view);
-
-				List<Peer> peers = convertToPeerList(view.getMembers());
-
-				HashSet<Peer> added = new HashSet<>(peers);
-				HashSet<Peer> removed = new HashSet<>(current);
-				added.removeAll(current);
-				removed.retainAll(peers);
-				for (Peer peer : added) {
-					try {
-						member.nodeAdded(peer.getAddress(), peer.getName(),
-								peer.getDataMap());
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
+				try {
+					member.update(view.getMembers());
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
-
-				for (Peer peer2 : removed) {
-					member.nodeDeleted(peer2);
-				}
+				// List<Peer> peers = convertToPeerList(view.getMembers());
+				//
+				// HashSet<Peer> added = new HashSet<>(peers);
+				// HashSet<Peer> removed = new HashSet<>(current);
+				// added.removeAll(current);
+				// removed.retainAll(peers);
+				// for (Peer peer : added) {
+				// try {
+				// member.nodeAdded(peer.getAddress(), peer.getName(),
+				// peer.getDataMap());
+				// } catch (Exception e) {
+				// e.printStackTrace();
+				// }
+				// }
+				//
+				// for (Peer peer2 : removed) {
+				// member.nodeDeleted(peer2);
+				// }
 			}
 		};
 

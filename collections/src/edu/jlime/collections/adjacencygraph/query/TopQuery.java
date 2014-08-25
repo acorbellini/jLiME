@@ -9,8 +9,8 @@ import java.util.TreeMap;
 
 import org.apache.log4j.Logger;
 
-import edu.jlime.client.JobContext;
 import edu.jlime.collections.adjacencygraph.Mapper;
+import edu.jlime.jd.client.JobContext;
 import gnu.trove.iterator.TIntIntIterator;
 import gnu.trove.map.hash.TIntIntHashMap;
 

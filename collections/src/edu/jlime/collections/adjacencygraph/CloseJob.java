@@ -2,10 +2,10 @@ package edu.jlime.collections.adjacencygraph;
 
 import org.apache.log4j.Logger;
 
-import edu.jlime.client.JobContext;
 import edu.jlime.collections.intintarray.client.PersistentIntIntArrayMap;
 import edu.jlime.collections.intintarray.client.jobs.StoreConfig;
 import edu.jlime.jd.ClientNode;
+import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.RunJob;
 
 public class CloseJob extends RunJob {

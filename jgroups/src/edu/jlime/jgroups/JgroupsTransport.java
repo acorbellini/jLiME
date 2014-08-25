@@ -21,7 +21,6 @@ import org.jgroups.blocks.Response;
 import edu.jlime.core.cluster.Peer;
 import edu.jlime.core.transport.Streamer;
 import edu.jlime.core.transport.Transport;
-import edu.jlime.jgroups.JGroupsFactory.JgroupsMembership;
 
 public class JgroupsTransport extends Transport implements AsyncRequestHandler {
 
@@ -30,6 +29,8 @@ public class JgroupsTransport extends Transport implements AsyncRequestHandler {
 	private static final int MAX_RETRY = 5;
 
 	private MessageDispatcher disp;
+
+	private HashMap<Peer, Address> jgroupsaddr = new HashMap<>();
 
 	ExecutorService handleExecutor = Executors.newFixedThreadPool(20,
 			new ThreadFactory() {
@@ -56,9 +57,12 @@ public class JgroupsTransport extends Transport implements AsyncRequestHandler {
 			.setFlags(Flag.OOB).setTimeout(Long.MAX_VALUE);
 	HashMap<edu.jlime.core.transport.Address, Address> addrMap = new HashMap<>();
 
+	private JgroupsMembership member;
+
 	public JgroupsTransport(Peer local, MessageDispatcher disp,
 			JgroupsMembership member, Streamer s) throws Exception {
 		super(local, member, member, s);
+		this.member = member;
 		disp.setRequestHandler(this);
 		this.disp = disp;
 		addrMap.put(local.getAddress(), disp.getChannel().getAddress());
@@ -84,7 +88,7 @@ public class JgroupsTransport extends Transport implements AsyncRequestHandler {
 				Address origin = msg.getSrc();
 				byte[] buff = msg.getBuffer();
 				byte[] resp = JgroupsTransport.super.callTransportListener(
-						new JGroupsAddress(origin), buff);
+						member.getAddress(origin), buff);
 				if (response != null)
 					response.send(resp, false);
 			}
@@ -119,9 +123,8 @@ public class JgroupsTransport extends Transport implements AsyncRequestHandler {
 				if (log.isDebugEnabled())
 					log.debug("Sending JGROUPS message to " + p.getAddress());
 				return disp.sendMessage(
-						new Message(
-								((Address) ((JGroupsAddress) p.getAddress())
-										.getAddress()), marshalled), opts);
+						new Message(member.getJgroupsAddress(p.getAddress()),
+								marshalled), opts);
 			} catch (SuspectedException e) {
 				if (log.isDebugEnabled())
 					log.debug("Peer "

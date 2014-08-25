@@ -10,12 +10,12 @@ import java.util.Scanner;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import edu.jlime.client.Client;
-import edu.jlime.client.JobContext;
 import edu.jlime.core.cluster.StreamResult;
 import edu.jlime.core.stream.RemoteInputStream;
 import edu.jlime.core.stream.RemoteOutputStream;
 import edu.jlime.jd.ClientNode;
+import edu.jlime.jd.client.Client;
+import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.StreamJob;
 import edu.jlime.util.RingQueue;
 

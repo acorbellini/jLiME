@@ -34,8 +34,6 @@ public class PingFailureDetection implements StackElement, FailureProvider {
 
 	private ConcurrentHashMap<Address, Integer> tries = new ConcurrentHashMap<>();
 
-	private ConcurrentHashMap<Address, Peer> peers = new ConcurrentHashMap<>();
-
 	@Override
 	public void addListener(FailureListener l) {
 		list.add(l);
@@ -49,7 +47,6 @@ public class PingFailureDetection implements StackElement, FailureProvider {
 	@Override
 	public void addPeerToMonitor(Peer peer) throws Exception {
 		tries.put((Address) peer.getAddress(), 0);
-		peers.put((Address) peer.getAddress(), peer);
 	}
 
 	@Override
@@ -62,8 +59,8 @@ public class PingFailureDetection implements StackElement, FailureProvider {
 					} catch (InterruptedException excep) {
 						excep.printStackTrace();
 					}
-					for (Entry<Address, Peer> e : new ArrayList<>(
-							peers.entrySet())) {
+					for (Entry<Address, Integer> e : new ArrayList<>(
+							tries.entrySet())) {
 						try {
 							if (log.isDebugEnabled())
 								log.debug("Sending ping to " + e.getKey()
@@ -74,7 +71,7 @@ public class PingFailureDetection implements StackElement, FailureProvider {
 						} catch (Exception excep) {
 							excep.printStackTrace();
 						}
-						tries.put(e.getKey(), tries.get(e.getKey()) + 1);
+						tries.put(e.getKey(), e.getValue() + 1);
 					}
 				}
 			};
@@ -88,12 +85,10 @@ public class PingFailureDetection implements StackElement, FailureProvider {
 							tries.entrySet())) {
 						if (e.getValue() >= max_missed) {
 							tries.remove(e.getKey());
-							Peer peerThatFailed = peers.remove(e.getKey());
-							if (peerThatFailed != null)
-								for (FailureListener l : list)
-									l.nodeFailed(peerThatFailed);
-
+							for (FailureListener l : list)
+								l.nodeFailed(e.getKey());
 						}
+
 					}
 					try {
 						Thread.sleep(ping_delay);
@@ -124,7 +119,8 @@ public class PingFailureDetection implements StackElement, FailureProvider {
 	private void pongArrived(Message m) {
 		if (log.isDebugEnabled())
 			log.debug("Received pong from " + m.getFrom() + ".");
-		tries.put(m.getFrom(), 0);
+		if (tries.containsKey(m.getFrom()))
+			tries.put(m.getFrom(), 0);
 	}
 
 	@Override

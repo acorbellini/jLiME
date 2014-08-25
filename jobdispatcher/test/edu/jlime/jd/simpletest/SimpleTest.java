@@ -6,9 +6,9 @@ import java.util.Map;
 
 import org.junit.Test;
 
-import edu.jlime.client.Client;
-import edu.jlime.client.JobContext;
 import edu.jlime.jd.ClientNode;
+import edu.jlime.jd.client.Client;
+import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.Job;
 import edu.jlime.jd.mapreduce.MapReduceTask;
 

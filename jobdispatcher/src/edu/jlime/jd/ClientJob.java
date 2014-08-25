@@ -1,7 +1,7 @@
 package edu.jlime.jd;
 
-import edu.jlime.client.JobContext;
 import edu.jlime.core.cluster.Peer;
+import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.Job;
 
 public class ClientJob<R> implements Job<R> {

@@ -6,10 +6,10 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 
-import edu.jlime.client.Client;
 import edu.jlime.collections.intintarray.client.PersistentIntIntArrayMap;
 import edu.jlime.collections.intintarray.client.jobs.StoreConfig;
 import edu.jlime.collections.intintarray.db.StoreFactory.StoreType;
+import edu.jlime.jd.client.Client;
 
 public class TopUsersExtractor {
 

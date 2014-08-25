@@ -2,9 +2,9 @@ package edu.jlime.collections.adjacencygraph.count;
 
 import java.util.Iterator;
 
-import edu.jlime.client.JobContext;
 import edu.jlime.collections.intint.DistIntIntHashtable;
 import edu.jlime.jd.ClientCluster;
+import edu.jlime.jd.client.JobContext;
 
 public class DistHashCount extends CountResult {
 

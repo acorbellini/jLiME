@@ -1,7 +1,7 @@
 package edu.jlime.jd.job;
 
-import edu.jlime.client.JobContext;
 import edu.jlime.jd.ClientNode;
+import edu.jlime.jd.client.JobContext;
 
 public abstract class RunJob implements Job<Boolean> {
 

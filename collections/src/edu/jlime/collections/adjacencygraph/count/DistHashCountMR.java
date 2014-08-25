@@ -9,11 +9,11 @@ import java.util.UUID;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.ReentrantLock;
 
-import edu.jlime.client.JobContext;
 import edu.jlime.collections.adjacencygraph.GraphMR;
 import edu.jlime.collections.adjacencygraph.Mapper;
 import edu.jlime.collections.adjacencygraph.get.GetType;
 import edu.jlime.jd.ClientNode;
+import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.Job;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.TIntIntHashMap;

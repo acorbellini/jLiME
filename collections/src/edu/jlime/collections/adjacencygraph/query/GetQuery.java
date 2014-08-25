@@ -2,10 +2,10 @@ package edu.jlime.collections.adjacencygraph.query;
 
 import org.apache.log4j.Logger;
 
-import edu.jlime.client.JobContext;
 import edu.jlime.collections.adjacencygraph.Mapper;
 import edu.jlime.collections.adjacencygraph.get.GetMR;
 import edu.jlime.collections.adjacencygraph.get.GetType;
+import edu.jlime.jd.client.JobContext;
 import gnu.trove.set.hash.TIntHashSet;
 
 public class GetQuery extends RemoteListQuery {

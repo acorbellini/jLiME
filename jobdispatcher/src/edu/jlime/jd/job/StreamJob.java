@@ -2,10 +2,10 @@ package edu.jlime.jd.job;
 
 import java.util.UUID;
 
-import edu.jlime.client.JobContext;
 import edu.jlime.core.stream.RemoteInputStream;
 import edu.jlime.core.stream.RemoteOutputStream;
 import edu.jlime.jd.ClientNode;
+import edu.jlime.jd.client.JobContext;
 
 public abstract class StreamJob extends RunJob {
 

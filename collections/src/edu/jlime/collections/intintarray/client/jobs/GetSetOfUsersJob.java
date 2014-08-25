@@ -11,9 +11,9 @@ import java.util.concurrent.Future;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 
-import edu.jlime.client.JobContext;
 import edu.jlime.collections.intintarray.db.Store;
 import edu.jlime.jd.ClientNode;
+import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.Job;
 import edu.jlime.util.DataTypeUtils;
 import edu.jlime.util.RingQueue;

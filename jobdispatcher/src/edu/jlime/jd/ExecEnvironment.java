@@ -4,9 +4,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.log4j.Logger;
 
-import edu.jlime.client.JobContext;
-import edu.jlime.client.JobContextImpl;
 import edu.jlime.core.cluster.Peer;
+import edu.jlime.jd.client.JobContext;
+import edu.jlime.jd.client.JobContextImpl;
 
 public class ExecEnvironment {
 

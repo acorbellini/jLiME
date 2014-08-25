@@ -11,13 +11,13 @@ import java.util.Map;
 
 import org.junit.Test;
 
-import edu.jlime.client.Client;
 import edu.jlime.collections.adjacencygraph.RemoteAdjacencyGraph;
 import edu.jlime.collections.adjacencygraph.mappers.RoundRobinMapper;
 import edu.jlime.collections.adjacencygraph.query.UserQuery;
 import edu.jlime.collections.intintarray.client.jobs.StoreConfig;
 import edu.jlime.collections.intintarray.db.StoreFactory.StoreType;
 import edu.jlime.jd.ClientCluster;
+import edu.jlime.jd.client.Client;
 
 public class AddISToResults {
 

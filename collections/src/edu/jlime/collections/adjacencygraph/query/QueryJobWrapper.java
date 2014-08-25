@@ -1,7 +1,7 @@
 package edu.jlime.collections.adjacencygraph.query;
 
-import edu.jlime.client.JobContext;
 import edu.jlime.jd.ClientNode;
+import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.Job;
 
 public class QueryJobWrapper<T> implements Job<T> {

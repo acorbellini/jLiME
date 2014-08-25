@@ -1,9 +1,9 @@
 package edu.jlime.collections.persistent;
 
-import edu.jlime.client.Client;
 import edu.jlime.collections.intintarray.client.PersistentIntIntArrayMap;
 import edu.jlime.collections.intintarray.client.jobs.StoreConfig;
 import edu.jlime.collections.intintarray.db.StoreFactory.StoreType;
+import edu.jlime.jd.client.Client;
 import gnu.trove.map.hash.TIntObjectHashMap;
 
 import java.util.Arrays;

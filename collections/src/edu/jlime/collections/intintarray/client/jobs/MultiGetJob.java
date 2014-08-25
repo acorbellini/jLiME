@@ -4,9 +4,9 @@ import java.util.Arrays;
 
 import org.apache.log4j.Logger;
 
-import edu.jlime.client.JobContext;
 import edu.jlime.collections.intintarray.db.Store;
 import edu.jlime.jd.ClientNode;
+import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.Job;
 import edu.jlime.util.Buffer;
 import edu.jlime.util.ByteBuffer;

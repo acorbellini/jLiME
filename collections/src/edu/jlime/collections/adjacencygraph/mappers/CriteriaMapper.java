@@ -7,9 +7,9 @@ import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
 
-import edu.jlime.client.JobContext;
 import edu.jlime.collections.adjacencygraph.Mapper;
 import edu.jlime.jd.ClientNode;
+import edu.jlime.jd.client.JobContext;
 import edu.jlime.metrics.metric.CompositeMetrics;
 import edu.jlime.metrics.sysinfo.filter.SysInfoFilter;
 import gnu.trove.list.array.TIntArrayList;

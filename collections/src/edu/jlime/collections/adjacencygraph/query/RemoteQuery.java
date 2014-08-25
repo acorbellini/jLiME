@@ -3,10 +3,10 @@ package edu.jlime.collections.adjacencygraph.query;
 import java.io.Serializable;
 import java.util.Calendar;
 
-import edu.jlime.client.JobContext;
 import edu.jlime.collections.adjacencygraph.Mapper;
 import edu.jlime.collections.adjacencygraph.RemoteAdjacencyGraph;
 import edu.jlime.jd.ClientCluster;
+import edu.jlime.jd.client.JobContext;
 
 public abstract class RemoteQuery<R> implements Serializable, Query<R> {
 

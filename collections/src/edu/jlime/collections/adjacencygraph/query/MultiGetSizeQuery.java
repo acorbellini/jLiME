@@ -1,8 +1,8 @@
 package edu.jlime.collections.adjacencygraph.query;
 
-import edu.jlime.client.JobContext;
 import edu.jlime.collections.adjacencygraph.get.GetType;
 import edu.jlime.collections.intintarray.client.PersistentIntIntArrayMap;
+import edu.jlime.jd.client.JobContext;
 import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import gnu.trove.set.hash.TIntHashSet;

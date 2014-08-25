@@ -1,8 +1,8 @@
 package edu.jlime.collections.intintarray.client.jobs;
 
-import edu.jlime.client.JobContext;
 import edu.jlime.collections.intintarray.db.Store;
 import edu.jlime.jd.ClientNode;
+import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.Job;
 import edu.jlime.util.DataTypeUtils;
 import gnu.trove.iterator.TIntObjectIterator;

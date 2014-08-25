@@ -5,10 +5,10 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
-import edu.jlime.client.JobContext;
 import edu.jlime.collections.adjacencygraph.Mapper;
 import edu.jlime.collections.intintarray.client.PersistentIntIntArrayMap;
 import edu.jlime.jd.ClientNode;
+import edu.jlime.jd.client.JobContext;
 import gnu.trove.list.array.TIntArrayList;
 
 public class LocationMapper extends Mapper {

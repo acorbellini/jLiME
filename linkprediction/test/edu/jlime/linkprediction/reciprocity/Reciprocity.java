@@ -5,12 +5,12 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-import edu.jlime.client.Client;
 import edu.jlime.collections.adjacencygraph.AdjacencyGraph;
 import edu.jlime.collections.adjacencygraph.RemoteAdjacencyGraph;
 import edu.jlime.collections.adjacencygraph.mappers.LocationMapper;
 import edu.jlime.collections.adjacencygraph.query.ListQuery;
 import edu.jlime.jd.ClientCluster;
+import edu.jlime.jd.client.Client;
 import edu.jlime.linkprediction.SimilarityTest;
 import edu.jlime.linkprediction.TwitterStoreConfig;
 

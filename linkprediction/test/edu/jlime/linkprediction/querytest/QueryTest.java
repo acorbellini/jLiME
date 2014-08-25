@@ -2,12 +2,12 @@ package edu.jlime.linkprediction.querytest;
 
 import org.junit.Test;
 
-import edu.jlime.client.Client;
 import edu.jlime.collections.adjacencygraph.AdjacencyGraph;
 import edu.jlime.collections.adjacencygraph.RemoteAdjacencyGraph;
 import edu.jlime.collections.adjacencygraph.mappers.LocationMapper;
 import edu.jlime.collections.util.IntArrayUtils;
 import edu.jlime.jd.ClientCluster;
+import edu.jlime.jd.client.Client;
 import edu.jlime.linkprediction.TwitterStoreConfig;
 
 public class QueryTest {

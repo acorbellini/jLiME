@@ -5,10 +5,10 @@ import java.util.concurrent.Semaphore;
 
 import org.junit.Test;
 
-import edu.jlime.client.Client;
-import edu.jlime.client.JobContext;
 import edu.jlime.jd.ClientCluster;
 import edu.jlime.jd.ClientNode;
+import edu.jlime.jd.client.Client;
+import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.ResultManager;
 import edu.jlime.jd.job.RunJob;
 

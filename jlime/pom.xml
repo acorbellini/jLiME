@@ -117,7 +117,7 @@
 		
 		<module>../jobdispatcher</module>
 		<module>../metrics</module>
-		<module>../server</module>
+		
 		<module>../util</module>
 	</modules>
 	<repositories>

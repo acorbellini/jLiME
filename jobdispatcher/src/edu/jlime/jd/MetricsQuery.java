@@ -1,6 +1,6 @@
 package edu.jlime.jd;
 
-import edu.jlime.client.JobContext;
+import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.Job;
 import edu.jlime.metrics.metric.Metrics;
 

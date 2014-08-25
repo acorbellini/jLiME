@@ -20,7 +20,6 @@ import java.util.concurrent.ThreadFactory;
 
 import org.apache.log4j.Logger;
 
-import edu.jlime.client.JobContextImpl;
 import edu.jlime.core.cluster.BroadcastException;
 import edu.jlime.core.cluster.Cluster;
 import edu.jlime.core.cluster.ClusterChangeListener;
@@ -30,6 +29,7 @@ import edu.jlime.core.marshalling.TypeConverters;
 import edu.jlime.core.rpc.RPCDispatcher;
 import edu.jlime.core.stream.RemoteInputStream;
 import edu.jlime.core.stream.RemoteOutputStream;
+import edu.jlime.jd.client.JobContextImpl;
 import edu.jlime.jd.job.ResultManager;
 import edu.jlime.metrics.metric.Metrics;
 import edu.jlime.util.ByteBuffer;

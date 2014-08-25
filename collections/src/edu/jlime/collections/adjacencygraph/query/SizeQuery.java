@@ -1,7 +1,7 @@
 package edu.jlime.collections.adjacencygraph.query;
 
-import edu.jlime.client.JobContext;
 import edu.jlime.collections.adjacencygraph.Mapper;
+import edu.jlime.jd.client.JobContext;
 
 public class SizeQuery extends RemoteQuery<Integer> {
 

@@ -8,7 +8,6 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.log4j.Logger;
 
-import edu.jlime.client.JobContext;
 import edu.jlime.collections.intintarray.client.jobs.GetJob;
 import edu.jlime.collections.intintarray.client.jobs.GetSetOfUsersJob;
 import edu.jlime.collections.intintarray.client.jobs.MultiGetJob;
@@ -21,6 +20,7 @@ import edu.jlime.core.stream.RemoteInputStream;
 import edu.jlime.core.stream.RemoteOutputStream;
 import edu.jlime.jd.ClientCluster;
 import edu.jlime.jd.ClientNode;
+import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.StreamJob;
 import edu.jlime.jd.task.ForkJoinTask;
 import edu.jlime.jd.task.ResultListener;

@@ -2,8 +2,8 @@ package edu.jlime.collections.adjacencygraph.query;
 
 import java.util.Arrays;
 
-import edu.jlime.client.JobContext;
 import edu.jlime.collections.adjacencygraph.RemoteAdjacencyGraph;
+import edu.jlime.jd.client.JobContext;
 
 public class UserQuery extends RemoteListQuery {
 

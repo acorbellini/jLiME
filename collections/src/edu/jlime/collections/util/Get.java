@@ -1,9 +1,9 @@
 package edu.jlime.collections.util;
 
-import edu.jlime.client.Client;
 import edu.jlime.collections.intintarray.client.PersistentIntIntArrayMap;
 import edu.jlime.collections.intintarray.client.jobs.StoreConfig;
 import edu.jlime.collections.intintarray.db.StoreFactory.StoreType;
+import edu.jlime.jd.client.Client;
 
 public class Get {
 	public static void main(String[] args) throws Exception {

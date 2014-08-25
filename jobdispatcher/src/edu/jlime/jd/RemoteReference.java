@@ -3,7 +3,7 @@ package edu.jlime.jd;
 import java.io.Serializable;
 import java.util.UUID;
 
-import edu.jlime.client.JobContext;
+import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.Job;
 
 public class RemoteReference<T> implements Serializable {

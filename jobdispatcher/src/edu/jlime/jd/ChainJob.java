@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
 
-import edu.jlime.client.JobContext;
+import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.Job;
 
 public class ChainJob<R> implements Job<Map<ClientNode, R>> {

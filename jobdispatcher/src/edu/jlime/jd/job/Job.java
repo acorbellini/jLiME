@@ -2,8 +2,8 @@ package edu.jlime.jd.job;
 
 import java.io.Serializable;
 
-import edu.jlime.client.JobContext;
 import edu.jlime.jd.ClientNode;
+import edu.jlime.jd.client.JobContext;
 
 public interface Job<R> extends Serializable {
 	//

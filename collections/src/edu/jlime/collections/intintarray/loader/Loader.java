@@ -10,11 +10,11 @@ import java.util.Properties;
 
 import org.apache.log4j.Logger;
 
-import edu.jlime.client.Client;
 import edu.jlime.collections.intintarray.client.BundlerClient;
 import edu.jlime.collections.intintarray.client.PersistentIntIntArrayMap;
 import edu.jlime.collections.intintarray.client.jobs.StoreConfig;
 import edu.jlime.collections.intintarray.db.StoreFactory.StoreType;
+import edu.jlime.jd.client.Client;
 import edu.jlime.util.RingQueue;
 import gnu.trove.list.array.TIntArrayList;
 

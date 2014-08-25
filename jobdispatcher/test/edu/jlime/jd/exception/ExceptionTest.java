@@ -2,9 +2,9 @@ package edu.jlime.jd.exception;
 
 import org.junit.Test;
 
-import edu.jlime.client.Client;
-import edu.jlime.client.JobContext;
 import edu.jlime.jd.ClientNode;
+import edu.jlime.jd.client.Client;
+import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.RunJob;
 
 public class ExceptionTest {

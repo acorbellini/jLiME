@@ -2,9 +2,9 @@ package edu.jlime.collections.intintarray.client.jobs;
 
 import org.apache.log4j.Logger;
 
-import edu.jlime.client.JobContext;
 import edu.jlime.collections.intintarray.db.Store;
 import edu.jlime.jd.ClientNode;
+import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.Job;
 
 public class PersistentIntIntArrayInitJob implements Job<Boolean> {

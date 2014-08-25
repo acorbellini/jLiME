@@ -50,10 +50,11 @@ public abstract class Transport implements DiscoveryListener, FailureListener {
 	}
 
 	@Override
-	public void nodeFailed(Peer peer) {
-		this.log.info("Node " + peer + " crashed. ");
-		this.cluster.removePeer(peer);
-		onFailedPeer(peer);
+	public void nodeFailed(Address addr) {
+		this.log.info("Node " + addr + " crashed. ");
+		Peer p = cluster.getByAddress(addr);
+		this.cluster.removePeer(p);
+		onFailedPeer(p);
 	}
 
 	protected void onNewPeer(Peer peer) {

@@ -2,8 +2,8 @@ package edu.jlime.jd.sysinfo;
 
 import org.junit.Test;
 
-import edu.jlime.client.Client;
 import edu.jlime.jd.MetricsQuery;
+import edu.jlime.jd.client.Client;
 import edu.jlime.metrics.metric.Metrics;
 
 public class SysInfoTest {
