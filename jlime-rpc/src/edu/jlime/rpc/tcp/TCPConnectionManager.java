@@ -36,8 +36,8 @@ class TCPConnectionManager {
 				}
 			});
 
-	private ExecutorService send = Executors.newFixedThreadPool(20,
-			new ThreadFactory() {
+	private ExecutorService send = Executors
+			.newCachedThreadPool(new ThreadFactory() {
 
 				@Override
 				public Thread newThread(Runnable r) {
@@ -56,7 +56,7 @@ class TCPConnectionManager {
 	private List<TCPPacketConnection> connections = Collections
 			.synchronizedList(new ArrayList<TCPPacketConnection>());
 
-	private int conn_limit = 20;
+	private int conn_limit = 10;
 
 	private long time_limit = 15000;
 
@@ -72,8 +72,8 @@ class TCPConnectionManager {
 
 	private int output_buffer;
 
-	public TCPConnectionManager(Address addr, Address localID,
-			TCP rcvr, TCPConfig config) {
+	public TCPConnectionManager(Address addr, Address localID, TCP rcvr,
+			TCPConfig config) {
 		this.conn_limit = config.conn_limit;
 		this.time_limit = config.time_limit;
 		this.input_buffer = config.input_buffer;

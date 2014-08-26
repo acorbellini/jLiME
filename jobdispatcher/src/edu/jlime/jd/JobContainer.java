@@ -51,8 +51,7 @@ public class JobContainer implements Runnable, Serializable {
 			try {
 				if (log.isDebugEnabled())
 					log.debug("Calling job " + jobID + " from " + origin);
-				res = rJ.call(srv.getEnv().getClientEnv(rJ.getClient()),
-						origin);
+				res = rJ.call(srv.getEnv().getClientEnv(rJ.getClient()), origin);
 				if (log.isDebugEnabled())
 					log.debug("Finished call to job " + jobID + " from "
 							+ origin);
@@ -65,7 +64,7 @@ public class JobContainer implements Runnable, Serializable {
 					if (log.isDebugEnabled())
 						log.debug("Sending result for job " + getJobID()
 								+ " to " + origin);
-					srv.sendResult(res, origin, getJobID(), rJ.getClient());
+					srv.sendResult(res, origin, jobID, rJ.getClient());
 				} else {
 					if (log.isDebugEnabled())
 						log.debug("Job " + jobID + " WILL NOT RESPOND");
@@ -98,4 +97,11 @@ public class JobContainer implements Runnable, Serializable {
 		this.jobID = id;
 
 	}
+
+	@Override
+	public String toString() {
+		return "JobContainer [jobID=" + jobID + ", noresponse=" + noresponse
+				+ ", origin=" + origin + ", rJ=" + rJ + "]";
+	}
+
 }

@@ -71,6 +71,7 @@ public class Cluster implements Iterable<Peer> {
 	};
 
 	public void addPeer(Peer peer) {
+
 		synchronized (peers) {
 			if (peers.contains(peer))
 				return;
@@ -84,19 +85,24 @@ public class Cluster implements Iterable<Peer> {
 		}
 
 		notifyPeerAdded(peer);
+
+		if (log.isDebugEnabled())
+			log.info(this.toString());
 	};
 
 	public void removePeer(Peer peer) {
-		synchronized (peers) {
-			if (!peers.contains(peer))
-				peers.remove(peer);
 
+		synchronized (peers) {
+			peers.remove(peer);
 			byAddress.remove(peer.getAddress());
 			byName.get(peer.getName()).remove(peer);
 
 		}
 
 		notifyPeerRemoved(peer);
+
+		if (log.isDebugEnabled())
+			log.info(this.toString());
 		// stop(peer);
 	}
 
@@ -149,4 +155,20 @@ public class Cluster implements Iterable<Peer> {
 
 		return true;
 	}
+
+	@Override
+	public String toString() {
+		HashSet<Peer> copy = null;
+		synchronized (peers) {
+			copy = new HashSet<>(peers);
+		}
+
+		StringBuilder builder = new StringBuilder();
+		builder.append("Cluster Status: \n");
+		for (Peer p : copy) {
+			builder.append(p + "\n");
+		}
+		return builder.toString();
+	}
+
 }

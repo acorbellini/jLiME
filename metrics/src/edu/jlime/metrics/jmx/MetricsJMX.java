@@ -3,6 +3,7 @@ package edu.jlime.metrics.jmx;
 import java.lang.management.ManagementFactory;
 import java.util.HashMap;
 import java.util.Map.Entry;
+import java.util.SortedMap;
 
 import javax.management.MBeanServer;
 import javax.management.MalformedObjectNameException;
@@ -60,7 +61,7 @@ public class MetricsJMX {
 	}
 
 	public void start() {
-		HashMap<String, Metric<?>> list = mgr.getMetrics();
+		SortedMap<String, Metric<?>> list = mgr.getMetrics();
 
 		for (Entry<String, Metric<?>> metric : list.entrySet())
 			addMetric(metric.getKey(), metric.getValue());

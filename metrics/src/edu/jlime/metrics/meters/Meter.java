@@ -12,7 +12,7 @@ public class Meter implements Metric<Float>, MeterMBean {
 
 	Gauge g = new Gauge();
 
-	Float meterValue;
+	Float meterValue = 0f;
 
 	Long lastTime = -1l;
 
@@ -23,7 +23,7 @@ public class Meter implements Metric<Float>, MeterMBean {
 	@Override
 	public void update(Float val) {
 		long currentTime = System.currentTimeMillis();
-		if (lastTime == -1) {
+		if (lastTime == -1l) {
 			lastTime = currentTime;
 			meterValue = val;
 			return;
@@ -36,7 +36,6 @@ public class Meter implements Metric<Float>, MeterMBean {
 		meterValue = val;
 		g.update(val);
 
-		
 	}
 
 	@Override

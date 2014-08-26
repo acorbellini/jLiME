@@ -29,11 +29,11 @@ public class JobContextImpl implements JobContext {
 	public JobContextImpl(ClientCluster c, Peer cliId) {
 		this.id = cliId;
 		this.cluster = c;
-		exec = Executors.newFixedThreadPool(50, new ThreadFactory() {
+		exec = Executors.newCachedThreadPool(new ThreadFactory() {
 			@Override
 			public Thread newThread(Runnable r) {
 				Thread t = Executors.defaultThreadFactory().newThread(r);
-				t.setName("CliEnv-client:" + id);
+				t.setName("JobContext for peer" + id);
 				return t;
 			}
 		});
@@ -97,7 +97,7 @@ public class JobContextImpl implements JobContext {
 
 	@Override
 	public String toString() {
-		return "Client Env. Keyset : " + data.keySet();
+		return "JobContext Keyset : " + data.keySet();
 	}
 
 	@Override

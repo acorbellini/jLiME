@@ -12,6 +12,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.log4j.Logger;
@@ -189,9 +190,10 @@ public class RPCDispatcher implements ClassLoaderProvider, TransportListener {
 						T sendSync = null;
 						if (p.equals(getCluster().getLocalPeer()))
 							sendSync = (T) callSync(p, client, call);
-						else
-							sendSync = (T) getMarshaller().getObject(
-									tr.sendSync(p, marshalled), p);
+						else {
+							byte[] res = tr.sendSync(p, marshalled);
+							sendSync = (T) getMarshaller().getObject(res, p);
+						}
 						if (sendSync != null)
 							ret.put(p, sendSync);
 						// else
@@ -201,13 +203,18 @@ public class RPCDispatcher implements ClassLoaderProvider, TransportListener {
 									+ p);
 					} catch (Exception e) {
 						exception.add(e);
-						e.printStackTrace();
+						log.error("Error making broadcast rpc to " + p, e);
 					}
 					sem.release();
 				}
 			});
 		}
-		sem.acquire();
+		while (!sem.tryAcquire(5, TimeUnit.SECONDS)) {
+			if (log.isDebugEnabled())
+				log.debug("Waiting for semaphore in multiCall Permits:"
+						+ sem.availablePermits() + " , call:  " + call
+						+ " , peers : " + peers);
+		}
 		if (log.isDebugEnabled())
 			log.debug("FINISHED broadcasting " + marshalled.length
 					+ " bytes to " + peers);

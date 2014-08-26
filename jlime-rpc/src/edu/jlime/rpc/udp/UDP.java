@@ -218,8 +218,8 @@ public class UDP extends NetworkProtocol implements PacketReceiver {
 							} catch (Exception e) {
 								log.debug(
 										"Failed sending datagram to "
-												+ dg.getAddress()
-												+ " with size "
+												+ dg.getAddress() + ":"
+												+ dg.getPort() + " with size "
 												+ dg.getLength()
 												+ " on socket "
 												+ sock.getLocalSocketAddress(),

@@ -36,7 +36,7 @@ public class Metrics implements Serializable, IMetrics {
 
 	public Metrics() {
 	}
-	
+
 	public Metrics(TreeMap<String, Metric<?>> map) {
 		metrics.putAll(map);
 	}
@@ -109,9 +109,11 @@ public class Metrics implements Serializable, IMetrics {
 		}
 
 		String nextLetter = String.valueOf((char) (el.charAt(0) + 1));
-
-		SortedMap<String, Metric<?>> m = metrics.subMap(k, root + nextLetter);
-		return m;
+		synchronized (metrics) {
+			SortedMap<String, Metric<?>> m = new TreeMap<>(metrics.subMap(k,
+					root + nextLetter));
+			return m;
+		}
 	}
 
 	public void createTimedSensor(final SensorMeasure timed) {
@@ -142,14 +144,16 @@ public class Metrics implements Serializable, IMetrics {
 	}
 
 	public void deleteAll(String k) {
-		SortedMap<String, Metric<?>> m = metrics.tailMap(k);
-		Iterator<Entry<String, Metric<?>>> it = m.entrySet().iterator();
-		while (it.hasNext()) {
-			Entry<String, Metric<?>> e = it.next();
-			if (e.getKey().startsWith(k))
-				it.remove();
-			else
-				return;
+		synchronized (metrics) {
+			SortedMap<String, Metric<?>> m = metrics.tailMap(k);
+			Iterator<Entry<String, Metric<?>>> it = m.entrySet().iterator();
+			while (it.hasNext()) {
+				Entry<String, Metric<?>> e = it.next();
+				if (e.getKey().startsWith(k))
+					it.remove();
+				else
+					return;
+			}
 		}
 	}
 
@@ -187,16 +191,21 @@ public class Metrics implements Serializable, IMetrics {
 		return (MetricSet) create(k, MetricFactory.setFactory);
 	}
 
-	public HashMap<String, Metric<?>> getMetrics() {
-		return new HashMap<>(metrics);
+	public SortedMap<String, Metric<?>> getMetrics() {
+		synchronized (metrics) {
+			return new TreeMap<>(metrics);
+		}
+
 	}
 
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
 		builder.append("Update every " + FREQ + ": \n");
-		for (Entry<String, Metric<?>> e : metrics.entrySet())
-			builder.append(e.getKey() + "-" + e.getValue() + "\n");
+		synchronized (metrics) {
+			for (Entry<String, Metric<?>> e : metrics.entrySet())
+				builder.append(e.getKey() + "-" + e.getValue() + "\n");
+		}
 
 		return builder.toString();
 	}

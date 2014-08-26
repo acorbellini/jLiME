@@ -33,9 +33,10 @@ public class JobServer {
 		jd.start();
 		
 		try {
-			String[] info = new String[2];
+			String[] info = new String[3];
 			info[0] = mgr.get("sysinfo.os").toString();
 			info[1] = mgr.get("jlime.interface").toString();
+			info[2] = "Local Node : " +jd.getCluster().getLocalNode();
 			Logger.getLogger(JobServer.class).info(
 					StringUtils.printDEFTitle(info));
 		} catch (Exception e) {

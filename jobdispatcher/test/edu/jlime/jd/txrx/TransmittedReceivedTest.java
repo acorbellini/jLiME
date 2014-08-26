@@ -40,11 +40,19 @@ public class TransmittedReceivedTest {
 
 		@Override
 		public void run(JobContext env, ClientNode origin) throws Exception {
-			System.out.println("Executing Transmission Job.");
+			System.out
+					.println("\n********************************************************\n");
+			System.out.println("Executing Transmission Job for " + origin);
+			System.out
+					.println("\n********************************************************\n");
 			ClientCluster cluster = env.getCluster();
 
-			for (int i = 1; i <= 200; i++) {
-				// System.out.println("Executing round " + i);
+			for (int i = 1; i <= 10; i++) {
+				System.out
+						.println("\n********************************************************\n");
+				System.out.println("Executing round " + i + " for " + origin);
+				System.out
+						.println("\n********************************************************\n");
 				int[] data = new int[8000];
 				for (int j = 0; j < data.length; j++) {
 					data[i] = (int) (Math.random() * 1000000);
@@ -57,33 +65,52 @@ public class TransmittedReceivedTest {
 
 	@Test
 	public void txrx() throws Exception {
+		// JobServer.jLiME().start();
+		// JobServer.jLiME().start();
+
+		// for (int i = 0; i < 50; i++) {
+		// System.out
+		// .println("\n*****************************************************************\n");
+		// System.out.println("New Execution : " + i + "\n\n");
+		// System.out
+		// .println("\n*****************************************************************\n");
+
 		long init = System.currentTimeMillis();
 		Client cli = Client.build(2);
-		ArrayList<ClientNode> exec = cli.getCluster().getExecutors();
-		final Semaphore sem = new Semaphore(-exec.size() + 1);
-		for (ClientNode peer : exec) {
-			System.out.println("Executing transmission Job on " + peer);
-			peer.execAsync(new TransmissionJob(), new ResultManager<Boolean>() {
+		ClientCluster cluster = cli.getCluster();
+		System.out.println("Local Peer: " + cluster.getLocalNode());
 
-				@Override
-				public void handleException(Exception res, String jobID,
-						ClientNode fromID) {
-					sem.release();
-				}
+		ArrayList<ClientNode> exec = cluster.getExecutors();
+		// final Semaphore sem = new Semaphore(-exec.size() + 1);
+		final Semaphore sem = new Semaphore(0);
+		ClientNode peer = exec.get(0);
+		// for (ClientNode peer : exec) {
+		System.out.println("Executing transmission Job on " + peer);
+		peer.execAsync(new TransmissionJob(), new ResultManager<Boolean>() {
 
-				@Override
-				public void handleResult(Boolean res, String jobID,
-						ClientNode fromID) {
-					sem.release();
-				}
-			});
-		}
+			@Override
+			public void handleException(Exception res, String jobID,
+					ClientNode fromID) {
+				System.out.println("Received Exception ");
+				res.printStackTrace();
+				sem.release();
+			}
+
+			@Override
+			public void handleResult(Boolean res, String jobID,
+					ClientNode fromID) {
+				System.out.println("Received Result  from " + fromID);
+				sem.release();
+			}
+		});
+		// }
 		sem.acquire();
 
 		long end = System.currentTimeMillis();
 
 		System.out.println(end - init);
 		cli.close();
+		// }
 	}
 
 	public static void main(String[] args) throws Exception {

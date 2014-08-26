@@ -122,7 +122,7 @@ public class Stack {
 		disco.addAddressListProvider(tcp);
 		disco.addAddressListProvider(udp);
 
-		PingFailureDetection fail = new PingFailureDetection(udp);
+		PingFailureDetection fail = new PingFailureDetection(udp, config);
 		fail.addPingProvider(tcp);
 
 		Stack tcpStack = Stack.newStack(tcp, udp, mcast, data, disco, fail);
@@ -167,7 +167,7 @@ public class Stack {
 		mcastDisco.addAddressListProvider(tcp);
 		disco.addDisco(mcastDisco);
 
-		PingFailureDetection fail = new PingFailureDetection(udp);
+		PingFailureDetection fail = new PingFailureDetection(udp, config);
 		fail.addPingProvider(tcp);
 
 		Stack tcpStack = Stack.newStack(tcp, udp,

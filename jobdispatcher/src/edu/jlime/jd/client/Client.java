@@ -33,8 +33,10 @@ public class Client implements Closeable {
 		jdData.put(JobDispatcher.ISEXEC, Boolean.valueOf(false).toString());
 		jdData.put(JobDispatcher.TAGS, "Client");
 
-		final RPCDispatcher rpc = new JlimeFactory(new Configuration(), jdData)
-				.build();
+		Configuration config = new Configuration();
+		// config.port = 3552;
+		// config.port_range = 1;
+		final RPCDispatcher rpc = new JlimeFactory(config, jdData).build();
 		JobDispatcher jd = new JobDispatcher(i, rpc);
 		jd.setStreamer(new StreamProvider() {
 

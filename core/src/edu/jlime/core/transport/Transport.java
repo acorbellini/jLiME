@@ -53,6 +53,11 @@ public abstract class Transport implements DiscoveryListener, FailureListener {
 	public void nodeFailed(Address addr) {
 		this.log.info("Node " + addr + " crashed. ");
 		Peer p = cluster.getByAddress(addr);
+		if (p == null) {
+			this.log.error("Node " + addr + " was not in cluster. ");
+			return;
+		}
+
 		this.cluster.removePeer(p);
 		onFailedPeer(p);
 	}

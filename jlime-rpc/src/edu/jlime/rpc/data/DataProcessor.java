@@ -22,7 +22,9 @@ import edu.jlime.util.Buffer;
 public class DataProcessor extends SimpleMessageProcessor implements
 		DataProvider {
 
-	jLiMELRUMap<UUID, Boolean> map = new jLiMELRUMap<>(100);
+	// jLiMELRUMap<UUID, Boolean> map = new jLiMELRUMap<>(100);
+
+	HashMap<UUID, Boolean> map = new HashMap<>();
 
 	Logger log = Logger.getLogger(DataProcessor.class);
 
@@ -35,6 +37,8 @@ public class DataProcessor extends SimpleMessageProcessor implements
 	ConcurrentHashMap<UUID, Message> responses = new ConcurrentHashMap<>();
 
 	private HashMap<Address, HashSet<UUID>> calls = new HashMap<>();
+
+	private Metrics metrics;
 
 	public static class DataMessage {
 
@@ -109,14 +113,7 @@ public class DataProcessor extends SimpleMessageProcessor implements
 		if (log.isDebugEnabled())
 			log.debug("Sending DATA message with id " + id + " to " + to);
 
-		sendNext(toSend);
-
-		if (!waitForResponse) {
-			if (log.isDebugEnabled())
-				log.debug("DATA message " + id + " to " + to
-						+ " does NOT require RESPONSE.");
-			return null;
-		} else {
+		if (waitForResponse) {
 			synchronized (waitingResponse) {
 				waitingResponse.put(id, lock);
 				HashSet<UUID> ids = calls.get(to);
@@ -126,13 +123,26 @@ public class DataProcessor extends SimpleMessageProcessor implements
 				}
 				ids.add(id);
 			}
+		}
 
+		sendNext(toSend);
+
+		if (!waitForResponse) {
+			if (log.isDebugEnabled())
+				log.debug("DATA message " + id + " to " + to
+						+ " does NOT require RESPONSE.");
+			return null;
+		} else {
 			if (log.isDebugEnabled())
 				log.debug("Waiting for response for DATA message with id " + id
 						+ " to " + to);
 			synchronized (lock) {
-				while (!responses.containsKey(id))
-					lock.wait();
+				while (!responses.containsKey(id)) {
+					lock.wait(5000);
+					if (log.isDebugEnabled())
+						log.debug("Still waiting for response for DATA message with id "
+								+ id + " to " + to);
+				}
 			}
 
 			if (log.isDebugEnabled())
@@ -149,12 +159,12 @@ public class DataProcessor extends SimpleMessageProcessor implements
 			HashSet<UUID> ids = calls.get(addr);
 			if (ids != null) {
 				for (UUID uuid : ids) {
-					Object o = waitingResponse.remove(uuid);
-					if (o != null) {
-						responses.put(uuid, Message.newEmptyOutDataMessage(
-								MessageType.DATA, new Address(uuid)));
-						synchronized (o) {
-							o.notifyAll();
+					Object lock = waitingResponse.remove(uuid);
+					if (lock != null) {
+						synchronized (lock) {
+							responses.put(uuid, Message.newEmptyOutDataMessage(
+									MessageType.DATA, new Address(uuid)));
+							lock.notifyAll();
 						}
 					}
 				}
@@ -178,8 +188,8 @@ public class DataProcessor extends SimpleMessageProcessor implements
 
 			if (lock != null) {
 				waitingResponse.remove(id);
-				responses.put(id, defMessage);
 				synchronized (lock) {
+					responses.put(id, defMessage);
 					lock.notifyAll();
 				}
 			}
@@ -195,6 +205,7 @@ public class DataProcessor extends SimpleMessageProcessor implements
 					+ id + " from " + m.getFrom() + ".");
 			return;
 		}
+
 		map.put(id, true);
 		if (log.isDebugEnabled())
 			log.debug("Received DATA message with id " + id + " from "
@@ -227,6 +238,6 @@ public class DataProcessor extends SimpleMessageProcessor implements
 
 	@Override
 	public void setMetrics(Metrics metrics) {
-
+		this.metrics = metrics;
 	}
 }

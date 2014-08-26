@@ -174,19 +174,6 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 		for (ClientNode jobNode : peers) {
 			copy.add(jobNode.getPeer());
 		}
-		// if (j.doNotReplicateIfLocal()) {
-		// Iterator<JobNode> it = copy.iterator();
-		// while (it.hasNext()) {
-		// JobContainer jw = new JobContainer(j, cluster.getLocalPeer());
-		// jw.setNoResponse(true);
-		// Peer dest = (Peer) it.next();
-		// JobDispatcher jd = DispatcherManager.getJD(dest.getID());
-		// if (jd != null) {
-		// it.remove();
-		// jd.execute(jw);
-		// }
-		// }
-		// }
 		if (!copy.isEmpty()) {
 			JobContainer jw = new JobContainer(j, new ClientNode(
 					getLocalPeer(), getLocalPeer(), this));
@@ -216,7 +203,9 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 			Iterator<Peer> it = copy.iterator();
 			JobContainer jw = new JobContainer(j, new ClientNode(
 					getLocalPeer(), j.getClient(), this));
+
 			addJobMapping(rm, jw, peers);
+
 			if (log.isDebugEnabled())
 				log.debug("Checking if it's local.");
 			while (it.hasNext()) {
@@ -514,7 +503,8 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 			log.info("Still waiting for "
 					+ (getMinServers() - executorsSize())
 					+ ((getMinServers() - executorsSize()) != 1 ? " executors "
-							: " executor") + " to show up.");
+							: " executor") + " to show up. I am : "
+					+ getLocalPeer());
 
 	}
 

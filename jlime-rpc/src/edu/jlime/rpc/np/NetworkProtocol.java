@@ -203,6 +203,10 @@ public abstract class NetworkProtocol extends SimpleMessageProcessor implements
 
 	@Override
 	public void onStop() throws Exception {
+		if (log.isDebugEnabled())
+			log.info("Stopping network protocol type " + getType()
+					+ " and socket " + socket);
+
 		packetsRx.put(new DataPacket(null, null));
 		if (metrics != null)
 			metrics.set("jlime.interface").remove(

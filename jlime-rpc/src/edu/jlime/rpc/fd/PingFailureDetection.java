@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.apache.log4j.Logger;
 
@@ -12,6 +14,7 @@ import edu.jlime.core.transport.Address;
 import edu.jlime.core.transport.FailureListener;
 import edu.jlime.core.transport.FailureProvider;
 import edu.jlime.metrics.metric.Metrics;
+import edu.jlime.rpc.Configuration;
 import edu.jlime.rpc.message.Message;
 import edu.jlime.rpc.message.MessageListener;
 import edu.jlime.rpc.message.MessageProcessor;
@@ -26,11 +29,13 @@ public class PingFailureDetection implements StackElement, FailureProvider {
 
 	private List<FailureListener> list = new ArrayList<>();
 
-	private int ping_delay = 5000;
+	private int ping_delay;
 
-	private int max_missed = 20;
+	private int max_missed;
 
 	private MessageProcessor conn;
+
+	private ExecutorService failure = Executors.newCachedThreadPool();
 
 	private ConcurrentHashMap<Address, Integer> tries = new ConcurrentHashMap<>();
 
@@ -39,8 +44,11 @@ public class PingFailureDetection implements StackElement, FailureProvider {
 		list.add(l);
 	}
 
-	public PingFailureDetection(final MessageProcessor conn) {
+	public PingFailureDetection(final MessageProcessor conn,
+			Configuration config) {
 		this.conn = conn;
+		this.max_missed = config.max_pings;
+		this.ping_delay = config.ping_delay;
 		addPingProvider(conn);
 	}
 
@@ -56,49 +64,49 @@ public class PingFailureDetection implements StackElement, FailureProvider {
 				while (!stopped) {
 					try {
 						Thread.sleep(ping_delay);
+
+						ArrayList<Entry<Address, Integer>> arrayList = null;
+						synchronized (tries) {
+							arrayList = new ArrayList<>(tries.entrySet());
+						}
+
+						for (Entry<Address, Integer> e : arrayList) {
+							if (e.getValue() > max_missed)
+								failed(e.getKey(), e.getValue());
+							else {
+								if (log.isDebugEnabled())
+									log.debug("Sending ping to " + e.getKey()
+											+ ", try number "
+											+ tries.get(e.getKey()));
+								conn.queue(Message.newEmptyOutDataMessage(
+										MessageType.PING, e.getKey()));
+								tries.put(e.getKey(), e.getValue() + 1);
+							}
+						}
 					} catch (InterruptedException excep) {
 						excep.printStackTrace();
-					}
-					for (Entry<Address, Integer> e : new ArrayList<>(
-							tries.entrySet())) {
-						try {
-							if (log.isDebugEnabled())
-								log.debug("Sending ping to " + e.getKey()
-										+ ", try number "
-										+ tries.get(e.getKey()));
-							conn.queue(Message.newEmptyOutDataMessage(
-									MessageType.PING, e.getKey()));
-						} catch (Exception excep) {
-							excep.printStackTrace();
-						}
-						tries.put(e.getKey(), e.getValue() + 1);
 					}
 				}
 			};
 		};
 		t.start();
+	}
 
-		Thread failure = new Thread("Failure Detect Thread") {
+	protected void failed(final Address addr, Integer t) {
+		if (log.isDebugEnabled())
+			log.debug("Removing " + addr + " tried " + t + " times.");
+
+		tries.remove(addr);
+
+		failure.execute(new Runnable() {
+
+			@Override
 			public void run() {
-				while (!stopped) {
-					for (Entry<Address, Integer> e : new ArrayList<>(
-							tries.entrySet())) {
-						if (e.getValue() >= max_missed) {
-							tries.remove(e.getKey());
-							for (FailureListener l : list)
-								l.nodeFailed(e.getKey());
-						}
+				for (FailureListener l : list)
+					l.nodeFailed(addr);
+			}
+		});
 
-					}
-					try {
-						Thread.sleep(ping_delay);
-					} catch (InterruptedException excep) {
-						excep.printStackTrace();
-					}
-				}
-			};
-		};
-		failure.start();
 	}
 
 	public void addPingProvider(MessageProcessor conn) {
