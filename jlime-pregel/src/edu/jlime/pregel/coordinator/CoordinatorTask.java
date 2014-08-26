@@ -10,11 +10,12 @@ import org.apache.log4j.Logger;
 import edu.jlime.pregel.graph.PregelGraph;
 import edu.jlime.pregel.graph.Vertex;
 import edu.jlime.pregel.graph.VertexFunction;
-import edu.jlime.pregel.worker.VertexData;
 import edu.jlime.pregel.worker.rpc.Worker;
 
 public class CoordinatorTask {
 	UUID taskID = UUID.randomUUID();
+
+	private volatile boolean finished = true;
 
 	private Set<UUID> currentStep = new HashSet<>();
 
@@ -26,7 +27,10 @@ public class CoordinatorTask {
 		this.coord = coordinatorImpl;
 	}
 
-	public synchronized void finished(UUID workerID) {
+	public synchronized void finished(UUID workerID, Boolean didWork) {
+		if (didWork)
+			finished = false;
+
 		if (log.isDebugEnabled())
 			log.debug("Received finished  from worker : " + workerID);
 		currentStep.remove(workerID);
@@ -35,20 +39,19 @@ public class CoordinatorTask {
 			log.debug("Remaining in step: " + currentStep.size());
 	}
 
-	public PregelGraph execute(PregelGraph input,
-			HashMap<Vertex, VertexData> initialData, VertexFunction func,
-			int supersteps) throws Exception {
+	public PregelGraph execute(PregelGraph input, Vertex[] vertex,
+			VertexFunction func, int supersteps) throws Exception {
 
 		// Divide vertex list.
-		HashMap<Worker, HashMap<Vertex, VertexData>> divided = new HashMap<>();
-		for (Vertex vertexID : initialData.keySet()) {
+		HashMap<Worker, HashSet<Vertex>> divided = new HashMap<>();
+		for (Vertex vertexID : vertex) {
 			Worker worker = coord.getWorker(vertexID);
-			HashMap<Vertex, VertexData> sublist = divided.get(worker);
+			HashSet<Vertex> sublist = divided.get(worker);
 			if (sublist == null) {
-				sublist = new HashMap<>();
+				sublist = new HashSet<>();
 				divided.put(worker, sublist);
 			}
-			sublist.put(vertexID, initialData.get(vertexID));
+			sublist.add(vertexID);
 		}
 
 		// Init workers
@@ -58,16 +61,18 @@ public class CoordinatorTask {
 			if (divided.containsKey(w))
 				w.createTask(input, func, taskID, divided.get(w));
 			else
-				w.createTask(input, func, taskID, new HashMap<>());
+				w.createTask(input, func, taskID, new HashSet<>());
 		}
 
 		for (int i = 0; i < supersteps; i++) {
-			if (log.isDebugEnabled())
-				log.debug("Running superstep " + i + " Remaining "
-						+ currentStep.size());
-			for (Worker w : coord.getWorkers()) {
-				w.nextSuperstep(i, taskID);
-			}
+			finished = true;
+
+			// if (log.isDebugEnabled())
+			log.info("Running superstep " + i + " Remaining "
+					+ currentStep.size());
+			
+			coord.getWorkerBroadcast().nextSuperstep(i, taskID);
+			
 
 			synchronized (this) {
 				while (!currentStep.isEmpty())
@@ -77,16 +82,11 @@ public class CoordinatorTask {
 			// if (log.isDebugEnabled())
 			log.info("Finished superstep " + i);
 
-			boolean finished = true;
-			for (Worker w : coord.getWorkers()) {
-				if (w.hasWork(taskID)) {
-					currentStep.add(w.getID());
-					finished = false;
-				}
-			}
-
 			if (finished)
 				break;
+
+			for (Worker w : coord.getWorkers())
+				currentStep.add(w.getID());
 		}
 		log.info("Finished");
 		return mergeGraph();

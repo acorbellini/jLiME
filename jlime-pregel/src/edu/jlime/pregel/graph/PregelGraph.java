@@ -83,8 +83,17 @@ public class PregelGraph implements Serializable {
 
 	@Override
 	public String toString() {
-		return "PregelGraph [id=" + id + ", adyacency=" + adyacency + ", data="
-				+ data + "]";
+		StringBuilder ret = new StringBuilder();
+		ret.append("Pregel Graph ID " + id + "\n");
+		ret.append("Adyacency:\n");
+		for (Entry<Vertex, List<Vertex>> e : adyacency.entrySet()) {
+			ret.append(e.getKey() + " -> " + e.getValue() + "\n");
+		}
+		ret.append("Data:\n");
+		for (Entry<Vertex, VertexData> e : data.entrySet()) {
+			ret.append(e.getKey() + " = " + e.getValue() + "\n");
+		}
+		return ret.toString();
 	}
 
 }

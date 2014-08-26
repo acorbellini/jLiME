@@ -82,8 +82,12 @@ public class ClientManager<T, B> implements ClusterChangeListener {
 	}
 
 	public B broadcast() {
-		return factory.getBroadcast(rpc.getCluster().getPeers(), rpc
-				.getCluster().getLocalPeer());
+		ArrayList<Peer> to = null;
+		synchronized (clients) {
+			to = new ArrayList<>(clients.keySet());
+		}
+
+		return factory.getBroadcast(to, rpc.getCluster().getLocalPeer());
 	}
 
 }

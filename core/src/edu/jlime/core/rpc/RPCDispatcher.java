@@ -119,7 +119,7 @@ public class RPCDispatcher implements ClassLoaderProvider, TransportListener {
 			Method m = findMethod(objClass, mc);
 			return m.invoke(target, mc.getObjects());
 		} catch (Exception e) {
-			throw new Exception("Error calling " + mc + " ", e.getCause());
+			throw new Exception("Error calling " + mc + " ", e);
 		}
 	}
 

@@ -9,7 +9,6 @@ import edu.jlime.pregel.coordinator.rpc.CoordinatorFactory;
 import edu.jlime.pregel.graph.PregelGraph;
 import edu.jlime.pregel.graph.Vertex;
 import edu.jlime.pregel.graph.VertexFunction;
-import edu.jlime.pregel.worker.VertexData;
 import edu.jlime.rpc.Configuration;
 import edu.jlime.rpc.JlimeFactory;
 
@@ -28,9 +27,8 @@ public class PregelClient {
 		this.minWorkers = numWorkers;
 	}
 
-	public PregelGraph execute(PregelGraph graph,
-			HashMap<Vertex, VertexData> data, VertexFunction func)
-			throws Exception {
+	public PregelGraph execute(PregelGraph graph, VertexFunction minTree,
+			Vertex... vList) throws Exception {
 
 		rpc.manage(new CoordinatorFactory(rpc, "worker"), new PeerFilter() {
 			@Override
@@ -46,7 +44,7 @@ public class PregelClient {
 							public boolean verify(Peer p) {
 								return (p.getData("type").equals("coordinator"));
 							}
-						}).waitFirst().execute(graph, data, func, 10);
+						}).waitFirst().execute(graph, minTree, vList, 10);
 	}
 
 	public void stop() throws Exception {

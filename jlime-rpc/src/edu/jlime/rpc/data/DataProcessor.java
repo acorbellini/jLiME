@@ -22,9 +22,7 @@ import edu.jlime.util.Buffer;
 public class DataProcessor extends SimpleMessageProcessor implements
 		DataProvider {
 
-	// jLiMELRUMap<UUID, Boolean> map = new jLiMELRUMap<>(100);
-
-	HashMap<UUID, Boolean> map = new HashMap<>();
+	jLiMELRUMap<UUID, Boolean> map = new jLiMELRUMap<>(100);
 
 	Logger log = Logger.getLogger(DataProcessor.class);
 
@@ -185,6 +183,8 @@ public class DataProcessor extends SimpleMessageProcessor implements
 
 			if (ids != null)
 				ids.remove(id);
+			else
+				log.warn("Ids table does not contain " + defMessage.getFrom());
 
 			if (lock != null) {
 				waitingResponse.remove(id);
@@ -192,7 +192,9 @@ public class DataProcessor extends SimpleMessageProcessor implements
 					responses.put(id, defMessage);
 					lock.notifyAll();
 				}
-			}
+			} else
+				log.warn("There is no lock for message " + id);
+
 		}
 	}
 

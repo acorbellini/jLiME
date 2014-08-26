@@ -12,7 +12,7 @@ public class Vertex implements Serializable {
 
 	@Override
 	public String toString() {
-		return "Vertex [id=" + id + "]";
+		return "Vertex (" + id + ")";
 	}
 
 	public int getId() {

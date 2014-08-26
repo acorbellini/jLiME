@@ -1,6 +1,6 @@
 package edu.jlime.pregel.worker.rpc;
 
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.UUID;
 
 import edu.jlime.core.rpc.Cache;
@@ -19,12 +19,10 @@ public interface Worker {
 
 	@Sync
 	public void createTask(PregelGraph input, VertexFunction func, UUID taskID,
-			HashMap<Vertex, VertexData> initialData) throws Exception;
+			HashSet<Vertex> hashSet) throws Exception;
 
 	@Cache
 	public UUID getID() throws Exception;
-
-	public boolean hasWork(UUID taskID) throws Exception;
 
 	public PregelGraph getResult(UUID taskID) throws Exception;
 

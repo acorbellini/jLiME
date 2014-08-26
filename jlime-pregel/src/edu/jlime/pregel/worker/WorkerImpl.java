@@ -1,6 +1,7 @@
 package edu.jlime.pregel.worker;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
 
@@ -47,14 +48,9 @@ public class WorkerImpl implements Worker {
 
 	@Override
 	public void createTask(PregelGraph input, VertexFunction func, UUID taskID,
-			HashMap<Vertex, VertexData> init) throws Exception {
+			HashSet<Vertex> init) throws Exception {
 		contexts.put(taskID, new WorkerTask(input, this, coordCli.first(),
 				func, taskID, init));
-	}
-
-	@Override
-	public boolean hasWork(UUID taskID) throws Exception {
-		return contexts.get(taskID).hasWork();
 	}
 
 	@Override
