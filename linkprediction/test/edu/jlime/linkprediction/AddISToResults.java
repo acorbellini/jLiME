@@ -31,39 +31,17 @@ public class AddISToResults {
 
 	@Test
 	public void addIS() throws Exception {
-		// cluster = DEFClient.build(8).getCluster();
-		// graph = new AdjacencyGraph(TwitterStoreConfig.getConfig(), cluster,
-		// new LocationMapper(TwitterStoreConfig.getConfig()
-		// .getStoreName()));
-		// graph = new AdyacencyGraph(new StoreConfig(StoreType.LEVELDB,
-		// "/home/ale/TwitterDB", "TwitterLevelDB"),
-		// Cluster.get(4));
 		Client cli = Client.build(1);
 		cluster = cli.getCluster();
 		graph = new RemoteAdjacencyGraph(new StoreConfig(StoreType.LEVELDB,
 				"C:/TwitterAdjacencyGraph", "Twitter1stAnd2ndLevel"), cluster,
 				new RoundRobinMapper());
 
-		// int[] f = graph.getUser(160763).neighbours().exec();
-		// int[] ifol = graph.getUser(890121).neighbours().exec();
-		// int[] res = IntArrayUtils.intersectArrays(ifol, f);
-		// TIntHashSet set = new TIntHashSet();
-		// set.addAll(graph.getUser(890121).neighbours().exec());
-		// set.addAll(f);
-		// float sim = res.length / (float) set.size();
-		// System.out.println(sim);
-
 		usersIds = SimilarityTest.scanIds("D:/1stLayer.txt").toArray();
 		BufferedWriter writer = new BufferedWriter(new FileWriter(new File(
 				"ahoraTienenIS.txt")));
 		// ESTO AGREGA A LOS RESULTADOS
-		// for (int u : usersIds) {
-		// Map<Integer, Float> isForU = graph.getUser(u).neighbours().map(new
-		// CalcIS()).exec(cluster);// foreach(new
-		// // CalcIS()).exec(cluster);
-		// addToDB(u, isForU);
-		// }
-
+		
 		// ESTE AGREGA A USERIS
 		for (int u : usersIds) {
 			System.out.println("Calulating IS for user " + u);
@@ -72,8 +50,6 @@ public class AddISToResults {
 			int followees = userQ.followees().size().query();
 			Float is = followers / (float) (followees + followers);
 			writer.write(u + ";" + is + "\n");
-			// CalcIS()).exec(cluster);
-			// addToDBSelectedUsers(u, is);
 		}
 		writer.close();
 		graph.close();

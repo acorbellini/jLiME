@@ -38,7 +38,6 @@ public class RoundRobinTest {
 	}
 
 	public static void main(String[] args) throws Exception {
-		// DEFServer.jLiME();
 		List<Job<String>> jobs = new ArrayList<>();
 
 		jobs.add(new HelloJob("Hey "));

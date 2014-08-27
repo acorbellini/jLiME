@@ -27,19 +27,32 @@ public class PregelTest {
 		Vertex v3 = g.vertex();
 		Vertex v4 = g.vertex();
 
+		g.setDefaultValue("pagerank", 1 / (double) g.vertexSize());
+
 		g.putLink(v0, v1);
 		g.putLink(v0, v2);
 		g.putLink(v0, v3);
 		g.putLink(v1, v0);
 		g.putLink(v1, v2);
+		g.putLink(v2, v4);
 		g.putLink(v3, v4);
 		g.putLink(v4, v2);
 
 		g.setVal(v0, "count", 0);
 
 		PregelClient cli = new PregelClient(4);
-		PregelGraph res = cli.execute(g, new MinTree(), v0);
+		PregelGraph res = cli.execute(g, new MinTree(), 10, v0);
 		System.out.println(res);
+
+		res = cli.execute(g, new PageRank(), 100, g.vertices());
+		double sum = 0;
+		for (Vertex v : res.vertices()) {
+			sum += (Double) res.getData(v).getData("pagerank");
+		}
+
+		System.out.println(res);
+		System.out.println(sum + " avg: " + sum / res.vertexSize());
+
 		srv.stop();
 		w1.stop();
 		w2.stop();

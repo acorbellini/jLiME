@@ -9,7 +9,7 @@ import edu.jlime.core.cluster.Peer;
 
 public class PeerClassLoader {
 
-	Map<String, byte[]> classDefCache = new ConcurrentHashMap<String, byte[]>();
+	Map<String, byte[]> classCache = new ConcurrentHashMap<String, byte[]>();
 
 	Map<Peer, ClientClassLoader> classLoaders = new ConcurrentHashMap<>();
 

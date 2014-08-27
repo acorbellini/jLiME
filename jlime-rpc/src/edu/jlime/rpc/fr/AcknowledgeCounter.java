@@ -59,8 +59,8 @@ class AcknowledgeCounter {
 		}
 	}
 
-	public AcknowledgeCounter(Address to, int max_nack_size,
-			int nack_delay, int ack_delay) {
+	public AcknowledgeCounter(Address to, int max_nack_size, int nack_delay,
+			int ack_delay) {
 		resendArray = new AtomicReferenceArray<>(max_resend_size);
 		this.to = to;
 		rcvd = new boolean[max_resend_size];
@@ -107,13 +107,6 @@ class AcknowledgeCounter {
 		return true;
 
 	}
-
-	// private void sendAck(int seq) throws Exception {
-	// DEFMessage ackMsg = DEFMessage.newEmptyOutDataMessage(MessageType.ACK,
-	// to);
-	// ackMsg.getHeaderBuffer().putInt(seq);
-	// sendNext(ackMsg);
-	// }
 
 	private int pos(int seqN) {
 		return seqN % max_resend_size;

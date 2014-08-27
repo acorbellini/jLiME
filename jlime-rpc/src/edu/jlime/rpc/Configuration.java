@@ -61,8 +61,8 @@ public class Configuration {
 		this.port = getInt("port", 3550);
 		this.port_range = getInt("port_range", 1000);
 
-		this.rcvBuffer = getInt("udp.rcv_buffer", 2 * 1024 * 1024);
-		this.sendBuffer = getInt("udp.send_buffer", 2 * 1024 * 1024);
+		this.rcvBuffer = getInt("udp.rcv_buffer", 1 * 1024 * 1024);
+		this.sendBuffer = getInt("udp.send_buffer", 1 * 1024 * 1024);
 		this.max_msg_size = getInt("udp.max_msg_size", 1024);
 
 		this.mcast_addr = getString("mcast.addr", "224.0.113.0");
@@ -108,13 +108,13 @@ public class Configuration {
 		this.tcp_config.conn_limit = getInt("tcp.conn_limit", 10);
 		this.tcp_config.time_limit = getInt("tcp.time_limit", 15000);
 		this.tcp_config.tcp_rcv_buffer = getInt("tcp.rcv_buffer",
-				25 * 1024 * 1024);
+				1 * 1024 * 1024);
 		this.tcp_config.tcp_send_buffer = getInt("tcp.send_buffer",
-				25 * 1024 * 1024);
+				1 * 1024 * 1024);
 		this.tcp_config.input_buffer = getInt("tcp.input_buffer",
-				25 * 1024 * 1024);
+				1 * 1024 * 1024);
 		this.tcp_config.output_buffer = getInt("tcp.output_buffer",
-				25 * 1024 * 1024);
+				1 * 1024 * 1024);
 
 	}
 

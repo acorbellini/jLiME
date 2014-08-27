@@ -50,13 +50,13 @@ public abstract class NetworkProtocol extends SimpleMessageProcessor implements
 
 	public NetworkProtocol(String addr, int port, int range,
 			SocketFactory fact, Address id) {
-		super(null, "DEF Network Protocol");
+		super(null, "Network Protocol");
 		this.setLocal(id);
 		this.fact = fact;
 		this.setAddr(addr);
 		this.port = port;
 		this.portrange = range;
-		Thread t = new Thread("DEF Network Protocol Data Packet Reader") {
+		Thread t = new Thread("Network Protocol Data Packet Reader") {
 			@Override
 			public void run() {
 				while (!stopped)
@@ -228,9 +228,9 @@ public abstract class NetworkProtocol extends SimpleMessageProcessor implements
 			log.debug("Updating addresses for address " + id + " with "
 					+ addresses);
 		List<SocketAddress> update = new ArrayList<>();
-		for (SocketAddress defSocketAddress : addresses) {
-			if (isEqualToLocalType(defSocketAddress.getSockTo()))
-				update.add(defSocketAddress);
+		for (SocketAddress socketAddress : addresses) {
+			if (isEqualToLocalType(socketAddress.getSockTo()))
+				update.add(socketAddress);
 		}
 
 		backup.put(id, update);

@@ -34,14 +34,14 @@ public class MessageBundler extends SimpleMessageProcessor {
 	public void start() throws Exception {
 		getNext().addMessageListener(MessageType.BUNDLE, new MessageListener() {
 			@Override
-			public void rcv(Message defMessage, MessageProcessor origin)
+			public void rcv(Message message, MessageProcessor origin)
 					throws Exception {
-				Buffer reader = defMessage.getDataBuffer();
+				Buffer reader = message.getDataBuffer();
 				while (reader.hasRemaining()) {
 					byte[] msg = reader.getByteArray();
 					try {
 						notifyRcvd(Message.deEncapsulate(msg,
-								defMessage.getFrom(), defMessage.getTo()));
+								message.getFrom(), message.getTo()));
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
@@ -51,9 +51,9 @@ public class MessageBundler extends SimpleMessageProcessor {
 		getNext().addSecondaryMessageListener(new MessageListener() {
 
 			@Override
-			public void rcv(Message defMessage, MessageProcessor origin)
+			public void rcv(Message message, MessageProcessor origin)
 					throws Exception {
-				notifyRcvd(defMessage);
+				notifyRcvd(message);
 			}
 		});
 	}
@@ -81,39 +81,10 @@ public class MessageBundler extends SimpleMessageProcessor {
 				}
 			}
 		bundler.send(msg);
-
-		// synchronized (bundler) {
-		// int msgSize = msg.getSize();
-		// if (msgSize > max_size) {
-		// System.out.println("Bypassing message of size " + msgSize);
-		// sendNext(msg);
-		// return;
-		// } else if (bundler.size() + msgSize > max_size)
-		// sendBundle(to, bundler);
-		//
-		// bundler.putByteArray(msg.toByteArray());
-		// }
 	}
-
-	// private void sendBundle(DEFAddress to, DEFByteBufferWriter bundler)
-	// throws Exception {
-	// System.out.println("Sending bundle of size " + bundler.size());
-	//
-	// DEFMessage bundle = DEFMessage.newOutDataMessage(bundler.build(),
-	// MessageType.BUNDLE, to);
-	// sendNext(bundle);
-	// bundler.clear();
-	// }
-
-	// private DEFByteBufferWriter newBundler(final DEFAddress to) {
-	// final DEFByteBufferWriter bundler = new DEFByteBufferWriter();
-	//
-	// return bundler;
-	// }
 
 	@Override
 	public void cleanupOnFailedPeer(Address addr) {
-		// synchronized (bundles) {
 		Bundler b = bundles.remove(addr);
 		if (b != null)
 			try {
@@ -121,7 +92,6 @@ public class MessageBundler extends SimpleMessageProcessor {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-		// }
 	}
 
 	@Override

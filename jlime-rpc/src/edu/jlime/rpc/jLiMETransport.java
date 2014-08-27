@@ -25,7 +25,7 @@ public class jLiMETransport extends Transport implements DataListener {
 				@Override
 				public Thread newThread(Runnable r) {
 					Thread t = Executors.defaultThreadFactory().newThread(r);
-					t.setName("DEFRpc");
+					t.setName("Transport Incoming");
 					return t;
 				}
 			});
@@ -44,22 +44,22 @@ public class jLiMETransport extends Transport implements DataListener {
 	}
 
 	@Override
-	public void sendAsync(Peer pdef, byte[] marshalled) throws Exception {
-		commStack.getData().sendData(marshalled,
-				(Address) pdef.getAddress(), false);
+	public void sendAsync(Peer peer, byte[] marshalled) throws Exception {
+		commStack.getData().sendData(marshalled, (Address) peer.getAddress(),
+				false);
 	}
 
 	@Override
-	public byte[] sendSync(Peer pdef, byte[] marshalled) throws Exception {
+	public byte[] sendSync(Peer peer, byte[] marshalled) throws Exception {
 		if (log.isDebugEnabled())
-			log.debug("Calling Synchronously " + pdef + ", sending "
+			log.debug("Calling Synchronously " + peer + ", sending "
 					+ marshalled.length + " b.");
 
 		byte[] resp = commStack.getData().sendData(marshalled,
-				(Address) pdef.getAddress(), true);
+				(Address) peer.getAddress(), true);
 
 		if (log.isDebugEnabled())
-			log.debug("FINISHED synchronous call  to " + pdef + ", response "
+			log.debug("FINISHED synchronous call  to " + peer + ", response "
 					+ (resp == null ? "NULL" : resp.length + " b."));
 
 		return resp;

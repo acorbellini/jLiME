@@ -32,7 +32,7 @@ class FlowControlPerNode extends SimpleMessageProcessor {
 
 	public FlowControlPerNode(Address to, MessageProcessor comm,
 			final FCConfiguration config) {
-		super(comm, "DEF Flow Control for " + to);
+		super(comm, "Flow Control for " + to);
 		this.addr = to;
 		this.config = config;
 		this.max_send = config.max_send_initial;

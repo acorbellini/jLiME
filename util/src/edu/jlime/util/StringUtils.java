@@ -4,18 +4,8 @@ import java.text.DecimalFormat;
 
 public class StringUtils {
 
-	public static String printDEFTitle(String[] info) {
+	public static String printTitle(String[] info) {
 		String title = "";
-		// title += "\n-----------------------------------\n";
-		// title += "|      ___      _______________   |\n";
-		// title += "|     / _ \\    / ______/ _____/   |\n";
-		// title += "|    / / \\ \\  / /___  / /__       |\n";
-		// title += "|   / /   \\ \\/ ____/ / ___/       |\n";
-		// title += "|  / /____/ / /_____/ /           |\n";
-		// title += "| /________/_______/_/            |\n";
-		// title += "| Distributed Execution Framework |\n";
-		// title += "-----------------------------------\n";
-
 		title += "\n";
 		title += "\n";
 		title += "       _ _    _  _    ______\n";
@@ -49,8 +39,8 @@ public class StringUtils {
 				(sinMS % 3600) / 60, (sinMS % 60), s % 1000);
 	}
 
-	public static String printDEFTitle() {
+	public static String printTitle() {
 
-		return printDEFTitle(new String[] {});
+		return printTitle(new String[] {});
 	}
 }

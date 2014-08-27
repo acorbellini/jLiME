@@ -2,13 +2,10 @@ package edu.jlime.collections.adjacencygraph.query;
 
 import edu.jlime.collections.adjacencygraph.get.GetType;
 import edu.jlime.collections.adjacencygraph.query.StreamForkJoin.StreamJobFactory;
-import edu.jlime.collections.intintarray.client.PersistentIntIntArrayMap;
 import edu.jlime.core.stream.RemoteInputStream;
 import edu.jlime.core.stream.RemoteOutputStream;
 import edu.jlime.jd.ClientNode;
-import edu.jlime.jd.RemoteReference;
 import edu.jlime.jd.client.JobContext;
-import edu.jlime.jd.job.Job;
 import edu.jlime.jd.job.StreamJob;
 import edu.jlime.util.DataTypeUtils;
 import gnu.trove.list.array.TIntArrayList;
@@ -25,39 +22,9 @@ import org.apache.log4j.Logger;
 public class RemoteCountQuery extends CompositeQuery<int[], TIntIntHashMap>
 		implements CountQuery {
 
-	public static class CountJob implements
-			Job<RemoteReference<TIntIntHashMap>> {
-
-		private TIntArrayList data;
-		private String map;
-
-		public CountJob(TIntArrayList value, String mapName) {
-			this.data = value;
-			this.map = mapName;
-		}
-
-		@Override
-		public RemoteReference<TIntIntHashMap> call(JobContext ctx, ClientNode peer)
-				throws Exception {
-			Logger log = Logger.getLogger(CountJob.class);
-			PersistentIntIntArrayMap dkvs = PersistentIntIntArrayMap.getMap(
-					map, ctx);
-
-			TIntIntHashMap adyacents = null;
-			try {
-				// log.info("CountStreamJob: Calling DKVS get.");
-				adyacents = dkvs.countLists(data.toArray());
-			} catch (Exception e1) {
-				e1.printStackTrace();
-			}
-			return new RemoteReference<>(adyacents, ctx);
-		}
-
-	}
-
 	private static final int READ_BUFFER_SIZE = 256 * 1024;
 
-	private static final int CACHE_THRESHOLD = 2000000;
+	private static final int CACHE_THRESHOLD = 200000;
 
 	private static final long serialVersionUID = 5030949972656440876L;
 

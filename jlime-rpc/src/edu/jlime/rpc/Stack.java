@@ -63,8 +63,8 @@ public class Stack {
 
 	public static Stack newStack(StackElement... elements) {
 		Stack ret = new Stack();
-		for (StackElement defStackElement : elements)
-			ret.addProc(defStackElement);
+		for (StackElement stackElement : elements)
+			ret.addProc(stackElement);
 
 		return ret;
 	}

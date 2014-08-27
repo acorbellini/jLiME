@@ -62,17 +62,17 @@ public abstract class Discovery implements DiscoveryProvider, StackElement {
 		discoveryData.addMessageListener(MessageType.DISCOVERY_CONFIRM,
 				new MessageListener() {
 					@Override
-					public void rcv(Message defMessage, MessageProcessor origin)
+					public void rcv(Message message, MessageProcessor origin)
 							throws Exception {
 						if (log.isDebugEnabled())
 							log.debug("Discovery Confirm received from "
-									+ defMessage.getFrom());
+									+ message.getFrom());
 						DiscoveryMessage disco = DiscoveryMessage
-								.fromMessage(defMessage);
+								.fromMessage(message);
 
 						notifyAddressList(disco.getId(), disco.getAddresses());
 
-						discoveryMessageReceived(defMessage.getFrom(),
+						discoveryMessageReceived(message.getFrom(),
 								disco.getName(), disco.getAdditional());
 					}
 				});
@@ -145,9 +145,9 @@ public abstract class Discovery implements DiscoveryProvider, StackElement {
 		for (Entry<AddressType, AddressListProvider> alul : addressProviders
 				.entrySet()) {
 			ArrayList<SocketAddress> byType = new ArrayList<>();
-			for (SocketAddress defSocketAddress : addresses) {
-				if (defSocketAddress.getType().equals(alul.getKey()))
-					byType.add(defSocketAddress);
+			for (SocketAddress socketAddress : addresses) {
+				if (socketAddress.getType().equals(alul.getKey()))
+					byType.add(socketAddress);
 			}
 			alul.getValue().addressUpdate(new Address(id), byType);
 		}

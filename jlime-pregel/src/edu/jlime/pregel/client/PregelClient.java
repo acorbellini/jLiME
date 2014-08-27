@@ -1,10 +1,13 @@
 package edu.jlime.pregel.client;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 import edu.jlime.core.cluster.Peer;
 import edu.jlime.core.rpc.PeerFilter;
 import edu.jlime.core.rpc.RPCDispatcher;
+import edu.jlime.pregel.PageRank;
 import edu.jlime.pregel.coordinator.rpc.CoordinatorFactory;
 import edu.jlime.pregel.graph.PregelGraph;
 import edu.jlime.pregel.graph.Vertex;
@@ -28,7 +31,18 @@ public class PregelClient {
 	}
 
 	public PregelGraph execute(PregelGraph graph, VertexFunction minTree,
-			Vertex... vList) throws Exception {
+			int maxSteps, Vertex... vList) throws Exception {
+		return this.execute(graph, minTree, maxSteps, Arrays.asList(vList));
+
+	}
+
+	public void stop() throws Exception {
+		rpc.stop();
+
+	}
+
+	public PregelGraph execute(PregelGraph g, VertexFunction minTree,
+			int maxSteps, List<Vertex> vList) throws Exception {
 
 		rpc.manage(new CoordinatorFactory(rpc, "worker"), new PeerFilter() {
 			@Override
@@ -44,11 +58,6 @@ public class PregelClient {
 							public boolean verify(Peer p) {
 								return (p.getData("type").equals("coordinator"));
 							}
-						}).waitFirst().execute(graph, minTree, vList, 10);
-	}
-
-	public void stop() throws Exception {
-		rpc.stop();
-
+						}).waitFirst().execute(g, minTree, vList, maxSteps);
 	}
 }

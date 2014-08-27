@@ -11,13 +11,7 @@ public class InfoTest {
 
 	@Test
 	public void infoTest() throws Exception {
-		// DEFServer server1 = new DEFServer();
-		// DEFServer server2 = new DEFServer();
-		// DEFServer server3 = new DEFServer();
-		// DEFServer server4 = new DEFServer();
-
 		Client client = Client.build(8);
-		// ClusterInfo info = ClusterInfo.get(client.getCluster());
 		ClusterProfiler profiler = new ClusterProfiler(client.getCluster(),
 				1000);
 		profiler.start();

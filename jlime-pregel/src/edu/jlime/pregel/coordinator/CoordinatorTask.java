@@ -2,6 +2,7 @@ package edu.jlime.pregel.coordinator;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -39,7 +40,7 @@ public class CoordinatorTask {
 			log.debug("Remaining in step: " + currentStep.size());
 	}
 
-	public PregelGraph execute(PregelGraph input, Vertex[] vertex,
+	public PregelGraph execute(PregelGraph input, List<Vertex> vertex,
 			VertexFunction func, int supersteps) throws Exception {
 
 		// Divide vertex list.
@@ -70,9 +71,8 @@ public class CoordinatorTask {
 			// if (log.isDebugEnabled())
 			log.info("Running superstep " + i + " Remaining "
 					+ currentStep.size());
-			
+
 			coord.getWorkerBroadcast().nextSuperstep(i, taskID);
-			
 
 			synchronized (this) {
 				while (!currentStep.isEmpty())

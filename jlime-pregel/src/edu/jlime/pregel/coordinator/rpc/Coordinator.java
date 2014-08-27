@@ -1,5 +1,6 @@
 package edu.jlime.pregel.coordinator.rpc;
 
+import java.util.List;
 import java.util.UUID;
 
 import edu.jlime.pregel.graph.PregelGraph;
@@ -11,5 +12,5 @@ public interface Coordinator {
 			throws Exception;
 
 	public PregelGraph execute(PregelGraph input, VertexFunction minTree,
-			Vertex[] vList, Integer supersteps) throws Exception;
+			List<Vertex> vList, Integer supersteps) throws Exception;
 }

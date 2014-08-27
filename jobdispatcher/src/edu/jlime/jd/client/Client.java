@@ -68,24 +68,4 @@ public class Client implements Closeable {
 		}
 	}
 
-	// public void close() throws Exception {
-	// jd.stop();
-	// }
-
-	// public static void main(String[] args) throws NumberFormatException,
-	// FileNotFoundException, Exception {
-	// InputStream config = null;
-	// if (args.length > 1)
-	// config = new FileInputStream(new File(args[1]));
-	//
-	// if (config == null)
-	// config = JGroupsFactory.getConfig();
-	// Integer min = new Integer(args[0]);
-	// String[] tags = new String[] { "DefaultClient" };
-	//
-	// JobDispatcherFactory factory = JobDispatcherFactory.getJGroupsFactory(
-	// config, min, tags, false);
-	//
-	// new DEFClient(factory);
-	// }
 }

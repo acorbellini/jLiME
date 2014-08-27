@@ -26,7 +26,7 @@ public class Acknowledge extends SimpleMessageProcessor {
 
 	public Acknowledge(MessageProcessor next, int max_size_nack,
 			int nack_delay, int ack_delay) {
-		super(next, "DEFAck");
+		super(next, "Acknowledge");
 		this.max_size_nack = max_size_nack;
 		this.nack_delay = nack_delay;
 		this.ack_delay = ack_delay;
@@ -34,13 +34,13 @@ public class Acknowledge extends SimpleMessageProcessor {
 
 	@Override
 	public void start() throws Exception {
-		Thread sender = new Thread("DEF Ack Sender And Resender") {
+		Thread sender = new Thread("Acknowledge Sender And Resender") {
 			public void run() {
 				while (!stopped) {
 					for (AcknowledgeCounter count : counters.values()) {
-						for (Message defMessage : count.getSend()) {
+						for (Message message : count.getSend()) {
 							try {
-								sendNext(defMessage);
+								sendNext(message);
 							} catch (Exception e) {
 								e.printStackTrace();
 							}
@@ -80,41 +80,6 @@ public class Acknowledge extends SimpleMessageProcessor {
 						sendNext(ackMsg);
 					}
 				});
-
-		// getNext().addMessageListener(MessageType.NACK,
-		// new DEFMessageListener() {
-		//
-		// @Override
-		// public void rcv(DEFMessage m, MessageProcessor origin)
-		// throws Exception {
-		// int missingNumber = m.getHeaderReader().getInt();
-		// TIntArrayList missing = new TIntArrayList();
-		// DEFByteBufferReader reader = m.getDataReader();
-		// for (int i = 0; i < missingNumber; i++) {
-		// missing.add(reader.getInt());
-		// }
-		// if (log.isDebugEnabled())
-		// log.debug("Received NACK with " + missing
-		// + " messages lost from " + m.getFrom());
-		// DEFAckCountPerNode c = getCounter(m.getFrom());
-		// c.resend(missing);
-		// }
-		// });
-
-		// getNext().addMessageListener(MessageType.ACK, new
-		// DEFMessageListener() {
-		//
-		// @Override
-		// public void rcv(DEFMessage m, MessageProcessor origin)
-		// throws Exception {
-		// int ackConfirm = m.getHeaderReader().getInt();
-		// if (log.isDebugEnabled())
-		// log.debug("Received ACK asking to get minimum seq number received with expected "
-		// + ackConfirm);
-		// DEFAckCountPerNode c = getCounter(m.getFrom());
-		// c.getSender().check(ackConfirm);
-		// }
-		// });
 
 		getNext().addMessageListener(MessageType.ACK, new MessageListener() {
 			@Override

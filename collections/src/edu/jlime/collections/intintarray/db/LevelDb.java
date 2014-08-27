@@ -56,8 +56,8 @@ public class LevelDb extends Store {
 				if (db == null) {
 					options = new Options();
 					options.createIfMissing(true);
-					options.cacheSize(300 * 1024 * 1024);
-					JniDBFactory.pushMemoryPool(300 * 1024 * 1024);
+					options.cacheSize(100 * 1024 * 1024);
+					JniDBFactory.pushMemoryPool(100 * 1024 * 1024);
 
 					File dirDB = new File(sPath + "/" + sn);
 					if (!dirDB.exists())

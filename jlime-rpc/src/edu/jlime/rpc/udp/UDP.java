@@ -132,7 +132,7 @@ public class UDP extends NetworkProtocol implements PacketReceiver {
 
 	@Override
 	public String toString() {
-		return "DEF UDP " + getAddr() + "/" + getPort();
+		return "UDP " + getAddr() + "/" + getPort();
 	}
 
 	@Override
@@ -165,7 +165,7 @@ public class UDP extends NetworkProtocol implements PacketReceiver {
 				if (bup != null && !bup.isEmpty()) {
 					realSockAddr = bup.get((int) (Math.random() * bup.size()));
 				} else if (!to.equals(Address.noAddr())) {
-					log.error("DEFAddress "
+					log.error("Address "
 							+ to
 							+ " was not in send table, and did not contain a physical address to send to.");
 					return;
@@ -199,7 +199,7 @@ public class UDP extends NetworkProtocol implements PacketReceiver {
 	public void onStart(Object socket) {
 		rx = new DatagramReceiver((DatagramSocket) socket, max_bytes, this);
 
-		Thread t = new Thread("DEF UDP Datagram Sender") {
+		Thread t = new Thread("UDP Datagram Sender") {
 			@Override
 			public void run() {
 				while (true) {

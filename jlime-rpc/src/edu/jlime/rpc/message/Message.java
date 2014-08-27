@@ -1,6 +1,5 @@
 package edu.jlime.rpc.message;
 
-import java.net.InetSocketAddress;
 import java.util.HashSet;
 
 import edu.jlime.core.transport.Address;
@@ -55,18 +54,6 @@ public abstract class Message {
 	}
 
 	protected abstract byte[] build();
-
-	// public static DEFMessage fromBytes(DEFByteBufferReader buff,
-	// DEFAddress from, DEFAddress to) {
-	// MessageType type = MessageType.fromID(buff.get());
-	// byte[] header = new byte[] {};
-	// byte[] data = new byte[] {};
-	// if (buff.hasRemaining())
-	// header = buff.getShortByteArray();
-	// if (buff.hasRemaining())
-	// data = buff.getRawByteArray();
-	// return new DEFMessage(type, data, header, from, to);
-	// }
 
 	public static Message encapsulate(Message msg, MessageType type,
 			Address from, Address to) {

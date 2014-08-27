@@ -10,9 +10,9 @@ public class DataPacket {
 
 	private InetSocketAddress addr;
 
-	public DataPacket(Buffer defByteBufferReader,
+	public DataPacket(Buffer buffer,
 			InetSocketAddress socketAddress) {
-		this.reader = defByteBufferReader;
+		this.reader = buffer;
 		this.addr = socketAddress;
 	}
 

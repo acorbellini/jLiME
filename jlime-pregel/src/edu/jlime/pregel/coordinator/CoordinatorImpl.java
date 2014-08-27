@@ -36,13 +36,14 @@ public class CoordinatorImpl implements Coordinator {
 	}
 
 	@Override
-	public void finished(UUID taskID, UUID workerID, Boolean didWork) throws Exception {
+	public void finished(UUID taskID, UUID workerID, Boolean didWork)
+			throws Exception {
 		tasks.get(taskID).finished(workerID, didWork);
 	}
 
 	@Override
 	public PregelGraph execute(PregelGraph input, VertexFunction func,
-			Vertex[] vertex, Integer superSteps) throws Exception {
+			List<Vertex> vertex, Integer superSteps) throws Exception {
 		CoordinatorTask task = new CoordinatorTask(this);
 		tasks.put(task.taskID, task);
 		return task.execute(input, vertex, func, superSteps);
@@ -52,7 +53,7 @@ public class CoordinatorImpl implements Coordinator {
 	public List<Worker> getWorkers() {
 		return workersList.getAll();
 	}
-	
+
 	public WorkerBroadcast getWorkerBroadcast() {
 		return workersList.broadcast();
 	}

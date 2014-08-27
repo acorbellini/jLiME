@@ -31,7 +31,7 @@ public class WorkerTask implements WorkerContext {
 
 	private Coordinator coord;
 
-	private HashMap<Vertex, HashSet<Incoming>> queue = new HashMap<>();
+	private HashMap<Vertex, HashSet<PregelMessage>> queue = new HashMap<>();
 
 	private VertexFunction f;
 
@@ -40,6 +40,8 @@ public class WorkerTask implements WorkerContext {
 	protected Logger log = Logger.getLogger(WorkerTask.class);
 
 	private HashSet<Vertex> halted = new HashSet<>();
+
+	private int currentStep;
 
 	public WorkerTask(PregelGraph input, WorkerImpl w, Coordinator coord,
 			VertexFunction f, UUID taskID, HashSet<Vertex> init) {
@@ -57,7 +59,7 @@ public class WorkerTask implements WorkerContext {
 		if (halted.contains(to))
 			return;
 
-		HashSet<Incoming> vertexData = queue.get(to);
+		HashSet<PregelMessage> vertexData = queue.get(to);
 		if (vertexData == null) {
 			synchronized (this) {
 				vertexData = queue.get(to);
@@ -67,10 +69,12 @@ public class WorkerTask implements WorkerContext {
 				}
 			}
 		}
-		vertexData.add(new Incoming(from, data));
+		vertexData.add(new PregelMessage(from, data));
 	}
 
 	public void nextStep(int superstep) throws Exception {
+		this.currentStep = superstep;
+
 		if (queue.isEmpty()) {
 			coord.finished(taskid, this.worker.getID(), false);
 			return;
@@ -79,9 +83,10 @@ public class WorkerTask implements WorkerContext {
 
 		Semaphore execCount = new Semaphore(MAX_THREADS);
 
-		HashMap<Vertex, HashSet<Incoming>> current = new HashMap<>(this.queue);
+		HashMap<Vertex, HashSet<PregelMessage>> current = new HashMap<>(
+				this.queue);
 		this.queue.clear();
-		for (Entry<Vertex, HashSet<Incoming>> vertex : current.entrySet()) {
+		for (Entry<Vertex, HashSet<PregelMessage>> vertex : current.entrySet()) {
 			modified.add(vertex.getKey());
 			execCount.acquire();
 			exec.execute(new Runnable() {
@@ -112,12 +117,15 @@ public class WorkerTask implements WorkerContext {
 	public PregelGraph getResultGraph() {
 		PregelGraph ret = new PregelGraph();
 		for (Vertex vertex : modified) {
-			List<Vertex> adyacency = graph.getAdyacency(vertex);
+			Set<Vertex> adyacency = graph.getOutgoing(vertex);
 			if (adyacency != null)
 				for (Vertex edge : adyacency) {
 					ret.putLink(vertex, edge);
 				}
+			VertexData data = graph.getData(vertex);
+			ret.setVal(vertex, data);
 
+			ret.addVertex(vertex);
 		}
 		return ret;
 	}
@@ -136,5 +144,10 @@ public class WorkerTask implements WorkerContext {
 	public void setHalted(Vertex v) {
 		this.halted.add(v);
 
+	}
+
+	@Override
+	public Integer getSuperStep() {
+		return currentStep;
 	}
 }

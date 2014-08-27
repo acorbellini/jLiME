@@ -93,29 +93,26 @@ public abstract class MessageProcessor implements StackElement {
 
 	protected abstract void send(Message msg) throws Exception;
 
-	protected void notifyRcvd(Message defMessage) throws Exception {
+	protected void notifyRcvd(Message message) throws Exception {
 		if (log.isDebugEnabled())
-			log.debug("Notifying message " + defMessage.getType() + " of size "
-					+ defMessage.getSize());
+			log.debug("Notifying message " + message.getType() + " of size "
+					+ message.getSize());
 		for (MessageQueue l : all)
-			l.notify(defMessage);
+			l.notify(message);
 
 		boolean notified = false;
-		List<MessageQueue> list = listeners.get(defMessage.getType());
+		List<MessageQueue> list = listeners.get(message.getType());
 		if (list != null) {
 			for (MessageQueue l : new ArrayList<>(list)) {
-				l.notify(defMessage);
+				l.notify(message);
 				notified = true;
 			}
 		}
 		if (!notified) {
 			for (MessageQueue any : secondaryMessage) {
-				any.notify(defMessage);
+				any.notify(message);
 				notified = true;
 			}
-			// if (!notified)
-			// log.warn("Message of type " + defMessage.getType()
-			// + " was not delivered to any listener.");
 		}
 
 	}
@@ -140,13 +137,13 @@ public abstract class MessageProcessor implements StackElement {
 		list.add(new MessageQueue(packList, this, type.toString()));
 	}
 
-	public void addSecondaryMessageListener(MessageListener defMessageListener) {
-		secondaryMessage.add(new MessageQueue(defMessageListener, this,
+	public void addSecondaryMessageListener(MessageListener listener) {
+		secondaryMessage.add(new MessageQueue(listener, this,
 				"Secondary Messages"));
 	}
 
-	public void addAllMessageListener(MessageListener defMessageListener) {
-		all.add(new MessageQueue(defMessageListener, this, "All Messages"));
+	public void addAllMessageListener(MessageListener listener) {
+		all.add(new MessageQueue(listener, this, "All Messages"));
 
 	}
 	

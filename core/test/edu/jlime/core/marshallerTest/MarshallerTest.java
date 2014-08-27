@@ -6,7 +6,7 @@ public class MarshallerTest {
 
 	@Test
 	public void test() throws Exception {
-		// DEFMarshaller m = new DEFMarshaller();
+		// Marshaller m = new Marshaller();
 		// byte[] marshalled = m.objectToBuffer(
 		// Compression.compress(ExecutionClient
 		// .serializeClass(new MyRealJob(4)))).getBuf();
@@ -27,7 +27,7 @@ public class MarshallerTest {
 		// Integer(4));
 		// // myjob.call();
 
-		// DEFMarshaller m = new DEFMarshaller(new NetworkClassLoader());
+		// Marshaller m = new Marshaller(new NetworkClassLoader());
 		// byte[] marshalled = m.objectToBuffer(
 		// ExecutionClient.serializeClass(new MyRealJob(4))).getBuf();
 		// TByteArrayList unmarshalled = (TByteArrayList) m.objectFromBuffer(

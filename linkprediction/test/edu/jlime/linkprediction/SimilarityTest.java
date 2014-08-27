@@ -36,41 +36,16 @@ public class SimilarityTest {
 
 	private ClientCluster cluster;
 
-	// private DEFClient cli;
-
 	@Test
 	public void similarityTest(String db, String output) throws Exception {
 		try {
 			Class.forName("org.h2.Driver");
 
 			conn = DriverManager.getConnection("jdbc:h2:file:" + output, "sa",
-			// ./results
 					"");
 
-			// cli = DEFClient.build(1);
-			// cluster = cli.getCluster();
 			graph = new LocalAdjacencyGraph(
-					new StoreFactory(StoreType.H2).getStore(db
-					// "D:/TwitterAdjacencyGraph/"
-							, "DKVSDB"));
-
-			// graph = new AdjacencyGraph(TwitterStoreConfig.getConfig(),
-			// cluster,
-			// new LocationMapper(TwitterStoreConfig.getConfig()
-			// .getStoreName()));
-
-			// graph = new AdyacencyGraph(new StoreConfig(StoreType.LEVELDB,
-			// "/home/ale/TwitterDB", "TwitterLevelDB"),
-			// cluster);
-
-			// int[] f = graph.getUser(160763).neighbours().exec();
-			// int[] ifol = graph.getUser(890121).neighbours().exec();
-			// int[] res = IntArrayUtils.intersectArrays(ifol, f);
-			// TIntHashSet set = new TIntHashSet();
-			// set.addAll(graph.getUser(890121).neighbours().exec());
-			// set.addAll(f);
-			// float sim = res.length / (float) set.size();
-			// System.out.println(sim);
+					new StoreFactory(StoreType.H2).getStore(db, "DKVSDB"));
 
 			PreparedStatement stmt = conn
 					.prepareStatement("CREATE TABLE IF NOT EXISTS USERSIMILARITY (USERID INTEGER , FOLLOWEEID INTEGER , TYPEOFSIMILARITY VARCHAR, SIMILARITY FLOAT, PRIMARY KEY(USERID, FOLLOWEEID, TYPEOFSIMILARITY));");

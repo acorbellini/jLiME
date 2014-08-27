@@ -1,8 +1,6 @@
 package edu.jlime.collections.intintarray.client;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.Callable;
 
 import org.apache.log4j.Logger;
 
@@ -29,98 +27,13 @@ public class CountListsJob implements Job<TIntIntHashMap> {
 		this.storeName = name;
 	}
 
-	private static class SubCount implements Callable<TIntIntHashMap> {
-
-		private int[] subset;
-		private Store store;
-
-		public SubCount(int[] subset, Store store) {
-			this.subset = subset;
-			this.store = store;
-		}
-
-		@Override
-		public TIntIntHashMap call() throws Exception {
-			TIntIntHashMap hash = new TIntIntHashMap();
-			Arrays.sort(subset);
-			System.out.println("Obtaining a subset of " + subset.length);
-			for (int u : subset) {
-				byte[] valAsBytes = store.load(u);
-				if (valAsBytes != null) {
-					for (int i : DataTypeUtils.byteArrayToIntArray(valAsBytes))
-						hash.adjustOrPutValue(i, 1, 1);
-				}
-			}
-			System.out.println("Finished obtaining a subset of "
-					+ subset.length);
-			return hash;
-		}
-	}
-
 	@Override
-	public TIntIntHashMap call(JobContext ctx, ClientNode peer) throws Exception {
-		// ExecutorService exec = Executors.newCachedThreadPool();
+	public TIntIntHashMap call(JobContext ctx, ClientNode peer)
+			throws Exception {
 		final Logger log = Logger.getLogger(MultiGetJob.class);
 		log.info("Obtaining multiple keys (" + kList.length + ") from store");
 
 		Store store = (Store) ctx.get(storeName);
-
-		// final RingQueue queue = new RingQueue(2 * 4 * 1024);
-		// Future<TIntIntHashMap> fut = exec
-		// .submit(new Callable<TIntIntHashMap>() {
-		//
-		// @Override
-		// public TIntIntHashMap call() throws Exception {
-		// TIntIntHashMap hash = new TIntIntHashMap();
-		// while (true) {
-		// Object[] vals = queue.take();
-		// for (Object bs : vals) {
-		// if (bs == null) {
-		// log.info("Returning result for CountListsJob with "
-		// + hash.size() + " users.");
-		// return hash;
-		// }
-		//
-		// int[] intArray = DataTypeUtils
-		// .byteArrayToIntArray((byte[]) bs);
-		// for (int b : intArray)
-		// hash.adjustOrPutValue(b, 1, 1);
-		// }
-		// }
-		// }
-		// });
-		// exec.shutdown();
-		// log.info("Sorting kList");
-		// Integer[] sorted = ArrayUtils.toObject(kList);
-		//
-		// Arrays.sort(sorted, new Comparator<Integer>() {
-		//
-		// @Override
-		// public int compare(Integer o1, Integer o2) {
-		// byte[] b1 = DataTypeUtils.intToByteArray(o1);
-		// byte[] b2 = DataTypeUtils.intToByteArray(o2);
-		// for (int i = 0; i < 4; i++) {
-		// int comp = Byte.compare(b1[i], b2[i]);
-		// if (comp != 0)
-		// return comp;
-		// }
-		// return 0;
-		// }
-		// });
-		//
-		//
-		//
-		// log.info("Sorted kList");
-		// for (int u : sorted) {
-		// byte[] valAsBytes = store.load(u);
-		// if (valAsBytes != null)
-		// queue.put(valAsBytes);
-		// }
-		// log.info("Finished loading from store");
-		//
-
-		// queue.put(null);
-		// return fut.get();
 
 		TIntIntHashMap hash = new TIntIntHashMap();
 		log.info("Loading kList.");

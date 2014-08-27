@@ -41,8 +41,8 @@ public class MessageQueue {
 
 	}
 
-	public void notify(Message defMessage) {
-		in.put(defMessage);
+	public void notify(Message message) {
+		in.put(message);
 	}
 
 	public void stop() {

@@ -6,6 +6,6 @@ import edu.jlime.rpc.message.SocketAddress;
 
 public interface AddressTester {
 
-	public boolean test(UUID id, SocketAddress defSocketAddress);
+	public boolean test(UUID id, SocketAddress socketAddress);
 
 }

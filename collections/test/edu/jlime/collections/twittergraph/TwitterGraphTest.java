@@ -16,12 +16,6 @@ public class TwitterGraphTest {
 	public static void main(String[] args) throws Exception {
 		System.out.println(Integer.MAX_VALUE);
 
-		// Load a twitter adjacency graph of the type u->[followees][followers]
-		// JobCluster cluster = DEFClient.build(1).getCluster();
-		// BundlerClient graph = new BundlerClient(new StoreConfig(
-		// StoreType.LEVELDB, ,
-		// ), 10000, cluster);
-
 		Store graph = (Store) new StoreFactory(StoreType.H2).getStore(
 				"D:/TwitterAdjacencyGraph/", "twitterGraph");
 

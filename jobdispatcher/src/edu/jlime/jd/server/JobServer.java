@@ -38,7 +38,7 @@ public class JobServer {
 			info[1] = mgr.get("jlime.interface").toString();
 			info[2] = "Local Node : " +jd.getCluster().getLocalNode();
 			Logger.getLogger(JobServer.class).info(
-					StringUtils.printDEFTitle(info));
+					StringUtils.printTitle(info));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

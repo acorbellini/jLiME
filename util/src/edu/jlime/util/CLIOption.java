@@ -12,7 +12,7 @@ public class CLIOption {
 
 	private String val;
 
-	private String def;
+	private String defaultValue;
 
 	public CLIOption(String name, String shortName, String desc, int vals,
 			String defaultValue) {
@@ -21,7 +21,7 @@ public class CLIOption {
 		this.setShortName(shortName);
 		this.setDesc(desc);
 		this.setValNum(vals);
-		this.def = defaultValue;
+		this.defaultValue = defaultValue;
 	}
 
 	public boolean validateVal(String val) {
@@ -29,7 +29,7 @@ public class CLIOption {
 	}
 
 	public String getDefault() {
-		return def;
+		return defaultValue;
 	}
 
 	@Override
@@ -51,7 +51,7 @@ public class CLIOption {
 	public String getVal() {
 		if (val != null)
 			return val;
-		return def;
+		return defaultValue;
 	}
 
 	public String getDesc() {

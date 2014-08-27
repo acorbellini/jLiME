@@ -36,23 +36,23 @@ public class Fragmenter extends SimpleMessageProcessor {
 	public void start() throws Exception {
 		getNext().addSecondaryMessageListener(new MessageListener() {
 			@Override
-			public void rcv(Message defMessage, MessageProcessor origin)
+			public void rcv(Message message, MessageProcessor origin)
 					throws Exception {
 				if (log.isDebugEnabled())
-					log.debug("Received msg type " + defMessage.getType()
+					log.debug("Received msg type " + message.getType()
 							+ " to be bypassed");
-				notifyRcvd(defMessage);
+				notifyRcvd(message);
 			}
 		});
 
 		getNext().addMessageListener(MessageType.FRAG, new MessageListener() {
 			@Override
-			public void rcv(Message defMessage, MessageProcessor origin)
+			public void rcv(Message message, MessageProcessor origin)
 					throws Exception {
-				Buffer header = defMessage.getHeaderBuffer();
+				Buffer header = message.getHeaderBuffer();
 
-				Address from = defMessage.getFrom();
-				Address to = defMessage.getTo();
+				Address from = message.getFrom();
+				Address to = message.getTo();
 				// Only the first four bytes.
 				UUID fragID = header.getUUID();
 				int offset = header.getInt();
@@ -77,7 +77,7 @@ public class Fragmenter extends SimpleMessageProcessor {
 					synchronized (incomplete) {
 						if (!incomplete.contains(offset)) {
 							incomplete.addPart(offset,
-									defMessage.getDataAsBytes());
+									message.getDataAsBytes());
 							if (incomplete.isCompleted()) {
 								parts.remove(fragID);
 								notifyRcvd(Message.deEncapsulate(
@@ -88,17 +88,6 @@ public class Fragmenter extends SimpleMessageProcessor {
 				} else
 					System.out.println("Repeated");
 
-				// } else {
-				// byte[] msgData = data.getByteArray();
-				// DEFMessage msg = DEFMessage.fromBytes(msgID, msgData,
-				// (InetSocketAddress) p.getSocketAddress(),
-				// (InetSocketAddress) sock.getLocalSocketAddress());
-				// // log.info("Received not fragmente message of type "
-				// +
-				// // msg.getType()
-				// // + " and size " + msgData.length);
-				// notifyRcvd(msg);
-				// }
 			}
 		});
 	}
@@ -141,25 +130,6 @@ public class Fragmenter extends SimpleMessageProcessor {
 				sendNext(toSend);
 			}
 		}
-
-		// else {
-		// DEFByteBuffer buff = new DEFByteBuffer();
-		// // ByteBuffer.allocate(data_size);
-		// buff.putBoolean(false);// it isn't fragmented
-		// // Most signf UUID
-		// buff.putUUID(msg.getId());
-		//
-		// buff.putByteArray(data);
-		//
-		// byte[] built = buff.build();
-		// try {
-		// DatagramPacket dg = new DatagramPacket(built, built.length,
-		// msg.getTo());
-		// packetsTx.putFirst(dg);
-		// } catch (InterruptedException e) {
-		// e.printStackTrace();
-		// }
-		// }
 	}
 
 	@Override

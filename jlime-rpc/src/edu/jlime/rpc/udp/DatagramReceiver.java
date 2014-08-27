@@ -22,7 +22,7 @@ public class DatagramReceiver {
 		this.rcvr = receiver;
 		this.sock = sock;
 		this.buff_size = buff_size;
-		Thread read = new Thread("DEF UDP Socket Reader") {
+		Thread read = new Thread("UDP Socket Reader") {
 			@Override
 			public void run() {
 				while (!stopped)
@@ -32,7 +32,7 @@ public class DatagramReceiver {
 		// read.setDaemon(true);
 		read.start();
 
-		Thread consume = new Thread("DEF UDP Datagram Receiver") {
+		Thread consume = new Thread("UDP Datagram Receiver") {
 			@Override
 			public void run() {
 				while (!stopped)

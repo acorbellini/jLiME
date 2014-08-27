@@ -48,11 +48,6 @@ public class SimpleTest {
 
 	@Test
 	public void test() throws Exception {
-		// try {
-		// DEFServer server = new DEFServer();
-		// } catch (Exception e) {
-		// e.printStackTrace();
-		// }
 		Client cl = Client.build(1);
 
 		Thread.sleep(3000);

@@ -83,8 +83,8 @@ public class DataProcessor extends SimpleMessageProcessor implements
 		getNext().addMessageListener(MessageType.RESPONSE,
 				new MessageListener() {
 					@Override
-					public void rcv(Message defMessage, MessageProcessor origin) {
-						processResponse(defMessage);
+					public void rcv(Message message, MessageProcessor origin) {
+						processResponse(message);
 					}
 				});
 	}
@@ -170,26 +170,26 @@ public class DataProcessor extends SimpleMessageProcessor implements
 		}
 	}
 
-	private void processResponse(Message defMessage) {
-		UUID id = defMessage.getHeaderBuffer().getUUID();
+	private void processResponse(Message message) {
+		UUID id = message.getHeaderBuffer().getUUID();
 		if (log.isDebugEnabled())
 			log.debug("Received RESPONSE for DATA message with id " + id
-					+ " from " + defMessage.getFrom());
+					+ " from " + message.getFrom());
 
 		synchronized (waitingResponse) {
 			Object lock = waitingResponse.get(id);
 
-			HashSet<UUID> ids = calls.get(defMessage.getFrom());
+			HashSet<UUID> ids = calls.get(message.getFrom());
 
 			if (ids != null)
 				ids.remove(id);
 			else
-				log.warn("Ids table does not contain " + defMessage.getFrom());
+				log.warn("Ids table does not contain " + message.getFrom());
 
 			if (lock != null) {
 				waitingResponse.remove(id);
 				synchronized (lock) {
-					responses.put(id, defMessage);
+					responses.put(id, message);
 					lock.notifyAll();
 				}
 			} else

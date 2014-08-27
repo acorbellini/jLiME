@@ -6,7 +6,7 @@ import edu.jlime.pregel.client.WorkerContext;
 import edu.jlime.pregel.graph.PregelGraph;
 import edu.jlime.pregel.graph.Vertex;
 import edu.jlime.pregel.graph.VertexFunction;
-import edu.jlime.pregel.worker.Incoming;
+import edu.jlime.pregel.worker.PregelMessage;
 import edu.jlime.pregel.worker.VertexData;
 
 class MinTree implements VertexFunction {
@@ -18,14 +18,14 @@ class MinTree implements VertexFunction {
 	private static final String STATUS = "status";
 
 	@Override
-	public void execute(Vertex v, HashSet<Incoming> incoming, WorkerContext ctx)
+	public void execute(Vertex v, HashSet<PregelMessage> incoming, WorkerContext ctx)
 			throws Exception {
 
 		PregelGraph graph = ctx.getGraph();
 
 		if (graph.isTrue(v, VISITED)) {
 			System.out.println("Vertex is visited: " + v);
-			for (Incoming adyacent : incoming) {
+			for (PregelMessage adyacent : incoming) {
 				if (adyacent.equals(STATUS, DELETE)) {
 					graph.removeLink(v, adyacent.getVertex());
 					System.out.println("Deleting link " + v + " -> "
@@ -48,11 +48,11 @@ class MinTree implements VertexFunction {
 
 		graph.setTrue(v, VISITED);
 
-		for (Vertex ady : graph.getAdyacency(v))
+		for (Vertex ady : graph.getOutgoing(v))
 			ctx.send(v, ady, VertexData.create(STATUS, NORMAL));
 
 		boolean first = true;
-		for (Incoming ady : incoming) {
+		for (PregelMessage ady : incoming) {
 			if (first) {
 				ctx.send(v, ady.getVertex(), VertexData.create(STATUS, OK));
 				first = false;

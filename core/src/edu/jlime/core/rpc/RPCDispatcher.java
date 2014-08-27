@@ -38,6 +38,17 @@ public class RPCDispatcher implements ClassLoaderProvider, TransportListener {
 
 	private Transport tr;
 
+	private ExecutorService asyncExec = Executors
+			.newCachedThreadPool(new ThreadFactory() {
+
+				@Override
+				public Thread newThread(Runnable r) {
+					Thread t = Executors.defaultThreadFactory().newThread(r);
+					t.setName("RPCAsyncThreads");
+					return t;
+				}
+			});
+
 	private ExecutorService broadcastExec = Executors
 			.newCachedThreadPool(new ThreadFactory() {
 
@@ -69,9 +80,19 @@ public class RPCDispatcher implements ClassLoaderProvider, TransportListener {
 		return call(dest, clientID, call, true);
 	}
 
-	public void callAsync(Peer dest, Peer clientID, MethodCall call)
-			throws Exception {
-		call(dest, clientID, call, false);
+	public void callAsync(final Peer dest, final Peer clientID,
+			final MethodCall call) throws Exception {
+		asyncExec.execute(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					call(dest, clientID, call, false);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
+
 	}
 
 	private Object call(Peer dest, Peer clientID, MethodCall call, boolean sync)
@@ -103,11 +124,12 @@ public class RPCDispatcher implements ClassLoaderProvider, TransportListener {
 		}
 	}
 
-	public void setMarshaller(Marshaller defMarshaller) {
-		this.marshaller = defMarshaller;
+	public void setMarshaller(Marshaller marshaller) {
+		this.marshaller = marshaller;
 	}
 
 	public void stop() throws Exception {
+		asyncExec.shutdown();
 		broadcastExec.shutdown();
 		tr.stop();
 	};
@@ -154,9 +176,22 @@ public class RPCDispatcher implements ClassLoaderProvider, TransportListener {
 				+ ". Object class: " + objClass.toString() + ".");
 	}
 
-	public void multiCallAsync(List<Peer> peers, Peer client, String target,
-			String method, Object[] objects) throws Exception {
-		multiCall(peers, client, new MethodCall(target, method, objects));
+	public void multiCallAsync(final List<Peer> peers, final Peer client,
+			final String target, final String method, final Object[] objects)
+			throws Exception {
+		asyncExec.execute(new Runnable() {
+
+			@Override
+			public void run() {
+				try {
+					multiCall(peers, client, new MethodCall(target, method,
+							objects));
+				} catch (Exception e) {
+					log.error("Error executing asynchronous multiCall", e);
+				}
+			}
+		});
+
 	}
 
 	public <T> Map<Peer, T> multiCall(List<Peer> peers, Peer client,

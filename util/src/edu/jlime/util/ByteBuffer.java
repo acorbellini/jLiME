@@ -81,7 +81,7 @@ public class ByteBuffer extends Buffer {
 
 	@Override
 	public byte[] getRawByteArray() {
-		byte[] raw = DEFByteArrayCache.get(writePos - readPos);
+		byte[] raw = ByteArrayCache.get(writePos - readPos);
 		System.arraycopy(buffered, readPos, raw, 0, writePos - readPos);
 		return raw;
 	}
@@ -94,11 +94,10 @@ public class ByteBuffer extends Buffer {
 	void ensureCapacity(int i) {
 		while (writePos + i > buffered.length) {
 			// byte[] copy = buffered;
-			byte[] bufferedExtended = DEFByteArrayCache
+			byte[] bufferedExtended = ByteArrayCache
 					.get(buffered.length == 0 ? INIT_SIZE : buffered.length * 2);
 			System.arraycopy(buffered, 0, bufferedExtended, 0, buffered.length);
 			buffered = bufferedExtended;
-			// DEFByteArrayCache.put(copy);
 		}
 
 	}
@@ -139,7 +138,7 @@ public class ByteBuffer extends Buffer {
 	public byte[] build() {
 		if (buffered.length != writePos) {
 			byte[] ret = Arrays.copyOf(buffered, writePos);
-			DEFByteArrayCache.put(buffered);
+			ByteArrayCache.put(buffered);
 			return ret;
 		} else
 			return buffered;

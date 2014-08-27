@@ -34,8 +34,6 @@ public class SharedTest {
 
 	@Test
 	public void sharedTest() throws Exception {
-		// DEFServer.jLiME();
-		// DEFServer.jLiME();
 
 		List<SharedJob> jobs = new ArrayList<>();
 		jobs.add(new SharedJob("1"));
