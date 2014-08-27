@@ -27,7 +27,8 @@ public class PregelTest {
 		Vertex v3 = g.vertex();
 		Vertex v4 = g.vertex();
 
-		g.setDefaultValue("pagerank", 1 / (double) g.vertexSize());
+		g.setDefaultValue("pagerank", 1d / g.vertexSize());
+		g.setDefaultValue("ranksource", .15d / g.vertexSize());
 
 		g.putLink(v0, v1);
 		g.putLink(v0, v2);
@@ -51,7 +52,7 @@ public class PregelTest {
 		}
 
 		System.out.println(res);
-		System.out.println(sum + " avg: " + sum / res.vertexSize());
+		System.out.println("sum: " + sum + " avg: " + sum / res.vertexSize());
 
 		srv.stop();
 		w1.stop();

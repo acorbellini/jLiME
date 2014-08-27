@@ -13,7 +13,9 @@ import edu.jlime.pregel.worker.VertexData;
 
 public class PageRank implements VertexFunction {
 
-	double error = 0.00001;
+	double error = 0.001;
+
+	// double d = 0.85;
 
 	@Override
 	public void execute(Vertex v, HashSet<PregelMessage> in, WorkerContext ctx)
@@ -29,15 +31,20 @@ public class PageRank implements VertexFunction {
 					(Double) incoming.get("edgePageRank"));
 		}
 
+		// Jabobi iterative method: (1-d) + d * function
+		// Example :
+		// http://mathscinotes.wordpress.com/2012/01/02/worked-pagerank-example/
 		double currentVal = oldval;
 		if (ctx.getSuperStep() >= 1) {
 			double sum = 0;
 			for (Vertex vertex : graph.getIncoming(v)) {
 				sum += (Double) graph.get(vertex, "pagerank");
 			}
-			// (double) graph.getAdyacencySize(v)
-			currentVal = 0.15 + 0.85 * sum;
 
+			double d = (Double) graph.get(v, "ranksource");
+
+			currentVal = d / graph.vertexSize() + (1 - d) * (sum);
+			// + (Double) graph.get(v, "ranksource")
 			System.out.println("Saving pagerank " + currentVal + " into " + v);
 
 			graph.setVal(v, "pagerank", currentVal);
