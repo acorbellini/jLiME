@@ -25,7 +25,7 @@ public class MultiDiscovery extends MessageProcessor implements
 	}
 
 	@Override
-	public void start() throws Exception {
+	public void onStart() throws Exception {
 		for (Discovery d : discos)
 			d.start();
 	}

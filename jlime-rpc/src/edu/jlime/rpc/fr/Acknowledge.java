@@ -33,7 +33,7 @@ public class Acknowledge extends SimpleMessageProcessor {
 	}
 
 	@Override
-	public void start() throws Exception {
+	public void onStart() throws Exception {
 		Thread sender = new Thread("Acknowledge Sender And Resender") {
 			public void run() {
 				while (!stopped) {

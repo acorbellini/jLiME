@@ -375,13 +375,8 @@ public class RPCDispatcher implements ClassLoaderProvider, TransportListener {
 	AtomicBoolean started = new AtomicBoolean(false);
 
 	public void start() throws Exception {
-		synchronized (started) {
-			if (started.get())
-				return;
-			else
-				started.set(true);
-		}
-		tr.start();
+		if (started.compareAndSet(false, true))
+			tr.start();
 	}
 
 	public void setMetrics(Metrics mgr) {

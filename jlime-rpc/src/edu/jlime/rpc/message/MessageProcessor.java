@@ -34,6 +34,17 @@ public abstract class MessageProcessor implements StackElement {
 
 	public MessageProcessor(String name) {
 		this.name = name;
+	}
+
+	public void registerProcessor(String procName, MessageProcessor proc) {
+		processors.put(procName, proc);
+	}
+
+	public MessageProcessor getProc(String name) {
+		return processors.get(name);
+	}
+
+	public final void start() throws Exception {
 		Thread t = new Thread("Outcoming Timer for " + name) {
 			public void run() {
 				while (!stopped)
@@ -52,17 +63,10 @@ public abstract class MessageProcessor implements StackElement {
 		};
 		t.start();
 
-	}
+		onStart();
+	};
 
-	public void registerProcessor(String procName, MessageProcessor proc) {
-		processors.put(procName, proc);
-	}
-
-	public MessageProcessor getProc(String name) {
-		return processors.get(name);
-	}
-
-	public void start() throws Exception {
+	public void onStart() throws Exception {
 	};
 
 	public final synchronized void stop() throws Exception {
@@ -88,7 +92,7 @@ public abstract class MessageProcessor implements StackElement {
 		onStop();
 	};
 
-	public void onStop() throws Exception {
+	protected void onStop() throws Exception {
 	};
 
 	protected abstract void send(Message msg) throws Exception;
@@ -146,7 +150,7 @@ public abstract class MessageProcessor implements StackElement {
 		all.add(new MessageQueue(listener, this, "All Messages"));
 
 	}
-	
+
 	@Override
 	public void cleanupOnFailedPeer(Address peer) {
 

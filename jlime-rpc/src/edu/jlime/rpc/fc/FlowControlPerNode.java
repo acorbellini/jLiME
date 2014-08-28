@@ -114,11 +114,6 @@ class FlowControlPerNode extends SimpleMessageProcessor {
 	}
 
 	@Override
-	public void start() throws Exception {
-
-	}
-
-	@Override
 	public void onStop() throws Exception {
 		t.cancel();
 	}

@@ -13,7 +13,7 @@ import edu.jlime.pregel.worker.VertexData;
 
 public class PageRank implements VertexFunction {
 
-	double error = 0.001;
+	double error = 0.0001;
 
 	// double d = 0.85;
 

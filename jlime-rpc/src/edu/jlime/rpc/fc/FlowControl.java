@@ -27,7 +27,7 @@ public class FlowControl extends SimpleMessageProcessor {
 	}
 
 	@Override
-	public void start() throws Exception {
+	public void onStart() throws Exception {
 		getNext().addMessageListener(MessageType.FC, new MessageListener() {
 			@Override
 			public void rcv(Message msg, MessageProcessor origin)

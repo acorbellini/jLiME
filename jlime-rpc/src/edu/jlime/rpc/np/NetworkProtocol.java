@@ -107,7 +107,7 @@ public abstract class NetworkProtocol extends SimpleMessageProcessor implements
 	protected abstract void beforeProcess(DataPacket pkt, Address from,
 			Address to);
 
-	public void start() throws Exception {
+	public void onStart() throws Exception {
 
 		int tries = 0;
 		while (getSocket() == null && tries != portrange) {

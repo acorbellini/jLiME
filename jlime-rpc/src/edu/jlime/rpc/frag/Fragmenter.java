@@ -33,7 +33,7 @@ public class Fragmenter extends SimpleMessageProcessor {
 	}
 
 	@Override
-	public void start() throws Exception {
+	public void onStart() throws Exception {
 		getNext().addSecondaryMessageListener(new MessageListener() {
 			@Override
 			public void rcv(Message message, MessageProcessor origin)
@@ -76,8 +76,7 @@ public class Fragmenter extends SimpleMessageProcessor {
 				if (!incomplete.contains(offset)) {
 					synchronized (incomplete) {
 						if (!incomplete.contains(offset)) {
-							incomplete.addPart(offset,
-									message.getDataAsBytes());
+							incomplete.addPart(offset, message.getDataAsBytes());
 							if (incomplete.isCompleted()) {
 								parts.remove(fragID);
 								notifyRcvd(Message.deEncapsulate(

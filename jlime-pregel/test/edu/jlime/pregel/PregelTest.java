@@ -28,7 +28,7 @@ public class PregelTest {
 		Vertex v4 = g.vertex();
 
 		g.setDefaultValue("pagerank", 1d / g.vertexSize());
-		g.setDefaultValue("ranksource", .15d / g.vertexSize());
+		g.setDefaultValue("ranksource", .15d);
 
 		g.putLink(v0, v1);
 		g.putLink(v0, v2);

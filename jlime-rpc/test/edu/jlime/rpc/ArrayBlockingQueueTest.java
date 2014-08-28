@@ -9,35 +9,35 @@ public class ArrayBlockingQueueTest {
 	}
 
 	public static void main(String[] args) throws InterruptedException {
-
-		Integer i1 = new Integer(5);
-		Integer i2 = new Integer(5);
-
-		if (i1 == i2)
-			System.out.println("Son iguales");
-		else
-			System.out.println("Son distintos");
-
-		String h1 = "hola";
-		String h2 = "hola";
-		if (h1 == "hola")
-			System.out.println("Son iguales");
-		else
-			System.out.println("Son distintos");
-		if (h1 == h2)
-			System.out.println("Son iguales");
-		else
-			System.out.println("Son distintos");
-
-		if ("hola" == "hola")
-			System.out.println("Son iguales");
-//		else
-//			System.out.println("Son distintos");
-
-		if (new String("hola") == new String("hola"))
-			System.out.println("Son iguales");
-		else
-			System.out.println("Son distintos");
+		//
+		// Integer i1 = new Integer(5);
+		// Integer i2 = new Integer(5);
+		//
+		// if (i1 == i2)
+		// System.out.println("Son iguales");
+		// else
+		// System.out.println("Son distintos");
+		//
+		// String h1 = "hola";
+		// String h2 = "hola";
+		// if (h1 == "hola")
+		// System.out.println("Son iguales");
+		// else
+		// System.out.println("Son distintos");
+		// if (h1 == h2)
+		// System.out.println("Son iguales");
+		// else
+		// System.out.println("Son distintos");
+		//
+		// if ("hola" == "hola")
+		// System.out.println("Son iguales");
+		// // else
+		// // System.out.println("Son distintos");
+		//
+		// if (new String("hola") == new String("hola"))
+		// System.out.println("Son iguales");
+		// else
+		// System.out.println("Son distintos");
 
 		final ArrayBlockingQueue<Integer> queue = new ArrayBlockingQueue<>(32);
 		final int ITER = 10000;

@@ -1,7 +1,7 @@
 package edu.jlime.rpc.bundler;
 
+import java.util.HashMap;
 import java.util.Timer;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.log4j.Logger;
 
@@ -16,7 +16,7 @@ import edu.jlime.util.Buffer;
 
 public class MessageBundler extends SimpleMessageProcessor {
 
-	ConcurrentHashMap<Address, Bundler> bundles = new ConcurrentHashMap<>();
+	HashMap<Address, Bundler> bundles = new HashMap<>();
 
 	private int max_size;
 
@@ -31,7 +31,7 @@ public class MessageBundler extends SimpleMessageProcessor {
 	}
 
 	@Override
-	public void start() throws Exception {
+	public void onStart() throws Exception {
 		getNext().addMessageListener(MessageType.BUNDLE, new MessageListener() {
 			@Override
 			public void rcv(Message message, MessageProcessor origin)
@@ -85,7 +85,10 @@ public class MessageBundler extends SimpleMessageProcessor {
 
 	@Override
 	public void cleanupOnFailedPeer(Address addr) {
-		Bundler b = bundles.remove(addr);
+		Bundler b = null;
+		synchronized (bundles) {
+			b = bundles.remove(addr);
+		}
 		if (b != null)
 			try {
 				b.stop();

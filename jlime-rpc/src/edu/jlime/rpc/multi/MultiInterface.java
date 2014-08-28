@@ -58,7 +58,7 @@ public class MultiInterface extends MessageProcessor implements
 	}
 
 	@Override
-	public void start() throws Exception {
+	public void onStart() throws Exception {
 		createIfaces(NetworkUtils.getLocalAddress(false));
 	}
 

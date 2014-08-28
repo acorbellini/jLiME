@@ -28,7 +28,7 @@ public class ClientClassLoader extends ClassLoader {
 		this.disp = rpcDispatcher;
 	}
 
-	ConcurrentHashMap<String, Object> classesBeingObtained = new ConcurrentHashMap<>();
+	HashMap<String, Object> classesBeingObtained = new HashMap<>();
 
 	@Override
 	protected Class<?> findClass(String name) throws ClassNotFoundException {
@@ -48,12 +48,17 @@ public class ClientClassLoader extends ClassLoader {
 		}
 
 		try {
-			synchronized (this) {
-				if (!classesBeingObtained.containsKey(name))
-					classesBeingObtained.put(name, new Object());
-			}
 
 			Object lock = classesBeingObtained.get(name);
+			if (lock == null)
+				synchronized (classesBeingObtained) {
+					lock = classesBeingObtained.get(name);
+					if (lock == null) {
+						lock = new Object();
+						classesBeingObtained.put(name, lock);
+					}
+				}
+
 			synchronized (lock) {
 				Class<?> c = loaded.get(name);
 				if (c == null) {

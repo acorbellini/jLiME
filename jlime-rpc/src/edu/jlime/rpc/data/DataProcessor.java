@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.log4j.Logger;
 
@@ -22,17 +21,17 @@ import edu.jlime.util.Buffer;
 public class DataProcessor extends SimpleMessageProcessor implements
 		DataProvider {
 
-	jLiMELRUMap<UUID, Boolean> map = new jLiMELRUMap<>(100);
+	private jLiMELRUMap<UUID, Boolean> map = new jLiMELRUMap<>(100);
 
-	Logger log = Logger.getLogger(DataProcessor.class);
+	private Logger log = Logger.getLogger(DataProcessor.class);
 
-	UUID localID;
+	private UUID localID;
 
-	List<DataListener> listeners = new ArrayList<>();
+	private List<DataListener> listeners = new ArrayList<>();
 
-	ConcurrentHashMap<UUID, Object> waitingResponse = new ConcurrentHashMap<>();
+	private HashMap<UUID, Object> waitingResponse = new HashMap<>();
 
-	ConcurrentHashMap<UUID, Message> responses = new ConcurrentHashMap<>();
+	private HashMap<UUID, Message> responses = new HashMap<>();
 
 	private HashMap<Address, HashSet<UUID>> calls = new HashMap<>();
 
@@ -71,7 +70,7 @@ public class DataProcessor extends SimpleMessageProcessor implements
 	}
 
 	@Override
-	public void start() throws Exception {
+	public void onStart() throws Exception {
 		getNext().addMessageListener(MessageType.DATA, new MessageListener() {
 			@Override
 			public void rcv(final Message m, MessageProcessor origin)
