@@ -9,6 +9,7 @@ import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
@@ -19,7 +20,7 @@ import edu.jlime.pregel.graph.PregelGraph;
 import edu.jlime.pregel.graph.Vertex;
 import edu.jlime.pregel.graph.VertexFunction;
 
-public class WorkerTask implements WorkerContext {
+public class WorkerTask {
 
 	private static final int MAX_THREADS = 10;
 
@@ -73,13 +74,30 @@ public class WorkerTask implements WorkerContext {
 	}
 
 	public void nextStep(int superstep) throws Exception {
+		log.info("Executing step " + superstep + " on Worker " + worker.getID());
+
 		this.currentStep = superstep;
 
 		if (queue.isEmpty()) {
-			coord.finished(taskid, this.worker.getID(), false);
+			log.info("Queue was empty, finished step " + superstep + " on Worker " + worker.getID());
+			try {
+				coord.finished(taskid, this.worker.getID(), false);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 			return;
 		}
-		ExecutorService exec = Executors.newFixedThreadPool(MAX_THREADS);
+		ExecutorService exec = Executors.newFixedThreadPool(MAX_THREADS,
+				new ThreadFactory() {
+
+					@Override
+					public Thread newThread(Runnable r) {
+						Thread t = Executors.defaultThreadFactory()
+								.newThread(r);
+						t.setName("Pregel Worker for task " + taskid);
+						return t;
+					}
+				});
 
 		Semaphore execCount = new Semaphore(MAX_THREADS);
 
@@ -96,21 +114,27 @@ public class WorkerTask implements WorkerContext {
 						if (log.isDebugEnabled())
 							log.debug("Executing function on vertex "
 									+ vertex.getKey());
-						f.execute(vertex.getKey(), vertex.getValue(),
-								WorkerTask.this);
+						f.execute(
+								vertex.getKey(),
+								vertex.getValue(),
+								new WorkerContext(WorkerTask.this, vertex
+										.getKey()));
 						if (log.isDebugEnabled())
 							log.debug("Finished executing function on vertex "
 									+ vertex.getKey());
 					} catch (Exception e) {
 						e.printStackTrace();
+					} finally {
+						execCount.release();
 					}
-					execCount.release();
 				}
 			});
 		}
 		exec.shutdown();
 		exec.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
-
+		
+		log.info("Finished work for step " + superstep + " on Worker " + worker.getID());
+		
 		coord.finished(taskid, this.worker.getID(), true);
 	}
 
@@ -130,24 +154,29 @@ public class WorkerTask implements WorkerContext {
 		return ret;
 	}
 
-	@Override
 	public PregelGraph getGraph() {
 		return graph;
 	}
 
-	@Override
 	public void send(Vertex from, Vertex to, VertexData data) throws Exception {
 		worker.getWorker(to).sendDataToVertex(from, to, data, taskid);
 	}
 
-	@Override
 	public void setHalted(Vertex v) {
 		this.halted.add(v);
 
 	}
 
-	@Override
 	public Integer getSuperStep() {
 		return currentStep;
+	}
+
+	public Double getAggregatedValue(Vertex v, String k) throws Exception {
+		return coord.getAggregatedValue(taskid, v, k);
+	}
+
+	public void setAggregatedValue(Vertex v, String string, double currentVal)
+			throws Exception {
+		coord.setAggregatedValue(taskid, v, string, currentVal);
 	}
 }

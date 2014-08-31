@@ -43,23 +43,31 @@ public class PageRank implements VertexFunction {
 
 			double d = (Double) graph.get(v, "ranksource");
 
-			currentVal = d / graph.vertexSize() + (1 - d) * (sum);
+			// Double s = ctx.getAggregatedValue("diff");
+
+			// if (s == null)
+			// s = 1d;
+			// else
+			// System.out.println("Using factor s :" + s);
+
+			currentVal = (d / graph.vertexSize()) + (1 - d) * (sum);
 			// + (Double) graph.get(v, "ranksource")
 			System.out.println("Saving pagerank " + currentVal + " into " + v);
 
 			graph.setVal(v, "pagerank", currentVal);
 
+			// ctx.setAggregatedValue("diff", currentVal);
+
 			// If converged, set as halted for the next superstep. The value of
 			// the current pagerank was saved in
 			// the previous step.
 			if (Math.abs(oldval - currentVal) < error)
-				ctx.setHalted(v);
+				ctx.setHalted();
 		}
 
 		Set<Vertex> outgoing = graph.getOutgoing(v);
 		for (Vertex vertex : outgoing) {
 			ctx.send(
-					v,
 					vertex,
 					VertexData.create("edgePageRank", currentVal
 							/ (double) outgoing.size()));

@@ -18,8 +18,8 @@ class MinTree implements VertexFunction {
 	private static final String STATUS = "status";
 
 	@Override
-	public void execute(Vertex v, HashSet<PregelMessage> incoming, WorkerContext ctx)
-			throws Exception {
+	public void execute(Vertex v, HashSet<PregelMessage> incoming,
+			WorkerContext ctx) throws Exception {
 
 		PregelGraph graph = ctx.getGraph();
 
@@ -37,7 +37,7 @@ class MinTree implements VertexFunction {
 					System.out.println("Ordering " + adyacent.getVertex()
 							+ " to delete this link (if exists): "
 							+ adyacent.getVertex() + " -> " + v);
-					ctx.send(v, adyacent.getVertex(),
+					ctx.send(adyacent.getVertex(),
 							VertexData.create(STATUS, DELETE));
 				}
 			}
@@ -49,15 +49,15 @@ class MinTree implements VertexFunction {
 		graph.setTrue(v, VISITED);
 
 		for (Vertex ady : graph.getOutgoing(v))
-			ctx.send(v, ady, VertexData.create(STATUS, NORMAL));
+			ctx.send(ady, VertexData.create(STATUS, NORMAL));
 
 		boolean first = true;
 		for (PregelMessage ady : incoming) {
 			if (first) {
-				ctx.send(v, ady.getVertex(), VertexData.create(STATUS, OK));
+				ctx.send(ady.getVertex(), VertexData.create(STATUS, OK));
 				first = false;
 			} else {
-				ctx.send(v, ady.getVertex(), VertexData.create(STATUS, DELETE));
+				ctx.send(ady.getVertex(), VertexData.create(STATUS, DELETE));
 			}
 		}
 	}

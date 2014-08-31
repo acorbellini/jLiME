@@ -3,6 +3,7 @@ package edu.jlime.pregel.coordinator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
 
@@ -24,20 +25,24 @@ public class CoordinatorTask {
 
 	private Logger log = Logger.getLogger(CoordinatorTask.class);
 
-	public CoordinatorTask(CoordinatorImpl coordinatorImpl) {
+	private HashMap<String, Aggregator> aggregators;
+
+	public CoordinatorTask(CoordinatorImpl coordinatorImpl,
+			HashMap<String, Aggregator> aggs) {
 		this.coord = coordinatorImpl;
+		this.aggregators = aggs;
 	}
 
 	public synchronized void finished(UUID workerID, Boolean didWork) {
 		if (didWork)
 			finished = false;
 
-		if (log.isDebugEnabled())
-			log.debug("Received finished  from worker : " + workerID);
+		// if (log.isDebugEnabled())
+		log.info("Received finished  from worker : " + workerID);
 		currentStep.remove(workerID);
-		notify();
-		if (log.isDebugEnabled())
-			log.debug("Remaining in step: " + currentStep.size());
+		notifyAll();
+		// if (log.isDebugEnabled())
+		log.info("Remaining in step: " + currentStep.size());
 	}
 
 	public PregelGraph execute(PregelGraph input, List<Vertex> vertex,
@@ -87,6 +92,11 @@ public class CoordinatorTask {
 
 			for (Worker w : coord.getWorkers())
 				currentStep.add(w.getID());
+
+			for (Entry<String, Aggregator> e : aggregators.entrySet()) {
+				e.getValue().superstep(i);
+			}
+
 		}
 		log.info("Finished");
 		return mergeGraph();
@@ -99,5 +109,24 @@ public class CoordinatorTask {
 		for (Worker w : coord.getWorkers())
 			ret.merge(w.getResult(taskID));
 		return ret;
+	}
+
+	public Double getAggregatedValue(Vertex v, String k) {
+		log.info("Obtaining aggregated value from " + k + " for " + v);
+		Aggregator a = aggregators.get(k);
+		if (a != null) {
+
+			Double val = a.getVal(v);
+			log.info("Obtained " + k + " for " + v + ": " + val);
+			return val;
+		}
+		log.info("No aggregator by that name: " + k);
+		return null;
+	}
+
+	public void setAggregatedValue(Vertex v, String name, Double val) {
+		Aggregator a = aggregators.get(name);
+		if (a != null)
+			a.setVal(v, val);
 	}
 }

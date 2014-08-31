@@ -43,8 +43,9 @@ public class CoordinatorImpl implements Coordinator {
 
 	@Override
 	public PregelGraph execute(PregelGraph input, VertexFunction func,
-			List<Vertex> vertex, Integer superSteps) throws Exception {
-		CoordinatorTask task = new CoordinatorTask(this);
+			Integer superSteps, HashMap<String, Aggregator> aggs,
+			List<Vertex> vertex) throws Exception {
+		CoordinatorTask task = new CoordinatorTask(this, aggs);
 		tasks.put(task.taskID, task);
 		return task.execute(input, vertex, func, superSteps);
 
@@ -57,4 +58,19 @@ public class CoordinatorImpl implements Coordinator {
 	public WorkerBroadcast getWorkerBroadcast() {
 		return workersList.broadcast();
 	}
+
+	@Override
+	public Double getAggregatedValue(UUID taskID, Vertex v, String k)
+			throws Exception {
+		return tasks.get(taskID).getAggregatedValue(v, k);
+
+	}
+
+	@Override
+	public void setAggregatedValue(UUID taskID, Vertex v, String name,
+			Double val) throws Exception {
+		 tasks.get(taskID).setAggregatedValue(v, name, val);
+		
+	}
+
 }

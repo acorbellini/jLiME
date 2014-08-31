@@ -12,6 +12,9 @@ import edu.jlime.pregel.graph.PregelGraph;
 import java.lang.Exception;
 import java.util.UUID;
 import java.lang.Exception;
+import java.lang.Integer;
+import java.util.UUID;
+import java.lang.Exception;
 import edu.jlime.pregel.graph.PregelGraph;
 import edu.jlime.pregel.graph.VertexFunction;
 import java.util.UUID;
@@ -22,9 +25,6 @@ import edu.jlime.pregel.graph.Vertex;
 import edu.jlime.pregel.worker.VertexData;
 import java.util.UUID;
 import java.lang.Exception;
-import java.lang.Integer;
-import java.util.UUID;
-import java.lang.Exception;
 
 public interface WorkerBroadcast { 
 
@@ -32,10 +32,10 @@ public interface WorkerBroadcast {
 
   public Map<Peer,UUID>  getID() throws Exception; 
 
+  public void nextSuperstep(Integer arg0, UUID arg1) throws Exception; 
+
   public void createTask(PregelGraph arg0, VertexFunction arg1, UUID arg2, HashSet<edu.jlime.pregel.graph.Vertex> arg3) throws Exception; 
 
   public void sendDataToVertex(Vertex arg0, Vertex arg1, VertexData arg2, UUID arg3) throws Exception; 
-
-  public void nextSuperstep(Integer arg0, UUID arg1) throws Exception; 
 
 }

@@ -109,9 +109,12 @@ public class RPCDispatcher implements ClassLoaderProvider, TransportListener {
 		try {
 			if (sync) {
 				if (log.isDebugEnabled())
-					log.debug("Dispatching SYNC call to " + dest);
-				return getMarshaller().getObject(tr.sendSync(dest, marshalled),
-						dest);
+					log.debug("Dispatching SYNC call " + call + " to " + dest);
+				Object object = getMarshaller().getObject(
+						tr.sendSync(dest, marshalled), dest);
+				if (object instanceof Exception)
+					throw (Exception) object;
+				return object;
 			} else {
 				if (log.isDebugEnabled())
 					log.debug("Dispatching ASYNC call to " + dest);
@@ -141,7 +144,7 @@ public class RPCDispatcher implements ClassLoaderProvider, TransportListener {
 			Method m = findMethod(objClass, mc);
 			return m.invoke(target, mc.getObjects());
 		} catch (Exception e) {
-			throw new Exception("Error calling " + mc + " ", e);
+			throw new Exception("Error calling " + mc + " ", e.getCause());
 		}
 	}
 
@@ -357,14 +360,21 @@ public class RPCDispatcher implements ClassLoaderProvider, TransportListener {
 			}
 			MethodCall mc = (MethodCall) obj;
 			if (log.isDebugEnabled())
-				log.info("Received method call " + mc.getName() + " from "
+				log.debug("Received method call " + mc.getName() + " from "
 						+ getCluster().getByAddress(origin) + ", invoking.");
 
-			return getMarshaller().toByteArray(callTarget(mc));
+			Object callTarget = callTarget(mc);
+
+			byte[] byteArray = getMarshaller().toByteArray(callTarget);
+			if (log.isDebugEnabled())
+				log.debug("Returning from method call " + mc.getName()
+						+ " from " + getCluster().getByAddress(origin)
+						+ ", invoking.");
+			return byteArray;
 		} catch (Exception e) {
 			log.error(e, e);
 			try {
-				return getMarshaller().toByteArray(new Object[] { e });
+				return getMarshaller().toByteArray(e);
 			} catch (Exception e1) {
 				e1.printStackTrace();
 				return null;
