@@ -105,7 +105,7 @@ public class StreamTest {
 		final Semaphore sem = new Semaphore(0);
 		Thread thread = new Thread() {
 			public void run() {
-				while (!finished.get() || !q.isEmpty()) {
+				while (!finished.get()) {
 					for (Object o : q.take()) {
 						try {
 							os.write((byte[]) o);

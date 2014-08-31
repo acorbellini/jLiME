@@ -4,13 +4,14 @@ import java.io.IOException;
 
 public class RingQueueTestMultiThread {
 
-	private static int max_threads = 4;
+	private static int max_threads = 10;
 
 	public static void main(String[] args) throws IOException {
 		// System.in.read();
+		System.out.println("Starting");
 		final RingQueue queue = new RingQueue();
 		// final RingQueueAtomic queue = new RingQueueAtomic();
-		final int ITER = 100000;
+		final int ITER = 5000;
 		final long i = System.nanoTime();
 		new Thread() {
 			int count = 0;
@@ -24,7 +25,17 @@ public class RingQueueTestMultiThread {
 						e1.printStackTrace();
 					}
 					for (Object e : list) {
+						if(e==null)
+							try {
+								System.in.read();
+							} catch (IOException e1) {
+								// TODO Auto-generated catch block
+								e1.printStackTrace();
+							}
 						System.out.println(e);
+						// if (!e.equals(count))
+						// System.out.println("Error.");
+
 						count++;
 					}
 					if (count == max_threads * ITER) {

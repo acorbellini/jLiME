@@ -20,12 +20,12 @@ public class jLiMETransport extends Transport implements DataListener {
 
 	private Stack commStack;
 
-	private ExecutorService handleExecutor = Executors.newFixedThreadPool(4,
-			new ThreadFactory() {
+	private ExecutorService handleExecutor = Executors
+			.newCachedThreadPool(new ThreadFactory() {
 				@Override
 				public Thread newThread(Runnable r) {
 					Thread t = Executors.defaultThreadFactory().newThread(r);
-					t.setName("Transport Incoming");
+					t.setName("jLiME Transport Incoming");
 					return t;
 				}
 			});
@@ -77,6 +77,9 @@ public class jLiMETransport extends Transport implements DataListener {
 					log.debug("Unmarshalling data received");
 				byte[] rsp = jLiMETransport.super.callTransportListener(origin,
 						buff);
+				if (log.isDebugEnabled())
+					log.debug("Sending response using response handler: "
+							+ handler);
 				if (handler != null) {
 					try {
 						handler.sendResponse(rsp);

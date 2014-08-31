@@ -21,9 +21,8 @@ public class MultiCastDiscovery extends Discovery {
 	// ,int announcedPort, String mcastaddr,
 	// int mcastport, long discDelay
 
-	public MultiCastDiscovery(Address id, String name,
-			Configuration config, MessageProcessor mcast,
-			MessageProcessor unicast) {
+	public MultiCastDiscovery(Address id, String name, Configuration config,
+			MessageProcessor mcast, MessageProcessor unicast) {
 		super(id, name, config, mcast, unicast);
 	}
 
@@ -32,10 +31,11 @@ public class MultiCastDiscovery extends Discovery {
 			return;
 		t = new Thread("Multicast Discovery Thread") {
 			public void run() {
+				discoveryInit.queue(newDiscoveryMessage());
 				int times = 0;
 				while (!stopped && times < config.disc_num_tries) {
 					try {
-						discoveryInit.queue(newDiscoveryMessage());
+
 					} catch (Exception e) {
 						log.error("Could not send discovery message.");
 					}
@@ -46,9 +46,7 @@ public class MultiCastDiscovery extends Discovery {
 					}
 					times++;
 				}
-				t = null;
 			}
-
 		};
 		t.start();
 	}

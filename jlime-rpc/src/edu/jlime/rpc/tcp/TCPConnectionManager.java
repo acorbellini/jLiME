@@ -9,7 +9,6 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Timer;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -64,7 +63,7 @@ class TCPConnectionManager {
 
 	Address localID;
 
-	private Timer closer;
+	// private Timer closer;
 
 	private RingQueue writeQueue = new RingQueue();
 
@@ -81,7 +80,7 @@ class TCPConnectionManager {
 		this.rcvr = rcvr;
 		this.to = addr;
 		this.localID = localID;
-		closer = new Timer("Connection Closer");
+		// closer = new Timer("Connection Closer");
 		Thread t = new Thread("Writer Queue reader for " + to) {
 			@Override
 			public void run() {
@@ -110,8 +109,16 @@ class TCPConnectionManager {
 					if (log.isDebugEnabled())
 						log.debug("Sending " + pkt.data.length + "b using "
 								+ bestConn + " to " + to);
-					if (!bestConn.write(pkt.data))
+
+					try {
+						bestConn.write(pkt.data, pkt.data.length);
+					} catch (Exception e) {
+						log.info("Error writing to " + bestConn
+								+ ". Removing connection and trying again.");
+						remove(bestConn);
 						writeQueue.put(pkt);
+					}
+
 				}
 			}
 		});
@@ -185,12 +192,12 @@ class TCPConnectionManager {
 				os.flush();
 				return addConnection(sock);
 			} catch (ConnectException e) {
-				if (log.isDebugEnabled())
-					log.error("Could not open socket to " + addr + " : "
-							+ e.getMessage());
+				// if (log.isDebugEnabled())
+				log.info("Could not open socket to " + addr + " : "
+						+ e.getMessage());
 				return null;
 			} catch (Exception e) {
-				log.error("Could not open socket to " + addr + " socket is "
+				log.info("Could not open socket to " + addr + " socket is "
 						+ sock + ", trying again in 1s : " + e.getMessage());
 				tries++;
 				try {
@@ -205,8 +212,8 @@ class TCPConnectionManager {
 
 	public TCPPacketConnection addConnection(final Socket conn)
 			throws Exception {
-		final TCPPacketConnection c = new TCPPacketConnection(conn, closer,
-				time_limit, this, input_buffer, output_buffer);
+		final TCPPacketConnection c = new TCPPacketConnection(conn, time_limit,
+				this, input_buffer, output_buffer);
 		synchronized (connections) {
 			connections.add(c);
 			connections.notifyAll();
@@ -215,11 +222,21 @@ class TCPConnectionManager {
 			@Override
 			public void run() {
 				while (!stopped) {
-					byte[] d = c.read();
-					if (d == null)
+					byte[] d;
+					try {
+						d = c.read();
+						if (d == null)
+							return;
+						rcvr.dataReceived(d, (InetSocketAddress) c.conn
+								.getRemoteSocketAddress());
+					} catch (Exception e) {
+						if (log.isDebugEnabled())
+							log.debug("Error reading from " + c
+									+ " removing connection.: "
+									+ e.getMessage());
+						remove(c);
 						return;
-					rcvr.dataReceived(d,
-							(InetSocketAddress) c.conn.getRemoteSocketAddress());
+					}
 
 				}
 
@@ -229,7 +246,6 @@ class TCPConnectionManager {
 	}
 
 	public void stop() {
-		closer.cancel();
 		rcv.shutdown();
 		send.shutdown();
 		stopped = true;

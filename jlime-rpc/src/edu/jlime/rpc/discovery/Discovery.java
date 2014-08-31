@@ -136,7 +136,8 @@ public abstract class Discovery implements DiscoveryProvider, StackElement {
 			@Override
 			public void interfacesChanged(List<SelectedInterface> added,
 					List<SelectedInterface> removed) {
-				startDiscovery(added);
+				log.info("Network Changed!! Restarting Discovery.");
+				// startDiscovery(added);
 			}
 		});
 	}
@@ -149,7 +150,7 @@ public abstract class Discovery implements DiscoveryProvider, StackElement {
 				if (socketAddress.getType().equals(alul.getKey()))
 					byType.add(socketAddress);
 			}
-			alul.getValue().addressUpdate(new Address(id), byType);
+			alul.getValue().updateAddress(new Address(id), byType);
 		}
 	}
 

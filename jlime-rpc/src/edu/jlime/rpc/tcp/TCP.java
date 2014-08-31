@@ -321,16 +321,6 @@ public class TCP extends NetworkProtocol implements DataReceiver {
 
 	}
 
-	// public static void putUUIDinStream(Socket sock, UUID id) throws
-	// IOException {
-	// BufferedOutputStream dos = new BufferedOutputStream(
-	// sock.getOutputStream());
-	// ByteBuffer bb = new ByteBuffer();
-	// bb.putUUID(id);
-	// dos.write(bb.build());
-	// dos.flush();
-	// }
-
 	@Override
 	public void onStop() throws Exception {
 		super.onStop();

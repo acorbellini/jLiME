@@ -123,8 +123,11 @@ public abstract class MessageProcessor implements StackElement {
 
 	public void sendToProc(String procName, Message msg) throws Exception {
 		MessageProcessor proc = processors.get(procName);
-		if (proc != null)
+		if (proc != null) {
+			if (log.isDebugEnabled())
+				log.debug("Queuing message " + msg + " on processor " + proc);
 			proc.queue(msg);
+		}
 	}
 
 	public void queue(Message msg) {

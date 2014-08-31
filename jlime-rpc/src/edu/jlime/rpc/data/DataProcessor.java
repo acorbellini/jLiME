@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import org.apache.log4j.Logger;
@@ -27,13 +28,11 @@ public class DataProcessor extends SimpleMessageProcessor implements
 
 	private UUID localID;
 
+	private HashMap<Address, Set<UUID>> waiting = new HashMap<>();
+
 	private List<DataListener> listeners = new ArrayList<>();
 
-	private HashMap<UUID, Object> waitingResponse = new HashMap<>();
-
 	private HashMap<UUID, Message> responses = new HashMap<>();
-
-	private HashMap<Address, HashSet<UUID>> calls = new HashMap<>();
 
 	private Metrics metrics;
 
@@ -100,7 +99,6 @@ public class DataProcessor extends SimpleMessageProcessor implements
 	@Override
 	public byte[] sendData(byte[] msg, Address to, boolean waitForResponse)
 			throws Exception {
-		Object lock = new Object();
 		UUID id = UUID.randomUUID();
 
 		Message toSend = Message.newOutDataMessage(msg, MessageType.DATA, to);
@@ -110,17 +108,15 @@ public class DataProcessor extends SimpleMessageProcessor implements
 		if (log.isDebugEnabled())
 			log.debug("Sending DATA message with id " + id + " to " + to);
 
-		if (waitForResponse) {
-			synchronized (waitingResponse) {
-				waitingResponse.put(id, lock);
-				HashSet<UUID> ids = calls.get(to);
-				if (ids == null) {
-					ids = new HashSet<>();
-					calls.put(to, ids);
+		if (waitForResponse)
+			synchronized (waiting) {
+				Set<UUID> list = waiting.get(to);
+				if (list == null) {
+					list = new HashSet<>();
+					waiting.put(to, list);
 				}
-				ids.add(id);
+				list.add(id);
 			}
-		}
 
 		sendNext(toSend);
 
@@ -133,39 +129,49 @@ public class DataProcessor extends SimpleMessageProcessor implements
 			if (log.isDebugEnabled())
 				log.debug("Waiting for response for DATA message with id " + id
 						+ " to " + to);
-			synchronized (lock) {
+			Message resp = null;
+			synchronized (responses) {
 				while (!responses.containsKey(id)) {
-					lock.wait(5000);
+					responses.wait(1000);
 					if (log.isDebugEnabled())
 						log.debug("Still waiting for response for DATA message with id "
-								+ id + " to " + to);
+								+ id
+								+ " to "
+								+ to
+								+ " responses : "
+								+ responses);
+				}
+				resp = responses.remove(id);
+				synchronized (waiting) {
+					Set<UUID> list = waiting.get(to);
+					if (list != null) {
+						list.remove(id);
+						if (list.isEmpty())
+							waiting.remove(to);
+					}
 				}
 			}
 
 			if (log.isDebugEnabled())
 				log.debug("Response rcvd for DATA message with id " + id
 						+ " to " + to);
-			Message resp = responses.remove(id);
+
 			return resp.getDataBuffer().build();
 		}
 	}
 
 	@Override
 	public void cleanupOnFailedPeer(Address addr) {
-		synchronized (waitingResponse) {
-			HashSet<UUID> ids = calls.get(addr);
-			if (ids != null) {
-				for (UUID uuid : ids) {
-					Object lock = waitingResponse.remove(uuid);
-					if (lock != null) {
-						synchronized (lock) {
-							responses.put(uuid, Message.newEmptyOutDataMessage(
-									MessageType.DATA, new Address(uuid)));
-							lock.notifyAll();
-						}
-					}
-				}
+		synchronized (waiting) {
+			Set<UUID> list = waiting.get(addr);
+			if (list == null)
+				return;
+			synchronized (responses) {
+				for (UUID uuid : list)
+					responses.put(uuid, Message.newEmptyOutDataMessage(
+							MessageType.DATA, new Address(uuid)));
 			}
+			waiting.remove(addr);
 		}
 	}
 
@@ -175,31 +181,15 @@ public class DataProcessor extends SimpleMessageProcessor implements
 			log.debug("Received RESPONSE for DATA message with id " + id
 					+ " from " + message.getFrom());
 
-		synchronized (waitingResponse) {
-			Object lock = waitingResponse.get(id);
-
-			HashSet<UUID> ids = calls.get(message.getFrom());
-
-			if (ids != null)
-				ids.remove(id);
-			else
-				log.warn("Ids table does not contain " + message.getFrom());
-
-			if (lock != null) {
-				waitingResponse.remove(id);
-				synchronized (lock) {
-					responses.put(id, message);
-					lock.notifyAll();
-				}
-			} else
-				log.warn("There is no lock for message " + id);
-
+		synchronized (responses) {
+			responses.put(id, message);
+			responses.notifyAll();
 		}
 	}
 
 	private void processData(final Message m) {
 		Buffer head = m.getHeaderBuffer();
-		UUID id = head.getUUID();
+		final UUID id = head.getUUID();
 		if (map.get(id) != null) {
 			// if (log.isDebugEnabled())
 			log.info("DISCARDING recently received a DATA message with id "
@@ -218,10 +208,14 @@ public class DataProcessor extends SimpleMessageProcessor implements
 				@Override
 				public void sendResponse(byte[] resp) throws Exception {
 					if (log.isDebugEnabled())
-						log.debug("Sending RESPONSE message to " + m.getFrom());
+						log.debug("Preparing RESPONSE for message id " + id
+								+ " to " + m.getFrom());
 					Message toSend = Message.newOutDataMessage(resp,
 							MessageType.RESPONSE, m.getFrom());
 					toSend.getHeaderBuffer().putUUID(this.msgID);
+					if (log.isDebugEnabled())
+						log.debug("Sending RESPONSE for message id " + id
+								+ " to " + m.getFrom());
 					sendNext(toSend);
 				}
 			};

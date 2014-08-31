@@ -17,7 +17,7 @@ class TCPSocketFactory extends SocketFactory {
 	@Override
 	public jLimeSocket getSocket(String addr, int port) throws Exception {
 		ServerSocket socket = new ServerSocket();
-		socket.setReuseAddress(true);
+		// socket.setReuseAddress(true);
 		socket.setReceiveBufferSize(rcv_buffer);
 		socket.bind(new InetSocketAddress(InetAddress.getByName(addr), port));
 		return new jLimeSocket(socket, port, addr);

@@ -3,6 +3,8 @@ package edu.jlime.rpc.udp;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 
+import org.apache.log4j.Logger;
+
 import edu.jlime.util.RingQueue;
 
 public class DatagramReceiver {
@@ -17,6 +19,8 @@ public class DatagramReceiver {
 
 	private PacketReceiver rcvr;
 
+	private Logger log = Logger.getLogger(DatagramReceiver.class);
+
 	public DatagramReceiver(DatagramSocket sock, int buff_size,
 			PacketReceiver receiver) {
 		this.rcvr = receiver;
@@ -25,8 +29,15 @@ public class DatagramReceiver {
 		Thread read = new Thread("UDP Socket Reader") {
 			@Override
 			public void run() {
-				while (!stopped)
-					read();
+
+				try {
+					while (!stopped)
+						read();
+				} catch (Exception e) {
+					if (log.isDebugEnabled())
+						log.debug("Error reading from datagram socket "
+								+ e.getMessage());
+				}
 			}
 		};
 		// read.setDaemon(true);
@@ -54,14 +65,12 @@ public class DatagramReceiver {
 		consume.start();
 	}
 
-	public void read() {
+	public void read() throws Exception {
 		byte[] b = new byte[buff_size];
 		DatagramPacket d = new DatagramPacket(b, buff_size);
-		try {
-			sock.receive(d);
-			packets.put(d);
-		} catch (Exception e) {
-		}
+
+		sock.receive(d);
+		packets.put(d);
 
 	}
 

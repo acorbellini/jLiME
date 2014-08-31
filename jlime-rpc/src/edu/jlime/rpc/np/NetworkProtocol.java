@@ -3,8 +3,8 @@ package edu.jlime.rpc.np;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.log4j.Logger;
 
@@ -26,9 +26,9 @@ import edu.jlime.util.RingQueue;
 public abstract class NetworkProtocol extends SimpleMessageProcessor implements
 		AddressListProvider, Streamer {
 
-	private static Logger log = Logger.getLogger(NetworkProtocol.class);
+	private Logger log = Logger.getLogger(NetworkProtocol.class);
 
-	protected HashMap<Address, List<SocketAddress>> backup = new HashMap<>();
+	protected ConcurrentHashMap<Address, List<SocketAddress>> backup = new ConcurrentHashMap<>();
 
 	private RingQueue packetsRx = new RingQueue();
 
@@ -98,7 +98,7 @@ public abstract class NetworkProtocol extends SimpleMessageProcessor implements
 
 		Message msg = Message.deEncapsulate(data, from, getLocal());
 		if (log.isTraceEnabled())
-			log.trace("Received message of type " + msg.getType() + " sized "
+			log.debug("Received message of type " + msg.getType() + " sized "
 					+ buff.size() + " bytes from " + from + " with address "
 					+ addr);
 		notifyRcvd(msg);
@@ -223,16 +223,15 @@ public abstract class NetworkProtocol extends SimpleMessageProcessor implements
 	}
 
 	@Override
-	public void addressUpdate(Address id, List<SocketAddress> addresses) {
+	public void updateAddress(Address id, List<SocketAddress> addresses) {
 		if (log.isDebugEnabled())
-			log.debug("Updating addresses for address " + id + " with "
+			log.info("Updating addresses for address " + id + " with "
 					+ addresses);
 		List<SocketAddress> update = new ArrayList<>();
 		for (SocketAddress socketAddress : addresses) {
 			if (isEqualToLocalType(socketAddress.getSockTo()))
 				update.add(socketAddress);
 		}
-
 		backup.put(id, update);
 	}
 

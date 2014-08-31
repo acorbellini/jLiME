@@ -192,9 +192,9 @@ public class MultiInterface extends MessageProcessor implements
 	}
 
 	@Override
-	public void addressUpdate(Address id, List<SocketAddress> addresses) {
+	public void updateAddress(Address id, List<SocketAddress> addresses) {
 		for (MessageProcessor mp : super.getProcessors())
-			((AddressListProvider) mp).addressUpdate(id, addresses);
+			((AddressListProvider) mp).updateAddress(id, addresses);
 	}
 
 	@Override

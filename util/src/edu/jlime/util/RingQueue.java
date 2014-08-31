@@ -1,56 +1,61 @@
 package edu.jlime.util;
 
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class RingQueue {
 
+	// ArrayBlockingQueue<Object> aux = new ArrayBlockingQueue<Object>(1024);
+
 	private Object[] buffer;
 
-	private boolean[] used;
+	// private boolean[] used;
 
 	private volatile int init;
 
 	private volatile int end;
 
-	private volatile int reserved;
-
-	private int len;
+	private AtomicInteger reserved;
 
 	public RingQueue(int s) {
 		this.init = 0;
 		this.end = 0;
-		this.reserved = 0;
-		this.len = s;
-		this.buffer = new Object[len];
-		this.used = new boolean[len];
+		this.reserved = new AtomicInteger(1);
+		this.buffer = new Object[s];
+		// this.used = new boolean[len];
 	}
 
 	public RingQueue() {
-		this(1024);
+		this(2048);
 	}
 
-	public int pos(int i) {
-		return (i % len + len) % len;
+	private int pos(int i) {
+		return ((i % buffer.length) + buffer.length) % buffer.length;
 	}
 
-	public boolean isEmpty() {
-		int currentEnd = end;
-		return init == currentEnd;
-	}
-
-	public synchronized int getAndIncrementReserved() {
-		return reserved++;
-	}
+	// private boolean isEmpty() {
+	// return aux.isEmpty();
+	// int currentEnd = end;
+	// return init == currentEnd;
+	// }
 
 	public void put(Object msg) {
-		int currentInit = init;
-		int currentReserved = getAndIncrementReserved();
+		// try {
+		// aux.put(msg);
+		// } catch (InterruptedException e1) {
+		//
+		// e1.printStackTrace();
+		// }
+		// return;
 
-		while (currentReserved - currentInit >= len) {
+		int currentInit = init;
+		int currentEnd = end;
+		int currentReserved = reserved.getAndIncrement();
+
+		while (currentReserved - currentInit >= buffer.length
+				|| currentReserved - 1 != currentEnd) {
 			// int count = 0;
-			while (currentInit == init
-			// && currentEnd == end
-			) {
+			while (currentInit == init && currentEnd == end) {
 				try {
 					synchronized (this) {
 						wait(0, 100);
@@ -77,37 +82,45 @@ public class RingQueue {
 				// }
 			}
 			currentInit = init;
-			// currentEnd = end;
+			currentEnd = end;
 		}
 
 		// endLock.lock();
 
 		// synchronized (buffer) {
-		buffer[pos(currentReserved)] = msg;
-		used[pos(currentReserved)] = true;
-		if (currentReserved == end) {
-			synchronized (used) {
-				if (currentReserved == end) {
-					do {
-						used[pos(end)] = false;
-						end++;
-					} while (used[pos(end)]);
-				}
-			}
-		}
+
+		buffer[pos(currentReserved - 1)] = msg;
+
+		end = currentReserved;
+
+		// used[pos(currentReserved)] = true;
+		// synchronized (used) {
+		// if (currentReserved == end) {
+		// do {
+		// used[pos(end)] = false;
+		// end++;
+		// } while (used[pos(end)]);
+		// }
+		// }
+		// }
 		// }
 		synchronized (this) {
 			notifyAll();
 		}
-
 		// endLock.unlock();
 	}
 
 	public Object[] take() {
+		// try {
+		// return new Object[] { aux.take() };
+		// } catch (InterruptedException e1) {
+		// e1.printStackTrace();
+		// }
+		// return null;
 		int currentEnd = end;
 		while (init == currentEnd) {
 			// int count = 0;
-			while (currentEnd == end && init == currentEnd) {
+			while (currentEnd == end) {
 				synchronized (this) {
 					try {
 						wait(0, 100);
@@ -131,7 +144,8 @@ public class RingQueue {
 
 		Object[] ret = new Object[currentEnd - init];
 
-		// System.out.println("Leyendo " + (currentEnd - init) + " elementos.");
+		// System.out.println("Leyendo " + (currentEnd - init) +
+		// " elementos.");
 		// int pos = 0;
 		// for (; init < currentEnd; init++) {
 		// ret[pos++] = buffer.get(pos(init));
@@ -143,23 +157,22 @@ public class RingQueue {
 			ret = Arrays.copyOfRange(buffer, i, f);
 			// synchronized (buffer) {
 			Arrays.fill(buffer, i, f, null);
-			Arrays.fill(used, i, f, false);
+			// Arrays.fill(used, i, f, false);
 			// }
 		} else if (f == i) {
-			ret = Arrays.copyOf(buffer, len);
+			ret = Arrays.copyOf(buffer, buffer.length);
 			// synchronized (buffer) {
 			Arrays.fill(buffer, null);
-			Arrays.fill(used, false);
+			// Arrays.fill(used, false);
 			// }
 		} else {
-			ret = new Object[currentEnd - init];
 			// synchronized (buffer) {
-			System.arraycopy(buffer, i, ret, 0, len - i);
-			Arrays.fill(buffer, i, len, null);
-			Arrays.fill(used, i, len, false);
-			System.arraycopy(buffer, 0, ret, len - i, f);
+			System.arraycopy(buffer, i, ret, 0, buffer.length - i);
+			Arrays.fill(buffer, i, buffer.length, null);
+			// Arrays.fill(used, i, len, false);
+			System.arraycopy(buffer, 0, ret, buffer.length - i, f);
 			Arrays.fill(buffer, 0, f, null);
-			Arrays.fill(used, 0, f, false);
+			// Arrays.fill(used, 0, f, false);
 			// }
 		}
 

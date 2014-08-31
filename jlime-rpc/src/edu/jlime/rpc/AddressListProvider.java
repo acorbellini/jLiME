@@ -12,5 +12,5 @@ public interface AddressListProvider {
 
 	public AddressType getType();
 
-	public void addressUpdate(Address id, List<SocketAddress> addresses);
+	public void updateAddress(Address id, List<SocketAddress> addresses);
 }
