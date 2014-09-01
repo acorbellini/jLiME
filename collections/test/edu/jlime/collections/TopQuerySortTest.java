@@ -1,55 +1,37 @@
-package edu.jlime.collections.adjacencygraph.query;
+package edu.jlime.collections;
+
+import edu.jlime.collections.adjacencygraph.query.TopQuery;
+import gnu.trove.iterator.TIntIntIterator;
+import gnu.trove.map.hash.TIntIntHashMap;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.TreeSet;
 import java.util.Map.Entry;
-import java.util.TreeMap;
+import java.util.TreeSet;
 
 import org.apache.log4j.Logger;
 
-import edu.jlime.collections.adjacencygraph.Mapper;
-import edu.jlime.jd.client.JobContext;
-import gnu.trove.iterator.TIntIntIterator;
-import gnu.trove.map.hash.TIntIntHashMap;
+public class TopQuerySortTest {
+	public static void main(String[] args) {
+		int top = 10;
+		final TIntIntHashMap countres = new TIntIntHashMap();
+		countres.put(1, 100);
+		countres.put(2, 15);
+		countres.put(3, 1);
+		countres.put(4, 3);
+		countres.put(5, 140);
+		countres.put(6, 1123);
+		countres.put(7, 2);
+		countres.put(8, 86);
+		countres.put(9, 12);
+		countres.put(10, 3);
+		countres.put(11, 1);
+		countres.put(12, 1301);
+		countres.put(13, 111);
+		countres.put(14, 161);
 
-public class TopQuery extends RemoteQuery<List<int[]>> {
-
-	private static final long serialVersionUID = -1411479222536631191L;
-
-	private RemoteCountQuery query;
-
-	private int top;
-
-	private boolean delete;
-
-	public TopQuery(RemoteCountQuery query, int top) {
-		this(query, top, true);
-	}
-
-	public TopQuery(RemoteCountQuery query, int top, boolean delete) {
-		super(query.getGraph());
-		this.query = query;
-		this.top = top;
-		this.delete = delete;
-	}
-
-	@Override
-	public String getMapName() {
-		return query.getMapName();
-	}
-
-	@Override
-	public Mapper getMapper() {
-		return query.getMapper();
-	}
-
-	@Override
-	public List<int[]> doExec(JobContext c) throws Exception {
-
-		final TIntIntHashMap countres = query.exec(c);
 		Logger logger = Logger.getLogger(TopQuery.class);
 		logger.info("Obtaining " + top + " elements from query.");
 		TreeSet<Integer> finalRes = new TreeSet<Integer>(
@@ -89,6 +71,9 @@ public class TopQuery extends RemoteQuery<List<int[]>> {
 			}
 
 		});
-		return res;
+		for (int[] is : res) {
+			System.out.println(is[0] + "=" + is[1]);
+		}
+
 	}
 }

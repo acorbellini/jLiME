@@ -214,8 +214,9 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 			try {
 				JobExecutor localJD = DispatcherManager.getJD(peer);
 				if (localJD != null) {
-					// if (log.isDebugEnabled())
-					log.info("Executing job on local JD (" + localJD + ")" + j);
+					if (log.isDebugEnabled())
+						log.debug("Executing job on local JD (" + localJD + ")"
+								+ j);
 					it.remove();
 					localJD.execute(jw);
 				}
@@ -355,10 +356,11 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 			throw new NotInClusterException();
 		}
 
-		// if (log.isDebugEnabled())
-		log.info("Executing job " + j.getJobID() + " of client "
-				+ j.getJob().getClient() + " and type " + j.getJob().getClass()
-				+ " from " + j.getRequestor() + " on " + getLocalPeer());
+		if (log.isDebugEnabled())
+			log.debug("Executing job " + j.getJobID() + " of client "
+					+ j.getJob().getClient() + " and type "
+					+ j.getJob().getClass() + " from " + j.getRequestor()
+					+ " on " + getLocalPeer());
 		try {
 			j.setSrv(this);
 			if (metrics != null)
@@ -371,9 +373,10 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 			if (cliEnv == null)
 				log.error("Client Environment not created for client " + cli);
 			else {
-				// if (log.isDebugEnabled())
-				log.info("Submitting job " + j.getJobID() + " of client "
-						+ j.getJob().getClient() + " from " + j.getRequestor());
+				if (log.isDebugEnabled())
+					log.debug("Submitting job " + j.getJobID() + " of client "
+							+ j.getJob().getClient() + " from "
+							+ j.getRequestor());
 				cliEnv.execute(j);
 			}
 		} catch (Exception e) {
@@ -396,8 +399,8 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 	@Override
 	public void result(final Object res, final UUID jobID, final ClientNode req)
 			throws Exception {
-		// if (log.isDebugEnabled())
-		log.info("Processing result of job " + jobID + " from " + req);
+		if (log.isDebugEnabled())
+			log.debug("Processing result of job " + jobID + " from " + req);
 
 		if (exec.isShutdown()) {
 			log.info("Can't process result, JobDispatcher is closed.");

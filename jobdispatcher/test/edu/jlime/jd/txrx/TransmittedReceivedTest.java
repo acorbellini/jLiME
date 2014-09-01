@@ -11,6 +11,7 @@ import edu.jlime.jd.client.Client;
 import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.ResultManager;
 import edu.jlime.jd.job.RunJob;
+import edu.jlime.jd.server.JobServer;
 
 public class TransmittedReceivedTest {
 
@@ -65,8 +66,8 @@ public class TransmittedReceivedTest {
 
 	@Test
 	public void txrx() throws Exception {
-		// JobServer.jLiME().start();
-		// JobServer.jLiME().start();
+		JobServer.jLiME().start();
+		JobServer.jLiME().start();
 
 		// for (int i = 0; i < 50; i++) {
 		// System.out
