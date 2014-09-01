@@ -203,7 +203,7 @@ public abstract class NetworkProtocol extends SimpleMessageProcessor implements
 
 	@Override
 	public void onStop() throws Exception {
-		if (log.isDebugEnabled())
+//		if (log.isDebugEnabled())
 			log.info("Stopping network protocol type " + getType()
 					+ " and socket " + socket);
 

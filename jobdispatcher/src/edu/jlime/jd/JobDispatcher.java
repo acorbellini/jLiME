@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
@@ -186,53 +187,64 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 	}
 
 	public <R> Map<ClientNode, R> mcast(List<ClientNode> peers, ClientJob<R> j)
-			throws BroadcastException {
+			throws Exception {
 		if (log.isDebugEnabled())
 			log.debug("Broadcasting job " + j + " to " + peers);
 		BroadcastResultManager<R> rm = new BroadcastResultManager<R>(
 				peers.size());
 		if (log.isDebugEnabled())
 			log.debug("Creating copy of peers.");
+
 		List<Peer> copy = new ArrayList<>();
 		for (ClientNode jobNode : peers) {
 			copy.add(jobNode.getPeer());
 		}
 
-		try {
+		Iterator<Peer> it = copy.iterator();
+		UUID jobid = UUID.randomUUID();
+		addJobMapping(rm, jobid, peers);
 
-			Iterator<Peer> it = copy.iterator();
-			JobContainer jw = new JobContainer(j, new ClientNode(
+		if (log.isDebugEnabled())
+			log.debug("Checking if it's local.");
+		while (it.hasNext()) {
+
+			Peer peer = it.next();
+			JobContainer jw = new JobContainer(j, jobid, new ClientNode(
 					getLocalPeer(), j.getClient(), this));
-
-			addJobMapping(rm, jw, peers);
-
-			if (log.isDebugEnabled())
-				log.debug("Checking if it's local.");
-			while (it.hasNext()) {
-				Peer peer = it.next();
+			try {
 				JobExecutor localJD = DispatcherManager.getJD(peer);
 				if (localJD != null) {
-					if (log.isDebugEnabled())
-						log.debug("Executing job on local JD " + j);
+					// if (log.isDebugEnabled())
+					log.info("Executing job on local JD (" + localJD + ")" + j);
 					it.remove();
 					localJD.execute(jw);
 				}
+			} catch (Exception e) {
+				rm.addException(peer, e);
 			}
-			if (!copy.isEmpty()) {
-				if (log.isDebugEnabled())
-					log.debug("Creating JobExecutorBroadcast");
-				JobExecutorBroadcast remote = factory.getBroadcast(copy,
-						j.getClient());
-				if (log.isDebugEnabled())
-					log.debug("Calling JobExecutorBroadcast");
-				remote.execute(jw);
-			}
-			if (log.isDebugEnabled())
-				log.debug("Waiting for results.");
-			rm.waitResults();
-		} catch (Exception e) {
-			rm.addException(getLocalPeer(), e);
 		}
+		if (!copy.isEmpty()) {
+			JobContainer jw = new JobContainer(j, jobid, new ClientNode(
+					getLocalPeer(), j.getClient(), this));
+			if (log.isDebugEnabled())
+				log.debug("Creating JobExecutorBroadcast");
+			JobExecutorBroadcast remote = factory.getBroadcast(copy,
+					j.getClient());
+			if (log.isDebugEnabled())
+				log.debug("Calling JobExecutorBroadcast");
+			try {
+				remote.execute(jw);
+			} catch (BroadcastException e) {
+				for (Entry<Peer, Exception> el : e.getListOfExcep().entrySet()) {
+					rm.addException(el.getKey(), el.getValue());
+				}
+			} catch (Exception e) {
+				throw new Exception("Exception calling broadcast on " + copy, e);
+			}
+		}
+		if (log.isDebugEnabled())
+			log.debug("Waiting for results.");
+		rm.waitResults();
 
 		if (!rm.getException().isEmpty())
 			throw rm.getException();
@@ -240,9 +252,9 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 
 	}
 
-	private void addJobMapping(ResultManager<?> rm, JobContainer jw,
+	private void addJobMapping(ResultManager<?> rm, UUID jobID,
 			List<ClientNode> peers) {
-		jobMap.put(jw.getJobID(), rm);
+		jobMap.put(jobID, rm);
 	}
 
 	public void execAsync(final ClientNode dest, final ClientJob<?> j,
@@ -258,7 +270,7 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 		if (m != null) {
 			ArrayList<ClientNode> al = new ArrayList<>();
 			al.add(dest);
-			addJobMapping(m, job, al);
+			addJobMapping(m, job.getJobID(), al);
 			job.setNoResponse(false);
 		} else
 			job.setNoResponse(true);
@@ -343,10 +355,10 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 			throw new NotInClusterException();
 		}
 
-		if (log.isDebugEnabled())
-			log.info("Executing job " + j.getJobID() + " of client "
-					+ j.getJob().getClient() + " and type "
-					+ j.getJob().getClass() + " from " + j.getRequestor());
+		// if (log.isDebugEnabled())
+		log.info("Executing job " + j.getJobID() + " of client "
+				+ j.getJob().getClient() + " and type " + j.getJob().getClass()
+				+ " from " + j.getRequestor() + " on " + getLocalPeer());
 		try {
 			j.setSrv(this);
 			if (metrics != null)
@@ -359,10 +371,9 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 			if (cliEnv == null)
 				log.error("Client Environment not created for client " + cli);
 			else {
-				if (log.isDebugEnabled())
-					log.debug("Submitting job " + j.getJobID() + " of client "
-							+ j.getJob().getClient() + " from "
-							+ j.getRequestor());
+				// if (log.isDebugEnabled())
+				log.info("Submitting job " + j.getJobID() + " of client "
+						+ j.getJob().getClient() + " from " + j.getRequestor());
 				cliEnv.execute(j);
 			}
 		} catch (Exception e) {
@@ -385,8 +396,8 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 	@Override
 	public void result(final Object res, final UUID jobID, final ClientNode req)
 			throws Exception {
-		if (log.isDebugEnabled())
-			log.debug("Processing result of job " + jobID + " from " + req);
+		// if (log.isDebugEnabled())
+		log.info("Processing result of job " + jobID + " from " + req);
 
 		if (exec.isShutdown()) {
 			log.info("Can't process result, JobDispatcher is closed.");
@@ -429,7 +440,8 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 			if (log.isDebugEnabled())
 				log.debug("Sending result for job " + jobID
 						+ " to LOCAL dispatcher.");
-			localJD.result(res, jobID, req);
+			localJD.result(res, jobID, new ClientNode(getLocalPeer(), cliID,
+					this));
 		} else {
 			if (log.isDebugEnabled())
 				log.debug("Sending result for job " + jobID + " to " + req);

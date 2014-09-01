@@ -21,9 +21,14 @@ public class JobContainer implements Runnable, Serializable {
 	transient JobDispatcher srv;
 
 	public JobContainer(ClientJob<?> j, ClientNode requestor) {
+		this(j, UUID.randomUUID(), requestor);
+
+	}
+
+	public JobContainer(ClientJob<?> j, UUID id, ClientNode requestor) {
 		this.origin = requestor;
-		this.jobID = UUID.randomUUID();
 		this.rJ = j;
+		this.jobID = id;
 	}
 
 	public ClientJob<?> getJob() {

@@ -51,7 +51,7 @@ public class ClientCluster implements Iterable<ClientNode> {
 	}
 
 	public <R> Map<ClientNode, R> mcast(List<ClientNode> p, Job<R> j)
-			throws BroadcastException {
+			throws Exception {
 		ClientJob<R> cliJob = new ClientJob<R>(j, client);
 		return disp.mcast(p, cliJob);
 	}

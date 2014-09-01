@@ -26,10 +26,10 @@ public class ExceptionTest {
 		JobServer server = JobServer.jLiME();
 		server.start();
 		JobServer server2 = JobServer.jLiME();
-		server.start();
+		server2.start();
 		JobServer server3 = JobServer.jLiME();
-		server.start();
-		Client cli = Client.build(1);
+		server3.start();
+		Client cli = Client.build(3);
 		// try {
 		// System.out.println("Sync Exception");
 		// cli.getCluster().getAnyExecutor().exec(new ExceptionJob());
@@ -59,7 +59,6 @@ public class ExceptionTest {
 //		} catch (Exception e) {
 //			e.printStackTrace();
 //		}
-//
 //		Thread.sleep(4000);
 		
 		cli.close();

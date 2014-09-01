@@ -34,6 +34,12 @@ public abstract class SocketFactory {
 			return javaSocket;
 		}
 
+		@Override
+		public String toString() {
+			return "jLimeSocket [javaSocket=" + javaSocket + ", port=" + port
+					+ ", addr=" + addr + "]";
+		}
+
 	}
 
 	public abstract jLimeSocket getSocket(String addr, int port)

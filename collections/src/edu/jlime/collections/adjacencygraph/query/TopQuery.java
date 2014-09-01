@@ -61,7 +61,7 @@ public class TopQuery extends RemoteQuery<List<int[]>> {
 				finalRes.put(v, k);
 			else {
 				if (v > finalRes.lastKey()) {
-					finalRes.remove(finalRes.remove(finalRes.firstKey()));
+					finalRes.remove(finalRes.firstKey());
 					finalRes.put(v, k);
 				}
 			}
