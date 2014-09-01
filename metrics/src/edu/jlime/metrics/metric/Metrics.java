@@ -32,13 +32,21 @@ public class Metrics implements Serializable, IMetrics {
 
 	private transient ArrayList<MetricsListener> listeners = new ArrayList<>();
 
+	private String id;
+
 	private static final long FREQ = 5000;
 
-	public Metrics() {
+	public Metrics(String id) {
+		this.id = id;
 	}
 
-	public Metrics(TreeMap<String, Metric<?>> map) {
+	public Metrics(String id, TreeMap<String, Metric<?>> map) {
+		this(id);
 		metrics.putAll(map);
+	}
+
+	public String getId() {
+		return id;
 	}
 
 	public void stop() {

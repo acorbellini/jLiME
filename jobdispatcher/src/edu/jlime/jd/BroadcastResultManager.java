@@ -7,6 +7,7 @@ import java.util.concurrent.Semaphore;
 import org.apache.log4j.Logger;
 
 import edu.jlime.core.cluster.BroadcastException;
+import edu.jlime.core.cluster.Peer;
 import edu.jlime.jd.job.ResultManager;
 
 final class BroadcastResultManager<R> extends ResultManager<R> {
@@ -27,7 +28,7 @@ final class BroadcastResultManager<R> extends ResultManager<R> {
 
 	@Override
 	public void handleException(Exception res, String jobID, ClientNode fromID) {
-		exception.add(res);
+		exception.put(fromID.getPeer(), res);
 		sem.release();
 	}
 
@@ -54,8 +55,8 @@ final class BroadcastResultManager<R> extends ResultManager<R> {
 		}
 	}
 
-	public void addException(Exception e) {
-		exception.add(e);
+	public void addException(Peer p, Exception e) {
+		exception.put(p, e);
 	}
 
 	public BroadcastException getException() {

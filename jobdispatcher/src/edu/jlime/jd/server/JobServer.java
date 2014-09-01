@@ -29,16 +29,16 @@ public class JobServer {
 	}
 
 	public void start() throws Exception {
-		
+
 		jd.start();
-		
+
 		try {
 			String[] info = new String[3];
 			info[0] = mgr.get("sysinfo.os").toString();
 			info[1] = mgr.get("jlime.interface").toString();
-			info[2] = "Local Node : " +jd.getCluster().getLocalNode();
-			Logger.getLogger(JobServer.class).info(
-					StringUtils.printTitle(info));
+			info[2] = "Local Node : " + jd.getCluster().getLocalNode();
+			Logger.getLogger(JobServer.class)
+					.info(StringUtils.printTitle(info));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -46,7 +46,7 @@ public class JobServer {
 
 	private JobServer(JobDispatcher jd) throws Exception {
 		this.jd = jd;
-		this.mgr = new Metrics();
+		this.mgr = new Metrics(jd.getLocalPeer().toString());
 		for (InfoProvider sysinfo : SysInfoProvider.get())
 			sysinfo.load(mgr);
 		new ClusterProvider(jd).load(mgr);

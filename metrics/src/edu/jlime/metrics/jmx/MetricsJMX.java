@@ -18,7 +18,6 @@ public class MetricsJMX {
 	private Metrics mgr;
 
 	public MetricsJMX(Metrics mgr) {
-
 		this.mgr = mgr;
 	}
 
@@ -35,7 +34,7 @@ public class MetricsJMX {
 			throws MalformedObjectNameException {
 		String name = getName(k);
 		String type = getType(k);
-		return new ObjectName("jlime.metrics:"
+		return new ObjectName("jlime.metrics." + mgr.getId() + ":"
 				+ (type != null ? "type=" + type + "," : "") + "name=" + name);
 	}
 

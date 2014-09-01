@@ -74,11 +74,12 @@ public class PingFailureDetection implements StackElement, FailureProvider {
 							if (e.getValue() > max_missed)
 								failed(e.getKey(), e.getValue());
 							else {
-								// if (log.isDebugEnabled())
 								Integer integer = tries.get(e.getKey());
 								if (integer != null && integer != 0)
-									log.info("Sending ping to " + e.getKey()
-											+ ", try number " + integer);
+									if (log.isDebugEnabled())
+										log.debug("Sending ping to "
+												+ e.getKey() + ", try number "
+												+ integer);
 								conn.queue(Message.newEmptyOutDataMessage(
 										MessageType.PING, e.getKey()));
 								tries.put(e.getKey(), e.getValue() + 1);

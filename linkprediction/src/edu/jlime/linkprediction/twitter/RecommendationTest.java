@@ -60,7 +60,6 @@ public class RecommendationTest {
 		// PrintStream fos = new PrintStream(
 		// new FileOutputStream(new File(output)));
 		// System.setOut(fos);
-
 		File checkIfExists = new File("/home/acorbellini/results/" + mapperID
 				+ "/" + user + "/" + user + "-profile-net-" + mapperID + "-run"
 				+ runID + ".csv");
@@ -69,36 +68,44 @@ public class RecommendationTest {
 					+ " already exists.");
 			return;
 		}
+		while (true)
+			try {
+				System.out.println("Running using mapper " + mapper
+						+ " with name " + mapperID + " user " + user
+						+ " and run " + runID);
+				CommandLineUtils.execCommand("bash " + HOME
+						+ "/scripts/clusterrun.sh " + HOME
+						+ "/scripts/eight.txt acorbellini");
 
-		System.out.println("Running using mapper " + mapper + " with name "
-				+ mapperID + " user " + user + " and run " + runID);
-		CommandLineUtils.execCommand("bash " + HOME
-				+ "/scripts/clusterrun.sh " + HOME
-				+ "/scripts/eight.txt acorbellini");
+				System.out
+						.println("Creating client, waiting for 8 execution nodes.");
+				Client client = Client.build(8);
 
-		System.out.println("Creating client, waiting for 8 execution nodes.");
-		Client client = Client.build(8);
+				cluster = client.getCluster();
+				System.out.println("Creating adyacency graph.");
+				graph = new RemoteAdjacencyGraph(config, cluster, mapper);
 
-		cluster = client.getCluster();
-		System.out.println("Creating adyacency graph.");
-		graph = new RemoteAdjacencyGraph(config, cluster, mapper);
+				RemoteListQuery followees = graph.getUser(user).followees();
 
-		RemoteListQuery followees = graph.getUser(user).followees();
+				// RECOMMENDATION ALGORITHM:
+				TopQuery query = followees.followers().remove(followees)
+						.countFollowees().remove(followees).top(10);
 
-		// RECOMMENDATION ALGORITHM:
-		TopQuery query = followees.followers().remove(followees)
-				.countFollowees().remove(followees).top(10);
+				query.setCacheQuery(false);
 
-		query.setCacheQuery(false);
+				printTop(query, user, mapperID, runID);
 
-		printTop(query, user, mapperID, runID);
+				client.close();
 
-		client.close();
-
-		CommandLineUtils.execCommand("bash " + HOME
-				+ "/scripts/clusterstop.sh " + HOME
-				+ "/scripts/eight.txt acorbellini");
-		System.exit(0);
+				CommandLineUtils.execCommand("bash " + HOME
+						+ "/scripts/clusterstop.sh " + HOME
+						+ "/scripts/eight.txt acorbellini");
+				System.exit(0);
+			} catch (Exception e) {
+				System.out.println("Error Executing Run " + runID
+						+ " for user " + user);
+				e.printStackTrace();
+			}
 	}
 
 	public void printTop(TopQuery query, Integer user, String mapperID,

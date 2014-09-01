@@ -6,6 +6,7 @@ import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.client.Client;
 import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.RunJob;
+import edu.jlime.jd.server.JobServer;
 
 public class ExceptionTest {
 
@@ -22,13 +23,48 @@ public class ExceptionTest {
 
 	@Test
 	public void exceptionTest() throws Exception {
-		Client cli = Client.build();
+		JobServer server = JobServer.jLiME();
+		server.start();
+		JobServer server2 = JobServer.jLiME();
+		server.start();
+		JobServer server3 = JobServer.jLiME();
+		server.start();
+		Client cli = Client.build(1);
+		// try {
 		// System.out.println("Sync Exception");
 		// cli.getCluster().getAnyExecutor().exec(new ExceptionJob());
-		System.out.println("Async Exception");
-		cli.getCluster().getAnyExecutor().execAsync(new ExceptionJob());
-		System.out.println("Termino");
-		while (true)
-			Thread.sleep(5000000);
+		// } catch (Exception e) {
+		// e.printStackTrace();
+		// }
+		// try {
+		// System.out.println("Async Exception");
+		// cli.getCluster().getAnyExecutor().execAsync(new ExceptionJob());
+		// } catch (Exception e) {
+		// e.printStackTrace();
+		// }
+		// System.out.println("Termino");
+		//
+		// Thread.sleep(4000);
+
+		try {
+			System.out.println("Broadcast Sync Exception");
+			cli.getCluster().broadcast(new ExceptionJob());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+//		try {
+//			System.out.println("Broadcast Async Exception");
+//			cli.getCluster().broadcastAsync(new ExceptionJob());
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}
+//
+//		Thread.sleep(4000);
+		
+		cli.close();
+		server.stop();
+		server2.stop();
+		server3.stop();
 	}
 }

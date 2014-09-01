@@ -4,7 +4,7 @@ import edu.jlime.metrics.metric.Metrics;
 
 public class ListTest {
 	public static void main(String[] args) {
-		Metrics m = new Metrics();
+		Metrics m = new Metrics("test");
 		m.simple("sysinfo.net.eth0.sent_total", "1");
 		m.simple("sysinfo.net.eth0.rcvd_total", "2");
 		m.simple("sysinfo.net.eth0.ip", "3");

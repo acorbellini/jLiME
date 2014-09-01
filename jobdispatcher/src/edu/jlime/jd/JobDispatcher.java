@@ -231,8 +231,7 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 				log.debug("Waiting for results.");
 			rm.waitResults();
 		} catch (Exception e) {
-			e.printStackTrace();
-			rm.addException(e);
+			rm.addException(getLocalPeer(), e);
 		}
 
 		if (!rm.getException().isEmpty())
@@ -399,10 +398,14 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 			public void run() {
 				try {
 					ResultManager manager = jobMap.get(jobID);
-					if (manager == null)
-						log.debug("Result was not expected from job " + jobID
-								+ " from server " + req);
-					else {
+					if (manager == null) {
+						if (Exception.class.isAssignableFrom(res.getClass()))
+							log.error("Received asynchronous exception from "
+									+ req, (Exception) res);
+						else
+							log.info("Result was not expected from job "
+									+ jobID + " from server " + req);
+					} else {
 						manager.manageResult(JobDispatcher.this, jobID, res,
 								req);
 

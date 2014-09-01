@@ -240,7 +240,7 @@ public class RPCDispatcher implements ClassLoaderProvider, TransportListener {
 							log.debug("Finished sending broadcast message synchronously to "
 									+ p);
 					} catch (Exception e) {
-						exception.add(e);
+						exception.put(p, e);
 						log.error("Error making broadcast rpc to " + p, e);
 					}
 					sem.release();

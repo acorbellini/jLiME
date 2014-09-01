@@ -25,6 +25,7 @@ public class MetricConverter implements TypeConverter {
 		Metrics m = (Metrics) o;
 		ArrayList<Entry<String, Metric<?>>> entries = new ArrayList<>(m
 				.getMetrics().entrySet());
+		buffer.putString(m.getId());
 		buffer.putInt(entries.size());
 		for (Entry<String, Metric<?>> entry : entries) {
 			buffer.putString(entry.getKey());
@@ -35,13 +36,13 @@ public class MetricConverter implements TypeConverter {
 
 	@Override
 	public Object fromArray(ByteBuffer buff) throws Exception {
-
+		String id = buff.getString();
 		TreeMap<String, Metric<?>> map = new TreeMap<>();
 		int size = buff.getInt();
 		for (int i = 0; i < size; i++) {
 			map.put(buff.getString(), (Metric<?>) tc.getObjectFromArray(buff));
 		}
-		Metrics m = new Metrics(map);
+		Metrics m = new Metrics(id, map);
 		return m;
 	}
 }

@@ -7,6 +7,7 @@ import java.util.concurrent.Semaphore;
 
 import org.apache.log4j.Logger;
 
+import edu.jlime.core.cluster.Peer;
 import edu.jlime.jd.ClientCluster;
 import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.client.JobContext;
@@ -28,7 +29,7 @@ public abstract class MapReduceTask<T, R, SR> implements Job<R> {
 
 		@Override
 		public void handleException(Exception res, String jid, ClientNode from) {
-			task.error(res);
+			task.error(from.getPeer(), res);
 		}
 
 		@Override
@@ -56,8 +57,8 @@ public abstract class MapReduceTask<T, R, SR> implements Job<R> {
 		return exec(data, env);
 	}
 
-	public void error(Exception res) {
-		exceptions.add(res);
+	public void error(Peer p, Exception res) {
+		exceptions.put(p, res);
 		lock.release();
 	}
 
