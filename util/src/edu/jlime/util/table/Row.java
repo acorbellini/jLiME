@@ -60,11 +60,17 @@ public class Row implements Dim {
 
 	@Override
 	public String toString() {
+		boolean first = true;
 		StringBuilder b = new StringBuilder();
 		for (Cell c : this) {
+			if (first)
+				first = false;
+			else
+				b.append(";");
+
 			if (c != null)
 				b.append(c.value());
-			b.append(";");
+
 		}
 		return b.toString();
 	}

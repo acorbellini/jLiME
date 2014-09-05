@@ -26,6 +26,10 @@ public class CSVBuilder {
 
 	private HashMap<String, String> replaces = new HashMap<>();
 
+	public void setUseWindowsNewLine(boolean useWindowsNewLine) {
+		this.useWindowsNewLine = useWindowsNewLine;
+	}
+
 	public CSVBuilder(File csv) {
 		this.csv = csv;
 	}

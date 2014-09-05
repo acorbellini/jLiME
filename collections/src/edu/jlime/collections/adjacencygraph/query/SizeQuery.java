@@ -11,6 +11,7 @@ public class SizeQuery extends RemoteQuery<Integer> {
 
 	public SizeQuery(RemoteListQuery listQuery) {
 		super(listQuery.getGraph());
+		this.query = listQuery;
 	}
 
 	@Override

@@ -39,7 +39,7 @@ public class ResultsGrouping {
 	private static void fix(File file) throws Exception {
 		File tmp = new File(file.getPath() + ".tmp");
 
-		Table t = Table.readCSV(file, ",", ".");
+		Table t = Table.readCSV(file, ",", ".", false);
 
 		t.sortTableHeader(new Comparator<String>() {
 			@Override

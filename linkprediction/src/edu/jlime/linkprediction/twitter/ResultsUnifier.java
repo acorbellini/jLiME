@@ -65,7 +65,8 @@ public class ResultsUnifier {
 				if (strategy.isDirectory()) {
 					Table timeTable = Table.readCSV(new File(dir.getPath()
 							+ "/" + strategy.getName() + "/" + u + "/" + u
-							+ "-" + strategy.getName() + ".csv"), ",", ".");
+							+ "-" + strategy.getName() + ".csv"), ",", ".",
+							false);
 					timeTable.set(0, timeTable.getRowLimit(), new ValueCell(
 							"Avg"));
 					timeTable.set(
@@ -78,6 +79,13 @@ public class ResultsUnifier {
 			}
 
 		}
+
+		times.fillRow("Avg", 1, times.getColLimit() - 1, 1,
+				times.getRowLimit() - 1, Functions.AVERAGE);
+		
+		times.fillRow("StdDev", 1, times.getColLimit() - 1, 1,
+				times.getRowLimit() - 1, Functions.STDDEV);
+
 		scanner.close();
 		writer.write(times.print(";"));
 		writer.close();
@@ -125,11 +133,12 @@ public class ResultsUnifier {
 					Table tmax = new Table();
 					Table tdiff = new Table();
 					boolean first = true;
-					for (File file : new File(dir.getPath() + "/"
-							+ strategy.getName() + "/" + u)
-							.listFiles(filterMem)) {
+					File strategyDir = new File(dir.getPath() + "/"
+							+ strategy.getName() + "/" + u);
+					File[] listFiles = strategyDir.listFiles(filterMem);
+					for (File file : listFiles) {
 
-						Table run = Table.readCSV(file, ";", ",");
+						Table run = Table.readCSV(file, ";", ",", false);
 						if (first) {
 							Row r = tmax.newRow();
 							r.add(run.getRow(0));
@@ -157,8 +166,8 @@ public class ResultsUnifier {
 					tdiff.fillRow("StdDev", 1, tdiff.getColLimit() - 1, 1,
 							tdiff.getRowLimit() - 1, Functions.STDDEV);
 
-					userMaxRow.add(tmax.getRow(11).get(9));
-					userDiffRow.add(tdiff.getRow(11).get(9));
+					userMaxRow.add(tmax.getRow(6).get(9));
+					userDiffRow.add(tdiff.getRow(6).get(9));
 
 					writer.write(strategy.getName() + "\n");
 					writer.write(tmax.print(";"));
@@ -167,6 +176,20 @@ public class ResultsUnifier {
 			}
 			writer.close();
 		}
+
+		generalMax.fillRow("Avg", 1, generalMax.getColLimit() - 1, 1,
+				generalMax.getRowLimit() - 1, Functions.AVERAGE);
+
+		generalMax.fillRow("StdDev", 1, generalMax.getColLimit() - 1, 1,
+				generalMax.getRowLimit() - 1, Functions.STDDEV);
+
+		generalDiff.fillRow("Avg", 1, generalDiff.getColLimit() - 1, 1,
+				generalDiff.getRowLimit() - 1, Functions.AVERAGE);
+
+		generalDiff.fillRow("StdDev", 1, generalDiff.getColLimit() - 1, 1,
+				generalDiff.getRowLimit() - 1, Functions.STDDEV);
+		
+		
 		writerMax.write(generalMax.print(";"));
 		writerMax.close();
 		writerDiff.write(generalDiff.print(";"));

@@ -112,7 +112,7 @@ public class Table {
 				.readCSV(
 						new File(
 								"C:/Users/acorbellini/Dropbox/Twitter Results/results/availablememory/13348/13348-profile-mem-availablememory-run1.csv"),
-						",", ".");
+						",", ".", true);
 		t.sortTableHeader(new Comparator<String>() {
 			@Override
 			public int compare(String o1, String o2) {
@@ -252,9 +252,10 @@ public class Table {
 		return table.get(col + "," + row);
 	}
 
-	public static Table readCSV(File csv, String columnSep, String decimalSep)
-			throws Exception {
+	public static Table readCSV(File csv, String columnSep, String decimalSep,
+			boolean windows) throws Exception {
 		CSVBuilder builder = new CSVBuilder(csv);
+		builder.setUseWindowsNewLine(windows);
 		builder.setColumnSep(columnSep);
 		builder.setDecimalSep(decimalSep);
 		return builder.toTable();
@@ -280,7 +281,8 @@ public class Table {
 		sortCols(0, 1, getRowLimit(), comparator);
 	}
 
-	private void sortCols(int col, int init, int end, Comparator<String> comparator) {
+	private void sortCols(int col, int init, int end,
+			Comparator<String> comparator) {
 		Col copy = getCol(col);
 		Integer[] indexes = getSortIndexes(copy, init, end, comparator);
 		reorderRows(indexes);
