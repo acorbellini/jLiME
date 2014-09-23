@@ -4,7 +4,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import edu.jlime.core.cluster.Peer;
-import edu.jlime.core.transport.Address;
 
 public class DispatcherManager {
 

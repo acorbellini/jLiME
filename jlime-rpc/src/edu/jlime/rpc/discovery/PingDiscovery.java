@@ -1,6 +1,5 @@
 package edu.jlime.rpc.discovery;
 
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.List;
 

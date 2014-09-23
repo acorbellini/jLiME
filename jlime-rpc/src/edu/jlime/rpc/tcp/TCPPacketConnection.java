@@ -10,6 +10,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.apache.log4j.Logger;
 
 import edu.jlime.util.DataTypeUtils;
+import edu.jlime.util.PerfMeasure;
 import edu.jlime.util.StreamUtils;
 
 class TCPPacketConnection {
@@ -62,20 +63,25 @@ class TCPPacketConnection {
 		try {
 			writeLock.lock();
 			if (closed) {
-				if (log.isDebugEnabled())
-					log.debug("Writing is forbidden on " + conn);
+				// if (log.isDebugEnabled())
+				// log.debug("Writing is forbidden on " + conn);
 				return;
 			}
-			if (log.isDebugEnabled())
-				log.debug("Writing to " + out.length + " bytes to " + conn);
+			// if (log.isDebugEnabled())
+			// log.debug("Writing to " + out.length + " bytes to " + conn);
+
 			os.write(DataTypeUtils.intToByteArray(id));
 			this.lastTimeUsed = System.currentTimeMillis();
 			if (id >= 0)
 				os.write(out);
+			// PerfMeasure.takeTime("write", false);
+			// PerfMeasure.takeTime("read", false);
+			//
+			// PerfMeasure.startTimer("write", 1000, false);
 			this.lastTimeUsed = System.currentTimeMillis();
-			os.flush();
-			if (log.isDebugEnabled())
-				log.debug("Finished Writing to " + conn);
+			// os.flush();
+			// if (log.isDebugEnabled())
+			// log.debug("Finished Writing to " + conn);
 			return;
 		} catch (Exception e) {
 			throw new Exception("Error WRITING to " + conn, e);
@@ -86,52 +92,39 @@ class TCPPacketConnection {
 
 	public byte[] read() throws Exception {
 		try {
-			if (log.isDebugEnabled())
-				log.debug("WAITING FOR LOCK ON " + readLock + " "
-						+ readLock.getQueueLength());
-			readLock.lock();
-			if (log.isDebugEnabled())
-				log.debug("READING ON SOCKET " + conn);
+
+			// if (log.isDebugEnabled())
+			// log.debug("WAITING FOR LOCK ON " + readLock + " "
+			// + readLock.getQueueLength());
+			// readLock.lock();
+			// if (log.isDebugEnabled())
+			// log.debug("READING ON SOCKET " + conn);
+
 			int id = StreamUtils.readInt(is);
-			if (log.isDebugEnabled())
-				log.debug("Read " + (id < 0 ? " ID " : " SIZE ") + id);
-			// if (id == CONN_CLOSE_INIT) {
 			// if (log.isDebugEnabled())
-			// log.debug("Received connection close init, sending response "
-			// + conn);
-			// synchronized (this) {
-			// closeTimer.cancel();
-			// closed = false;
-			// write(null, CONN_CLOSE_RESP);
-			// closed = true;
-			// if (log.isDebugEnabled())
-			// log.debug("Received Connection response, removing connection "
-			// + conn);
-			// conn.close();
-			// mgr.remove(this);
-			// }
-			// } else if (id == CONN_CLOSE_RESP) {
-			// if (log.isDebugEnabled())
-			// log.debug("Received connection close response " + conn);
-			// synchronized (this) {
-			// closed = true;
-			// conn.close();
-			// mgr.remove(this);
-			// }
-			// } else {
+			// log.debug("Read " + (id < 0 ? " ID " : " SIZE ") + id);
 			this.lastTimeUsed = System.currentTimeMillis();
-			if (log.isDebugEnabled())
-				log.debug(" Fully reading from " + conn + " " + id + " bytes.");
+			// if (log.isDebugEnabled())
+			// log.debug(" Fully reading from " + conn + " " + id + " bytes.");
+
 			byte[] data = StreamUtils.read(is, id);
+
+			// PerfMeasure.startTimer("read", 1000, false);
+
+			// PerfMeasure.takeTime("write", false);
+			//
+			// PerfMeasure.takeTime("dataproc", false);
 			this.lastTimeUsed = System.currentTimeMillis();
-			if (log.isDebugEnabled())
-				log.debug("FINISHED READING ON SOCKET " + conn);
+			// if (log.isDebugEnabled())
+			// log.debug("FINISHED READING ON SOCKET " + conn);
+
 			return data;
 			// }
 		} catch (Exception e) {
 			throw new Exception("Error reading from " + conn, e);
 		} finally {
-			readLock.unlock();
+			// readLock.unlock();
+
 		}
 		// return null;
 	}

@@ -1,40 +1,37 @@
 package edu.jlime.pregel;
 
-import java.util.HashMap;
-import java.util.Map.Entry;
-
 import edu.jlime.pregel.coordinator.Aggregator;
-import edu.jlime.pregel.graph.Vertex;
 
 final class DifferenceAggregator implements Aggregator {
-	HashMap<Vertex, Double> values = new HashMap<>();
+	// HashMap<Long, Double> values = new HashMap<>();
 	Double old;
+	Double newVal = 0d;
 	Double currentDiff;
 
 	@Override
 	public void superstep(int s) {
 		if (old != null)
-			currentDiff = old - getAcc();
-		old = getAcc();
+			currentDiff = old - newVal;
+		old = newVal;
 	}
 
-	private Double getAcc() {
-		double acc = 0d;
-		for (Entry<Vertex, Double> e : values.entrySet()) {
-			acc += e.getValue();
-		}
-		return acc;
+	// private Double getAcc() {
+	// double acc = 0d;
+	// for (Entry<Long, Double> e : values.entrySet()) {
+	// acc += e.getValue();
+	// }
+	// return acc;
+	// }
+
+	@Override
+	public synchronized void setVal(long v, Double value) {
+		// values.put(v, value);
+		newVal += value;
 	}
 
 	@Override
-	public synchronized void setVal(Vertex v, Double value) {
-		values.put(v, value);
-	}
-
-	@Override
-	public Double getVal(Vertex v) {
-		System.out.println("Returning difference for vertex " + v + " ("
-				+ currentDiff + ")");
+	public Double getVal(long v) {
+		System.out.println("Returning difference " + currentDiff + "");
 		return currentDiff;
 	}
 }

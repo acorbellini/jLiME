@@ -1,14 +1,7 @@
 package edu.jlime.collections.intintarray.client.jobs;
 
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
-import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 
 import edu.jlime.collections.intintarray.db.Store;
@@ -16,7 +9,6 @@ import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.Job;
 import edu.jlime.util.DataTypeUtils;
-import edu.jlime.util.RingQueue;
 import gnu.trove.set.hash.TIntHashSet;
 
 public class GetSetOfUsersJob implements Job<int[]> {

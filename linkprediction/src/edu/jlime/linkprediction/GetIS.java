@@ -1,12 +1,10 @@
 package edu.jlime.linkprediction;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.util.Scanner;
 
 import edu.jlime.collections.adjacencygraph.RemoteAdjacencyGraph;
 import edu.jlime.collections.adjacencygraph.mappers.LocationMapper;
-import edu.jlime.collections.adjacencygraph.query.CountQuery;
 import edu.jlime.collections.adjacencygraph.query.UserQuery;
 import edu.jlime.collections.intintarray.client.jobs.StoreConfig;
 import edu.jlime.jd.ClientCluster;

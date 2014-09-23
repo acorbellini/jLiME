@@ -11,8 +11,9 @@ import edu.jlime.core.transport.Address;
 import edu.jlime.core.transport.Transport;
 import edu.jlime.metrics.metric.Metrics;
 import edu.jlime.rpc.data.DataListener;
-import edu.jlime.rpc.data.DataProcessor.DataMessage;
+import edu.jlime.rpc.data.DataMessage;
 import edu.jlime.rpc.data.Response;
+import edu.jlime.util.PerfMeasure;
 
 public class jLiMETransport extends Transport implements DataListener {
 
@@ -55,8 +56,7 @@ public class jLiMETransport extends Transport implements DataListener {
 			log.debug("Calling Synchronously " + peer + ", sending "
 					+ marshalled.length + " b.");
 
-		byte[] resp = commStack.getData().sendData(marshalled,
-				(Address) peer.getAddress(), true);
+		byte[] resp = commStack.getData().sendData(marshalled,peer.getAddress(), true);
 
 		if (log.isDebugEnabled())
 			log.debug("FINISHED synchronous call  to " + peer + ", response "
@@ -69,14 +69,19 @@ public class jLiMETransport extends Transport implements DataListener {
 	public void messageReceived(final DataMessage msg, final Response handler) {
 		if (log.isDebugEnabled())
 			log.debug("Received data from processor");
+		
+		
+		
 		handleExecutor.execute(new Runnable() {
 			public void run() {
 				Address origin = msg.getFrom();
 				byte[] buff = msg.getData();
 				if (log.isDebugEnabled())
 					log.debug("Unmarshalling data received");
+				
 				byte[] rsp = jLiMETransport.super.callTransportListener(origin,
 						buff);
+				
 				if (log.isDebugEnabled())
 					log.debug("Sending response using response handler: "
 							+ handler);

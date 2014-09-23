@@ -1,77 +1,82 @@
 package edu.jlime.pregel;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+
+import org.apache.log4j.Logger;
 
 import edu.jlime.pregel.client.WorkerContext;
-import edu.jlime.pregel.graph.PregelGraph;
-import edu.jlime.pregel.graph.Vertex;
 import edu.jlime.pregel.graph.VertexFunction;
+import edu.jlime.pregel.graph.rpc.Graph;
 import edu.jlime.pregel.worker.PregelMessage;
-import edu.jlime.pregel.worker.VertexData;
+import edu.jlime.util.PerfMeasure;
 
 public class PageRank implements VertexFunction {
 
 	double error = 0.0001;
+	private int vertexSize;
+
+	public PageRank(int vSize) {
+		this.vertexSize = vSize;
+	}
 
 	// double d = 0.85;
 
 	@Override
-	public void execute(Vertex v, HashSet<PregelMessage> in, WorkerContext ctx)
+	public void execute(long v, List<PregelMessage> in, WorkerContext ctx)
 			throws Exception {
-		PregelGraph graph = ctx.getGraph();
+		Logger log = Logger.getLogger(PageRank.class);
+
+		Graph graph = ctx.getGraph();
 
 		Double oldval = (Double) graph.get(v, "pagerank");
 
-		for (PregelMessage incoming : in) {
-			// Cache pagerank in current graph view in case that the incoming
-			// vertex halts.
-			graph.setVal(incoming.getVertex(), "pagerank",
-					(Double) incoming.get("edgePageRank"));
-		}
+		// for (PregelMessage incoming : in) {
+		// // Cache pagerank in current graph view in case that the incoming
+		// // vertex halts.
+		// graph.setVal(incoming.getTo(), "edgePageRank",
+		// (Double) incoming.getV());
+		// }
 
-		// Jabobi iterative method: (1-d) + d * function
+		// Jacobi iterative method: (1-d) + d * function
 		// Example :
 		// http://mathscinotes.wordpress.com/2012/01/02/worked-pagerank-example/
 		double currentVal = oldval;
 		if (ctx.getSuperStep() >= 1) {
 			double sum = 0;
-			for (Vertex vertex : graph.getIncoming(v)) {
-				sum += (Double) graph.get(vertex, "pagerank");
+			for (PregelMessage pm : in) {
+				sum += (Double) pm.getV();
 			}
 
 			double d = (Double) graph.get(v, "ranksource");
-
-			// Double s = ctx.getAggregatedValue("diff");
-
-			// if (s == null)
-			// s = 1d;
-			// else
-			// System.out.println("Using factor s :" + s);
-
-			currentVal = (d / graph.vertexSize()) + (1 - d) * (sum);
-			// + (Double) graph.get(v, "ranksource")
-			System.out.println("Saving pagerank " + currentVal + " into " + v);
+			currentVal = (1 - d) / vertexSize + d * (sum);
+			if (log.isDebugEnabled())
+				log.debug("Saving pagerank " + currentVal + " into " + v
+						+ " ( 1 - " + d + "/" + graph.vertexSize() + " + " + d
+						+ "*" + sum + " )");
 
 			graph.setVal(v, "pagerank", currentVal);
-
-			// ctx.setAggregatedValue("diff", currentVal);
 
 			// If converged, set as halted for the next superstep. The value of
 			// the current pagerank was saved in
 			// the previous step.
-			if (Math.abs(oldval - currentVal) < error)
-				ctx.setHalted();
+			// if (Math.abs(oldval - currentVal) < error)
+			// ctx.setHalted();
 		}
 
-		Set<Vertex> outgoing = graph.getOutgoing(v);
-		for (Vertex vertex : outgoing) {
-			ctx.send(
-					vertex,
-					VertexData.create("edgePageRank", currentVal
-							/ (double) outgoing.size()));
-		}
+		double outgoingSize = (double) graph.getOutgoingSize(v);
+		Iterable<Long> outgoing;
+		// Dangling nodes distribute pagerank across the whole graph.
+		if (outgoingSize == 0) {
+			outgoingSize = vertexSize;
+			ctx.sendAll(currentVal / outgoingSize);
+		} else {
+			outgoing = graph.getOutgoing(v);
 
+			for (Long vertex : outgoing) {
+				if (log.isDebugEnabled())
+					log.debug("Sending message to " + vertex + " from " + v);
+				ctx.send(vertex, currentVal / outgoingSize);
+			}
+		}
 	}
 }

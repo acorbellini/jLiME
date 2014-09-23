@@ -1,11 +1,7 @@
 package edu.jlime.rpc;
 
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.ListIterator;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 
 import edu.jlime.core.transport.Address;
 import edu.jlime.core.transport.DiscoveryProvider;
@@ -23,7 +19,6 @@ import edu.jlime.rpc.message.StackElement;
 import edu.jlime.rpc.multi.MultiInterface;
 import edu.jlime.rpc.np.NetworkProtocol;
 import edu.jlime.util.NetworkUtils;
-import edu.jlime.util.RingQueue;
 
 public class Stack {
 

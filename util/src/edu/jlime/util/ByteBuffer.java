@@ -26,7 +26,7 @@ public class ByteBuffer extends Buffer {
 	public ByteBuffer(byte[] data, int length) {
 		this.buffered = data;
 		this.writePos = length;
-		bos = new ByteArrayOutputStream();
+		// bos = new ByteArrayOutputStream();
 	}
 
 	public ByteBuffer(int i) {
@@ -164,5 +164,13 @@ public class ByteBuffer extends Buffer {
 
 		return ret;
 
+	}
+
+	public void putDouble(Double o) {
+		putLong(Double.doubleToLongBits(o));
+	}
+
+	public Object getDouble() {
+		return Double.longBitsToDouble(getLong());
 	}
 }

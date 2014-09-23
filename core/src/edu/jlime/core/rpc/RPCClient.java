@@ -1,8 +1,25 @@
 package edu.jlime.core.rpc;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+
 import edu.jlime.core.cluster.Peer;
 
 public class RPCClient {
+
+	protected static ExecutorService async = Executors
+			.newCachedThreadPool(new ThreadFactory() {
+
+				@Override
+				public Thread newThread(Runnable r) {
+					Thread t = Executors.defaultThreadFactory().newThread(r);
+					t.setName("LocalRPCAsyncThreads");
+					t.setDaemon(true);
+					return t;
+				}
+			});
+
 	protected RPCDispatcher disp;
 	protected Peer local;
 	protected Peer dest;

@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 
-import edu.jlime.core.cluster.BroadcastException;
 import edu.jlime.core.cluster.BroadcastOutputStream;
 import edu.jlime.core.cluster.MCastStreamResult;
 import edu.jlime.core.cluster.Peer;

@@ -21,6 +21,7 @@ import edu.jlime.rpc.message.SimpleMessageProcessor;
 import edu.jlime.rpc.message.SocketAddress;
 import edu.jlime.util.Buffer;
 import edu.jlime.util.ByteBuffer;
+import edu.jlime.util.PerfMeasure;
 import edu.jlime.util.RingQueue;
 
 public abstract class NetworkProtocol extends SimpleMessageProcessor implements
@@ -73,12 +74,13 @@ public abstract class NetworkProtocol extends SimpleMessageProcessor implements
 					}
 			}
 		};
-		// t.setDaemon(true);
+		t.setDaemon(true);
 		t.start();
 	}
 
-	public void notifyPacketRvcd(DataPacket pkt) {
+	public void notifyPacketRvcd(DataPacket pkt) throws Exception {
 		packetsRx.put(pkt);
+		// processPacket(pkt);
 	};
 
 	private void processPacket(DataPacket pkt) throws Exception {
@@ -89,19 +91,20 @@ public abstract class NetworkProtocol extends SimpleMessageProcessor implements
 		beforeProcess(pkt, from, to);
 
 		if (!to.equals(Address.noAddr()) && !to.equals(getLocal())) {
-			if (log.isDebugEnabled())
-				log.debug("Message from " + from + " to " + to
-						+ " wasn't for me (" + getLocal() + ")");
+			// if (log.isDebugEnabled())
+			// log.debug("Message from " + from + " to " + to
+			// + " wasn't for me (" + getLocal() + ")");
 			return;
 		}
 		byte[] data = buff.getRawByteArray();
 
 		Message msg = Message.deEncapsulate(data, from, getLocal());
-		if (log.isTraceEnabled())
-			log.debug("Received message of type " + msg.getType() + " sized "
-					+ buff.size() + " bytes from " + from + " with address "
-					+ addr);
+		// if (log.isTraceEnabled())
+		// log.debug("Received message of type " + msg.getType() + " sized "
+		// + buff.size() + " bytes from " + from + " with address "
+		// + addr);
 		notifyRcvd(msg);
+
 	}
 
 	protected abstract void beforeProcess(DataPacket pkt, Address from,
@@ -159,11 +162,11 @@ public abstract class NetworkProtocol extends SimpleMessageProcessor implements
 		writer.putRawByteArray(array);
 		byte[] built = writer.build();
 
-		if (log.isTraceEnabled())
-			log.trace("Sending message from " + getLocal() + " to " + to
-					+ " using this message info: TYPE " + msg.getType()
-					+ " SIZE: " + built.length + " bytes TO " + msg.getTo()
-					+ " ADDRESS " + realSockAddr);
+		// if (log.isTraceEnabled())
+		// log.trace("Sending message from " + getLocal() + " to " + to
+		// + " using this message info: TYPE " + msg.getType()
+		// + " SIZE: " + built.length + " bytes TO " + msg.getTo()
+		// + " ADDRESS " + realSockAddr);
 
 		sendBytes(built, to, realSockAddr);
 	}
@@ -207,7 +210,7 @@ public abstract class NetworkProtocol extends SimpleMessageProcessor implements
 			log.debug("Stopping network protocol type " + getType()
 					+ " and socket " + socket);
 
-		packetsRx.put(new DataPacket(null, null));
+		// packetsRx.put(new DataPacket(null, null));
 		if (metrics != null)
 			metrics.set("jlime.interface").remove(
 					this.socket.getAddr() + ":" + this.socket.getPort());

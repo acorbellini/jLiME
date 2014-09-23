@@ -171,4 +171,10 @@ public class Cluster implements Iterable<Peer> {
 		return builder.toString();
 	}
 
+	public int size() {
+		synchronized (peers) {
+			return peers.size();
+		}
+	}
+
 }

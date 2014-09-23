@@ -1,7 +1,6 @@
 package edu.jlime.core.cluster;
 
 import java.io.PrintStream;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;

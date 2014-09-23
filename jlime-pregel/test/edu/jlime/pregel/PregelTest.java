@@ -1,66 +1,73 @@
 package edu.jlime.pregel;
 
-import java.util.HashMap;
-
+import edu.jlime.pregel.client.InMemoryGraph;
 import edu.jlime.pregel.client.PregelClient;
-import edu.jlime.pregel.coordinator.Aggregator;
-import edu.jlime.pregel.coordinator.CoordinatorServer;
-import edu.jlime.pregel.graph.PregelGraph;
-import edu.jlime.pregel.graph.Vertex;
-import edu.jlime.pregel.worker.WorkerServer;
+import edu.jlime.pregel.client.PregelConfig;
 
 public class PregelTest {
+	private static final int LIMIT = 50000;
+
 	public static void main(String[] args) throws Exception {
 		// for (int i = 0; i < 100; i++) {
-		CoordinatorServer srv = new CoordinatorServer();
-		srv.start();
-		WorkerServer w1 = new WorkerServer();
-		w1.start();
-		WorkerServer w2 = new WorkerServer();
-		w2.start();
-		WorkerServer w3 = new WorkerServer();
-		w3.start();
-		WorkerServer w4 = new WorkerServer();
-		w4.start();
-		PregelGraph g = new PregelGraph();
-		Vertex v0 = g.vertex();
-		Vertex v1 = g.vertex();
-		Vertex v2 = g.vertex();
-		Vertex v3 = g.vertex();
-		Vertex v4 = g.vertex();
+		// CoordinatorServer srv = new CoordinatorServer();
+		// srv.start();
+		// WorkerServer w1 = new WorkerServer();
+		// w1.start();
+		// WorkerServer w2 = new WorkerServer();
+		// w2.start();
+		// WorkerServer w3 = new WorkerServer();
+		// w3.start();
+		// WorkerServer w4 = new WorkerServer();
+		// w4.start();
+
+		PregelClient cli = new PregelClient(2);
+		InMemoryGraph g = new InMemoryGraph(cli.getRPC(), "graph",
+				SplitFunctions.simple(), PregelClient.workerFilter(), 2);
+
+		String pathname = "C:/Users/Ale/Desktop/dataset.csv";
+		// g.load(pathname);
+
+		g.putLink(0l, 1l);
+		g.putLink(0l, 2l);
+		g.putLink(0l, 3l);
+		g.putLink(1l, 0l);
+		g.putLink(1l, 2l);
+		g.putLink(2l, 4l);
+		g.putLink(3l, 4l);
+
+		// System.out.println(g.print());
+
+		// g.putLink(4l, 2l);
+		// }
+		System.out.println("Executing PageRank Test.");
+
 		g.setDefaultValue("pagerank", 1d / g.vertexSize());
-		g.setDefaultValue("ranksource", .15d);
-		g.putLink(v0, v1);
-		g.putLink(v0, v2);
-		g.putLink(v0, v3);
-		g.putLink(v1, v0);
-		g.putLink(v1, v2);
-		g.putLink(v2, v4);
-		g.putLink(v3, v4);
-		g.putLink(v4, v2);
-		g.setVal(v0, "count", 0);
-		PregelClient cli = new PregelClient(4);
-		PregelGraph res = cli.execute(g, new MinTree(), 10, v0);
-		System.out.println(res);
-		HashMap<String, Aggregator> aggregators = new HashMap<>();
-		Aggregator agg = new DifferenceAggregator();
-		aggregators.put("diff", agg);
-		for (Vertex v : g.vertices()) {
-			agg.setVal(v, 1d / g.vertexSize());
-		}
-		res = cli.execute(g, new PageRank(), 100, aggregators, g.vertices());
+		g.setDefaultValue("ranksource", .85d);
+
+		cli.execute(
+				new PageRank(g.vertexSize()),
+				new PregelConfig().split(SplitFunctions.simple())
+						.merger(MessageMergers.sum()).graph(g).steps(30)
+						.threads(10).executeOnAll());
+
+		System.out.println("Finished PageRank Test.");
+
 		double sum = 0;
-		for (Vertex v : res.vertices()) {
-			sum += (Double) res.getData(v).getData("pagerank");
+
+		// If everything's alright, the sum should be 1 (Or near)
+		for (Long v : g.vertices()) {
+			sum += (Double) g.get(v, "pagerank");
 		}
-		System.out.println(res);
-		System.out.println("sum: " + sum + " avg: " + sum / res.vertexSize());
-		srv.stop();
-		w1.stop();
-		w2.stop();
-		w3.stop();
-		w4.stop();
+		System.out.println("vertices: " + g.vertexSize() + " sum: " + sum
+				+ " avg: " + sum / g.vertexSize());
+		System.out.println(g.print());
+		// srv.stop();
+		// w1.stop();
+		// w2.stop();
+		// w3.stop();
+		// w4.stop();
 		cli.stop();
 		// }
 	}
+
 }

@@ -81,10 +81,10 @@ public class UDP extends NetworkProtocol implements PacketReceiver {
 
 		InetSocketAddress sockAddr = (InetSocketAddress) p.getSocketAddress();
 
-		if (!isEqualToLocalType(sockAddr)) {
-			log.info("Won't accept packet from other addr " + sockAddr
-					+ " local is " + getAddr());
-		}
+		// if (!isEqualToLocalType(sockAddr)) {
+		// log.info("Won't accept packet from other addr " + sockAddr
+		// + " local is " + getAddr());
+		// }
 
 		Buffer buffer = new ByteBuffer(p.getData(), p.getLength());
 		DatagramType dt = DatagramType.fromID(buffer.get());

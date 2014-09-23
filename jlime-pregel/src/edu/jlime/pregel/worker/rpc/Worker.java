@@ -1,29 +1,34 @@
 package edu.jlime.pregel.worker.rpc;
 
-import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
+import edu.jlime.core.cluster.Peer;
 import edu.jlime.core.rpc.Cache;
 import edu.jlime.core.rpc.Sync;
-import edu.jlime.pregel.graph.PregelGraph;
-import edu.jlime.pregel.graph.Vertex;
+import edu.jlime.pregel.client.PregelConfig;
 import edu.jlime.pregel.graph.VertexFunction;
-import edu.jlime.pregel.worker.VertexData;
+import edu.jlime.pregel.worker.PregelMessage;
 
 public interface Worker {
 	@Sync
-	public void sendDataToVertex(Vertex from, Vertex to, VertexData data,
-			UUID taskID) throws Exception;
-
-	public void nextSuperstep(Integer superstep, UUID taskID) throws Exception;
+	public void sendMessage(PregelMessage msg, UUID taskID) throws Exception;
 
 	@Sync
-	public void createTask(PregelGraph input, VertexFunction func, UUID taskID,
-			HashSet<Vertex> hashSet) throws Exception;
+	public void nextSuperstep(Integer superstep, UUID taskID) throws Exception;
 
 	@Cache
 	public UUID getID() throws Exception;
 
-	public PregelGraph getResult(UUID taskID) throws Exception;
+	public void execute(UUID taskID) throws Exception;
+
+	@Sync
+	void createTask(UUID taskID, Peer cli, VertexFunction func,
+			PregelConfig config, Set<Long> tLongSetDecorator) throws Exception;
+
+	@Sync
+	public void sendMessages(List<PregelMessage> value, UUID taskid)
+			throws Exception;
 
 }

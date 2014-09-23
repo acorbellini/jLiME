@@ -153,7 +153,12 @@ public class MultiInterface extends MessageProcessor implements
 
 	private void sendToAllProcs(Message msg) {
 		for (MessageProcessor mp : super.getProcessors())
-			mp.queue(msg);
+			try {
+				mp.queue(msg);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 	}
 
 	@Override

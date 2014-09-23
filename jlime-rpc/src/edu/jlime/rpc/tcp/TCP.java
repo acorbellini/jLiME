@@ -25,6 +25,7 @@ import edu.jlime.rpc.message.SocketAddress;
 import edu.jlime.rpc.np.DataPacket;
 import edu.jlime.rpc.np.NetworkProtocol;
 import edu.jlime.util.ByteBuffer;
+import edu.jlime.util.PerfMeasure;
 
 public class TCP extends NetworkProtocol implements DataReceiver {
 
@@ -90,7 +91,7 @@ public class TCP extends NetworkProtocol implements DataReceiver {
 			if (log.isDebugEnabled())
 				log.debug("Received connection request from "
 						+ conn.getRemoteSocketAddress() + " with id " + id);
-			connList.addConnection(conn);
+			connList.addConnection(conn, false);
 		} else if (type.equals(StreamType.STREAM)) {
 			if (log.isDebugEnabled())
 				log.debug("Received stream request from "
@@ -131,8 +132,9 @@ public class TCP extends NetworkProtocol implements DataReceiver {
 	@Override
 	public void sendBytes(final byte[] built, final Address to,
 			final SocketAddress realSockAddr) throws Exception {
-		if (log.isDebugEnabled())
-			log.debug("Sending " + built.length + " bytes to  " + to);
+
+		// if (log.isDebugEnabled())
+		// log.debug("Sending " + built.length + " bytes to  " + to);
 		final TCPConnectionManager mgr = getConnManager(to);
 		SocketAddress toSend = null;
 		if (realSockAddr != null) {
@@ -145,14 +147,14 @@ public class TCP extends NetworkProtocol implements DataReceiver {
 			throw new Exception("Can't find address for " + to
 					+ " given realsockaddr is " + realSockAddr);
 
-		if (!isEqualToLocalType(toSend.getSockTo())) {
-			if (log.isDebugEnabled())
-				log.debug("Won't send to different type of address " + toSend
-						+ " != " + getAddr() + " REAL SOCKET : " + realSockAddr);
-			return;
-		}
-
+		// if (!isEqualToLocalType(toSend.getSockTo())) {
+		// if (log.isDebugEnabled())
+		// log.debug("Won't send to different type of address " + toSend
+		// + " != " + getAddr() + " REAL SOCKET : " + realSockAddr);
+		// return;
+		// }
 		mgr.send(built, toSend);
+
 	}
 
 	private SocketAddress getBestAddress(final Address to) {
@@ -183,14 +185,15 @@ public class TCP extends NetworkProtocol implements DataReceiver {
 	}
 
 	@Override
-	public void dataReceived(byte[] array, InetSocketAddress addr) {
+	public void dataReceived(byte[] array, InetSocketAddress addr)
+			throws Exception {
 		if (log.isDebugEnabled())
 			log.debug("Data (" + array.length + "b) received from " + addr);
-		if (!isEqualToLocalType(addr)) {
-			if (log.isDebugEnabled())
-				log.debug("Won't RECEIVE data from different address type.");
-			return;
-		}
+		// if (!isEqualToLocalType(addr)) {
+		// if (log.isDebugEnabled())
+		// log.debug("Won't RECEIVE data from different address type.");
+		// return;
+		// }
 		notifyPacketRvcd(new DataPacket(new ByteBuffer(array), addr));
 	}
 
@@ -295,6 +298,7 @@ public class TCP extends NetworkProtocol implements DataReceiver {
 				if (log.isDebugEnabled())
 					log.debug("Created Streaming Socket " + sock + " to "
 							+ addr);
+
 				// TODO Careful
 
 				sock.setReceiveBufferSize(config.tcp_rcv_buffer);

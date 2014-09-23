@@ -112,6 +112,7 @@ public abstract class MessageProcessor implements StackElement {
 				notified = true;
 			}
 		}
+
 		if (!notified) {
 			for (MessageQueue any : secondaryMessage) {
 				any.notify(message);
@@ -130,8 +131,9 @@ public abstract class MessageProcessor implements StackElement {
 		}
 	}
 
-	public void queue(Message msg) {
+	public void queue(Message msg) throws Exception {
 		out.put(msg);
+		// send(msg);
 	}
 
 	public synchronized void addMessageListener(MessageType type,

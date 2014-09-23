@@ -10,24 +10,28 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 public class StreamUtils {
-	private static final int BUFFER_SIZE = 128 * 1024;
+	private static final int BUFFER_SIZE = 32 * 1024;
 
 	public static byte[] read(InputStream inputStream, int size)
 			throws IOException {
-		byte[] data = new byte[BUFFER_SIZE];
+		// byte[] data = new byte[BUFFER_SIZE];
 		int read = 0;
 		int remaining = size;
 		// byte[] buffer = new byte[BUFFER_SIZE];
-		ByteBuffer buff = new ByteBuffer(size);
+		byte[] buffer = new byte[size];
+		// ByteBuffer buff = new ByteBuffer(size);
 		while (remaining != 0
-				&& (read = inputStream.read(data, 0,
-						Math.min(remaining, BUFFER_SIZE))) != -1) {
-			buff.putRawByteArray(data, read);
+		// && (read = inputStream.read(data, 0,
+		// Math.min(remaining, BUFFER_SIZE))) != -1) {
+				&& (read = inputStream
+						.read(buffer, size - remaining, remaining)) != -1) {
+			// buff.putRawByteArray(data, read);
 			remaining -= read;
 		}
-		if (read == -1 && remaining != size)
+		if (read == -1 && remaining != 0)
 			throw new IOException("Stream closed before finishing read.");
-		return buff.build();
+		// return buff.build();
+		return buffer;
 	}
 
 	public static int readInt(InputStream is) throws IOException {

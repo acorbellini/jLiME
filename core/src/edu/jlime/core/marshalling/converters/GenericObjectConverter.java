@@ -33,7 +33,7 @@ public class GenericObjectConverter implements TypeConverter {
 		ByteArrayInputStream bis = new ByteArrayInputStream(buff.getByteArray());
 
 		MarshallerInputStream stream = new MarshallerInputStream(bis,
-				this.typeConverters.getClp(), client);
+				this.typeConverters.getRPC(), client);
 		Object ret = stream.readObject();
 		stream.close();
 		return ret;

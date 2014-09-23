@@ -1,8 +1,8 @@
 package edu.jlime.core.marshalling.converters;
 
 import java.util.ArrayList;
-import java.util.TreeMap;
 import java.util.Map.Entry;
+import java.util.TreeMap;
 
 import edu.jlime.core.cluster.Peer;
 import edu.jlime.core.marshalling.TypeConverter;

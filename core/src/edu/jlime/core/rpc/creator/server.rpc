@@ -1,0 +1,47 @@
+$package
+
+$imports
+import edu.jlime.core.rpc.RPCDispatcher;
+import edu.jlime.core.rpc.RPCClient;
+import edu.jlime.core.cluster.Peer;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Map;
+import $ifacefqn;
+		
+
+public class $nameServerImpl extends RPCClient implements $name {
+	$fields
+	RPCDispatcher local = null;	
+	
+	public $nameServerImpl(RPCDispatcher disp, Peer dest, Peer client, String targetID) {
+		super(disp, dest, client, targetID);
+		local = RPCDispatcher.getLocalDispatcher(dest);
+	}
+	
+	#method
+	 !sync?callSync:callAsync
+	 public $ret $method(%,params) throws? %,exceptions {
+	 	if(local!=null)
+	 		return ( ($ret) disp.getTarget(targetID) ).$method(%,params);
+	 	else {
+			%cached?
+			{
+				if ($methodCached==null){
+					synchronized(this){
+						if ($methodCached==null)
+							$methodCached=(($ret) disp.$sync(dest, 
+							client, targetID, "$method",new Object[] { $args });;
+				}
+				return $methodCached;
+			}:
+			{
+				return (($ret) disp.$sync(dest, 
+							client, targetID, "$method",new Object[] { $args });	
+			}
+		}
+	 }
+
+	#method 
+		
+}

@@ -17,7 +17,7 @@ public class MPChainPerfTest {
 
 	long init = 0;
 
-	public MPChainPerfTest() {
+	public MPChainPerfTest() throws Exception {
 
 		MessageProcessor last = new SimpleMessageProcessor(null, "Final") {
 			@Override
@@ -61,7 +61,7 @@ public class MPChainPerfTest {
 
 	}
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws Exception {
 		new MPChainPerfTest();
 
 	}

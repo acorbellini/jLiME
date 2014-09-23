@@ -33,7 +33,6 @@ public class JlimeFactory implements RPCFactory {
 		Address localAddress = new Address();
 		Peer localPeer = new Peer(localAddress, config.name);
 		localPeer.putData(localData);
-
 		// STACK
 		final Stack commStack = config.getProtocol().equals("tcp") ? Stack
 				.tcpStack(config, localAddress, config.name) : Stack.udpStack(

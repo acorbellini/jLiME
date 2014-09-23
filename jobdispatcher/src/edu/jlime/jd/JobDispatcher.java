@@ -93,7 +93,7 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 		this.cluster = rpc.getCluster();
 		this.cluster.addChangeListener(this);
 
-		rpc.registerTarget(JOB_DISPATCHER, this);
+		rpc.registerTarget(JOB_DISPATCHER, this, true);
 
 		factory = new JobExecutorFactory(rpc, JOB_DISPATCHER);
 		final TypeConverters tc = rpc.getMarshaller().getTc();

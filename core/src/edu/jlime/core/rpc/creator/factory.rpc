@@ -1,0 +1,25 @@
+$package
+		
+import edu.jlime.core.cluster.Peer;
+import edu.jlime.core.rpc.RPCDispatcher;
+import edu.jlime.core.rpc.ClientFactory;
+
+import java.util.List;
+
+public class $name implements ClientFactory<$iface,$bcast>{
+	private RPCDispatcher rpc;
+	private String target;
+
+	public $name(RPCDispatcher rpc, String target){
+		this.rpc = rpc;
+		this.target = target;
+	}
+
+	public $bcast getBroadcast(List<Peer> to, Peer client){
+		return new $bcastImpl(rpc, to, client, target);
+	}
+
+	public $iface get(Peer to, Peer client){
+		return new $serverImpl(rpc, to, client, target);
+	}
+}

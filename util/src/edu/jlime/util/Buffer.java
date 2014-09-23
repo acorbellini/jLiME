@@ -104,6 +104,9 @@ public abstract class Buffer {
 	}
 
 	public void putObject(Object o) throws IOException {
+		if (bos == null)
+			bos = new ByteArrayOutputStream();
+
 		ObjectOutputStream oos = new ObjectOutputStream(bos);
 		oos.writeObject(o);
 		oos.reset();

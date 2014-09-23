@@ -26,7 +26,7 @@ public class MessageProcessorPerformanceTest {
 
 	private MessageProcessor mp;
 
-	public MessageProcessorPerformanceTest() {
+	public MessageProcessorPerformanceTest() throws Exception {
 		mp = new MessageProcessor("Algo") {
 			@Override
 			public void send(Message msg) throws Exception {
@@ -56,9 +56,14 @@ public class MessageProcessorPerformanceTest {
 			public void run() {
 				int iter = ITERMAX / 2;
 				while (iter < ITERMAX) {
-					mp.queue(Message.newOutDataMessage(
-							DataTypeUtils.intToByteArray(iter),
-							MessageType.ACK, null));
+					try {
+						mp.queue(Message.newOutDataMessage(
+								DataTypeUtils.intToByteArray(iter),
+								MessageType.ACK, null));
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 					iter++;
 				}
 			};
@@ -97,7 +102,7 @@ public class MessageProcessorPerformanceTest {
 		// System.exit(0);
 	}
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws Exception {
 		new MessageProcessorPerformanceTest();
 		new ArrayBlockingQueueTest().algo();
 	}

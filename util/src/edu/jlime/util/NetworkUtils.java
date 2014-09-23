@@ -121,7 +121,8 @@ public class NetworkUtils {
 
 			while (en.hasMoreElements()) {
 				NetworkInterface nif = (NetworkInterface) en.nextElement();
-
+				if (nif.getDisplayName().contains("Teredo"))
+					continue;
 				Enumeration<InetAddress> inet = nif.getInetAddresses();
 				while (inet.hasMoreElements()) {
 					InetAddress inetAddress = inet.nextElement();

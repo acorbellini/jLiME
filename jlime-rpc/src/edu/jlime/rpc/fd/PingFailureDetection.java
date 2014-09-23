@@ -80,8 +80,13 @@ public class PingFailureDetection implements StackElement, FailureProvider {
 										log.debug("Sending ping to "
 												+ e.getKey() + ", try number "
 												+ integer);
-								conn.queue(Message.newEmptyOutDataMessage(
-										MessageType.PING, e.getKey()));
+								try {
+									conn.queue(Message.newEmptyOutDataMessage(
+											MessageType.PING, e.getKey()));
+								} catch (Exception e1) {
+									// TODO Auto-generated catch block
+									e1.printStackTrace();
+								}
 								tries.put(e.getKey(), e.getValue() + 1);
 
 							}

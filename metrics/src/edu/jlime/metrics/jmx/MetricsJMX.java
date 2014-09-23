@@ -1,7 +1,6 @@
 package edu.jlime.metrics.jmx;
 
 import java.lang.management.ManagementFactory;
-import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.SortedMap;
 

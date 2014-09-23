@@ -1,11 +1,7 @@
 package edu.jlime.core.rpc;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
-
-import javax.lang.model.type.NullType;
 
 public class MethodCall implements Serializable {
 
@@ -17,17 +13,20 @@ public class MethodCall implements Serializable {
 
 	private Object[] objects;
 
-	public MethodCall(String k, String name, Object[] objects) {
+	private Class<?>[] types;
+
+	public MethodCall(String k, String name, Object[] objects, Class<?>[] types) {
 		this.objectKey = k;
 		this.objects = objects;
 		this.name = name;
+		this.types = types;
 	}
 
-	public String getObjectKey() {
-		return objectKey;
+	public MethodCall(String k, String name, Object[] objects) {
+		this(k, name, objects, getClassTypes(objects));
 	}
 
-	public Class<?>[] getArgTypes() {
+	private static Class<?>[] getClassTypes(Object[] objects) {
 		if (objects.length == 0)
 			return new Class<?>[] {};
 		Class<?>[] classes = new Class<?>[objects.length];
@@ -36,9 +35,16 @@ public class MethodCall implements Serializable {
 				classes[i] = objects[i].getClass();
 			else
 				classes[i] = Object.class;
-
 		}
 		return classes;
+	}
+
+	public String getObjectKey() {
+		return objectKey;
+	}
+
+	public Class<?>[] getArgTypes() {
+		return types;
 	}
 
 	public String getName() {

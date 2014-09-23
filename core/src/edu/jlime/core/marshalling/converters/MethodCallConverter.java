@@ -32,11 +32,18 @@ public class MethodCallConverter implements TypeConverter {
 		buff.putInt(objects.length);
 		for (Object object : objects)
 			this.typeConverters.objectToByteArray(object, buff, cliID);
+
+		// Class<?>[] argTypes = mc.getArgTypes();
+		// buff.putInt(argTypes.length);
+		// for (Class<?> c : argTypes)
+		// this.typeConverters.objectToByteArray(c, buff, cliID);
+
 	}
 
 	@Override
 	public Object fromArray(ByteBuffer buff) throws Exception {
 		List<Object> objects = new ArrayList<>();
+		List<Class<?>> types = new ArrayList<>();
 		String name = buff.getString();
 		String k = buff.getString();
 		int num = buff.getInt();

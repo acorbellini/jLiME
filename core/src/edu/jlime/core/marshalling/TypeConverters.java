@@ -21,6 +21,8 @@ import edu.jlime.core.marshalling.converters.PeerConverter;
 import edu.jlime.core.marshalling.converters.StringConverter;
 import edu.jlime.core.marshalling.converters.UUIDConverter;
 import edu.jlime.core.rpc.MethodCall;
+import edu.jlime.core.rpc.RPCDispatcher;
+import edu.jlime.core.rpc.RPCObject;
 import edu.jlime.core.transport.Address;
 import edu.jlime.metrics.metric.Metrics;
 import edu.jlime.util.ByteBuffer;
@@ -35,14 +37,20 @@ public class TypeConverters {
 
 	private byte count = 0;
 
-	ClassLoaderProvider clp;
+	RPCDispatcher rpc;
 
-	public ClassLoaderProvider getClp() {
-		return clp;
+	public RPCDispatcher getRPC() {
+		return rpc;
 	}
 
-	public TypeConverters(ClassLoaderProvider cl) {
-		this.clp = cl;
+	public TypeConverters(RPCDispatcher rpcDispatcher) {
+
+		this.rpc = rpcDispatcher;
+
+		registerTypeConverter(Long.class, new LongConverter());
+		
+		registerTypeConverter(Double.class, new DoubleConverter());
+		
 		registerTypeConverter(Integer.class, new IntegerConverter());
 
 		registerTypeConverter(Boolean.class, new BooleanConverter());
@@ -57,10 +65,15 @@ public class TypeConverters {
 
 		registerTypeConverter(MethodCall.class, new MethodCallConverter(this));
 
+		registerTypeConverter(RPCDispatcher.class, new RPCDispatcherConverter(
+				rpc));
+
+		registerTypeConverter(RPCObject.class, new RPCObjectConverter(this));
+
 		registerTypeConverter(Peer.class, new PeerConverter(this));
 
 		registerTypeConverter(UUID.class, new UUIDConverter());
-		
+
 		registerTypeConverter(Metrics.class, new MetricConverter(this));
 
 		registerTypeConverter(byte[].class, new ByteArrayConverter());
@@ -99,15 +112,21 @@ public class TypeConverters {
 		TypeConverter converter = getTypeConverter(classOfObject);
 		Byte type = getTypeId(classOfObject);
 		if (converter == null) {
-			converter = getTypeConverter(Object.class);
-			type = getTypeId(Object.class);
+
+			if (RPCObject.class.isAssignableFrom(classOfObject)) {
+				converter = getTypeConverter(RPCObject.class);
+				type = getTypeId(RPCObject.class);
+			} else {
+				converter = getTypeConverter(Object.class);
+				type = getTypeId(Object.class);
+			}
 		}
 		buffer.put(type);
 		converter.toArray(o, buffer, client);
 
-		if (log.isDebugEnabled())
-			log.info("Converted " + o + " of type " + classOfObject + " in "
-					+ (buffer.size() - size) + " bytes ");
+		// if (log.isDebugEnabled())
+		// log.info("Converted " + o + " of type " + classOfObject + " in "
+		// + (buffer.size() - size) + " bytes ");
 
 	}
 

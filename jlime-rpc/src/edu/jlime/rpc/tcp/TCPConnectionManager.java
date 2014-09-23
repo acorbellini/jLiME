@@ -20,6 +20,7 @@ import edu.jlime.core.transport.Address;
 import edu.jlime.rpc.message.AddressType;
 import edu.jlime.rpc.message.SocketAddress;
 import edu.jlime.util.ByteBuffer;
+import edu.jlime.util.PerfMeasure;
 import edu.jlime.util.RingQueue;
 import edu.jlime.util.StreamUtils;
 
@@ -52,10 +53,9 @@ class TCPConnectionManager {
 
 	private TCP rcvr;
 
-	private List<TCPPacketConnection> connections = Collections
-			.synchronizedList(new ArrayList<TCPPacketConnection>());
+	private List<TCPPacketConnection> connections = new ArrayList<TCPPacketConnection>();
 
-	private int conn_limit = 10;
+	private int conn_limit = 1;
 
 	private long time_limit = 15000;
 
@@ -104,19 +104,22 @@ class TCPConnectionManager {
 				SocketAddress addr = pkt.addr;
 				TCPPacketConnection bestConn = getConnection(addr);
 				if (bestConn == null)
-					writeQueue.put(pkt);
+					writeToConn(pkt);
 				else {
-					if (log.isDebugEnabled())
-						log.debug("Sending " + pkt.data.length + "b using "
-								+ bestConn + " to " + to);
+					// if (log.isDebugEnabled())
+					// log.debug("Sending " + pkt.data.length + "b using " +
+					// bestConn
+					// + " to " + to);
 
 					try {
+						// PerfMeasure.startTimer("mgr", 1000);
 						bestConn.write(pkt.data, pkt.data.length);
+						// PerfMeasure.takeTime("mgr");
 					} catch (Exception e) {
-						log.info("Error writing to " + bestConn
-								+ ". Removing connection and trying again.");
+						// log.info("Error writing to " + bestConn
+						// + ". Removing connection and trying again.");
 						remove(bestConn);
-						writeQueue.put(pkt);
+						writeToConn(pkt);
 					}
 
 				}
@@ -146,26 +149,24 @@ class TCPConnectionManager {
 			return;
 		}
 
-		if (log.isDebugEnabled())
-			log.debug("Adding " + data.length + " to write queue.");
+		// if (log.isDebugEnabled())
+		// log.debug("Adding " + data.length + " to write queue.");
 		writeQueue.put(new OutPacket(data, realSockAddr));
 	}
 
 	private TCPPacketConnection getConnection(SocketAddress addr) {
-		synchronized (connections) {
-			if (connections.size() < conn_limit && addr != null)
+		if (connections.size() < conn_limit && addr != null) {
+			synchronized (connections) {
 				createConnection(addr);
-
-			List<TCPPacketConnection> connList = new ArrayList<>(connections);
-			if (connList.isEmpty())
-				return null;
-
-			TCPPacketConnection conn = connList
-					.get((int) (Math.random() * connList.size()));
-			if (log.isDebugEnabled())
-				log.debug("Returning connection " + conn);
-			return conn;
+			}
 		}
+
+		TCPPacketConnection conn = connections
+				.get((int) (Math.random() * connections.size()));
+		// if (log.isDebugEnabled())
+		// log.debug("Returning connection " + conn);
+		return conn;
+
 	}
 
 	private TCPPacketConnection createConnection(SocketAddress addr) {
@@ -190,7 +191,7 @@ class TCPConnectionManager {
 				asbytes.putUUID(localID.getId());
 				os.write(asbytes.build());
 				os.flush();
-				return addConnection(sock);
+				return addConnection(sock, true);
 			} catch (ConnectException e) {
 				// if (log.isDebugEnabled())
 				log.info("Could not open socket to " + addr + " : "
@@ -210,14 +211,15 @@ class TCPConnectionManager {
 		return null;
 	}
 
-	public TCPPacketConnection addConnection(final Socket conn)
-			throws Exception {
+	public TCPPacketConnection addConnection(final Socket conn,
+			boolean addToPool) throws Exception {
 		final TCPPacketConnection c = new TCPPacketConnection(conn, time_limit,
 				this, input_buffer, output_buffer);
-		synchronized (connections) {
-			connections.add(c);
-			connections.notifyAll();
-		}
+		if (addToPool)
+			synchronized (connections) {
+				connections.add(c);
+				connections.notifyAll();
+			}
 		rcv.execute(new Runnable() {
 			@Override
 			public void run() {
@@ -249,7 +251,7 @@ class TCPConnectionManager {
 		rcv.shutdown();
 		send.shutdown();
 		stopped = true;
-		writeQueue.put(new OutPacket(new byte[] {}, null));
+		// writeQueue.put(new OutPacket(new byte[] {}, null));
 		synchronized (connections) {
 			for (TCPPacketConnection c : connections)
 				c.stop();

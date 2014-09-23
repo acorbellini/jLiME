@@ -4,8 +4,8 @@ import java.util.UUID;
 
 import org.apache.log4j.Logger;
 
-import edu.jlime.jd.JobDispatcher;
 import edu.jlime.jd.ClientNode;
+import edu.jlime.jd.JobDispatcher;
 
 public abstract class ResultManager<R> {
 

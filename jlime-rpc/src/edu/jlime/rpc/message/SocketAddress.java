@@ -1,9 +1,6 @@
 package edu.jlime.rpc.message;
 
 import java.net.InetSocketAddress;
-import java.util.UUID;
-
-import edu.jlime.core.transport.Address;
 
 public class SocketAddress {
 	private AddressType type;

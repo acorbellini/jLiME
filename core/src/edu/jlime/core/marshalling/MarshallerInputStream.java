@@ -8,20 +8,23 @@ import java.io.ObjectStreamClass;
 import org.apache.log4j.Logger;
 
 import edu.jlime.core.cluster.Peer;
+import edu.jlime.core.rpc.RPCDispatcher;
+import edu.jlime.core.rpc.Transferible;
 
 public class MarshallerInputStream extends ObjectInputStream {
 
 	private Peer classSource;
 
-	private ClassLoaderProvider disp;
+	private RPCDispatcher disp;
 
 	Logger log = Logger.getLogger(MarshallerInputStream.class);
 
-	public MarshallerInputStream(InputStream is, ClassLoaderProvider disp,
+	public MarshallerInputStream(InputStream is, RPCDispatcher rpcDispatcher,
 			Peer classSourceID) throws IOException, SecurityException {
 		super(is);
-		this.disp = disp;
+		this.disp = rpcDispatcher;
 		this.classSource = classSourceID;
+		enableResolveObject(true);
 	}
 
 	@Override
@@ -47,5 +50,16 @@ public class MarshallerInputStream extends ObjectInputStream {
 			e = e2;
 		}
 		throw new ClassNotFoundException(name, e);
+	}
+
+	@Override
+	protected Object resolveObject(Object obj) throws IOException {
+		if (Transferible.class.isAssignableFrom(obj.getClass()))
+			((Transferible) obj).setRPC(disp);
+		return obj;
+	}
+
+	public Object getRPC() {
+		return disp;
 	}
 }

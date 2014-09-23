@@ -21,7 +21,7 @@ public class CoordinatorServer {
 
 	public CoordinatorServer() throws Exception {
 		Configuration config = new Configuration();
-		config.port = 4040;
+		config.port = 6070;
 		config.mcastport = 5050;
 
 		HashMap<String, String> data = new HashMap<>();
@@ -36,8 +36,9 @@ public class CoordinatorServer {
 							return true;
 						return false;
 					}
-				});
-		this.rpc.registerTarget("coordinator", new CoordinatorImpl(workers));
+				}, this.rpc.getCluster().getLocalPeer());
+		this.rpc.registerTarget("coordinator",
+				new CoordinatorImpl(rpc, workers), true);
 
 	}
 
@@ -50,5 +51,9 @@ public class CoordinatorServer {
 
 	public void stop() throws Exception {
 		this.rpc.stop();
+	}
+
+	public static void main(String[] args) throws Exception {
+		new CoordinatorServer().start();
 	}
 }

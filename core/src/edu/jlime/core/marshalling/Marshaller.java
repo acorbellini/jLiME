@@ -3,6 +3,7 @@ package edu.jlime.core.marshalling;
 import org.apache.log4j.Logger;
 
 import edu.jlime.core.cluster.Peer;
+import edu.jlime.core.rpc.RPCDispatcher;
 import edu.jlime.util.ByteBuffer;
 
 public class Marshaller {
@@ -11,8 +12,8 @@ public class Marshaller {
 
 	private TypeConverters tc;
 
-	public Marshaller(ClassLoaderProvider cl) {
-		this.tc = new TypeConverters(cl);
+	public Marshaller(RPCDispatcher rpcDispatcher) {
+		this.tc = new TypeConverters(rpcDispatcher);
 	}
 
 	public Object getObject(byte[] array, Peer caller) throws Exception {
@@ -35,9 +36,9 @@ public class Marshaller {
 		ByteBuffer buffer = new ByteBuffer();
 		tc.objectToByteArray(o, buffer, cliID);
 		byte[] build = buffer.build();
-		if (log.isDebugEnabled()) {
-			log.info("Converted " + o + " to bytes : " + build.length);
-		}
+		// if (log.isDebugEnabled()) {
+		// log.info("Converted " + o + " to bytes : " + build.length);
+		// }
 		return build;
 	}
 
