@@ -27,7 +27,7 @@ public class PregelTest {
 		// g.putLink(3l, 4l);
 		// g.putLink(4l, 2l);
 
-		System.out.println(g.print());
+		// System.out.println(g.print());
 
 		System.out.println("Executing PageRank Test.");
 
