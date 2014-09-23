@@ -9,6 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import edu.jlime.pregel.graph.rpc.Graph;
 import edu.jlime.pregel.worker.VertexData;
+import gnu.trove.decorator.TLongListDecorator;
 import gnu.trove.decorator.TLongSetDecorator;
 import gnu.trove.iterator.TLongObjectIterator;
 import gnu.trove.map.hash.TLongObjectHashMap;
@@ -137,7 +138,7 @@ public class PregelGraphLocal implements Serializable, Graph {
 		VertexData data = getVertexData(vertex);
 		if (data == null)
 			return new HashSet<Long>();
-		return new HashSet<>(new TLongSetDecorator(data.outgoing()));
+		return new HashSet<>(new TLongListDecorator(data.outgoing()));
 	}
 
 	/*
@@ -333,7 +334,7 @@ public class PregelGraphLocal implements Serializable, Graph {
 		VertexData data = getVertexData(v);
 		if (data == null)
 			return new HashSet<Long>();
-		return new HashSet<>(new TLongSetDecorator(data.incoming()));
+		return new HashSet<>(new TLongListDecorator(data.incoming()));
 		// ByteBuffer from = new ByteBuffer(16);
 		// from.putLong(v);
 		// from.putLong(0);

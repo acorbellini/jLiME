@@ -37,7 +37,7 @@ import org.apache.log4j.Logger;
 
 public class WorkerTask {
 
-	private static int LIMIT_CACHE = 500000;
+	private static int LIMIT_CACHE = 5000;
 
 	private static final int QUEUE_SIZE = 2048;
 

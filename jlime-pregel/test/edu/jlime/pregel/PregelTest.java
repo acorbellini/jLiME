@@ -8,37 +8,25 @@ public class PregelTest {
 	private static final int LIMIT = 50000;
 
 	public static void main(String[] args) throws Exception {
-		// for (int i = 0; i < 100; i++) {
-		// CoordinatorServer srv = new CoordinatorServer();
-		// srv.start();
-		// WorkerServer w1 = new WorkerServer();
-		// w1.start();
-		// WorkerServer w2 = new WorkerServer();
-		// w2.start();
-		// WorkerServer w3 = new WorkerServer();
-		// w3.start();
-		// WorkerServer w4 = new WorkerServer();
-		// w4.start();
 
 		PregelClient cli = new PregelClient(2);
 		InMemoryGraph g = new InMemoryGraph(cli.getRPC(), "graph",
 				SplitFunctions.simple(), PregelClient.workerFilter(), 2);
 
+		// Bigger graph to stress workers.
 		String pathname = "C:/Users/Ale/Desktop/dataset.csv";
-		// g.load(pathname);
+		g.load(pathname);
 
-		g.putLink(0l, 1l);
-		g.putLink(0l, 2l);
-		g.putLink(0l, 3l);
-		g.putLink(1l, 0l);
-		g.putLink(1l, 2l);
-		g.putLink(2l, 4l);
-		g.putLink(3l, 4l);
-
-		// System.out.println(g.print());
-
+		// Smaller test graph (to check is PageRank is working OK).
+		// g.putLink(0l, 1l);
+		// g.putLink(0l, 2l);
+		// g.putLink(0l, 3l);
+		// g.putLink(1l, 0l);
+		// g.putLink(1l, 2l);
+		// g.putLink(2l, 4l);
+		// g.putLink(3l, 4l);
 		// g.putLink(4l, 2l);
-		// }
+
 		System.out.println("Executing PageRank Test.");
 
 		g.setDefaultValue("pagerank", 1d / g.vertexSize());
@@ -60,14 +48,7 @@ public class PregelTest {
 		}
 		System.out.println("vertices: " + g.vertexSize() + " sum: " + sum
 				+ " avg: " + sum / g.vertexSize());
-		System.out.println(g.print());
-		// srv.stop();
-		// w1.stop();
-		// w2.stop();
-		// w3.stop();
-		// w4.stop();
 		cli.stop();
-		// }
 	}
 
 }
