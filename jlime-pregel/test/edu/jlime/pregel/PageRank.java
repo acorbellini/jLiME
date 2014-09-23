@@ -71,7 +71,6 @@ public class PageRank implements VertexFunction {
 			ctx.sendAll(currentVal / outgoingSize);
 		} else {
 			outgoing = graph.getOutgoing(v);
-
 			for (Long vertex : outgoing) {
 				if (log.isDebugEnabled())
 					log.debug("Sending message to " + vertex + " from " + v);

@@ -14,7 +14,7 @@ public class PregelTest {
 				SplitFunctions.simple(), PregelClient.workerFilter(), 2);
 
 		// Bigger graph to stress workers.
-		String pathname = "C:/Users/Ale/Desktop/dataset.csv";
+		String pathname = args[0];// e.g. "C:/Users/Ale/Desktop/dataset.csv";
 		g.load(pathname);
 
 		// Smaller test graph (to check is PageRank is working OK).
@@ -26,6 +26,8 @@ public class PregelTest {
 		// g.putLink(2l, 4l);
 		// g.putLink(3l, 4l);
 		// g.putLink(4l, 2l);
+
+		System.out.println(g.print());
 
 		System.out.println("Executing PageRank Test.");
 

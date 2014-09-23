@@ -50,9 +50,10 @@ public class VertexData implements Serializable {
 
 	public Map<String, Object> getData() {
 		HashMap<String, Object> map = new HashMap<>();
-		for (int i = 0; i < data.size(); i += 2) {
-			map.put((String) data.get(i), data.get(i + 1));
-		}
+		if (data != null)
+			for (int i = 0; i < data.size(); i += 2) {
+				map.put((String) data.get(i), data.get(i + 1));
+			}
 		return map;
 	}
 

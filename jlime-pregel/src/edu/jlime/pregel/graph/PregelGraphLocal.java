@@ -11,7 +11,9 @@ import edu.jlime.pregel.graph.rpc.Graph;
 import edu.jlime.pregel.worker.VertexData;
 import gnu.trove.decorator.TLongListDecorator;
 import gnu.trove.decorator.TLongSetDecorator;
+import gnu.trove.iterator.TLongIterator;
 import gnu.trove.iterator.TLongObjectIterator;
+import gnu.trove.list.TLongList;
 import gnu.trove.map.hash.TLongObjectHashMap;
 
 public class PregelGraphLocal implements Serializable, Graph {
@@ -23,17 +25,17 @@ public class PregelGraphLocal implements Serializable, Graph {
 
 	boolean createOriginVerticesOnly;
 
-	Map<String, Object> defaultValue = new ConcurrentHashMap<>();
+	Map<String, Object> defaultValue = new ConcurrentHashMap<String, Object>();
 
 	private static long id = 0l;
 
 	long graphid = 0;
 
-	TLongObjectHashMap<VertexData> vertices = new TLongObjectHashMap<>(1024,
-			0.75f);
+	TLongObjectHashMap<VertexData> vertices = new TLongObjectHashMap<VertexData>(
+			1024, 0.75f);
 
-	TLongObjectHashMap<VertexData> disabled = new TLongObjectHashMap<>(1024,
-			0.75f);
+	TLongObjectHashMap<VertexData> disabled = new TLongObjectHashMap<VertexData>(
+			1024, 0.75f);
 
 	private String name;
 
@@ -138,7 +140,14 @@ public class PregelGraphLocal implements Serializable, Graph {
 		VertexData data = getVertexData(vertex);
 		if (data == null)
 			return new HashSet<Long>();
-		return new HashSet<>(new TLongListDecorator(data.outgoing()));
+
+		HashSet<Long> ret = new HashSet<Long>();
+		TLongList outgoing = data.outgoing();
+		TLongIterator it = outgoing.iterator();
+		while (it.hasNext()) {
+			ret.add(it.next());
+		}
+		return ret;
 	}
 
 	/*
@@ -288,7 +297,7 @@ public class PregelGraphLocal implements Serializable, Graph {
 	 */
 	@Override
 	public Set<Long> vertices() {
-		return new HashSet<>(new TLongSetDecorator(vertices.keySet()));
+		return new HashSet<Long>(new TLongSetDecorator(vertices.keySet()));
 	}
 
 	/*
@@ -331,10 +340,18 @@ public class PregelGraphLocal implements Serializable, Graph {
 	 */
 	@Override
 	public Set<Long> getIncoming(Long v) {
+
 		VertexData data = getVertexData(v);
 		if (data == null)
 			return new HashSet<Long>();
-		return new HashSet<>(new TLongListDecorator(data.incoming()));
+
+		HashSet<Long> ret = new HashSet<Long>();
+		TLongList outgoing = data.incoming();
+		TLongIterator it = outgoing.iterator();
+		while (it.hasNext()) {
+			ret.add(it.next());
+		}
+		return ret;
 		// ByteBuffer from = new ByteBuffer(16);
 		// from.putLong(v);
 		// from.putLong(0);
