@@ -40,9 +40,13 @@ public class ClientCluster implements Iterable<ClientNode> {
 		ArrayList<Peer> execs = new ArrayList<Peer>(disp.getExecutors());
 		ArrayList<ClientNode> execCli = new ArrayList<>();
 		for (Peer jobNode : execs) {
-			execCli.add(new ClientNode(jobNode, client, disp));
+			execCli.add(createNode(jobNode));
 		}
 		return execCli;
+	}
+	
+	private ClientNode createNode(Peer jobNode) {
+		return new ClientNode(jobNode, client, disp);
 	}
 
 	public Metrics getMetrics() {
@@ -78,7 +82,7 @@ public class ClientCluster implements Iterable<ClientNode> {
 		ArrayList<Peer> peers = disp.getPeers();
 		ArrayList<ClientNode> copy = new ArrayList<>();
 		for (Peer jobNode : peers) {
-			copy.add(new ClientNode(jobNode, client, disp));
+			copy.add(createNode(jobNode));
 		}
 		return copy;
 	}
@@ -167,5 +171,10 @@ public class ClientCluster implements Iterable<ClientNode> {
 	@Override
 	public Iterator<ClientNode> iterator() {
 		return getPeers().iterator();
+	}
+	
+	@Override
+	public String toString() {
+		return disp.getPeers().toString();
 	}
 }

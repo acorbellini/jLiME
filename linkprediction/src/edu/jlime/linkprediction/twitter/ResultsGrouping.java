@@ -18,7 +18,7 @@ import edu.jlime.util.table.Table;
 
 public class ResultsGrouping {
 
-	private static final String SEP = ";";
+	private static final String SEP = ",";
 
 	public static void main(String[] args) throws Exception {
 		File dir = new File(args[0]);
@@ -39,8 +39,9 @@ public class ResultsGrouping {
 	private static void fix(File file) throws Exception {
 		File tmp = new File(file.getPath() + ".tmp");
 
-		Table t = Table.readCSV(file, ",", ".", false);
-
+		Table t = Table.readCSV(file, SEP, ".", false);
+		if (t.getCol("Sum") != null)
+			return;
 		t.sortTableHeader(new Comparator<String>() {
 			@Override
 			public int compare(String o1, String o2) {
@@ -72,7 +73,7 @@ public class ResultsGrouping {
 				});
 
 		BufferedWriter writer = new BufferedWriter(new FileWriter(tmp));
-		writer.write(t.print(";"));
+		writer.write(t.print(SEP));
 		writer.close();
 
 		file.delete();

@@ -34,6 +34,8 @@ public abstract class MapReduceTask<T, R, SR> implements Job<R> {
 
 		@Override
 		public void handleResult(SR res, String jid, ClientNode from) {
+			Logger.getLogger(TaskResultManager.class).info(
+					"Received Results from " + from);
 			task.result(res);
 		}
 	}
@@ -42,7 +44,7 @@ public abstract class MapReduceTask<T, R, SR> implements Job<R> {
 
 	private boolean dontCacheSubResults;
 
-	MapReduceException exceptions = new MapReduceException();
+	MapReduceException exceptions = null;
 
 	private Semaphore lock;
 
@@ -58,6 +60,10 @@ public abstract class MapReduceTask<T, R, SR> implements Job<R> {
 	}
 
 	public void error(Peer p, Exception res) {
+		synchronized (this) {
+			if (exceptions == null)
+				exceptions = new MapReduceException();
+		}
 		exceptions.put(p, res);
 		lock.release();
 	}
@@ -92,7 +98,7 @@ public abstract class MapReduceTask<T, R, SR> implements Job<R> {
 			log.error("", e);
 		}
 
-		if (!exceptions.isEmpty()) {
+		if (exceptions != null && !exceptions.isEmpty()) {
 			exceptions.addSubRes(subresults);
 			throw exceptions;
 		}
@@ -110,7 +116,7 @@ public abstract class MapReduceTask<T, R, SR> implements Job<R> {
 
 	}
 
-	public abstract R red(ArrayList<SR> subres);
+	public abstract R red(ArrayList<SR> subres) throws Exception;
 
 	public void result(SR subres) {
 		if (!dontCacheSubResults)

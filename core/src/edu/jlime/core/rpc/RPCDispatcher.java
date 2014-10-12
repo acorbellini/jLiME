@@ -56,8 +56,8 @@ public class RPCDispatcher implements TransportListener {
 
 	private Metrics metrics;
 
-	private ExecutorService asyncExec = Executors.newFixedThreadPool(10,
-			new ThreadFactory() {
+	private ExecutorService asyncExec = Executors
+			.newCachedThreadPool(new ThreadFactory() {
 
 				@Override
 				public Thread newThread(Runnable r) {
@@ -115,18 +115,18 @@ public class RPCDispatcher implements TransportListener {
 				log.debug("Dispatching methodcall to local target.");
 			return local.callTarget(call);
 		}
-		
+
 		byte[] marshalled = getMarshaller().toByteArray(clientID, call);
-		
+
 		try {
 			if (sync) {
 				if (log.isDebugEnabled())
 					log.debug("Dispatching SYNC call " + call + " to " + dest);
 
 				byte[] sendSync = tr.sendSync(dest, marshalled);
-				
+
 				Object object = getMarshaller().getObject(sendSync, dest);
-				
+
 				if (object instanceof Exception)
 					throw (Exception) object;
 				return object;

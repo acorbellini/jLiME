@@ -1,5 +1,6 @@
 package edu.jlime.collections.adjacencygraph.query;
 
+import java.io.BufferedOutputStream;
 import java.io.EOFException;
 
 import org.apache.log4j.Logger;
@@ -17,6 +18,7 @@ import gnu.trove.map.hash.TIntIntHashMap;
 class CountStreamJob extends StreamJob {
 
 	private static final int READ_BUFFER_SIZE = 32 * 1024;
+
 	private String map;
 
 	public CountStreamJob(String map) {
@@ -61,21 +63,18 @@ class CountStreamJob extends StreamJob {
 
 		log.info("CountStreamJob: Finished calling DKVS get, obtained "
 				+ adyacents.size());
+		log.info("CountStreamJob: Sending obtained count");
+		BufferedOutputStream os = new BufferedOutputStream(outputStream,
+				READ_BUFFER_SIZE);
 
-		log.info("CountStreamJob: Converting obtained hash to bytearray");
-		byte[] ret = new byte[4 * 2 * adyacents.size()];
 		TIntIntIterator it = adyacents.iterator();
-		int pos = 0;
 		while (it.hasNext()) {
 			it.advance();
-			DataTypeUtils.intToByteArray(it.key(), pos * 4, ret);
-			DataTypeUtils.intToByteArray(it.value(), pos * 4 + 4, ret);
-			pos += 2;
+			os.write(DataTypeUtils.intToByteArray(it.key()));
+			os.write(DataTypeUtils.intToByteArray(it.value()));
 		}
-		adyacents.clear();
-		log.info("CountStreamJob: Sending obtained count");
-		outputStream.write(ret);
 		log.info("CountStreamJob: Finished sending obtained count");
 		outputStream.close();
+		os.close();
 	}
 }

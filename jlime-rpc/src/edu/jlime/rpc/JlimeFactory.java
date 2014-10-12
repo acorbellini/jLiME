@@ -38,9 +38,10 @@ public class JlimeFactory implements RPCFactory {
 				.tcpStack(config, localAddress, config.name) : Stack.udpStack(
 				config, localAddress, config.name);
 
-		// RPC
+		// Transport
 		jLiMETransport tr = new jLiMETransport(localPeer, commStack);
 
+		// RPC
 		RPCDispatcher rpc = new RPCDispatcher(tr);
 
 		return rpc;

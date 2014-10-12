@@ -6,6 +6,7 @@ import java.io.OutputStream;
 import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -104,7 +105,7 @@ class TCPConnectionManager {
 				SocketAddress addr = pkt.addr;
 				TCPPacketConnection bestConn = getConnection(addr);
 				if (bestConn == null)
-					writeToConn(pkt);
+					writeQueue.put(pkt);
 				else {
 					// if (log.isDebugEnabled())
 					// log.debug("Sending " + pkt.data.length + "b using " +
@@ -119,7 +120,7 @@ class TCPConnectionManager {
 						// log.info("Error writing to " + bestConn
 						// + ". Removing connection and trying again.");
 						remove(bestConn);
-						writeToConn(pkt);
+						writeQueue.put(pkt);
 					}
 
 				}
@@ -176,10 +177,10 @@ class TCPConnectionManager {
 			try {
 				sock = new Socket();
 				// TODO Careful
-				// sock.setTcpNoDelay(true);
+
 				// sock.setReuseAddress(true);
-				// sock.setReceiveBufferSize(rcvr.config.tcp_rcv_buffer);
-				// sock.setSendBufferSize(rcvr.config.tcp_send_buffer);
+
+				setFlags(sock);
 				sock.connect(new InetSocketAddress(addr.getSockTo()
 						.getAddress(), addr.getSockTo().getPort()));
 
@@ -191,7 +192,7 @@ class TCPConnectionManager {
 				asbytes.putUUID(localID.getId());
 				os.write(asbytes.build());
 				os.flush();
-				return addConnection(sock, true);
+				return addConnection(sock);
 			} catch (ConnectException e) {
 				// if (log.isDebugEnabled())
 				log.info("Could not open socket to " + addr + " : "
@@ -211,15 +212,20 @@ class TCPConnectionManager {
 		return null;
 	}
 
-	public TCPPacketConnection addConnection(final Socket conn,
-			boolean addToPool) throws Exception {
+	private void setFlags(Socket sock) throws SocketException {
+		sock.setTcpNoDelay(true);
+		sock.setReceiveBufferSize(rcvr.config.tcp_rcv_buffer);
+		sock.setSendBufferSize(rcvr.config.tcp_send_buffer);
+	}
+
+	public TCPPacketConnection addConnection(final Socket conn)
+			throws Exception {
 		final TCPPacketConnection c = new TCPPacketConnection(conn, time_limit,
 				this, input_buffer, output_buffer);
-		if (addToPool)
-			synchronized (connections) {
-				connections.add(c);
-				connections.notifyAll();
-			}
+		synchronized (connections) {
+			connections.add(c);
+			connections.notifyAll();
+		}
 		rcv.execute(new Runnable() {
 			@Override
 			public void run() {
@@ -251,7 +257,7 @@ class TCPConnectionManager {
 		rcv.shutdown();
 		send.shutdown();
 		stopped = true;
-		// writeQueue.put(new OutPacket(new byte[] {}, null));
+		writeQueue.put(new OutPacket(new byte[] {}, null));
 		synchronized (connections) {
 			for (TCPPacketConnection c : connections)
 				c.stop();

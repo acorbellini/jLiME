@@ -1,11 +1,13 @@
 package edu.jlime.collections.adjacencygraph.query;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Calendar;
 
 import edu.jlime.collections.adjacencygraph.Mapper;
 import edu.jlime.collections.adjacencygraph.RemoteAdjacencyGraph;
 import edu.jlime.jd.ClientCluster;
+import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.client.JobContext;
 
 public abstract class RemoteQuery<R> implements Serializable, Query<R> {
@@ -59,8 +61,8 @@ public abstract class RemoteQuery<R> implements Serializable, Query<R> {
 		R res = null;
 		long init = Calendar.getInstance().getTimeInMillis();
 		if (!cluster.getLocalNode().isExec()) {
-			res = cluster.getExecutors().get(0)
-					.exec(new QueryJobWrapper<R>(this));
+			res = cluster.getExecutors().get(1).exec(
+					new QueryJobWrapper<R>(this));
 		} else
 			res = cluster.getLocalNode().exec(new QueryJobWrapper<R>(this));
 		long end = Calendar.getInstance().getTimeInMillis();

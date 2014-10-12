@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import edu.jlime.core.cluster.Peer;
+import edu.jlime.jd.rpc.JobExecutor;
 
 public class DispatcherManager {
 

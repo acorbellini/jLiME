@@ -8,6 +8,7 @@ import java.io.PipedOutputStream;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -77,12 +78,16 @@ public class TCP extends NetworkProtocol implements DataReceiver {
 		t.start();
 	}
 
+	private void setFlags(Socket sock) throws SocketException {
+		sock.setTcpNoDelay(true);
+		sock.setReceiveBufferSize(config.tcp_rcv_buffer);
+		sock.setSendBufferSize(config.tcp_send_buffer);
+	}
+
 	protected void acceptConnection() throws Exception {
 		final Socket conn = getServerSocket().accept();
 		// TODO Careful
-		// conn.setTcpNoDelay(true);
-		// conn.setReceiveBufferSize(config.tcp_rcv_buffer);
-		// conn.setSendBufferSize(config.tcp_send_buffer);
+		setFlags(conn);
 		InputStream inputStream = conn.getInputStream();
 		StreamType type = StreamType.fromID((byte) inputStream.read());
 		UUID id = TCPConnectionManager.getID(inputStream);
@@ -91,7 +96,7 @@ public class TCP extends NetworkProtocol implements DataReceiver {
 			if (log.isDebugEnabled())
 				log.debug("Received connection request from "
 						+ conn.getRemoteSocketAddress() + " with id " + id);
-			connList.addConnection(conn, false);
+			connList.addConnection(conn);
 		} else if (type.equals(StreamType.STREAM)) {
 			if (log.isDebugEnabled())
 				log.debug("Received stream request from "

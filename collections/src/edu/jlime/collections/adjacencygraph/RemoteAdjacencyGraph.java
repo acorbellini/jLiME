@@ -40,6 +40,7 @@ public class RemoteAdjacencyGraph implements Closeable, AdjacencyGraph,
 		this.mapper = mapper;
 		this.config = config;
 		this.cluster = cluster;
+		System.out.println("Broadcasting init job " + cluster);
 		this.cluster.broadcast(new AdyacencyGraphInitJob(config.getStoreName(),
 				config));
 	}

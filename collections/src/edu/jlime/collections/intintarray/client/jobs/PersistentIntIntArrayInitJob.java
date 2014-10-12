@@ -22,17 +22,23 @@ public class PersistentIntIntArrayInitJob implements Job<Boolean> {
 
 	@Override
 	public Boolean call(JobContext ctx, ClientNode peer) throws Exception {
-		Logger log = Logger.getLogger(PersistentIntIntArrayInitJob.class);
-		if (log.isDebugEnabled())
-			log.debug("Initializing PersistentIntIntMap requested from " + peer);
-		synchronized (ctx) {
-			if (ctx.get(storeName) == null)
-				ctx.put(storeName, Store.init(storeConfig));
-			if (log.isDebugEnabled())
-				log.debug("Returning from init job of persistent hash, requested from "
-						+ peer);
-			return true;
-		}
 
+		Logger log = Logger.getLogger(PersistentIntIntArrayInitJob.class);
+
+		if (log.isDebugEnabled())
+			log.debug("Initializing PersistentIntIntMap " + storeName
+					+ " requested from " + peer);
+		if (ctx.get(storeName) == null)
+			synchronized (ctx) {
+				if (ctx.get(storeName) == null) {
+					// log.info("Waiting 60 sec");
+					// Thread.sleep(60000);
+					ctx.put(storeName, Store.init(storeConfig));
+				}
+				if (log.isDebugEnabled())
+					log.debug("Returning from init job of persistent hash, requested from "
+							+ peer);
+			}
+		return true;
 	}
 }

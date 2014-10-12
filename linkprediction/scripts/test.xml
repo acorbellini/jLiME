@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans .>
+	<bean id="availablememory"
+		class="edu.jlime.collections.adjacencygraph.mappers.CriteriaMapper">
+		<constructor-arg value="memory.available" />
+	</bean>
+</beans>
+
+
+

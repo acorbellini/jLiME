@@ -4,9 +4,8 @@ import edu.jlime.collections.intintarray.client.PersistentIntIntArrayMap;
 import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.Job;
-import gnu.trove.set.hash.TIntHashSet;
 
-public class GraphGet implements Job<TIntHashSet> {
+public class GraphGet implements Job<int[]> {
 
 	private static final long serialVersionUID = -3316802861448545540L;
 
@@ -20,10 +19,9 @@ public class GraphGet implements Job<TIntHashSet> {
 	}
 
 	@Override
-	public TIntHashSet call(JobContext ctx, ClientNode peer) throws Exception {
+	public int[] call(JobContext ctx, ClientNode peer) throws Exception {
 		PersistentIntIntArrayMap dkvs = PersistentIntIntArrayMap.getMap(map,
 				ctx);
 		return dkvs.getSetOfUsers(data);
 	}
-
 }

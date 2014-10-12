@@ -14,15 +14,14 @@ import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.Job;
 import gnu.trove.list.array.TIntArrayList;
+import gnu.trove.list.linked.TIntLinkedList;
 import gnu.trove.set.hash.TIntHashSet;
 
-public class GetMR extends GraphMR<TIntHashSet, TIntHashSet> {
+public class GetMR extends GraphMR<TIntHashSet, int[]> {
 
 	private static final long serialVersionUID = 643643302077255726L;
 
-	TIntHashSet res = null;
-
-	ReentrantLock lock = new ReentrantLock();
+	TIntHashSet res = new TIntHashSet(1000000, 0.9f);
 
 	private GetType type;
 
@@ -33,7 +32,7 @@ public class GetMR extends GraphMR<TIntHashSet, TIntHashSet> {
 	}
 
 	@Override
-	public Map<Job<TIntHashSet>, ClientNode> map(int[] data, JobContext env)
+	public Map<Job<int[]>, ClientNode> map(int[] data, JobContext env)
 			throws Exception {
 		TIntHashSet toSearch = new TIntHashSet();
 		if (type.equals(GetType.FOLLOWEES) || type.equals(GetType.NEIGHBOURS))
@@ -43,7 +42,7 @@ public class GetMR extends GraphMR<TIntHashSet, TIntHashSet> {
 		if (type.equals(GetType.FOLLOWERS) || type.equals(GetType.NEIGHBOURS))
 			toSearch.addAll(data);
 
-		HashMap<Job<TIntHashSet>, ClientNode> res = new HashMap<>();
+		HashMap<Job<int[]>, ClientNode> res = new HashMap<>();
 		Map<ClientNode, TIntArrayList> mapped = getMapper().map(
 				toSearch.toArray(), env);
 		for (Entry<ClientNode, TIntArrayList> e : mapped.entrySet()) {
@@ -54,25 +53,21 @@ public class GetMR extends GraphMR<TIntHashSet, TIntHashSet> {
 	}
 
 	@Override
-	public void processSubResult(TIntHashSet subres) {
+	public void processSubResult(int[] subres) {
 		Logger log = Logger.getLogger(GetMR.class);
-		// if (log.isDebugEnabled())
 		log.info("Obtained sub result on Get Map Reduce");
-		lock.lock();
-		if (res == null)
-			res = subres;
-		else
+		synchronized (this) {
 			res.addAll(subres);
-
-		lock.unlock();
+		}
 		log.info("Added to final result.");
 	}
 
 	@Override
-	public TIntHashSet red(ArrayList<TIntHashSet> subres) {
+	public TIntHashSet red(ArrayList<int[]> subres) throws Exception {
 		Logger log = Logger.getLogger(GetMR.class);
-		// if (log.isDebugEnabled())
 		log.info("Finished obtaining results for Get MR");
+		if (res == null)
+			res = new TIntHashSet();
 		return res;
 	}
 }

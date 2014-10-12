@@ -13,6 +13,9 @@ public class Promedio extends Function {
 		double sum = 0;
 		double count = 0;
 		for (Cell c : range) {
+			if(c==null){
+				return "ERROR: CELL IS NOT DEFINED";
+			}
 			sum += Double.valueOf(c.value());
 			count++;
 		}

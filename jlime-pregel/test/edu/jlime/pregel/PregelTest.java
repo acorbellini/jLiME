@@ -15,17 +15,17 @@ public class PregelTest {
 
 		// Bigger graph to stress workers.
 		String pathname = args[0];// e.g. "C:/Users/Ale/Desktop/dataset.csv";
-		g.load(pathname);
+//		g.load(pathname);
 
 		// Smaller test graph (to check is PageRank is working OK).
-		// g.putLink(0l, 1l);
-		// g.putLink(0l, 2l);
-		// g.putLink(0l, 3l);
-		// g.putLink(1l, 0l);
-		// g.putLink(1l, 2l);
-		// g.putLink(2l, 4l);
-		// g.putLink(3l, 4l);
-		// g.putLink(4l, 2l);
+		g.putLink(0l, 1l);
+		g.putLink(0l, 2l);
+		g.putLink(0l, 3l);
+		g.putLink(1l, 0l);
+		g.putLink(1l, 2l);
+		g.putLink(2l, 4l);
+		g.putLink(3l, 4l);
+		g.putLink(4l, 2l);
 
 		// System.out.println(g.print());
 

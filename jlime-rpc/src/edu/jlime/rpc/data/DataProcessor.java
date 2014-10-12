@@ -81,13 +81,6 @@ public class DataProcessor extends SimpleMessageProcessor implements
 		headerWriter.putUUID(id);
 		headerWriter.putBoolean(waitForResponse);
 
-		// if (log.isDebugEnabled())
-		// log.debug("Sending DATA message with id " + id + " to " + to);
-
-		// new Exception().printStackTrace();
-
-		// PerfMeasure.takeTime("data", false);
-
 		DataResponse r = null;
 		if (waitForResponse) {
 			r = new DataResponse(this, to, id);
@@ -109,37 +102,10 @@ public class DataProcessor extends SimpleMessageProcessor implements
 		sendNext(toSend);
 
 		if (r == null) {
-			// if (log.isDebugEnabled())
-			// log.debug("DATA message " + id + " to " + to
-			// + " does NOT require RESPONSE.");
 			return null;
 		}
-		// if (log.isDebugEnabled())
-		// log.debug("Waiting for response for DATA message with id " + id
-		// + " to " + to);
 		Message resp = r.getResponse();
 
-		// synchronized (responses) {
-		// while (!responses.containsKey(id)) {
-		// responses.wait(1000);
-		// if (log.isDebugEnabled())
-		// log.debug("Still waiting for response for DATA message with id "
-		// + id + " to " + to + " responses : " + responses);
-		// }
-		// resp = responses.remove(id);
-		// synchronized (waiting) {
-		// Set<UUID> list = waiting.get(to);
-		// if (list != null) {
-		// list.remove(id);
-		// if (list.isEmpty())
-		// waiting.remove(to);
-		// }
-		// }
-		// }
-
-		// if (log.isDebugEnabled())
-		// log.debug("Response rcvd for DATA message with id " + id + " to "
-		// + to);
 		return resp.getDataBuffer().build();
 	}
 
@@ -162,26 +128,20 @@ public class DataProcessor extends SimpleMessageProcessor implements
 		if (log.isDebugEnabled())
 			log.debug("Received RESPONSE for DATA message with id " + id
 					+ " from " + message.getFrom());
-		DataResponse dataResponse = responses.get(id);
-		if (dataResponse == null)
-			System.out.println("Is null.");
-		dataResponse.setMsg(message);
+		responses.get(id).setMsg(message);
 	}
 
 	private void processData(final Message m) {
 		Buffer head = m.getHeaderBuffer();
 		final UUID id = head.getUUID();
 		if (map.get(id) != null) {
-			// if (log.isDebugEnabled())
-			// log.info("DISCARDING recently received a DATA message with id "
-			// + id + " from " + m.getFrom() + ".");
 			return;
 		}
 
 		map.put(id, true);
-		// if (log.isDebugEnabled())
-		// log.debug("Received DATA message with id " + id + " from "
-		// + m.getFrom());
+		if (log.isDebugEnabled())
+			log.debug("Received DATA message with id " + id + " from "
+					+ m.getFrom());
 		boolean requiresResponse = head.getBoolean();
 		Response resp = null;
 		if (requiresResponse) {
@@ -220,7 +180,10 @@ public class DataProcessor extends SimpleMessageProcessor implements
 
 	public void removeResponse(Address addr, UUID id) {
 		Set<UUID> list = waiting.get(addr);
-		list.remove(id);
+		
+		if(list!=null)
+			list.remove(id);
+		
 		responses.remove(id);
 	}
 }

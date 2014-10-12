@@ -32,6 +32,7 @@ import edu.jlime.core.stream.RemoteInputStream;
 import edu.jlime.core.stream.RemoteOutputStream;
 import edu.jlime.jd.client.JobContextImpl;
 import edu.jlime.jd.job.ResultManager;
+import edu.jlime.jd.rpc.JobExecutor;
 import edu.jlime.metrics.metric.Metrics;
 import edu.jlime.util.ByteBuffer;
 
@@ -207,7 +208,6 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 		if (log.isDebugEnabled())
 			log.debug("Checking if it's local.");
 		while (it.hasNext()) {
-
 			Peer peer = it.next();
 			JobContainer jw = new JobContainer(j, jobid, new ClientNode(
 					getLocalPeer(), j.getClient(), this));

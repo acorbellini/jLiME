@@ -4,6 +4,7 @@ import java.util.List;
 
 import edu.jlime.core.cluster.Peer;
 import edu.jlime.core.rpc.RPCDispatcher;
+import edu.jlime.jd.rpc.JobExecutor;
 
 public class JobExecutorFactory {
 

@@ -11,6 +11,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
@@ -19,6 +23,7 @@ import org.iq80.leveldb.DB;
 import org.iq80.leveldb.DBException;
 import org.iq80.leveldb.DBIterator;
 import org.iq80.leveldb.Options;
+import org.iq80.leveldb.ReadOptions;
 import org.iq80.leveldb.WriteBatch;
 
 import edu.jlime.util.DataTypeUtils;
@@ -54,7 +59,14 @@ public class LevelDb extends Store {
 		if (db == null) {
 			synchronized (this) {
 				if (db == null) {
+
+					org.iq80.leveldb.Logger logger = new org.iq80.leveldb.Logger() {
+						public void log(String message) {
+							log.info(message);
+						}
+					};
 					options = new Options();
+					options.logger(logger);
 					options.createIfMissing(true);
 					options.cacheSize(100 * 1024 * 1024);
 					JniDBFactory.pushMemoryPool(100 * 1024 * 1024);
@@ -63,6 +75,7 @@ public class LevelDb extends Store {
 					if (!dirDB.exists())
 						dirDB.mkdirs();
 					db = JniDBFactory.factory.open(dirDB, options);
+					// db.compactRange(null, null);
 					Logger.getLogger(LevelDb.class).info("Opened.");
 				}
 			}
@@ -82,47 +95,70 @@ public class LevelDb extends Store {
 
 	@Override
 	public List<byte[]> loadAll(int[] k) throws Exception {
-		log.info("Sorting input list");
-		Integer[] sorted = ArrayUtils.toObject(k);
-		Arrays.sort(sorted, new Comparator<Integer>() {
 
-			@Override
-			public int compare(Integer o1, Integer o2) {
-				byte[] b1 = DataTypeUtils.intToByteArray(o1);
-				byte[] b2 = DataTypeUtils.intToByteArray(o2);
-				for (int i = 0; i < 4; i++) {
-					int comp = Byte.compare(b1[i], b2[i]);
-					if (comp != 0)
-						return comp;
-				}
-				return 0;
+		List<List<Integer>> div = new ArrayList<List<Integer>>();
+		List<Integer> curr = null;
+		for (int i = 0; i < k.length; i++) {
+			int j = k[i];
+			if (i % 100000 == 0) {
+				curr = new ArrayList<Integer>();
+				div.add(curr);
 			}
-		});
-		log.info("Sorted input list");
-		List<byte[]> res = new ArrayList<byte[]>();
-		System.out.println("Loading  " + sorted.length);
-		DBIterator it = getDb().iterator();
+			curr.add(j);
+		}
+
+		ExecutorService exec = Executors.newFixedThreadPool(10);
+
+		final List<byte[]> res = new ArrayList<byte[]>();
+		for (final List<Integer> list : div) {
+			exec.execute(new Runnable() {
+
+				@Override
+				public void run() {
+					List<byte[]> toAdd = new ArrayList<>();
+					for (Integer i : list) {
+						try {
+							byte[] load = load(i);
+							if (load != null)
+								toAdd.add(load);
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					}
+					synchronized (res) {
+						res.addAll(toAdd);
+					}
+
+				}
+			});
+		}
+		exec.shutdown();
+		exec.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
+
+		return res;
+		// System.out.println("Loading  " + sorted.length);
+		// DBIterator it = getDb().iterator();
 
 		// if(key.length==1){
 		// System.out.println("Key[0]: " + load(key[0]));
 		// }
-		try {
-			for (int i = 0; i < sorted.length; i++) {
-				it.seek(intToBytes(sorted[i]));
-				if (!it.hasNext())
-					break;
-				Entry<byte[], byte[]> e = it.peekNext();
-				if (DataTypeUtils.byteArrayToInt(e.getKey()) == sorted[i])
-					res.add(e.getValue());
-
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			it.close();
-		}
-		System.out.println("Returning" + res.size());
-		return res;
+		// try {
+		// for (int i = 0; i < sorted.length; i++) {
+		// it.seek(intToBytes(sorted[i]));
+		// if (!it.hasNext())
+		// break;
+		// Entry<byte[], byte[]> e = it.peekNext();
+		// if (DataTypeUtils.byteArrayToInt(e.getKey()) == sorted[i])
+		// res.add(e.getValue());
+		//
+		// }
+		// } catch (Exception e) {
+		// e.printStackTrace();
+		// } finally {
+		// it.close();
+		// }
+		// // System.out.println("Returning" + res.size());
+		// return res;
 	}
 
 	private byte[] intToBytes(int key) {

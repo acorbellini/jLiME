@@ -1,6 +1,7 @@
 package edu.jlime.collections.intintarray.client;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.concurrent.Future;
@@ -15,20 +16,12 @@ import edu.jlime.collections.intintarray.client.jobs.MultiSetJob;
 import edu.jlime.collections.intintarray.client.jobs.PersistentIntIntArrayInitJob;
 import edu.jlime.collections.intintarray.client.jobs.SetJob;
 import edu.jlime.collections.intintarray.client.jobs.StoreConfig;
-import edu.jlime.collections.intintarray.db.Store;
-import edu.jlime.core.stream.RemoteInputStream;
-import edu.jlime.core.stream.RemoteOutputStream;
 import edu.jlime.jd.ClientCluster;
 import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.client.JobContext;
-import edu.jlime.jd.job.StreamJob;
 import edu.jlime.jd.task.ForkJoinTask;
 import edu.jlime.jd.task.ResultListener;
-import edu.jlime.util.Buffer;
-import edu.jlime.util.ByteBuffer;
-import edu.jlime.util.DataTypeUtils;
 import gnu.trove.iterator.TIntIntIterator;
-import gnu.trove.iterator.TIntIterator;
 import gnu.trove.iterator.TIntObjectIterator;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.TIntIntHashMap;
@@ -38,7 +31,7 @@ import gnu.trove.set.hash.TIntHashSet;
 
 public class PersistentIntIntArrayMap {
 
-	private static final int READ_BUFFER_SIZE = 128 * 1024;
+	private static final int READ_BUFFER_SIZE = 32 * 1024;
 
 	Logger log = Logger.getLogger(PersistentIntIntArrayMap.class);
 
@@ -127,34 +120,37 @@ public class PersistentIntIntArrayMap {
 		return res;
 	}
 
-	public TIntHashSet getSetOfUsers(int[] array) throws Exception {
+	public int[] getSetOfUsers(int[] array) throws Exception {
 
 		HashMap<ClientNode, TIntArrayList> byServer = hashKeys(array);
 		log.info("Starting getSetOfUsers");
 
-		ForkJoinTask<int[]> mgr = new ForkJoinTask<>();
+		ForkJoinTask<TIntHashSet> mgr = new ForkJoinTask<>();
 		for (Entry<ClientNode, TIntArrayList> map : byServer.entrySet()) {
 			ClientNode p = map.getKey();
 			GetSetOfUsersJob j = new GetSetOfUsersJob(map.getValue().toArray(),
 					store);
 			mgr.putJob(j, p);
 		}
-		return mgr.execute(new ResultListener<int[], TIntHashSet>() {
-			TIntHashSet hashToReturn = null;
+		return mgr.execute(new ResultListener<TIntHashSet, int[]>() {
+			TIntHashSet ret = null;
 
 			@Override
-			public void onSuccess(int[] res) {
+			public void onSuccess(TIntHashSet res) {
 				synchronized (this) {
-					if (hashToReturn == null)
-						hashToReturn = new TIntHashSet(res);
-					else
-						hashToReturn.addAll(res);
+					if (ret == null)
+						ret = res;
+					ret.addAll(res);
 				}
 			}
 
 			@Override
-			public TIntHashSet onFinished() {
-				return hashToReturn;
+			public int[] onFinished() {
+				if (ret == null)
+					return new int[] {};
+				int[] array2 = ret.toArray();
+				Arrays.sort(array2);
+				return array2;
 			}
 
 			@Override
@@ -258,6 +254,8 @@ public class PersistentIntIntArrayMap {
 
 					@Override
 					public TIntIntHashMap onFinished() {
+						if (hashToReturn == null)
+							return new TIntIntHashMap();
 						return hashToReturn;
 					}
 
@@ -266,60 +264,6 @@ public class PersistentIntIntArrayMap {
 						res.printStackTrace();
 					}
 				});
-	}
-
-	private static class GetAdyacencyListStreamJob extends StreamJob {
-
-		private String name;
-
-		public GetAdyacencyListStreamJob(String name) {
-			this.name = name;
-		}
-
-		@Override
-		public void run(RemoteInputStream input,
-				RemoteOutputStream outputStream, JobContext ctx)
-				throws Exception {
-
-			// BufferedInputStream input = new BufferedInputStream(inputStream);
-			Logger log = Logger.getLogger(MultiGetJob.class);
-			TIntArrayList kList = new TIntArrayList();
-			try {
-				byte[] buffer = new byte[READ_BUFFER_SIZE];
-				int read = 0;
-				while ((read = input.read(buffer)) != -1)
-					for (int i = 0; i < read / 4; i++) {
-						int k = DataTypeUtils.byteArrayToInt(buffer, i * 4);
-						kList.add(k);
-					}
-			} catch (Exception e) {
-			}
-			log.info("Obtaining multiple keys (" + kList.size()
-					+ ") from store");
-			TIntArrayList set = new TIntArrayList();
-
-			Buffer buffer = new ByteBuffer();
-			int max = 256 * 1024;
-			Store store = (Store) ctx.get(name);
-			TIntIterator it = kList.iterator();
-			while (it.hasNext()) {
-				int u = it.next();
-				byte[] valAsBytes = store.load(u);
-				if (valAsBytes != null) {
-					set.addAll(DataTypeUtils.byteArrayToIntArray(valAsBytes));
-				}
-			}
-
-			int[] array = set.toArray();
-			byte[] intArrayToByteArray = DataTypeUtils
-					.intArrayToByteArray(array);
-			set.clear();
-			log.info("Sending multiple keys " + array.length + " from store");
-			outputStream.write(intArrayToByteArray);
-			log.info("Finished obtaining multiple keys (" + kList.size()
-					+ ") from store");
-			outputStream.close();
-		}
 	}
 
 	public void list() throws Exception {

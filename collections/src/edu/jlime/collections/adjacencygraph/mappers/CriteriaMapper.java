@@ -34,7 +34,8 @@ public class CriteriaMapper extends Mapper {
 
 		HashMap<ClientNode, Float> infoValues = filter.extract(info);
 
-		log.info("Obtained Info for Criteria Mapper  : " + infoValues);
+		log.info("Obtained Info for Criteria Mapper  : " + this + " - values "
+				+ infoValues);
 
 		// Normalize to [0,1]
 		float sum = 0;
@@ -54,9 +55,15 @@ public class CriteriaMapper extends Mapper {
 				end = data.length;
 
 			int[] dataCopy = Arrays.copyOfRange(data, init, end);
-			div.put(e.getKey(), new TIntArrayList(dataCopy));
+			if (dataCopy.length != 0)
+				div.put(e.getKey(), new TIntArrayList(dataCopy));
 			init = end;
 		}
+
+		for (Entry<ClientNode, TIntArrayList> e : div.entrySet()) {
+			log.info(e.getKey() + " -> " + e.getValue().size());
+		}
+
 		return div;
 	}
 }

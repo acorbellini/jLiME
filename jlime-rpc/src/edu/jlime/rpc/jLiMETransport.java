@@ -70,15 +70,10 @@ public class jLiMETransport extends Transport implements DataListener {
 		if (log.isDebugEnabled())
 			log.debug("Received data from processor");
 		
-		
-		
 		handleExecutor.execute(new Runnable() {
 			public void run() {
 				Address origin = msg.getFrom();
 				byte[] buff = msg.getData();
-				if (log.isDebugEnabled())
-					log.debug("Unmarshalling data received");
-				
 				byte[] rsp = jLiMETransport.super.callTransportListener(origin,
 						buff);
 				

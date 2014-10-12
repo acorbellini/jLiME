@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Locale;
 
 import edu.jlime.util.table.Cell.Formatter;
 import edu.jlime.util.table.Functions.CellFactory;
@@ -15,7 +16,14 @@ public class Table {
 
 		@Override
 		public String format(Cell c) {
-			return String.format("%.2f", Double.valueOf(c.value()));
+			if (c == null)
+				return "CELL IS NULL.";
+			try {
+				return String.format(Locale.ENGLISH, "%.2f",
+						Double.valueOf(c.value()));
+			} catch (NumberFormatException e) {
+				return "PARSE ERROR: " + c.value();
+			}
 		}
 	};
 

@@ -24,9 +24,8 @@ public class AdyacencyGraphInitJob implements Job<Boolean> {
 	@Override
 	public Boolean call(JobContext ctx, ClientNode peer) throws Exception {
 		Logger log = Logger.getLogger(RemoteAdjacencyGraph.class);
-		if (log.isDebugEnabled())
-			log.debug("Initializing adyacency graph, requested from peer "
-					+ peer);
+		// if (log.isDebugEnabled())
+		log.info("Initializing adyacency graph, requested from peer " + peer);
 		ctx.put(storeID,
 				new PersistentIntIntArrayMap(storeConfig, ctx.getCluster()));
 		if (log.isDebugEnabled())

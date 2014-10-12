@@ -23,7 +23,7 @@ public class RingQueue {
 	}
 
 	public RingQueue() {
-		this(2048);
+		this(512);
 	}
 
 	private int pos(int i) {

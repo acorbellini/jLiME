@@ -17,9 +17,11 @@ import edu.jlime.util.table.ValueCell;
 
 public class ResultsUnifier {
 
+	private static final int NUM_RUNS = 1;
+	private static final int NUM_NODES = 8;
+
 	public static void main(String[] args) throws Exception {
 		File dir = new File(args[0]);
-		File users = new File(args[1]);
 
 		FilenameFilter filterMem = new FilenameFilter() {
 			@Override
@@ -34,20 +36,19 @@ public class ResultsUnifier {
 			}
 		};
 
-		unify(dir, users, filterMem, "mem");
-		unify(dir, users, filterNet, "net");
+		unify(dir, filterMem, "mem");
+		unify(dir, filterNet, "net");
 
-		unifyTimes(dir, users);
+		unifyTimes(dir);
 	}
 
-	private static void unifyTimes(File dir, File users) throws Exception {
+	private static void unifyTimes(File dir) throws Exception {
 		BufferedWriter writer = new BufferedWriter(new FileWriter(new File(
 				dir.getPath() + "/avgtimes.csv")));
 		Table times = new Table();
-		Scanner scanner = new Scanner(users);
+		int[] users = getUsers(dir);
 		boolean header = true;
-		while (scanner.hasNext()) {
-			int u = scanner.nextInt();
+		for (int u : users) {
 			if (header) {
 				Row r = times.newRow();
 				r.add(new ValueCell("User"));
@@ -82,17 +83,16 @@ public class ResultsUnifier {
 
 		times.fillRow("Avg", 1, times.getColLimit() - 1, 1,
 				times.getRowLimit() - 1, Functions.AVERAGE);
-		
+
 		times.fillRow("StdDev", 1, times.getColLimit() - 1, 1,
 				times.getRowLimit() - 1, Functions.STDDEV);
 
-		scanner.close();
 		writer.write(times.print(";"));
 		writer.close();
 	}
 
-	private static void unify(File dir, File users, FilenameFilter filterMem,
-			String title) throws FileNotFoundException, Exception, IOException {
+	private static void unify(File dir, FilenameFilter filterMem, String title)
+			throws FileNotFoundException, Exception, IOException {
 		Table generalMax = new Table();
 		Table generalDiff = new Table();
 
@@ -102,13 +102,9 @@ public class ResultsUnifier {
 				dir.getPath() + "/diff-" + title + ".csv")));
 
 		boolean header = true;
-		Scanner scanner = new Scanner(users);
-		while (scanner.hasNext()) {
-			int u = scanner.nextInt();
 
-			BufferedWriter writer = new BufferedWriter(new FileWriter(new File(
-					dir.getPath() + "/" + u + "-maxanddiff-" + title + ".csv")));
-
+		int[] users = getUsers(dir);
+		for (int u : users) {
 			if (header) {
 				Row r = generalMax.newRow();
 				Row rdiff = generalDiff.newRow();
@@ -138,7 +134,7 @@ public class ResultsUnifier {
 					File[] listFiles = strategyDir.listFiles(filterMem);
 					for (File file : listFiles) {
 
-						Table run = Table.readCSV(file, ";", ",", false);
+						Table run = Table.readCSV(file, ",", ".", false);
 						if (first) {
 							Row r = tmax.newRow();
 							r.add(run.getRow(0));
@@ -166,15 +162,12 @@ public class ResultsUnifier {
 					tdiff.fillRow("StdDev", 1, tdiff.getColLimit() - 1, 1,
 							tdiff.getRowLimit() - 1, Functions.STDDEV);
 
-					userMaxRow.add(tmax.getRow(6).get(9));
-					userDiffRow.add(tdiff.getRow(6).get(9));
-
-					writer.write(strategy.getName() + "\n");
-					writer.write(tmax.print(";"));
-					writer.write(tdiff.print(";"));
+					userMaxRow
+							.add(tmax.getRow(NUM_RUNS + 1).get(NUM_NODES + 1));
+					userDiffRow.add(tdiff.getRow(NUM_RUNS + 1).get(
+							NUM_NODES + 1));
 				}
 			}
-			writer.close();
 		}
 
 		generalMax.fillRow("Avg", 1, generalMax.getColLimit() - 1, 1,
@@ -188,12 +181,31 @@ public class ResultsUnifier {
 
 		generalDiff.fillRow("StdDev", 1, generalDiff.getColLimit() - 1, 1,
 				generalDiff.getRowLimit() - 1, Functions.STDDEV);
-		
-		
+
 		writerMax.write(generalMax.print(";"));
 		writerMax.close();
 		writerDiff.write(generalDiff.print(";"));
 		writerDiff.close();
-		scanner.close();
+	}
+
+	private static int[] getUsers(File dir) {
+		File strat = null;
+		while (strat == null) {
+			for (File f : dir.listFiles()) {
+				if (f.isDirectory()) {
+					strat = f;
+					continue;
+				}
+			}
+		}
+
+		File[] listFiles = strat.listFiles();
+		int[] users = new int[listFiles.length];
+		int cont = 0;
+		for (File f : listFiles) {
+			users[cont++] = Integer.valueOf(f.getName());
+		}
+
+		return users;
 	}
 }

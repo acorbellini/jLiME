@@ -338,7 +338,7 @@ public class RPCCreator {
 				}
 				set.add(arg);
 				argsNames.add(arg);
-				argsBuilder.append(", " + type + " " + arg);
+				argsBuilder.append(", final " + type + " " + arg);
 			}
 			ret.append(argsBuilder.substring(2));
 		}

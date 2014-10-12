@@ -210,7 +210,7 @@ public abstract class NetworkProtocol extends SimpleMessageProcessor implements
 			log.debug("Stopping network protocol type " + getType()
 					+ " and socket " + socket);
 
-		// packetsRx.put(new DataPacket(null, null));
+		packetsRx.put(new DataPacket(null, null));
 		if (metrics != null)
 			metrics.set("jlime.interface").remove(
 					this.socket.getAddr() + ":" + this.socket.getPort());

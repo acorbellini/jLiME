@@ -2,6 +2,7 @@ package edu.jlime.collections.adjacencygraph.mappers;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
 
@@ -23,14 +24,11 @@ public class LocationMapper extends Mapper {
 
 	@Override
 	public Map<ClientNode, TIntArrayList> map(int[] data, JobContext cluster) {
-
 		Logger log = Logger.getLogger(LocationMapper.class);
-		log.info("Mapping " + data.length + " keys by location.");
-
 		PersistentIntIntArrayMap simple = PersistentIntIntArrayMap.getMap(
 				mapName, cluster);
-
-		HashMap<ClientNode, TIntArrayList> map = simple.hashKeys(data);
+		log.info("Mapping " + data.length + " keys by location.");
+		HashMap<ClientNode, TIntArrayList> map = simple.hashKeys(data);		
 		log.info("Finished mapping " + data.length + " keys by location.");
 		return map;
 	}
