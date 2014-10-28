@@ -1,9 +1,13 @@
 package edu.jlime.util;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 public class ByteBuffer extends Buffer {
 
@@ -102,11 +106,6 @@ public class ByteBuffer extends Buffer {
 
 	}
 
-	@Override
-	public void putRawByteArray(byte[] data) {
-		putRawByteArray(data, data.length);
-	}
-
 	public void clear() {
 		buffered = new byte[INIT_SIZE];
 		writePos = 0;
@@ -115,9 +114,7 @@ public class ByteBuffer extends Buffer {
 
 	@Override
 	public void putRawByteArray(byte[] data, int l) {
-		ensureCapacity(l);
-		System.arraycopy(data, 0, buffered, writePos, l);
-		writePos += l;
+		putRawByteArray(data, 0, l);
 	}
 
 	public int getOffset() {
@@ -172,5 +169,92 @@ public class ByteBuffer extends Buffer {
 
 	public Object getDouble() {
 		return Double.longBitsToDouble(getLong());
+	}
+
+	public void putStringByteArrayMap(Map<String, byte[]> data) {
+		putInt(data.size());
+		for (Entry<String, byte[]> e : data.entrySet()) {
+			putString(e.getKey());
+			putByteArray(e.getValue());
+		}
+	}
+
+	public Map<String, byte[]> getStringByteArrayMap() {
+		int size = getInt();
+		Map<String, byte[]> ret = new HashMap<>();
+		for (int i = 0; i < size; i++) {
+			ret.put(getString(), getByteArray());
+		}
+		return ret;
+	}
+
+	public List<String> getStringList() {
+		List<String> list = new ArrayList<>();
+		int size = getInt();
+		for (int i = 0; i < size; i++) {
+			list.add(getString());
+		}
+		return list;
+	}
+
+	public void putStringList(List<String> list) {
+		putInt(list.size());
+		for (String l : list) {
+			putString(l);
+		}
+	}
+
+	public void putByteArrayList(List<byte[]> keys) {
+		putInt(keys.size());
+		for (byte[] bs : keys) {
+			putByteArray(bs);
+		}
+	}
+
+	public void putLongList(List<Long> values) {
+		putInt(values.size());
+		for (Long long1 : values) {
+			putLong(long1);
+		}
+	}
+
+	public List<byte[]> getByteArrayList() {
+		List<byte[]> ret = new ArrayList<>();
+		int size = getInt();
+		for (int i = 0; i < size; i++) {
+			ret.add(getByteArray());
+		}
+		return ret;
+	}
+
+	public List<Long> getLongList() {
+		List<Long> ret = new ArrayList<>();
+		int size = getInt();
+		for (int i = 0; i < size; i++) {
+			ret.add(getLong());
+		}
+		return ret;
+	}
+
+	public void padTo(int maximumSize) {
+		if (maximumSize < writePos)
+			return;
+		ensureCapacity(maximumSize);
+		writePos = maximumSize;
+	}
+
+	public void putShort(short blockMagic) {
+		putRawByteArray(java.nio.ByteBuffer.allocate(2).putShort(blockMagic)
+				.array());
+	}
+
+	public void putRawByteArray(byte[] data) {
+		putRawByteArray(data, 0, data.length);
+	}
+
+	public void putRawByteArray(byte[] data, int offset, int lenght) {
+		ensureCapacity(lenght);
+		System.arraycopy(data, offset, buffered, writePos, lenght);
+		writePos += lenght;
 	}
 }

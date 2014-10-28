@@ -17,7 +17,9 @@ public abstract class Buffer {
 
 	public abstract void put(Byte val);
 
-	public abstract void putRawByteArray(byte[] data, int l);
+	public abstract void putRawByteArray(byte[] data, int offset, int lenght);
+
+	public abstract void putRawByteArray(byte[] data, int lenght);
 
 	public abstract void putRawByteArray(byte[] data);
 
