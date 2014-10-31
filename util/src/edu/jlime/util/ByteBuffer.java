@@ -52,8 +52,9 @@ public class ByteBuffer extends Buffer {
 
 	}
 
-	public void setOffset(int off) {
+	public ByteBuffer setOffset(int off) {
 		this.readPos = off;
+		return this;
 	}
 
 	@Override

@@ -35,6 +35,11 @@
   		<version>0.3</version>
   		<classifier>bin</classifier>
   	</dependency>
+  	<dependency>
+  		<groupId>net.jpountz.lz4</groupId>
+  		<artifactId>lz4</artifactId>
+  		<version>1.2.0</version>
+  	</dependency>
   </dependencies>
   <name>Utilities</name>
 </project>
