@@ -34,7 +34,8 @@ public class ByteBuffer extends Buffer {
 	}
 
 	public ByteBuffer(int i) {
-		this(new byte[i], 0);
+//		this(new byte[i], 0);
+		this(ByteArrayCache.get(i), 0);
 	}
 
 	@Override
@@ -101,6 +102,9 @@ public class ByteBuffer extends Buffer {
 			// byte[] copy = buffered;
 			byte[] bufferedExtended = ByteArrayCache
 					.get(buffered.length == 0 ? INIT_SIZE : buffered.length * 2);
+			// byte[] bufferedExtended = new byte[buffered.length == 0 ?
+			// INIT_SIZE
+			// : buffered.length * 2];
 			System.arraycopy(buffered, 0, bufferedExtended, 0, buffered.length);
 			buffered = bufferedExtended;
 		}
@@ -182,7 +186,7 @@ public class ByteBuffer extends Buffer {
 
 	public Map<String, byte[]> getStringByteArrayMap() {
 		int size = getInt();
-		Map<String, byte[]> ret = new HashMap<>();
+		Map<String, byte[]> ret = new HashMap<>(size + size / 2);
 		for (int i = 0; i < size; i++) {
 			ret.put(getString(), getByteArray());
 		}
@@ -190,8 +194,8 @@ public class ByteBuffer extends Buffer {
 	}
 
 	public List<String> getStringList() {
-		List<String> list = new ArrayList<>();
 		int size = getInt();
+		List<String> list = new ArrayList<>(size + size / 2);
 		for (int i = 0; i < size; i++) {
 			list.add(getString());
 		}
@@ -220,8 +224,8 @@ public class ByteBuffer extends Buffer {
 	}
 
 	public List<byte[]> getByteArrayList() {
-		List<byte[]> ret = new ArrayList<>();
 		int size = getInt();
+		List<byte[]> ret = new ArrayList<>(size + size / 2);
 		for (int i = 0; i < size; i++) {
 			ret.add(getByteArray());
 		}
@@ -229,8 +233,8 @@ public class ByteBuffer extends Buffer {
 	}
 
 	public List<Long> getLongList() {
-		List<Long> ret = new ArrayList<>();
 		int size = getInt();
+		List<Long> ret = new ArrayList<>(size + size / 2);
 		for (int i = 0; i < size; i++) {
 			ret.add(getLong());
 		}
