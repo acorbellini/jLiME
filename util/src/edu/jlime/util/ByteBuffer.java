@@ -11,7 +11,7 @@ import java.util.Map.Entry;
 
 public class ByteBuffer extends Buffer {
 
-	private static final int INIT_SIZE = 8096;
+	private static final int INIT_SIZE = 32;
 
 	byte[] buffered;
 
