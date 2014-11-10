@@ -34,8 +34,13 @@ public class ByteBuffer extends Buffer {
 	}
 
 	public ByteBuffer(int i) {
-//		this(new byte[i], 0);
-		this(ByteArrayCache.get(i), 0);
+		this(new byte[i], 0);
+		// this(ByteArrayCache.get(i), 0);
+	}
+
+	public ByteBuffer(byte[] buffered, int wrapSize, int readPos) {
+		this(buffered, wrapSize);
+		this.readPos = readPos;
 	}
 
 	@Override
@@ -87,14 +92,15 @@ public class ByteBuffer extends Buffer {
 
 	@Override
 	public byte[] getRawByteArray() {
-		byte[] raw = ByteArrayCache.get(writePos - readPos);
+		// byte[] raw = ByteArrayCache.get(writePos - readPos);
+		byte[] raw = new byte[writePos - readPos];
 		System.arraycopy(buffered, readPos, raw, 0, writePos - readPos);
 		return raw;
 	}
 
 	@Override
 	public int size() {
-		return writePos;
+		return writePos - readPos;
 	}
 
 	void ensureCapacity(int i) {
@@ -112,7 +118,7 @@ public class ByteBuffer extends Buffer {
 	}
 
 	public void clear() {
-		buffered = new byte[INIT_SIZE];
+		// buffered = new byte[INIT_SIZE];
 		writePos = 0;
 		readPos = 0;
 	}
@@ -138,9 +144,10 @@ public class ByteBuffer extends Buffer {
 	}
 
 	public byte[] build() {
-		if (buffered.length != writePos) {
-			byte[] ret = Arrays.copyOf(buffered, writePos);
-			ByteArrayCache.put(buffered);
+		if (buffered.length != writePos - readPos) {
+			// byte[] ret = Arrays.copyOf(buffered, writePos);
+			byte[] ret = Arrays.copyOfRange(buffered, readPos, writePos);
+			// ByteArrayCache.put(buffered);
 			return ret;
 		} else
 			return buffered;
@@ -216,6 +223,13 @@ public class ByteBuffer extends Buffer {
 		}
 	}
 
+	public void putByteBufferList(List<ByteBuffer> keys) {
+		putInt(keys.size());
+		for (ByteBuffer bs : keys) {
+			putByteArray(bs.build());
+		}
+	}
+
 	public void putLongList(List<Long> values) {
 		putInt(values.size());
 		for (Long long1 : values) {
@@ -228,6 +242,21 @@ public class ByteBuffer extends Buffer {
 		List<byte[]> ret = new ArrayList<>(size + size / 2);
 		for (int i = 0; i < size; i++) {
 			ret.add(getByteArray());
+		}
+		return ret;
+	}
+
+	public List<ByteBuffer> getByteBufferList() {
+		int size = getInt();
+		List<ByteBuffer> ret = new ArrayList<>(size + size / 2);
+		for (int i = 0; i < size; i++) {
+			int wrapSize = getInt();
+			if (wrapSize > 5)
+				System.out.println("What");
+			ByteBuffer wrap = new ByteBuffer(buffered, readPos + wrapSize,
+					readPos);
+			ret.add(wrap);
+			readPos += wrapSize;
 		}
 		return ret;
 	}
@@ -261,5 +290,36 @@ public class ByteBuffer extends Buffer {
 		ensureCapacity(lenght);
 		System.arraycopy(data, offset, buffered, writePos, lenght);
 		writePos += lenght;
+	}
+
+	@Override
+	public void putInt(int i) {
+		ensureCapacity(4);
+		DataTypeUtils.intToByteArray(i, writePos, buffered);
+		writePos += 4;
+	}
+
+	public long getLong(int offset) {
+		return DataTypeUtils.byteArrayToLong(buffered, readPos + offset);
+	}
+
+	public int getInteger(int offset) {
+		return DataTypeUtils.byteArrayToInt(buffered, readPos + offset);
+	}
+
+	public void putIntArray(int[] array) {
+		putInt(array.length);
+		for (int i : array) {
+			putInt(i);
+		}
+	}
+
+	public int[] getIntArray() {
+		int size = getInt();
+		int[] ret = new int[size];
+		for (int j = 0; j < ret.length; j++) {
+			ret[j] = getInt();
+		}
+		return ret;
 	}
 }

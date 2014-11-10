@@ -15,6 +15,7 @@ public class Compression {
 			.fastDecompressor();
 
 	public static byte[] compress(byte[] buf) {
+		// return lz4compress(buf);
 		return Snappy.compress(buf);
 	}
 
@@ -23,6 +24,7 @@ public class Compression {
 	}
 
 	public static byte[] uncompress(byte[] data) {
+		// return lz4decompress(data);
 		return Snappy.uncompress(data, 0, data.length);
 	}
 

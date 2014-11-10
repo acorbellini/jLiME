@@ -150,10 +150,6 @@ public abstract class Buffer {
 		putRawByteArray(stringAsBytes);
 	}
 
-	public void putInt(int i) {
-		putRawByteArray(DataTypeUtils.intToByteArray(i));
-	}
-
 	public void putMap(Map<String, String> data) {
 		putInt(data.size());
 		for (Entry<String, String> e : data.entrySet()) {
@@ -161,5 +157,7 @@ public abstract class Buffer {
 			putString(e.getValue());
 		}
 	}
+
+	public abstract void putInt(int i);
 
 }
