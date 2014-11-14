@@ -2,6 +2,7 @@ package edu.jlime.util;
 
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
+import java.nio.LongBuffer;
 
 public class DataTypeUtils {
 
@@ -63,5 +64,12 @@ public class DataTypeUtils {
 			l ^= bytes[i] & 0xFF;
 		}
 		return l;
+	}
+
+	public static byte[] longArrayToByteArray(long[] data) {
+		ByteBuffer byteBuffer = ByteBuffer.allocate(data.length * 8);
+		LongBuffer intBuffer = byteBuffer.asLongBuffer();
+		intBuffer.put(data);
+		return byteBuffer.array();
 	}
 }

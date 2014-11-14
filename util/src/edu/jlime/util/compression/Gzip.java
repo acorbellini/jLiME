@@ -6,8 +6,6 @@ import java.io.IOException;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-import edu.jlime.util.compression.Compression.CompressionType;
-
 public class Gzip implements Compressor {
 
 	@Override

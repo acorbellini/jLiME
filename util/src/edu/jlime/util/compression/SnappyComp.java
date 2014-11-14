@@ -3,7 +3,6 @@ package edu.jlime.util.compression;
 import org.iq80.snappy.Snappy;
 
 import edu.jlime.util.DataTypeUtils;
-import edu.jlime.util.compression.Compression.CompressionType;
 
 public class SnappyComp implements Compressor {
 

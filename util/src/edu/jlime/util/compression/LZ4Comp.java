@@ -1,7 +1,6 @@
 package edu.jlime.util.compression;
 
 import edu.jlime.util.ByteBuffer;
-import edu.jlime.util.compression.Compression.CompressionType;
 import net.jpountz.lz4.LZ4Compressor;
 import net.jpountz.lz4.LZ4Factory;
 import net.jpountz.lz4.LZ4FastDecompressor;

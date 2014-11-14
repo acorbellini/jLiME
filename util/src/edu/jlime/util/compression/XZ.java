@@ -8,8 +8,6 @@ import org.tukaani.xz.LZMA2Options;
 import org.tukaani.xz.XZInputStream;
 import org.tukaani.xz.XZOutputStream;
 
-import edu.jlime.util.compression.Compression.CompressionType;
-
 public class XZ implements Compressor {
 
 	@Override

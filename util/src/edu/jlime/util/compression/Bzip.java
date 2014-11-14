@@ -7,8 +7,6 @@ import java.io.IOException;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream;
 
-import edu.jlime.util.compression.Compression.CompressionType;
-
 public class Bzip implements Compressor {
 
 	@Override
