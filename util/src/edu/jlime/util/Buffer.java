@@ -50,7 +50,7 @@ public abstract class Buffer {
 	public String getString() {
 		int stringLength = getInt();
 		if (stringLength == 0)
-			return null;
+			return "";
 
 		byte[] bytes = get(stringLength);
 		return new String(bytes);
