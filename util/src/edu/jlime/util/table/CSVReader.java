@@ -22,8 +22,8 @@ public class CSVReader {
 
 	}
 
-	public CSVReader(Reader r, boolean windows, int i) {
-		this.reader = new BufferedReader(r, i);
+	public CSVReader(Reader r, boolean windows, int size) {
+		this.reader = new BufferedReader(r, size);
 		this.win = windows;
 	}
 
