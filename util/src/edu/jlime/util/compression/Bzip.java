@@ -15,8 +15,7 @@ public class Bzip implements Compressor {
 		try {
 
 			BZip2CompressorOutputStream comp = new BZip2CompressorOutputStream(
-					bas);
-
+					bas, BZip2CompressorOutputStream.chooseBlockSize(in.length));
 			comp.write(in);
 			comp.close();
 			bas.close();

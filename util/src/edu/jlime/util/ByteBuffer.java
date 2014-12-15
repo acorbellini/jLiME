@@ -131,6 +131,10 @@ public class ByteBuffer extends Buffer {
 		return readPos;
 	}
 
+	public int getWritePos() {
+		return writePos;
+	}
+
 	public void reset() {
 		writePos = 0;
 		readPos = 0;
@@ -238,7 +242,7 @@ public class ByteBuffer extends Buffer {
 
 	public List<byte[]> getByteArrayList() {
 		int size = getInt();
-		List<byte[]> ret = new ArrayList<>(size + size / 2);
+		List<byte[]> ret = new ArrayList<>(2 * size);
 		for (int i = 0; i < size; i++) {
 			ret.add(getByteArray());
 		}
@@ -272,7 +276,7 @@ public class ByteBuffer extends Buffer {
 	public void padTo(int maximumSize) {
 		if (maximumSize < writePos)
 			return;
-		ensureCapacity(maximumSize);
+		ensureCapacity(maximumSize - writePos);
 		writePos = maximumSize;
 	}
 
@@ -318,6 +322,26 @@ public class ByteBuffer extends Buffer {
 		int[] ret = new int[size];
 		for (int j = 0; j < ret.length; j++) {
 			ret[j] = getInt();
+		}
+		return ret;
+	}
+
+	public byte[] getBuffered() {
+		return buffered;
+	}
+
+	public void putStringArray(String[] array) {
+		putInt(array.length);
+		for (String l : array) {
+			putString(l);
+		}
+	}
+
+	public String[] getStringArray() {
+		int s = getInt();
+		String[] ret = new String[s];
+		for (int i = 0; i < ret.length; i++) {
+			ret[i] = getString();
 		}
 		return ret;
 	}
