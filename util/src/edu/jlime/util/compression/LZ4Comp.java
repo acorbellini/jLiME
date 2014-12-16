@@ -19,7 +19,7 @@ public class LZ4Comp implements Compressor {
 	}
 
 	@Override
-	public byte[] uncompress(byte[] in) {
+	public byte[] uncompress(byte[] in, int size) {
 		ByteBuffer buff = new ByteBuffer(in);
 		int decomSize = buff.getInt();
 		byte[] comp = buff.getRawByteArray();

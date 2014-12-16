@@ -31,8 +31,8 @@ public class XZ implements Compressor {
 	}
 
 	@Override
-	public byte[] uncompress(byte[] in) {
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
+	public byte[] uncompress(byte[] in, int size) {
+		ByteArrayOutputStream out = new ByteArrayOutputStream(size);
 		ByteArrayInputStream bas = new ByteArrayInputStream(in);
 		try {
 			XZInputStream comp = new XZInputStream(bas);

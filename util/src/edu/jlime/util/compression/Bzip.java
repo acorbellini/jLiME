@@ -30,8 +30,8 @@ public class Bzip implements Compressor {
 	}
 
 	@Override
-	public byte[] uncompress(byte[] in) {
-		ByteArrayOutputStream out = new ByteArrayOutputStream(in.length * 2);
+	public byte[] uncompress(byte[] in, int size) {
+		ByteArrayOutputStream out = new ByteArrayOutputStream(size);
 		ByteArrayInputStream bas = new ByteArrayInputStream(in);
 		try {
 			BZip2CompressorInputStream comp = new BZip2CompressorInputStream(

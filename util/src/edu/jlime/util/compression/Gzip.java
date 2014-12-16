@@ -28,8 +28,8 @@ public class Gzip implements Compressor {
 	}
 
 	@Override
-	public byte[] uncompress(byte[] in) {
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
+	public byte[] uncompress(byte[] in, int size) {
+		ByteArrayOutputStream out = new ByteArrayOutputStream(size);
 		ByteArrayInputStream bas = new ByteArrayInputStream(in);
 		GZIPInputStream comp;
 		try {

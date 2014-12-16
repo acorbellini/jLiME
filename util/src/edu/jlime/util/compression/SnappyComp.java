@@ -12,7 +12,7 @@ public class SnappyComp implements Compressor {
 	}
 
 	@Override
-	public byte[] uncompress(byte[] in) {
+	public byte[] uncompress(byte[] in, int size) {
 		return Snappy.uncompress(in, 0, in.length);
 	}
 
