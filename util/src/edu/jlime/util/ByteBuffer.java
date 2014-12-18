@@ -274,7 +274,7 @@ public class ByteBuffer extends Buffer {
 	}
 
 	public void padTo(int maximumSize) {
-		if (maximumSize < writePos)
+		if (maximumSize <= writePos)
 			return;
 		ensureCapacity(maximumSize - writePos);
 		writePos = maximumSize;
