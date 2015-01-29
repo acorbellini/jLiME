@@ -10,6 +10,7 @@ import edu.jlime.metrics.metric.Metrics;
 import edu.jlime.rpc.discovery.Discovery;
 import edu.jlime.rpc.message.Message;
 import edu.jlime.rpc.message.MessageProcessor;
+import edu.jlime.rpc.message.SocketAddress;
 
 public class MultiDiscovery extends MessageProcessor implements
 		DiscoveryProvider {
@@ -50,5 +51,14 @@ public class MultiDiscovery extends MessageProcessor implements
 	@Override
 	public void setMetrics(Metrics metrics) {
 
+	}
+
+	@Override
+	public Object getAddresses() {
+		List<SocketAddress> list = new ArrayList<>();
+		for (Discovery discovery : discos) {
+			list.addAll(discovery.buildAddressList());
+		}
+		return list;
 	}
 }

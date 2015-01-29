@@ -1,5 +1,6 @@
 package edu.jlime.jgroups;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -47,7 +48,7 @@ public class JgroupsMembership implements DiscoveryProvider, FailureProvider {
 
 	public void nodeAdded(edu.jlime.core.transport.Address addr, String name,
 			Map<String, String> data) throws Exception {
-		disco.memberMessage(addr, name, data);
+		disco.memberMessage(addr, name, data, new Object());
 	}
 
 	public void update(List<Address> newList) throws Exception {
@@ -105,6 +106,11 @@ public class JgroupsMembership implements DiscoveryProvider, FailureProvider {
 
 	public edu.jlime.core.transport.Address getAddress(Address origin) {
 		return addressToPeer.get(origin);
+	}
+
+	@Override
+	public Object getAddresses() {
+		return null;
 	}
 
 }

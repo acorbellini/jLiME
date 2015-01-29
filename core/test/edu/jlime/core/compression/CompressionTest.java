@@ -2,7 +2,7 @@ package edu.jlime.core.compression;
 
 import org.junit.Test;
 
-import edu.jlime.util.compression.Compression;
+import edu.jlime.util.compression.SnappyComp;
 
 public class CompressionTest {
 
@@ -15,11 +15,11 @@ public class CompressionTest {
 			testarray[i] = (int) (Math.random() * randomnes);
 		}
 
-		byte[] compressed = Compression.compress(testarray);
+		byte[] compressed = SnappyComp.compress(testarray);
 		System.out.println(compressed.length);
 		System.out.println(testarray.length * 4);
 
-		int[] uncompressed = Compression.uncompressIntArray(compressed);
+		int[] uncompressed = SnappyComp.uncompressIntArray(compressed);
 
 		System.out.println(uncompressed.length * 4);
 		System.out.println(testarray.length * 4);

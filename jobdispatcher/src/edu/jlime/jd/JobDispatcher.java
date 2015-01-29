@@ -33,6 +33,8 @@ import edu.jlime.core.stream.RemoteOutputStream;
 import edu.jlime.jd.client.JobContextImpl;
 import edu.jlime.jd.job.ResultManager;
 import edu.jlime.jd.rpc.JobExecutor;
+import edu.jlime.jd.rpc.JobExecutorBroadcast;
+import edu.jlime.jd.rpc.JobExecutorFactory;
 import edu.jlime.metrics.metric.Metrics;
 import edu.jlime.util.ByteBuffer;
 
@@ -97,6 +99,7 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 		rpc.registerTarget(JOB_DISPATCHER, this, true);
 
 		factory = new JobExecutorFactory(rpc, JOB_DISPATCHER);
+
 		final TypeConverters tc = rpc.getMarshaller().getTc();
 		tc.registerTypeConverter(JobContainer.class, new TypeConverter() {
 			@Override

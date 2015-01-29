@@ -19,7 +19,7 @@ public class SyncPerfClient {
 		config.port = 6070;
 		config.mcastport = 5050;
 
-		RPCDispatcher rpc = new JlimeFactory(config).build();
+		RPCDispatcher rpc = new JLiMEFactory(config).buildRPC();
 
 		rpc.start();
 

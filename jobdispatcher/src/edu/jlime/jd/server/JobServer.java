@@ -16,7 +16,7 @@ import edu.jlime.metrics.metric.Metrics;
 import edu.jlime.metrics.sysinfo.InfoProvider;
 import edu.jlime.metrics.sysinfo.SysInfoProvider;
 import edu.jlime.rpc.Configuration;
-import edu.jlime.rpc.JlimeFactory;
+import edu.jlime.rpc.JLiMEFactory;
 import edu.jlime.util.StringUtils;
 
 public class JobServer {
@@ -61,8 +61,8 @@ public class JobServer {
 		jdData.put(JobDispatcher.ISEXEC, Boolean.valueOf(true).toString());
 		jdData.put(JobDispatcher.TAGS, "Server");
 
-		final RPCDispatcher rpc = new JlimeFactory(new Configuration(), jdData)
-				.build();
+		final RPCDispatcher rpc = new JLiMEFactory(new Configuration(), jdData)
+				.buildRPC();
 
 		// JD
 		final JobDispatcher disp = new JobDispatcher(0, rpc);

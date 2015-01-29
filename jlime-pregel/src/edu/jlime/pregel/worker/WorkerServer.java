@@ -11,7 +11,7 @@ import edu.jlime.pregel.coordinator.rpc.CoordinatorBroadcast;
 import edu.jlime.pregel.worker.rpc.Worker;
 import edu.jlime.pregel.worker.rpc.WorkerBroadcast;
 import edu.jlime.rpc.Configuration;
-import edu.jlime.rpc.JlimeFactory;
+import edu.jlime.rpc.JLiMEFactory;
 
 public class WorkerServer {
 	private RPCDispatcher disp;
@@ -25,12 +25,11 @@ public class WorkerServer {
 		config.mcastport = 5050;
 
 		HashMap<String, String> data = new HashMap<>();
-
 		data.put("type", "worker");
 
-		JlimeFactory fact = new JlimeFactory(config, data);
+		JLiMEFactory fact = new JLiMEFactory(config, data);
 
-		disp = fact.build();
+		disp = fact.buildRPC();
 
 		// coord = disp.manage(new CoordinatorFactory(disp, "coordinator"),
 		// new PeerFilter() {

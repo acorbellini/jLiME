@@ -73,7 +73,8 @@ public abstract class Discovery implements DiscoveryProvider, StackElement {
 						notifyAddressList(disco.getId(), disco.getAddresses());
 
 						discoveryMessageReceived(message.getFrom(),
-								disco.getName(), disco.getAdditional());
+								disco.getName(), disco.getAdditional(),
+								disco.getAddresses());
 					}
 				});
 		discoveryData.addMessageListener(MessageType.DISCOVERY_RESPONSE,
@@ -93,7 +94,7 @@ public abstract class Discovery implements DiscoveryProvider, StackElement {
 						notifyAddressList(disco.getId(), disco.getAddresses());
 
 						discoveryMessageReceived(m.getFrom(), disco.getName(),
-								disco.getAdditional());
+								disco.getAdditional(), disco.getAddresses());
 
 						Message confirm = newDiscoveryConfirmMessage();
 						confirm.setTo(m.getFrom());
@@ -177,9 +178,7 @@ public abstract class Discovery implements DiscoveryProvider, StackElement {
 	}
 
 	private Message newDiscoveryMessage(MessageType t) {
-		List<SocketAddress> addresses = new ArrayList<>();
-		for (AddressListProvider alp : addressProviders.values())
-			addresses.addAll(alp.getAddresses());
+		List<SocketAddress> addresses = buildAddressList();
 
 		Message discoMsg = DiscoveryMessage.createNew(t, localID, localName,
 				discAdditionData, addresses);
@@ -187,15 +186,23 @@ public abstract class Discovery implements DiscoveryProvider, StackElement {
 		return discoMsg;
 	}
 
+	public List<SocketAddress> buildAddressList() {
+		List<SocketAddress> addresses = new ArrayList<>();
+		for (AddressListProvider alp : addressProviders.values())
+			addresses.addAll(alp.getAddresses());
+		return addresses;
+	}
+
 	public void addAddressListProvider(AddressListProvider alp) {
 		addressProviders.put(alp.getType(), alp);
 	}
 
 	private void discoveryMessageReceived(Address from, String name,
-			Map<String, String> additional) throws Exception {
+			Map<String, String> additional, List<SocketAddress> sockets)
+			throws Exception {
 		for (DiscoveryListener l : new ArrayList<>(listeners)) {
 			try {
-				l.memberMessage(from, name, additional);
+				l.memberMessage(from, name, additional, sockets);
 			} catch (UnknownHostException e) {
 				e.printStackTrace();
 			}
@@ -212,4 +219,8 @@ public abstract class Discovery implements DiscoveryProvider, StackElement {
 
 	protected abstract void startDiscovery(List<SelectedInterface> added);
 
+	@Override
+	public Object getAddresses() {
+		return buildAddressList();
+	}
 }

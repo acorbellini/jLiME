@@ -192,4 +192,10 @@ public class JgroupsTransport extends Transport implements AsyncRequestHandler {
 
 	}
 
+	@Override
+	public String getRealAddress() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

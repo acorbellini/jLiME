@@ -84,7 +84,7 @@ public class JGroupsFactory implements RPCFactory {
 	}
 
 	@Override
-	public RPCDispatcher build() throws Exception {
+	public RPCDispatcher buildRPC() throws Exception {
 		List<SelectedInterface> addrList = NetworkUtils.getLocalAddressIPv4();
 
 		if (addrList.size() == 0)

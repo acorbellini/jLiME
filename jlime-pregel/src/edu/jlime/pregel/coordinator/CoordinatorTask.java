@@ -46,9 +46,9 @@ public class CoordinatorTask {
 	public CoordinatorTask(RPCDispatcher rpc, HashMap<String, Aggregator> aggs,
 			Peer cli) {
 		this.coordMgr = rpc.manage(new CoordinatorFactory(rpc, "coordinator"),
-				new CoordinatorFilter(), cli);
+				new CoordinatorFilter(), this.cli);
 		this.workerMgr = rpc.manage(new WorkerFactory(rpc, "worker"),
-				new WorkerFilter(), cli);
+				new WorkerFilter(), this.cli);
 		this.aggregators = aggs;
 		this.cli = cli;
 	}

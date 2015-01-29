@@ -13,7 +13,7 @@ import edu.jlime.jd.ClientCluster;
 import edu.jlime.jd.JobDispatcher;
 import edu.jlime.jd.StreamProvider;
 import edu.jlime.rpc.Configuration;
-import edu.jlime.rpc.JlimeFactory;
+import edu.jlime.rpc.JLiMEFactory;
 
 public class Client implements Closeable {
 
@@ -36,7 +36,7 @@ public class Client implements Closeable {
 		Configuration config = new Configuration();
 		// config.port = 3552;
 		// config.port_range = 1;
-		final RPCDispatcher rpc = new JlimeFactory(config, jdData).build();
+		final RPCDispatcher rpc = new JLiMEFactory(config, jdData).buildRPC();
 		JobDispatcher jd = new JobDispatcher(i, rpc);
 		jd.setStreamer(new StreamProvider() {
 

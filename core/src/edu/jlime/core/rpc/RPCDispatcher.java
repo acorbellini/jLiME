@@ -478,4 +478,8 @@ public class RPCDispatcher implements TransportListener {
 		callSync(p, localPeer, new MethodCall(RPC, "registerTarget",
 				new Object[] { name, pregelGraphLocal, false }));
 	}
+
+	public Object getRealAddress() {
+		return tr.getRealAddress();
+	}
 }

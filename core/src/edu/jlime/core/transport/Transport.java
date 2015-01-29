@@ -36,11 +36,12 @@ public abstract class Transport implements DiscoveryListener, FailureListener {
 
 	@Override
 	public void memberMessage(Address from, String name,
-			Map<String, String> data) throws Exception {
+			Map<String, String> data, Object realAddress) throws Exception {
 		Peer p = cluster.getByAddress(from);
 		if (p == null) {
-			if (log.isDebugEnabled())
-				log.info("New member found : " + name + " id " + from);
+			// if (log.isDebugEnabled())
+			log.info("New member found : " + name + " id " + from
+					+ " with address " + realAddress);
 			Peer peer = new Peer(from, name);
 			peer.putData(data);
 			cluster.addPeer(peer);
@@ -97,5 +98,7 @@ public abstract class Transport implements DiscoveryListener, FailureListener {
 	public abstract void start() throws Exception;
 
 	public abstract void stop() throws Exception;
+
+	public abstract Object getRealAddress();
 
 }

@@ -56,7 +56,8 @@ public class jLiMETransport extends Transport implements DataListener {
 			log.debug("Calling Synchronously " + peer + ", sending "
 					+ marshalled.length + " b.");
 
-		byte[] resp = commStack.getData().sendData(marshalled,peer.getAddress(), true);
+		byte[] resp = commStack.getData().sendData(marshalled,
+				peer.getAddress(), true);
 
 		if (log.isDebugEnabled())
 			log.debug("FINISHED synchronous call  to " + peer + ", response "
@@ -69,14 +70,14 @@ public class jLiMETransport extends Transport implements DataListener {
 	public void messageReceived(final DataMessage msg, final Response handler) {
 		if (log.isDebugEnabled())
 			log.debug("Received data from processor");
-		
+
 		handleExecutor.execute(new Runnable() {
 			public void run() {
 				Address origin = msg.getFrom();
 				byte[] buff = msg.getData();
 				byte[] rsp = jLiMETransport.super.callTransportListener(origin,
 						buff);
-				
+
 				if (log.isDebugEnabled())
 					log.debug("Sending response using response handler: "
 							+ handler);
@@ -105,5 +106,10 @@ public class jLiMETransport extends Transport implements DataListener {
 	@Override
 	protected void onFailedPeer(Peer peer) {
 		commStack.cleanup((Address) peer.getAddress());
+	}
+
+	@Override
+	public Object getRealAddress() {
+		return commStack.getDiscovery().getAddresses();
 	}
 }
