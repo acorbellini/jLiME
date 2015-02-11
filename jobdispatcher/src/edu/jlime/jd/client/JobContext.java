@@ -20,4 +20,6 @@ public interface JobContext {
 
 	public abstract Object waitFor(String id);
 
+	public abstract Object getGlobal(String k);
+
 }

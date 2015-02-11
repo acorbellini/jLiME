@@ -1,6 +1,6 @@
 package edu.jlime.collections.adjacencygraph.query;
 
-import edu.jlime.collections.adjacencygraph.get.GetType;
+import edu.jlime.collections.adjacencygraph.get.Dir;
 import edu.jlime.collections.adjacencygraph.query.StreamForkJoin.StreamJobFactory;
 import edu.jlime.core.stream.RemoteInputStream;
 import edu.jlime.core.stream.RemoteOutputStream;
@@ -31,11 +31,11 @@ public class RemoteCountQuery extends CompositeQuery<int[], TIntIntHashMap>
 
 	private static final long serialVersionUID = 5030949972656440876L;
 
-	private GetType type;
+	private Dir type;
 
 	private RemoteListQuery toremove;
 
-	public RemoteCountQuery(RemoteQuery<int[]> query, GetType type) {
+	public RemoteCountQuery(RemoteQuery<int[]> query, Dir type) {
 		super(query);
 		super.setCacheQuery(false);
 		this.type = type;
@@ -46,7 +46,7 @@ public class RemoteCountQuery extends CompositeQuery<int[], TIntIntHashMap>
 		final Logger log = Logger.getLogger(RemoteCountQuery.class);
 		int[] data = getQuery().exec(c);
 		int[] inverted = Arrays.copyOf(data, data.length);
-		if (type.equals(GetType.FOLLOWEES))
+		if (type.equals(Dir.OUT))
 			for (int i = 0; i < data.length; i++)
 				inverted[i] = -1 * data[i];
 

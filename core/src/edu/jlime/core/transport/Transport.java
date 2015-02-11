@@ -6,6 +6,7 @@ import org.apache.log4j.Logger;
 
 import edu.jlime.core.cluster.Cluster;
 import edu.jlime.core.cluster.Peer;
+import edu.jlime.core.cluster.PeerFilter;
 import edu.jlime.core.rpc.TransportListener;
 import edu.jlime.metrics.metric.Metrics;
 
@@ -18,10 +19,10 @@ public abstract class Transport implements DiscoveryListener, FailureListener {
 	private Metrics metrics;
 	private Streamer streamer;
 
-	public Transport(Peer local, DiscoveryProvider disco,
+	public Transport(Peer local, PeerFilter filter, DiscoveryProvider disco,
 			FailureProvider failure, Streamer streamer) {
 		// CLUSTER
-		this.cluster = new Cluster(local);
+		this.cluster = new Cluster(local, filter);
 		this.disco = disco;
 		this.failure = failure;
 		this.streamer = streamer;
@@ -39,14 +40,15 @@ public abstract class Transport implements DiscoveryListener, FailureListener {
 			Map<String, String> data, Object realAddress) throws Exception {
 		Peer p = cluster.getByAddress(from);
 		if (p == null) {
-			// if (log.isDebugEnabled())
-			log.info("New member found : " + name + " id " + from
-					+ " with address " + realAddress);
 			Peer peer = new Peer(from, name);
 			peer.putData(data);
-			cluster.addPeer(peer);
-			failure.addPeerToMonitor(peer);
-			onNewPeer(peer);
+			if (cluster.addPeer(peer)) {
+				if (log.isDebugEnabled())
+					log.debug("New member found : " + name + " id " + from
+							+ " with address " + realAddress);
+				failure.addPeerToMonitor(peer);
+				onNewPeer(peer);
+			}
 		}
 	}
 

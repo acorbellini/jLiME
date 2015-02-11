@@ -72,4 +72,11 @@ public class DataTypeUtils {
 		intBuffer.put(data);
 		return byteBuffer.array();
 	}
+
+	public static long[] byteArrayToLongArray(byte[] data) {
+		long[] ret = new long[data.length / 8];
+		for (int i = 0; i < (data.length / 8); i++)
+			ret[i] = byteArrayToLong(data, i * 8);
+		return ret;
+	}
 }

@@ -13,6 +13,7 @@ import org.apache.log4j.Logger;
 import edu.jlime.core.cluster.Peer;
 import edu.jlime.jd.ClientCluster;
 import edu.jlime.jd.JobContainer;
+import edu.jlime.jd.JobDispatcher;
 
 public class JobContextImpl implements JobContext {
 
@@ -26,7 +27,10 @@ public class JobContextImpl implements JobContext {
 
 	private ClientCluster cluster;
 
-	public JobContextImpl(ClientCluster c, Peer cliId) {
+	private JobDispatcher srv;
+
+	public JobContextImpl(JobDispatcher srv, ClientCluster c, Peer cliId) {
+		this.srv = srv;
 		this.id = cliId;
 		this.cluster = c;
 		exec = Executors.newCachedThreadPool(new ThreadFactory() {
@@ -114,5 +118,10 @@ public class JobContextImpl implements JobContext {
 			}
 		}
 		return obj;
+	}
+
+	@Override
+	public Object getGlobal(String k) {
+		return srv.getGlobal(k);
 	}
 }

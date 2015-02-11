@@ -10,9 +10,9 @@ import java.util.Map;
 import $ifacefqn;
 		
 
-public class $nameServerImpl extends RPCClient implements $name {
+public class $nameServerImpl extends RPCClient implements $name, Transferible {
 	$fields
-	RPCDispatcher local = null;	
+	transient RPCDispatcher local = null;	
 	
 	public $nameServerImpl(RPCDispatcher disp, Peer dest, Peer client, String targetID) {
 		super(disp, dest, client, targetID);
@@ -43,5 +43,11 @@ public class $nameServerImpl extends RPCClient implements $name {
 	 }
 
 	#method 
+	
+	@Override
+	public void setRPC(RPCDispatcher rpc) {
+		this.disp=rpc;
+		
+	}
 		
 }

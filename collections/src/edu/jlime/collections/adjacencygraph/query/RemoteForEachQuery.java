@@ -125,10 +125,11 @@ public class RemoteForEachQuery<T> extends RemoteQuery<Map<Integer, T>> {
 		}
 
 		@Override
-		public Map<Job<Map<Integer, T>>, ClientNode> map(int[] data, JobContext env)
-				throws Exception {
+		public Map<Job<Map<Integer, T>>, ClientNode> map(int[] data,
+				JobContext env) throws Exception {
 			Map<Job<Map<Integer, T>>, ClientNode> res = new HashMap<>();
-			Map<ClientNode, TIntArrayList> map = graph.getMapper().map(data, env);
+			Map<ClientNode, TIntArrayList> map = graph.getMapper().map(data,
+					env);
 
 			for (ClientNode p : map.keySet()) {
 				res.put(new ForEachJob<T>(map.get(p).toArray(), proc, graph), p);
@@ -138,9 +139,9 @@ public class RemoteForEachQuery<T> extends RemoteQuery<Map<Integer, T>> {
 		}
 
 		@Override
-		public void processSubResult(Map<Integer, T> subres) {
+		public boolean processSubResult(Map<Integer, T> subres) {
 			res.putAll(subres);
-
+			return true;
 		}
 
 		@Override

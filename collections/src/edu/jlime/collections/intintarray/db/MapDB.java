@@ -9,7 +9,7 @@ import org.mapdb.HTreeMap;
 
 public class MapDB extends Store {
 
-	private HTreeMap<Integer, byte[]> store;
+	private HTreeMap<Long, byte[]> store;
 
 	private DB db;
 
@@ -17,16 +17,16 @@ public class MapDB extends Store {
 		super(name);
 		db = DBMaker.newFileDB(new File(dir + "/" + name)).transactionDisable()
 				.mmapFileEnable().closeOnJvmShutdown().make();
-		store = db.<Integer, byte[]> getHashMap(name);
+		store = db.<Long, byte[]> getHashMap(name);
 	}
 
 	@Override
-	public byte[] load(int key) throws Exception {
+	public byte[] load(long key) throws Exception {
 		return store.get(key);
 	}
 
 	@Override
-	public void store(int k, byte[] bs) throws Exception {
+	public void store(long k, byte[] bs) throws Exception {
 		store.put(k, bs);
 	}
 
@@ -40,12 +40,6 @@ public class MapDB extends Store {
 	@Override
 	public void commit() {
 		db.commit();
-	}
-
-	@Override
-	public List<byte[]> loadAll(int[] key) throws Exception {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 }

@@ -1,6 +1,6 @@
 package edu.jlime.collections.adjacencygraph.query;
 
-import edu.jlime.collections.adjacencygraph.get.GetType;
+import edu.jlime.collections.adjacencygraph.get.Dir;
 import edu.jlime.collections.intintarray.client.PersistentIntIntArrayMap;
 import edu.jlime.jd.client.JobContext;
 import gnu.trove.map.hash.TIntObjectHashMap;
@@ -13,9 +13,9 @@ public class MultiGetQuery extends
 
 	private static final long serialVersionUID = 1608593213488543917L;
 
-	private GetType type;
+	private Dir type;
 
-	public MultiGetQuery(RemoteListQuery listQuery, GetType type) {
+	public MultiGetQuery(RemoteListQuery listQuery, Dir type) {
 		super(listQuery);
 		this.type = type;
 		super.setCacheQuery(false);
@@ -29,10 +29,10 @@ public class MultiGetQuery extends
 
 		TIntHashSet toSearch = new TIntHashSet();
 		int[] data = getQuery().exec(c);
-		if (type.equals(GetType.FOLLOWEES) || type.equals(GetType.NEIGHBOURS))
+		if (type.equals(Dir.OUT) || type.equals(Dir.BOTH))
 			toSearch.addAll(data);
 
-		if (type.equals(GetType.FOLLOWERS) || type.equals(GetType.NEIGHBOURS))
+		if (type.equals(Dir.IN) || type.equals(Dir.BOTH))
 			for (int i = 0; i < data.length; i++) {
 				toSearch.add(-1 * data[i]);
 			}
@@ -45,11 +45,11 @@ public class MultiGetQuery extends
 		TIntObjectHashMap<int[]> ret = new TIntObjectHashMap<>();
 		for (int i : data) {
 			TIntHashSet toadd = new TIntHashSet();
-			if (type.equals(GetType.FOLLOWERS)
-					|| type.equals(GetType.NEIGHBOURS))
+			if (type.equals(Dir.IN)
+					|| type.equals(Dir.BOTH))
 				toadd.addAll(getRes.get(-i));
-			if (type.equals(GetType.FOLLOWEES)
-					|| type.equals(GetType.NEIGHBOURS))
+			if (type.equals(Dir.OUT)
+					|| type.equals(Dir.BOTH))
 				toadd.addAll(getRes.get(i));
 			ret.put(i, toadd.toArray());
 		}

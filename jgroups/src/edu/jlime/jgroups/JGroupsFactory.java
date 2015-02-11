@@ -15,6 +15,7 @@ import org.jgroups.blocks.MessageDispatcher;
 
 import edu.jlime.core.cluster.IP;
 import edu.jlime.core.cluster.Peer;
+import edu.jlime.core.cluster.PeerFilter;
 import edu.jlime.core.rpc.RPCDispatcher;
 import edu.jlime.core.rpc.RPCFactory;
 import edu.jlime.util.NetworkUtils;
@@ -46,6 +47,8 @@ public class JGroupsFactory implements RPCFactory {
 	private InputStream jg;
 
 	private HashMap<String, String> data;
+
+	private PeerFilter filter;
 
 	public JGroupsFactory(InputStream jg, HashMap<String, String> data) {
 		this.jg = jg;
@@ -84,7 +87,7 @@ public class JGroupsFactory implements RPCFactory {
 	}
 
 	@Override
-	public RPCDispatcher buildRPC() throws Exception {
+	public RPCDispatcher build() throws Exception {
 		List<SelectedInterface> addrList = NetworkUtils.getLocalAddressIPv4();
 
 		if (addrList.size() == 0)
@@ -172,7 +175,8 @@ public class JGroupsFactory implements RPCFactory {
 		Peer local = new Peer(new edu.jlime.core.transport.Address(),
 				ip.toString());
 
-		JgroupsTransport tr = new JgroupsTransport(local, disp, member, null);
+		JgroupsTransport tr = new JgroupsTransport(local, filter, disp, member,
+				null);
 
 		RPCDispatcher rpc = new RPCDispatcher(tr);
 		return rpc;

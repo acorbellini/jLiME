@@ -11,7 +11,7 @@ public abstract class Mapper implements Serializable {
 
 	private static final long serialVersionUID = 6201330433508707230L;
 
-	public abstract Map<ClientNode, TIntArrayList> map(int[] data, JobContext ctx)
-			throws Exception;
+	public abstract Map<ClientNode, TIntArrayList> map(int[] data,
+			JobContext ctx) throws Exception;
 
 }

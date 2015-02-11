@@ -27,8 +27,11 @@ public class Cluster implements Iterable<Peer> {
 
 	private Peer localPeer;
 
-	public Cluster(Peer localPeer) {
+	private PeerFilter filter;
+
+	public Cluster(Peer localPeer, PeerFilter filter) {
 		this.localPeer = localPeer;
+		this.filter = filter;
 		this.addPeer(localPeer);
 	}
 
@@ -70,11 +73,17 @@ public class Cluster implements Iterable<Peer> {
 		}
 	};
 
-	public void addPeer(Peer peer) {
+	public boolean addPeer(Peer peer) {
+		if (filter != null && !filter.verify(peer))
+			return false;
 
 		synchronized (peers) {
 			if (peers.contains(peer))
-				return;
+				return false;
+
+			log.info(localPeer.getData("app") + ": Added peer "
+					+ peer.getName());
+
 			peers.add(peer);
 			peers.notifyAll();
 
@@ -88,6 +97,7 @@ public class Cluster implements Iterable<Peer> {
 
 		if (log.isDebugEnabled())
 			log.info(this.toString());
+		return true;
 	};
 
 	public void removePeer(Peer peer) {

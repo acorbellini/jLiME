@@ -2,7 +2,7 @@ package edu.jlime.collections.adjacencygraph.query;
 
 import java.util.Map;
 
-import edu.jlime.collections.adjacencygraph.get.GetType;
+import edu.jlime.collections.adjacencygraph.get.Dir;
 import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 
@@ -12,7 +12,7 @@ public interface ListQuery extends Query<int[]> {
 
 	public abstract ListQuery followers();
 
-	public abstract CountQuery count(GetType type);
+	public abstract CountQuery count(Dir type);
 
 	public abstract CountQuery countFollowers();
 

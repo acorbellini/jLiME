@@ -3,7 +3,7 @@ package edu.jlime.collections.adjacencygraph.query;
 import java.util.Map;
 
 import edu.jlime.collections.adjacencygraph.RemoteAdjacencyGraph;
-import edu.jlime.collections.adjacencygraph.get.GetType;
+import edu.jlime.collections.adjacencygraph.get.Dir;
 import gnu.trove.map.hash.TIntIntHashMap;
 
 public abstract class RemoteListQuery extends RemoteQuery<int[]> implements
@@ -25,31 +25,31 @@ public abstract class RemoteListQuery extends RemoteQuery<int[]> implements
 
 	@Override
 	public RemoteListQuery followees() {
-		return get(GetType.FOLLOWEES);
+		return get(Dir.OUT);
 	}
 
 	@Override
 	public RemoteListQuery followers() {
-		return get(GetType.FOLLOWERS);
+		return get(Dir.IN);
 	}
 
-	public RemoteListQuery get(GetType type) {
+	public RemoteListQuery get(Dir type) {
 		return new GetQuery(this, type);
 	}
 
 	@Override
-	public CountQuery count(GetType type) {
+	public CountQuery count(Dir type) {
 		return new RemoteCountQuery(this, type);
 	}
 
 	@Override
 	public CountQuery countFollowers() {
-		return count(GetType.FOLLOWERS);
+		return count(Dir.IN);
 	}
 
 	@Override
 	public CountQuery countFollowees() {
-		return count(GetType.FOLLOWEES);
+		return count(Dir.OUT);
 	}
 
 	@Override
@@ -96,7 +96,7 @@ public abstract class RemoteListQuery extends RemoteQuery<int[]> implements
 
 	@Override
 	public RemoteListQuery neighbours() {
-		return get(GetType.NEIGHBOURS);
+		return get(Dir.BOTH);
 	}
 
 	@Override
@@ -106,22 +106,22 @@ public abstract class RemoteListQuery extends RemoteQuery<int[]> implements
 
 	@Override
 	public MultiGetQuery followeesMap() {
-		return new MultiGetQuery(this, GetType.FOLLOWEES);
+		return new MultiGetQuery(this, Dir.OUT);
 	}
 
 	@Override
 	public MultiGetQuery followersMap() {
-		return new MultiGetQuery(this, GetType.FOLLOWERS);
+		return new MultiGetQuery(this, Dir.IN);
 	}
 
 	@Override
 	public MultiGetQuery neighboursMap() {
-		return new MultiGetQuery(this, GetType.NEIGHBOURS);
+		return new MultiGetQuery(this, Dir.BOTH);
 	}
 
 	@Override
 	public Query<TIntIntHashMap> neighboursSizesMap() {
-		return new MultiGetSizeQuery(this, GetType.NEIGHBOURS);
+		return new MultiGetSizeQuery(this, Dir.BOTH);
 	}
 
 }

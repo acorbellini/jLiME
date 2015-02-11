@@ -2,14 +2,14 @@ package edu.jlime.collections.adjacencygraph.query.local;
 
 import java.util.Arrays;
 
-import edu.jlime.collections.adjacencygraph.get.GetType;
+import edu.jlime.collections.adjacencygraph.get.Dir;
 import edu.jlime.collections.adjacencygraph.query.ListQuery;
 import edu.jlime.util.DataTypeUtils;
 import gnu.trove.set.hash.TIntHashSet;
 
 public class LocalGetQuery extends LocalListQuery {
 
-	private GetType type;
+	private Dir type;
 
 	private LocalListQuery q;
 
@@ -17,7 +17,7 @@ public class LocalGetQuery extends LocalListQuery {
 
 	private ListQuery filter;
 
-	public LocalGetQuery(LocalListQuery q, GetType type) {
+	public LocalGetQuery(LocalListQuery q, Dir type) {
 		super(q.getStore());
 		this.q = q;
 		this.type = type;
@@ -40,14 +40,14 @@ public class LocalGetQuery extends LocalListQuery {
 		int[] users = q.query();
 		TIntHashSet list = new TIntHashSet(50000);
 		for (int i : users) {
-			if (type.equals(GetType.FOLLOWEES)
-					|| type.equals(GetType.NEIGHBOURS)) {
+			if (type.equals(Dir.OUT)
+					|| type.equals(Dir.BOTH)) {
 				byte[] load = getStore().load(i);
 				if (load != null)
 					list.addAll(DataTypeUtils.byteArrayToIntArray(load));
 			}
-			if (type.equals(GetType.FOLLOWERS)
-					|| type.equals(GetType.NEIGHBOURS)) {
+			if (type.equals(Dir.IN)
+					|| type.equals(Dir.BOTH)) {
 				byte[] load = getStore().load(-i);
 				if (load != null)
 					list.addAll(DataTypeUtils.byteArrayToIntArray(load));

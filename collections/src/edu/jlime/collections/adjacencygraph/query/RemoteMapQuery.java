@@ -77,8 +77,8 @@ public class RemoteMapQuery<T> extends CompositeQuery<int[], Map<Integer, T>>
 		}
 
 		@Override
-		public Map<Job<Map<Integer, T>>, ClientNode> map(int[] data, JobContext env)
-				throws Exception {
+		public Map<Job<Map<Integer, T>>, ClientNode> map(int[] data,
+				JobContext env) throws Exception {
 			Map<Job<Map<Integer, T>>, ClientNode> res = new HashMap<>();
 			Map<ClientNode, TIntArrayList> map = mapper.map(data, env);
 			Logger log = Logger.getLogger(MapMR.class);
@@ -94,10 +94,11 @@ public class RemoteMapQuery<T> extends CompositeQuery<int[], Map<Integer, T>>
 		}
 
 		@Override
-		public void processSubResult(Map<Integer, T> subres) {
+		public boolean processSubResult(Map<Integer, T> subres) {
 			Logger log = Logger.getLogger(MapMR.class);
 			log.info("Reducing result at MapMR");
 			result.putAll(subres);
+			return true;
 
 		}
 

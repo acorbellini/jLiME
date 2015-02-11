@@ -4,6 +4,9 @@ import java.util.HashMap;
 
 import org.apache.log4j.Logger;
 
+import edu.jlime.core.cluster.DataFilter;
+import edu.jlime.core.cluster.Peer;
+import edu.jlime.core.cluster.PeerFilter;
 import edu.jlime.core.rpc.ClientManager;
 import edu.jlime.core.rpc.RPCDispatcher;
 import edu.jlime.pregel.coordinator.rpc.Coordinator;
@@ -25,11 +28,12 @@ public class WorkerServer {
 		config.mcastport = 5050;
 
 		HashMap<String, String> data = new HashMap<>();
+		data.put("app", "graphly");
 		data.put("type", "worker");
 
-		JLiMEFactory fact = new JLiMEFactory(config, data);
-
-		disp = fact.buildRPC();
+		JLiMEFactory fact = new JLiMEFactory(config, data, new DataFilter(
+				"app", "graphly"));
+		disp = fact.build();
 
 		// coord = disp.manage(new CoordinatorFactory(disp, "coordinator"),
 		// new PeerFilter() {

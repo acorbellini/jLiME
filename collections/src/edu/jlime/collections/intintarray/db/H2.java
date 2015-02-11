@@ -58,7 +58,7 @@ public class H2 extends Store {
 	}
 
 	@Override
-	public byte[] load(int key) {
+	public byte[] load(long key) {
 		try {
 			if (conn == null || conn.isClosed())
 				open();
@@ -100,7 +100,7 @@ public class H2 extends Store {
 	}
 
 	@Override
-	public void store(int k, byte[] bs) {
+	public void store(long k, byte[] bs) {
 		try {
 			// System.out.println("Saving key=" + k + " data size:" +
 			// bs.length);
@@ -117,7 +117,7 @@ public class H2 extends Store {
 
 			stmt.close();
 
-			updateStmt.setInt(1, k);
+			updateStmt.setLong(1, k);
 			updateStmt.setBinaryStream(2, new ByteArrayInputStream(bs),
 					bs.length);
 			updateStmt.execute();
@@ -154,12 +154,6 @@ public class H2 extends Store {
 			e.printStackTrace();
 		}
 
-	}
-
-	@Override
-	public List<byte[]> loadAll(int[] key) throws Exception {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 }

@@ -3,8 +3,7 @@ package edu.jlime.jd.server;
 import java.util.HashMap;
 import java.util.UUID;
 
-import org.apache.log4j.Logger;
-
+import edu.jlime.core.cluster.DataFilter;
 import edu.jlime.core.cluster.Peer;
 import edu.jlime.core.rpc.RPCDispatcher;
 import edu.jlime.core.stream.RemoteInputStream;
@@ -17,7 +16,6 @@ import edu.jlime.metrics.sysinfo.InfoProvider;
 import edu.jlime.metrics.sysinfo.SysInfoProvider;
 import edu.jlime.rpc.Configuration;
 import edu.jlime.rpc.JLiMEFactory;
-import edu.jlime.util.StringUtils;
 
 public class JobServer {
 
@@ -33,12 +31,12 @@ public class JobServer {
 		jd.start();
 
 		try {
-			String[] info = new String[3];
-			info[0] = mgr.get("sysinfo.os").toString();
-			info[1] = mgr.get("jlime.interface").toString();
-			info[2] = "Local Node : " + jd.getCluster().getLocalNode();
-			Logger.getLogger(JobServer.class)
-					.info(StringUtils.printTitle(info));
+			// String[] info = new String[3];
+			// info[0] = mgr.get("sysinfo.os").toString();
+			// info[1] = mgr.get("jlime.interface").toString();
+			// info[2] = "Local Node : " + jd.getCluster().getLocalNode();
+			// Logger.getLogger(JobServer.class)
+			// .info(StringUtils.printTitle(info));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -58,11 +56,12 @@ public class JobServer {
 	public static JobServer jLiME() throws Exception {
 
 		HashMap<String, String> jdData = new HashMap<>();
+		jdData.put("app", "jobdispatcher");
 		jdData.put(JobDispatcher.ISEXEC, Boolean.valueOf(true).toString());
 		jdData.put(JobDispatcher.TAGS, "Server");
 
-		final RPCDispatcher rpc = new JLiMEFactory(new Configuration(), jdData)
-				.buildRPC();
+		final RPCDispatcher rpc = new JLiMEFactory(new Configuration(), jdData,
+				new DataFilter("app", "jobdispatcher")).build();
 
 		// JD
 		final JobDispatcher disp = new JobDispatcher(0, rpc);
@@ -87,5 +86,9 @@ public class JobServer {
 
 	public void stop() throws Exception {
 		jd.stop();
+	}
+
+	public JobDispatcher getJd() {
+		return jd;
 	}
 }

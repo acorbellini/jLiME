@@ -1,6 +1,6 @@
 package edu.jlime.collections.adjacencygraph.query.local;
 
-import edu.jlime.collections.adjacencygraph.get.GetType;
+import edu.jlime.collections.adjacencygraph.get.Dir;
 import edu.jlime.collections.adjacencygraph.query.CountQuery;
 import edu.jlime.collections.adjacencygraph.query.ListQuery;
 import edu.jlime.collections.adjacencygraph.query.RemoteListQuery;
@@ -15,9 +15,9 @@ public class LocalCountQuery extends LocalQuery<TIntIntHashMap> implements
 
 	private LocalListQuery q;
 
-	private GetType type;
+	private Dir type;
 
-	public LocalCountQuery(LocalListQuery q, GetType type) {
+	public LocalCountQuery(LocalListQuery q, Dir type) {
 		this.q = q;
 		this.type = type;
 	}
@@ -48,12 +48,12 @@ public class LocalCountQuery extends LocalQuery<TIntIntHashMap> implements
 		int[] u = q.query();
 		TIntIntHashMap count = new TIntIntHashMap();
 		for (int i : u) {
-			if (type.equals(GetType.FOLLOWEES)
-					|| type.equals(GetType.NEIGHBOURS))
+			if (type.equals(Dir.OUT)
+					|| type.equals(Dir.BOTH))
 				addToCount(count,
 						DataTypeUtils.byteArrayToIntArray(q.getStore().load(i)));
-			if (type.equals(GetType.FOLLOWERS)
-					|| type.equals(GetType.NEIGHBOURS))
+			if (type.equals(Dir.IN)
+					|| type.equals(Dir.BOTH))
 				addToCount(count, DataTypeUtils.byteArrayToIntArray(q
 						.getStore().load(-i)));
 		}

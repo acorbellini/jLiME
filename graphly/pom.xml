@@ -11,11 +11,6 @@
 	<name>Graphly</name>
 	<dependencies>
 		<dependency>
-			<groupId>com.tinkerpop.blueprints</groupId>
-			<artifactId>blueprints-core</artifactId>
-			<version>2.5.0</version>
-		</dependency>
-		<dependency>
 			<groupId>edu.jlime</groupId>
 			<artifactId>core</artifactId>
 			<version>1.0</version>
@@ -24,6 +19,26 @@
 			<groupId>edu.jlime</groupId>
 			<artifactId>collections</artifactId>
 			<version>1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-collections4</artifactId>
+			<version>4.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.tinkerpop</groupId>
+			<artifactId>gremlin-console</artifactId>
+			<version>3.0.0.M7</version>
+		</dependency>
+		<dependency>
+			<groupId>com.tinkerpop</groupId>
+			<artifactId>gremlin-core</artifactId>
+			<version>3.0.0.M7</version>
+		</dependency>
+		<dependency>
+			<groupId>com.tinkerpop</groupId>
+			<artifactId>neo4j-gremlin</artifactId>
+			<version>3.0.0.M7</version>
 		</dependency>
 	</dependencies>
 </project>

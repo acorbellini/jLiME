@@ -7,6 +7,7 @@ import java.util.concurrent.ThreadFactory;
 import org.apache.log4j.Logger;
 
 import edu.jlime.core.cluster.Peer;
+import edu.jlime.core.cluster.PeerFilter;
 import edu.jlime.core.transport.Address;
 import edu.jlime.core.transport.Transport;
 import edu.jlime.metrics.metric.Metrics;
@@ -31,9 +32,9 @@ public class jLiMETransport extends Transport implements DataListener {
 				}
 			});
 
-	public jLiMETransport(Peer local, Stack commStack) {
-		super(local, commStack.getDiscovery(), commStack.getFailureDetection(),
-				commStack.getStreamer());
+	public jLiMETransport(Peer local, PeerFilter filter, Stack commStack) {
+		super(local, filter, commStack.getDiscovery(), commStack
+				.getFailureDetection(), commStack.getStreamer());
 		this.commStack = commStack;
 		this.commStack.getData().addDataListener(this);
 	}

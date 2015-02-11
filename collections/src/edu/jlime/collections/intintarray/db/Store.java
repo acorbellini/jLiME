@@ -14,9 +14,9 @@ public abstract class Store implements Closeable {
 		this.name = name;
 	}
 
-	public abstract byte[] load(int key) throws Exception;
+	public abstract byte[] load(long key) throws Exception;
 
-	public abstract void store(int k, byte[] bs) throws Exception;
+	public abstract void store(long k, byte[] bs) throws Exception;
 
 	public String getName() {
 		return this.name;
@@ -38,8 +38,6 @@ public abstract class Store implements Closeable {
 
 	public void commit() {
 	}
-
-	public abstract List<byte[]> loadAll(int[] key) throws Exception;
 
 	public String list() throws Exception {
 		return "";

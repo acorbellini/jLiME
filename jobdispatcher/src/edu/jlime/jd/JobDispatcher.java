@@ -85,6 +85,8 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 
 	private Cluster cluster;
 
+	private Map<String, Object> globals = new ConcurrentHashMap<>();
+
 	public Map<UUID, ResultManager<?>> getJobMap() {
 		return jobMap;
 	}
@@ -569,4 +571,13 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 	public Metrics getMetrics() {
 		return metrics;
 	}
+
+	public void setGlobal(String k, Object v) {
+		globals.put(k, v);
+	}
+
+	public Object getGlobal(String k) {
+		return globals.get(k);
+	}
+
 }

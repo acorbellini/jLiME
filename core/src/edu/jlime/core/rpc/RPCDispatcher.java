@@ -21,6 +21,7 @@ import org.apache.log4j.Logger;
 import edu.jlime.core.cluster.BroadcastException;
 import edu.jlime.core.cluster.Cluster;
 import edu.jlime.core.cluster.Peer;
+import edu.jlime.core.cluster.PeerFilter;
 import edu.jlime.core.marshalling.ClientClassLoader;
 import edu.jlime.core.marshalling.Marshaller;
 import edu.jlime.core.marshalling.PeerClassLoader;
@@ -33,6 +34,10 @@ import edu.jlime.util.StreamUtils;
 import edu.jlime.util.PerfMeasure.PerfTime;
 
 public class RPCDispatcher implements TransportListener {
+
+	public static enum RPCStatus {
+		STARTED, INIT, DOWN
+	}
 
 	private static final Map<Peer, RPCDispatcher> localdispatchers = new ConcurrentHashMap<>();
 
@@ -49,6 +54,8 @@ public class RPCDispatcher implements TransportListener {
 	private Logger log = Logger.getLogger(RPCDispatcher.class);
 
 	private Map<String, Object> targets = new ConcurrentHashMap<>();
+
+	private Map<String, RPCStatus> targetsStatuses = new ConcurrentHashMap<>();
 
 	private Map<String, Method[]> targetsMethods = new ConcurrentHashMap<>();
 
@@ -372,10 +379,19 @@ public class RPCDispatcher implements TransportListener {
 	}
 
 	public void registerTarget(String key, Object target, boolean replace) {
+		registerTarget(key, target, replace, RPCStatus.STARTED);
+
+	}
+
+	public void registerTarget(String key, Object target, boolean replace,
+			RPCStatus status) {
 		if (!replace && targets.containsKey(key))
 			return;
 		// System.out.println("Putting target " + key + ": " + target);
+
 		targets.put(key, target);
+		targetsStatuses.put(key, status);
+
 		Method[] methods = target.getClass().getMethods();
 		targetsMethods.put(key, methods);
 		for (Method method : methods) {
@@ -465,7 +481,24 @@ public class RPCDispatcher implements TransportListener {
 				new Object[] { name, pregelGraphLocal, true }));
 	}
 
+	public void setTargetsStatuses(String k, RPCStatus newStat) {
+		this.targetsStatuses.put(k, newStat);
+		synchronized (targetsStatuses) {
+			targetsStatuses.notifyAll();
+		}
+	}
+
 	public Object getTarget(String name) {
+		synchronized (targetsStatuses) {
+			while (!targetsStatuses.get(name).equals(RPCStatus.STARTED))
+				try {
+					log.info("Waiting for target " + name + " to start.");
+					targetsStatuses.wait();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+		}
+
 		return targets.get(name);
 	}
 

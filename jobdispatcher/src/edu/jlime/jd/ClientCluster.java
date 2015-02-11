@@ -40,12 +40,12 @@ public class ClientCluster implements Iterable<ClientNode> {
 		ArrayList<Peer> execs = new ArrayList<Peer>(disp.getExecutors());
 		ArrayList<ClientNode> execCli = new ArrayList<>();
 		for (Peer jobNode : execs) {
-			execCli.add(createNode(jobNode));
+			execCli.add(getClientFor(jobNode));
 		}
 		return execCli;
 	}
-	
-	private ClientNode createNode(Peer jobNode) {
+
+	public ClientNode getClientFor(Peer jobNode) {
 		return new ClientNode(jobNode, client, disp);
 	}
 
@@ -82,7 +82,7 @@ public class ClientCluster implements Iterable<ClientNode> {
 		ArrayList<Peer> peers = disp.getPeers();
 		ArrayList<ClientNode> copy = new ArrayList<>();
 		for (Peer jobNode : peers) {
-			copy.add(createNode(jobNode));
+			copy.add(getClientFor(jobNode));
 		}
 		return copy;
 	}
@@ -113,7 +113,8 @@ public class ClientCluster implements Iterable<ClientNode> {
 
 	}
 
-	public MCastStreamResult mcastStream(ArrayList<ClientNode> peers, StreamJob j) {
+	public MCastStreamResult mcastStream(ArrayList<ClientNode> peers,
+			StreamJob j) {
 		List<StreamResult> results = new ArrayList<>();
 		for (ClientNode peer : peers)
 			results.add(peer.stream(j));
@@ -172,7 +173,7 @@ public class ClientCluster implements Iterable<ClientNode> {
 	public Iterator<ClientNode> iterator() {
 		return getPeers().iterator();
 	}
-	
+
 	@Override
 	public String toString() {
 		return disp.getPeers().toString();

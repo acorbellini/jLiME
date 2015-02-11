@@ -178,7 +178,7 @@ public class RPCCreator {
 		writer.write(getImports(serverInterface));
 
 		writer.write("public class " + name + " extends RPCClient implements "
-				+ serverInterface.getSimpleName() + " {\n\n");
+				+ serverInterface.getSimpleName() + ", Transferible {\n\n");
 
 		writer.write(getFields(serverInterface.getMethods()));
 
@@ -191,6 +191,10 @@ public class RPCCreator {
 			writer.write(getBody(serverInterface.getSimpleName(),
 					method.getName(), method, methodSignature.params.arguments));
 		}
+
+		writer.write("@Override\n"
+				+ "public void setRPC(RPCDispatcher rpc) {\n"
+				+ "this.disp=rpc;\n" + "}\n");
 		writer.write("}");
 		writer.close();
 	}
@@ -203,7 +207,7 @@ public class RPCCreator {
 				builder.append("   " + method.getReturnType().getSimpleName()
 						+ " " + method.getName() + "Cached = null;\n");
 
-		builder.append("    RPCDispatcher local = null;\n");
+		builder.append("   transient RPCDispatcher local = null;\n");
 
 		return builder.toString();
 	}
@@ -354,6 +358,7 @@ public class RPCCreator {
 		imports.append("import java.util.List;\n");
 		imports.append("import java.util.ArrayList;\n");
 		imports.append("import java.util.Map;\n");
+		imports.append("import edu.jlime.core.rpc.Transferible;\n");
 
 		for (Method m : ifaceClass.getMethods()) {
 			for (Class<?> arg : m.getParameterTypes())

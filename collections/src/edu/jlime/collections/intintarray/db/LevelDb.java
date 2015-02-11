@@ -3,27 +3,16 @@ package edu.jlime.collections.intintarray.db;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 import org.fusesource.leveldbjni.JniDBFactory;
 import org.iq80.leveldb.DB;
 import org.iq80.leveldb.DBException;
 import org.iq80.leveldb.DBIterator;
 import org.iq80.leveldb.Options;
-import org.iq80.leveldb.ReadOptions;
 import org.iq80.leveldb.WriteBatch;
 
 import edu.jlime.util.DataTypeUtils;
@@ -62,7 +51,8 @@ public class LevelDb extends Store {
 
 					org.iq80.leveldb.Logger logger = new org.iq80.leveldb.Logger() {
 						public void log(String message) {
-							log.info(message);
+							if (log.isDebugEnabled())
+								log.debug(message);
 						}
 					};
 					options = new Options();
@@ -88,97 +78,13 @@ public class LevelDb extends Store {
 	}
 
 	@Override
-	public byte[] load(int key) throws Exception {
-		byte[] res = getDb().get(DataTypeUtils.intToByteArray(key));
+	public byte[] load(long key) throws Exception {
+		byte[] res = getDb().get(DataTypeUtils.longToByteArray(key));
 		return res;
-	}
-
-	@Override
-	public List<byte[]> loadAll(int[] k) throws Exception {
-
-		List<List<Integer>> div = new ArrayList<List<Integer>>();
-		List<Integer> curr = null;
-		for (int i = 0; i < k.length; i++) {
-			int j = k[i];
-			if (i % 100000 == 0) {
-				curr = new ArrayList<Integer>();
-				div.add(curr);
-			}
-			curr.add(j);
-		}
-
-		ExecutorService exec = Executors.newFixedThreadPool(10);
-
-		final List<byte[]> res = new ArrayList<byte[]>();
-		for (final List<Integer> list : div) {
-			exec.execute(new Runnable() {
-
-				@Override
-				public void run() {
-					List<byte[]> toAdd = new ArrayList<>();
-					for (Integer i : list) {
-						try {
-							byte[] load = load(i);
-							if (load != null)
-								toAdd.add(load);
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
-					}
-					synchronized (res) {
-						res.addAll(toAdd);
-					}
-
-				}
-			});
-		}
-		exec.shutdown();
-		exec.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
-
-		return res;
-		// System.out.println("Loading  " + sorted.length);
-		// DBIterator it = getDb().iterator();
-
-		// if(key.length==1){
-		// System.out.println("Key[0]: " + load(key[0]));
-		// }
-		// try {
-		// for (int i = 0; i < sorted.length; i++) {
-		// it.seek(intToBytes(sorted[i]));
-		// if (!it.hasNext())
-		// break;
-		// Entry<byte[], byte[]> e = it.peekNext();
-		// if (DataTypeUtils.byteArrayToInt(e.getKey()) == sorted[i])
-		// res.add(e.getValue());
-		//
-		// }
-		// } catch (Exception e) {
-		// e.printStackTrace();
-		// } finally {
-		// it.close();
-		// }
-		// // System.out.println("Returning" + res.size());
-		// return res;
 	}
 
 	private byte[] intToBytes(int key) {
 		return DataTypeUtils.intToByteArray(key);
-	}
-
-	public int[] load(String key) throws DBException, Exception {
-		byte[] res = getDb().get(stringToByteArray(key));
-		if (res != null)
-			return DataTypeUtils.byteArrayToIntArray(res);
-		else
-			return null;
-	}
-
-	public Map<String, int[]> loadAll(Collection<String> keys) throws Exception {
-		Map<String, int[]> all = new HashMap<String, int[]>();
-		for (String k : keys) {
-			all.put(k, load(k));
-		}
-		return all;
 	}
 
 	public void delete(String k) throws Exception {
@@ -205,8 +111,8 @@ public class LevelDb extends Store {
 	}
 
 	@Override
-	public void store(int k, byte[] bs) throws Exception {
-		getDb().put(DataTypeUtils.intToByteArray(k), bs);
+	public void store(long k, byte[] bs) throws Exception {
+		getDb().put(DataTypeUtils.longToByteArray(k), bs);
 	}
 
 	public void store(String k, int[] v) throws Exception {

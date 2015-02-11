@@ -19,8 +19,8 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 import edu.jlime.core.cluster.Peer;
+import edu.jlime.core.cluster.PeerFilter;
 import edu.jlime.core.rpc.ClientManager;
-import edu.jlime.core.rpc.PeerFilter;
 import edu.jlime.core.rpc.RPCDispatcher;
 import edu.jlime.core.rpc.Transferible;
 import edu.jlime.pregel.graph.PregelGraphLocal;

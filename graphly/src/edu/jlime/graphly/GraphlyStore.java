@@ -2,11 +2,11 @@ package edu.jlime.graphly;
 
 import java.util.Map;
 
-import edu.jlime.collections.adjacencygraph.get.GetType;
+import edu.jlime.collections.adjacencygraph.get.Dir;
 
 public interface GraphlyStore {
 
-	public long[] getEdges(GetType type, long id);
+	public long[] getEdges(Dir type, long id);
 
 	public Map<String, Object> getVertexAttributes(long id);
 

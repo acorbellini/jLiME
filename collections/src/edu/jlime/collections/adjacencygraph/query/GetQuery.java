@@ -4,7 +4,7 @@ import org.apache.log4j.Logger;
 
 import edu.jlime.collections.adjacencygraph.Mapper;
 import edu.jlime.collections.adjacencygraph.get.GetMR;
-import edu.jlime.collections.adjacencygraph.get.GetType;
+import edu.jlime.collections.adjacencygraph.get.Dir;
 import edu.jlime.jd.client.JobContext;
 import gnu.trove.set.hash.TIntHashSet;
 
@@ -14,13 +14,13 @@ public class GetQuery extends RemoteListQuery {
 
 	private RemoteQuery<int[]> query;
 
-	private GetType type;
+	private Dir type;
 
 	public Query<int[]> getQuery() {
 		return query;
 	}
 
-	public GetQuery(RemoteQuery<int[]> query, GetType type) {
+	public GetQuery(RemoteQuery<int[]> query, Dir type) {
 		super(query.getGraph());
 		this.query = query;
 		this.type = type;

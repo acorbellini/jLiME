@@ -19,6 +19,7 @@ import org.jgroups.blocks.RequestOptions;
 import org.jgroups.blocks.Response;
 
 import edu.jlime.core.cluster.Peer;
+import edu.jlime.core.cluster.PeerFilter;
 import edu.jlime.core.transport.Streamer;
 import edu.jlime.core.transport.Transport;
 
@@ -59,9 +60,10 @@ public class JgroupsTransport extends Transport implements AsyncRequestHandler {
 
 	private JgroupsMembership member;
 
-	public JgroupsTransport(Peer local, MessageDispatcher disp,
-			JgroupsMembership member, Streamer s) throws Exception {
-		super(local, member, member, s);
+	public JgroupsTransport(Peer local, PeerFilter filter,
+			MessageDispatcher disp, JgroupsMembership member, Streamer s)
+			throws Exception {
+		super(local, filter, member, member, s);
 		this.member = member;
 		disp.setRequestHandler(this);
 		this.disp = disp;

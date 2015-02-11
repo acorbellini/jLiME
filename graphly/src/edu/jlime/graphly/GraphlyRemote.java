@@ -2,11 +2,9 @@ package edu.jlime.graphly;
 
 import java.util.Map;
 
-import edu.jlime.collections.adjacencygraph.get.GetType;
+import edu.jlime.collections.adjacencygraph.get.Dir;
 import edu.jlime.core.rpc.ClientManager;
 import edu.jlime.core.rpc.RPCDispatcher;
-import edu.jlime.graphly.rpc.GraphlyStoreNodeIBroadcast;
-import edu.jlime.graphly.rpc.GraphlyStoreNodeIFactory;
 
 public class GraphlyRemote implements GraphlyStore {
 
@@ -21,7 +19,7 @@ public class GraphlyRemote implements GraphlyStore {
 	}
 
 	@Override
-	public long[] getEdges(GetType type, long id) {
+	public long[] getEdges(Dir type, long id) {
 		// TODO Auto-generated method stub
 		return null;
 	}

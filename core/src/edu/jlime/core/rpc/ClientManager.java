@@ -5,12 +5,15 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
 import edu.jlime.core.cluster.Cluster;
 import edu.jlime.core.cluster.ClusterChangeListener;
 import edu.jlime.core.cluster.Peer;
+import edu.jlime.core.cluster.PeerFilter;
 
 public class ClientManager<T, B> implements ClusterChangeListener {
 
@@ -121,4 +124,19 @@ public class ClientManager<T, B> implements ClusterChangeListener {
 		return clients.get(peer);
 	}
 
+	public RPCDispatcher getRpc() {
+		return rpc;
+	}
+
+	public T get(PeerFilter f) {
+		for (Entry<Peer, T> t : clients.entrySet()) {
+			if (f.verify(t.getKey()))
+				return t.getValue();
+		}
+		return null;
+	}
+
+	public Map<Peer, T> getMap() {
+		return clients;
+	}
 }

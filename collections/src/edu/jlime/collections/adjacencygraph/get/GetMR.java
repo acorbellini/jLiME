@@ -23,9 +23,9 @@ public class GetMR extends GraphMR<TIntHashSet, int[]> {
 
 	TIntHashSet res = new TIntHashSet(1000000, 0.9f);
 
-	private GetType type;
+	private Dir type;
 
-	public GetMR(int[] data, String map, Mapper mapper, GetType type) {
+	public GetMR(int[] data, String map, Mapper mapper, Dir type) {
 		super(data, map, mapper);
 		super.setDontCacheSubResults(true);
 		this.type = type;
@@ -35,11 +35,13 @@ public class GetMR extends GraphMR<TIntHashSet, int[]> {
 	public Map<Job<int[]>, ClientNode> map(int[] data, JobContext env)
 			throws Exception {
 		TIntHashSet toSearch = new TIntHashSet();
-		if (type.equals(GetType.FOLLOWEES) || type.equals(GetType.NEIGHBOURS))
+		if (type.equals(Dir.OUT)
+				|| type.equals(Dir.BOTH))
 			for (int i = 0; i < data.length; i++) {
 				toSearch.add(-1 * data[i]);
 			}
-		if (type.equals(GetType.FOLLOWERS) || type.equals(GetType.NEIGHBOURS))
+		if (type.equals(Dir.IN)
+				|| type.equals(Dir.BOTH))
 			toSearch.addAll(data);
 
 		HashMap<Job<int[]>, ClientNode> res = new HashMap<>();
@@ -53,13 +55,14 @@ public class GetMR extends GraphMR<TIntHashSet, int[]> {
 	}
 
 	@Override
-	public void processSubResult(int[] subres) {
+	public boolean processSubResult(int[] subres) {
 		Logger log = Logger.getLogger(GetMR.class);
 		log.info("Obtained sub result on Get Map Reduce");
 		synchronized (this) {
 			res.addAll(subres);
 		}
 		log.info("Added to final result.");
+		return true;
 	}
 
 	@Override

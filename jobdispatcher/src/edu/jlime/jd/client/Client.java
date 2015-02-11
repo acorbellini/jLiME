@@ -5,7 +5,9 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.UUID;
 
+import edu.jlime.core.cluster.DataFilter;
 import edu.jlime.core.cluster.Peer;
+import edu.jlime.core.cluster.PeerFilter;
 import edu.jlime.core.rpc.RPCDispatcher;
 import edu.jlime.core.stream.RemoteInputStream;
 import edu.jlime.core.stream.RemoteOutputStream;
@@ -21,7 +23,6 @@ public class Client implements Closeable {
 
 	public Client(JobDispatcher jd) throws Exception {
 		this.jd = jd;
-		jd.start();
 	}
 
 	public static Client build() throws Exception {
@@ -30,13 +31,15 @@ public class Client implements Closeable {
 
 	public static Client build(int i) throws Exception {
 		HashMap<String, String> jdData = new HashMap<>();
+		jdData.put("app", "jobdispatcher");
 		jdData.put(JobDispatcher.ISEXEC, Boolean.valueOf(false).toString());
 		jdData.put(JobDispatcher.TAGS, "Client");
 
 		Configuration config = new Configuration();
-		// config.port = 3552;
-		// config.port_range = 1;
-		final RPCDispatcher rpc = new JLiMEFactory(config, jdData).buildRPC();
+
+		final RPCDispatcher rpc = new JLiMEFactory(config, jdData,
+				new DataFilter("app", "jobdispatcher")).build();
+
 		JobDispatcher jd = new JobDispatcher(i, rpc);
 		jd.setStreamer(new StreamProvider() {
 
@@ -52,6 +55,7 @@ public class Client implements Closeable {
 						to.getAddress());
 			}
 		});
+		jd.start();
 		return new Client(jd);
 	}
 
@@ -66,6 +70,10 @@ public class Client implements Closeable {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	public JobDispatcher getJd() {
+		return jd;
 	}
 
 }

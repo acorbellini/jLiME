@@ -6,13 +6,12 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 
 import edu.jlime.core.cluster.Peer;
+import edu.jlime.core.cluster.PeerFilter;
 import edu.jlime.core.rpc.RPCDispatcher;
 import edu.jlime.core.rpc.RPCFactory;
-import edu.jlime.core.server.TransportFactory;
 import edu.jlime.core.transport.Address;
-import edu.jlime.core.transport.Transport;
 
-public class JLiMEFactory implements RPCFactory, TransportFactory {
+public class JLiMEFactory implements RPCFactory {
 
 	private Configuration config;
 
@@ -20,35 +19,32 @@ public class JLiMEFactory implements RPCFactory, TransportFactory {
 
 	private Map<String, String> localData;
 
-	public JLiMEFactory() {
+	private PeerFilter filter;
+
+	public JLiMEFactory(Map<String, String> localData, PeerFilter filter) {
 		String configFile = System.getProperty("jlime.config");
 		this.config = configFile == null ? new Configuration() : Configuration
 				.newConfig(configFile);
-
+		this.localData = localData;
+		this.filter = filter;
 	}
 
-	public JLiMEFactory(Configuration config, Map<String, String> localData)
-			throws Exception {
+	public JLiMEFactory(Configuration config, Map<String, String> localData,
+			PeerFilter filter) throws Exception {
 		this.config = config;
 		this.localData = localData;
+		this.filter = filter;
 	}
 
 	public JLiMEFactory(Configuration config) throws Exception {
-		this(config, new HashMap<String, String>());
+		this(config, new HashMap<String, String>(), null);
 	}
 
 	@Override
-	public RPCDispatcher buildRPC() throws Exception {
+	public RPCDispatcher build() throws Exception {
 		Address localAddress = new Address();
-		Peer localPeer = new Peer(localAddress, config.name);
-		localPeer.putData(localData);
-		// RPC
-		RPCDispatcher rpc = new RPCDispatcher(build(localPeer));
-		return rpc;
-	}
-
-	@Override
-	public Transport build(Peer p) {
+		Peer p = new Peer(localAddress, config.name);
+		p.putData(localData);
 
 		// STACK
 		final Stack commStack = config.getProtocol().equals("tcp") ? Stack
@@ -56,7 +52,10 @@ public class JLiMEFactory implements RPCFactory, TransportFactory {
 				.udpStack(config, p.getAddress(), config.name);
 
 		// Transport
-		jLiMETransport tr = new jLiMETransport(p, commStack);
-		return tr;
+		jLiMETransport tr = new jLiMETransport(p, filter, commStack);
+
+		// RPC
+		RPCDispatcher rpc = new RPCDispatcher(tr);
+		return rpc;
 	}
 }

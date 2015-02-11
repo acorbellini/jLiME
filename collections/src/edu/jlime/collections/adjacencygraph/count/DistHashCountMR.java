@@ -11,7 +11,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import edu.jlime.collections.adjacencygraph.GraphMR;
 import edu.jlime.collections.adjacencygraph.Mapper;
-import edu.jlime.collections.adjacencygraph.get.GetType;
+import edu.jlime.collections.adjacencygraph.get.Dir;
 import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.Job;
@@ -26,14 +26,14 @@ public class DistHashCountMR extends GraphMR<TIntIntHashMap, byte[]> {
 
 	private Semaphore lock;
 
-	private GetType type;
+	private Dir type;
 
 	TIntIntHashMap result = new TIntIntHashMap();
 
 	ReentrantLock resultLock = new ReentrantLock();
 
 	public DistHashCountMR(int[] data, String mapName, Mapper mapper,
-			GetType type) {
+			Dir type) {
 		super(data, mapName, mapper);
 		super.setDontCacheSubResults(true);
 		this.hash = "CountHash - " + UUID.randomUUID();
@@ -41,7 +41,7 @@ public class DistHashCountMR extends GraphMR<TIntIntHashMap, byte[]> {
 	}
 
 	@Override
-	public void processSubResult(byte[] subres) {
+	public boolean processSubResult(byte[] subres) {
 		TIntIntHashMap subHash = DistHashCountJob.fromBytes(subres);
 		resultLock.lock();
 		for (int k : subHash.keys()) {
@@ -50,6 +50,7 @@ public class DistHashCountMR extends GraphMR<TIntIntHashMap, byte[]> {
 		}
 		subHash.clear();
 		resultLock.unlock();
+		return true;
 	}
 
 	@Override
@@ -58,7 +59,7 @@ public class DistHashCountMR extends GraphMR<TIntIntHashMap, byte[]> {
 
 		int[] inverted = Arrays.copyOf(data, data.length);
 
-		if (type.equals(GetType.FOLLOWERS))
+		if (type.equals(Dir.IN))
 			for (int i = 0; i < data.length; i++) {
 				inverted[i] = -1 * data[i];
 			}

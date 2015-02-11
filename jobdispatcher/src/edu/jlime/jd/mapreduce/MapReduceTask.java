@@ -112,19 +112,18 @@ public abstract class MapReduceTask<T, R, SR> implements Job<R> {
 	public abstract Map<Job<SR>, ClientNode> map(T data, JobContext cluster)
 			throws Exception;
 
-	public void processSubResult(SR subres) {
-
+	public boolean processSubResult(SR subres) {
+		return false;
 	}
 
 	public abstract R red(ArrayList<SR> subres) throws Exception;
 
 	public void result(SR subres) {
-		if (!dontCacheSubResults)
+		if (!dontCacheSubResults || !processSubResult(subres))
 			synchronized (subresults) {
 				if (subres != null && !dontCacheSubResults)
 					subresults.add(subres);
 			}
-		processSubResult(subres);
 		lock.release();
 	}
 

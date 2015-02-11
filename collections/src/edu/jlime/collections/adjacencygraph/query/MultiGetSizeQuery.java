@@ -1,6 +1,6 @@
 package edu.jlime.collections.adjacencygraph.query;
 
-import edu.jlime.collections.adjacencygraph.get.GetType;
+import edu.jlime.collections.adjacencygraph.get.Dir;
 import edu.jlime.collections.intintarray.client.PersistentIntIntArrayMap;
 import edu.jlime.jd.client.JobContext;
 import gnu.trove.map.hash.TIntIntHashMap;
@@ -13,9 +13,9 @@ public class MultiGetSizeQuery extends CompositeQuery<int[], TIntIntHashMap> {
 
 	private static final long serialVersionUID = -5681783873201600310L;
 
-	private GetType type;
+	private Dir type;
 
-	public MultiGetSizeQuery(RemoteListQuery listQuery, GetType type) {
+	public MultiGetSizeQuery(RemoteListQuery listQuery, Dir type) {
 		super(listQuery);
 		this.type = type;
 		super.setCacheQuery(false);
@@ -28,10 +28,10 @@ public class MultiGetSizeQuery extends CompositeQuery<int[], TIntIntHashMap> {
 			log.debug("Executing MultiGet Size Query");
 		TIntHashSet toSearch = new TIntHashSet();
 		int[] data = getQuery().exec(c);
-		if (type.equals(GetType.FOLLOWEES) || type.equals(GetType.NEIGHBOURS))
+		if (type.equals(Dir.OUT) || type.equals(Dir.BOTH))
 			toSearch.addAll(data);
 
-		if (type.equals(GetType.FOLLOWERS) || type.equals(GetType.NEIGHBOURS))
+		if (type.equals(Dir.IN) || type.equals(Dir.BOTH))
 			for (int i = 0; i < data.length; i++) {
 				toSearch.add(-1 * data[i]);
 			}
@@ -44,11 +44,11 @@ public class MultiGetSizeQuery extends CompositeQuery<int[], TIntIntHashMap> {
 		TIntIntHashMap ret = new TIntIntHashMap();
 		for (int i : data) {
 			int size = 0;
-			if (type.equals(GetType.FOLLOWERS)
-					|| type.equals(GetType.NEIGHBOURS))
+			if (type.equals(Dir.IN)
+					|| type.equals(Dir.BOTH))
 				size += getRes.get(-i).length;
-			if (type.equals(GetType.FOLLOWEES)
-					|| type.equals(GetType.NEIGHBOURS)) {
+			if (type.equals(Dir.OUT)
+					|| type.equals(Dir.BOTH)) {
 				size += getRes.get(i).length;
 			}
 			ret.put(i, size);

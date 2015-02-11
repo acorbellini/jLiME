@@ -2,6 +2,9 @@ package edu.jlime.pregel.client;
 
 import java.util.HashMap;
 
+import edu.jlime.core.cluster.DataFilter;
+import edu.jlime.core.cluster.Peer;
+import edu.jlime.core.cluster.PeerFilter;
 import edu.jlime.core.rpc.ClientManager;
 import edu.jlime.core.rpc.RPCDispatcher;
 import edu.jlime.pregel.PregelExecution;
@@ -28,8 +31,10 @@ public class PregelClient {
 		config.port = 4040;
 		config.mcastport = 5050;
 		HashMap<String, String> data = new HashMap<>();
+		data.put("app", "pregel");
 		data.put("type", "client");
-		this.rpc = new JLiMEFactory(config, data).buildRPC();
+		this.rpc = new JLiMEFactory(config, data, new DataFilter("app",
+				"pregel")).build();
 		this.rpc.start();
 		this.minWorkers = numWorkers;
 
