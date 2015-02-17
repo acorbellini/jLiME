@@ -1,6 +1,6 @@
 package edu.jlime.graphly.traversal;
 
-public class SaveStep implements Step<Object, Object> {
+public class SaveStep implements Step {
 
 	private String k;
 	private GraphlyTraversal g;
@@ -11,7 +11,7 @@ public class SaveStep implements Step<Object, Object> {
 	}
 
 	@Override
-	public Object exec(Object before) throws Exception {
+	public TraversalResult exec(TraversalResult before) throws Exception {
 		g.set(k, before);
 		return before;
 	}

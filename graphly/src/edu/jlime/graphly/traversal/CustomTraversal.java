@@ -13,11 +13,11 @@ public class CustomTraversal {
 		return tr;
 	}
 
-	public Object exec() throws Exception {
+	public TraversalResult exec() throws Exception {
 		return tr.exec();
 	}
 
-	public Object submit(ClientNode c) throws Exception {
+	public TraversalResult submit(ClientNode c) throws Exception {
 		return tr.submit(c);
 	}
 }

@@ -61,6 +61,7 @@ public class JobContainer implements Runnable, Serializable {
 					log.debug("Finished call to job " + jobID + " from "
 							+ origin);
 			} catch (Exception e) {
+				e.printStackTrace();
 				res = e;
 			}
 			try {

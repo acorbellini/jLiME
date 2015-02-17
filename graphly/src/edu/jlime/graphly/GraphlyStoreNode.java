@@ -4,10 +4,19 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.tinkerpop.gremlin.structure.Edge;
 
 import edu.jlime.collections.adjacencygraph.get.Dir;
@@ -15,23 +24,66 @@ import edu.jlime.collections.intintarray.db.LevelDb;
 import edu.jlime.core.cluster.Peer;
 import edu.jlime.core.rpc.RPCDispatcher;
 import edu.jlime.util.DataTypeUtils;
+import gnu.trove.iterator.TLongIterator;
+import gnu.trove.iterator.TLongObjectIterator;
 import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.map.hash.TLongIntHashMap;
+import gnu.trove.map.hash.TLongObjectHashMap;
 
 public class GraphlyStoreNode implements GraphlyStoreNodeI {
 
+	private static class InMemoryGraphProperties {
+		ConcurrentHashMap<Long, Map<String, Object>> props = new ConcurrentHashMap<>();
+
+		public void put(Long vid, String k, Object val) {
+			Map<String, Object> map = props.get(vid);
+			if (map == null) {
+				synchronized (props) {
+					map = props.get(vid);
+					if (map == null) {
+						map = new ConcurrentHashMap<String, Object>();
+						props.put(vid, map);
+					}
+				}
+			}
+			map.put(k, val);
+		}
+
+		public Object get(Long vid, String k) {
+			Map<String, Object> map = props.get(vid);
+			if (map != null) {
+				return map.get(k);
+			}
+			return null;
+		}
+
+		@Override
+		public String toString() {
+			return props.toString();
+		}
+	}
+
 	// private Graph graph;
 	private LevelDb adj;
+
+	Cache<Long, long[]> adj_cache = CacheBuilder.newBuilder().maximumSize(100)
+			.build();
+
 	private File localRanges;
 	private List<Integer> ranges = new ArrayList<>();
 	private Peer je;
+	private InMemoryGraphProperties props = new InMemoryGraphProperties();
 
 	// Store store;
 
 	public GraphlyStoreNode(String name, String localpath, RPCDispatcher rpc)
 			throws IOException {
-		File dir = new File(localpath);
-		dir.mkdir();
+
+		try {
+			Files.createDirectory(Paths.get(localpath));
+		} catch (Exception e) {
+		}
+
 		this.localRanges = new File(localpath + "/ranges.prop");
 		if (!localRanges.exists())
 			localRanges.createNewFile();
@@ -47,7 +99,11 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 			}
 		}
 
-		// this.graph = Neo4jGraph.open(localpath);
+		try {
+			Files.createDirectory(Paths.get(localpath + "/neo4j"));
+		} catch (Exception e) {
+		}
+		// this.graph = Neo4jGraph.open(localpath + "/neo4j");
 		this.adj = new LevelDb(name, localpath);
 	}
 
@@ -75,7 +131,7 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	@Override
 	public void addEdges(Long id, Dir type, long[] list) throws Exception {
 		if (type.equals(Dir.OUT))
-			id = -id;
+			id = -id - 1;
 		adj.store(id, DataTypeUtils.longArrayToByteArray(list));
 	}
 
@@ -86,17 +142,25 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	 * adjacencygraph.get.GetType, java.lang.Long)
 	 */
 	@Override
-	public long[] getEdges(Dir type, long[] id) {
+	public long[] getEdges(Dir type, Integer max_edges, long[] id)
+			throws ExecutionException {
 		TLongArrayList ret = new TLongArrayList();
 		for (long l : id) {
-			ret.addAll(getEdges(type, l));
+			long[] edges = getEdges(type, l);
+
+			if (edges.length > max_edges && max_edges > 0) {
+				TLongArrayList toAdd = new TLongArrayList(edges);
+				while (toAdd.size() != max_edges)
+					toAdd.removeAt((int) (Math.random() * toAdd.size()));
+			} else
+				ret.addAll(edges);
 		}
 
 		return ret.toArray();
 
 	}
 
-	private long[] getEdges(Dir type, long id) {
+	private long[] getEdges(Dir type, long id) throws ExecutionException {
 		if (type.equals(Dir.BOTH)) {
 			TLongArrayList list = new TLongArrayList();
 			list.addAll(getEdges0(id));
@@ -105,19 +169,26 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 		}
 
 		if (type.equals(Dir.OUT))
-			id = -id;
+			id = -id - 1;
 
 		return getEdges0(id);
 	}
 
-	private long[] getEdges0(Long id) {
-		byte[] array;
-		try {
-			array = adj.load((int) id.longValue());
-			return DataTypeUtils.byteArrayToLongArray(array);
-		} catch (Exception e) {
-			return new long[] {};
-		}
+	private long[] getEdges0(Long id) throws ExecutionException {
+		return adj_cache.get(id, new Callable<long[]>() {
+
+			@Override
+			public long[] call() throws Exception {
+				byte[] array;
+				try {
+					array = adj.load((int) id.longValue());
+					return DataTypeUtils.byteArrayToLongArray(array);
+				} catch (Exception e) {
+					return new long[] {};
+				}
+			}
+		});
+
 	}
 
 	/*
@@ -127,8 +198,17 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	 * java.lang.String, java.lang.Object)
 	 */
 	@Override
-	public void setProperty(Long vid, String k, Object val) {
-		// Vertex v1 = graph.V(vid).next();
+	public void setProperty(Long vid, String k, Object val) throws Exception {
+		props.put(vid, k, val);
+		// Iterator<Vertex> v = graph.iterators().vertexIterator(vid);
+		// Vertex v1 = null;
+		// if (!v.hasNext()) {
+		// addVertex(vid, null);
+		// v = graph.iterators().vertexIterator(vid);
+		// }
+		// if (v.hasNext())
+		// v1 = v.next();
+		// if (v1 != null)
 		// v1.property(k, val);
 	}
 
@@ -139,10 +219,19 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	 * java.lang.String)
 	 */
 	@Override
-	public Object getProperty(Long vid, String k) {
-		// Vertex v1 = graph.V(vid).next();
+	public Object getProperty(Long vid, String k) throws Exception {
+		return props.get(vid, k);
+		// Iterator<Vertex> v = graph.iterators().vertexIterator(vid);
+		// Vertex v1 = null;
+		// if (!v.hasNext()) {
+		// addVertex(vid, null);
+		// v = graph.iterators().vertexIterator(vid);
+		// }
+		// if (v.hasNext())
+		// v1 = v.next();
+		// if (v1 != null)
 		// return v1.property(k);
-		return null;
+		// return null;
 	}
 
 	/*
@@ -207,9 +296,14 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 
 	@Override
 	public boolean addVertex(Long id, String label) throws Exception {
+		// if (label != null) {
 		// Vertex v = graph.addVertex(T.id, id, T.label, label);
 		// return v == null;
-		return true;
+		// } else {
+		// Vertex v = graph.addVertex(T.id, id);
+		// return v == null;
+		// }
+		return false;
 	}
 
 	@Override
@@ -256,10 +350,48 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	}
 
 	@Override
-	public Long getRandomEdge(Long v, Dir d) throws Exception {
+	public Long getRandomEdge(Long v, long[] subset, Dir d) throws Exception {
 		long[] edges = getEdges(d, v);
 		if (edges == null || edges.length == 0)
 			return null;
-		return edges[(int) (Math.random() * edges.length)];
+
+		if (subset.length == 0)
+			return edges[(int) (Math.random() * edges.length)];
+		else {
+			TLongArrayList diff = new TLongArrayList(subset);
+			diff.retainAll(edges);
+			if (diff.isEmpty())
+				return null;
+			return diff.get((int) (Math.random() * diff.size()));
+		}
+	}
+
+	@Override
+	public void setProperties(String to, TLongObjectHashMap<Object> m)
+			throws Exception {
+		TLongObjectIterator<Object> it = m.iterator();
+		while (it.hasNext()) {
+			it.advance();
+			setProperty(it.key(), to, it.value());
+		}
+	}
+
+	@Override
+	public TLongObjectHashMap<Object> getProperties(String k,
+			TLongArrayList list) throws Exception {
+		TLongObjectHashMap<Object> res = new TLongObjectHashMap<>();
+		TLongIterator it = list.iterator();
+		while (it.hasNext()) {
+			long vid = it.next();
+			res.put(vid, getProperty(vid, k));
+		}
+		return res;
+	}
+
+	@Override
+	public int getEdgeCount(Long vid, Dir dir, long[] among) throws Exception {
+		TLongArrayList edges = new TLongArrayList(getEdges(dir, vid));
+		edges.retainAll(among);
+		return edges.size();
 	}
 }

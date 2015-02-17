@@ -1,20 +1,31 @@
 package edu.jlime.graphly.traversal;
 
 import edu.jlime.collections.adjacencygraph.get.Dir;
+import gnu.trove.iterator.TLongIterator;
+import gnu.trove.list.array.TLongArrayList;
 
-public class RandomStep implements Step<Long, Long> {
+public class RandomStep implements Step {
 
 	private GraphlyTraversal tr;
 	private Dir dir;
+	private long[] subset;
 
-	public RandomStep(Dir dir, GraphlyTraversal tr) {
+	public RandomStep(Dir dir, long[] subset, GraphlyTraversal tr) {
 		this.dir = dir;
 		this.tr = tr;
+		this.subset = subset;
 	}
 
 	@Override
-	public Long exec(Long before) throws Exception {
-		return tr.getGraph().getRandomEdge(before, dir);
+	public TraversalResult exec(TraversalResult before) throws Exception {
+		TLongIterator it = before.vertices().iterator();
+		TLongArrayList ret = new TLongArrayList();
+		while (it.hasNext()) {
+			long v = it.next();
+			Long r = tr.getGraph().getRandomEdge(v, subset, dir);
+			if (r != null)
+				ret.add(r);
+		}
+		return new VertexResult(ret);
 	}
-
 }

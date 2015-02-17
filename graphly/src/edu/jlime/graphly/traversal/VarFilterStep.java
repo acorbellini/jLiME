@@ -1,19 +1,29 @@
 package edu.jlime.graphly.traversal;
 
-public class VarFilterStep extends FilterStep {
+import gnu.trove.list.array.TLongArrayList;
+
+public class VarFilterStep implements Step {
 
 	private String[] k;
+	private GraphlyTraversal g;
+	private boolean neg;
 
-	public VarFilterStep(String[] k, GraphlyTraversal g) {
-		super(null, g);
+	public VarFilterStep(String[] k, GraphlyTraversal g, boolean neg) {
 		this.k = k;
+		this.g = g;
+		this.neg = neg;
 	}
 
 	@Override
-	public Object exec(Object before) throws Exception {
-		Object res = before;
+	public TraversalResult exec(TraversalResult before) throws Exception {
+		TraversalResult res = before;
 		for (String k : k) {
-			res = super.filter(res, (long[]) super.g.get(k));
+			TLongArrayList filter = ((TraversalResult) g.get(k)).vertices();
+
+			if (neg)
+				res = res.removeAll(filter);
+			else
+				res = res.retainAll(filter);
 		}
 		return res;
 	}

@@ -4,7 +4,7 @@ import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.Job;
 
-public class TraversalJob implements Job {
+public class TraversalJob implements Job<TraversalResult> {
 
 	private GraphlyTraversal g;
 
@@ -13,7 +13,8 @@ public class TraversalJob implements Job {
 	}
 
 	@Override
-	public Object call(JobContext env, ClientNode peer) throws Exception {
+	public TraversalResult call(JobContext env, ClientNode peer)
+			throws Exception {
 		return g.exec();
 	}
 

@@ -11,37 +11,46 @@ import edu.jlime.collections.adjacencygraph.get.Dir;
 import edu.jlime.core.rpc.RPCDispatcher;
 import edu.jlime.core.rpc.Transferible;
 import edu.jlime.graphly.client.Graphly;
-import edu.jlime.graphly.traversal.recommendation.ForEach;
+import edu.jlime.graphly.recommendation.CustomStep;
+import edu.jlime.graphly.recommendation.CustomStep.CustomFunction;
+import edu.jlime.graphly.recommendation.MinEdgeFilter;
+import edu.jlime.graphly.recommendation.Repeat;
+import edu.jlime.graphly.recommendation.Update;
+import edu.jlime.graphly.recommendation.VertexFilter;
+import edu.jlime.graphly.traversal.count.CountStep;
+import edu.jlime.graphly.traversal.each.EachStep;
+import edu.jlime.graphly.traversal.each.ForEach;
 import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.JobDispatcher;
+import gnu.trove.list.array.TLongArrayList;
 
 public class GraphlyTraversal implements Serializable, Transferible {
 
 	Map<String, Object> vars = new HashMap<>();
 
-	List<Step<?, ?>> steps = new ArrayList<>();
+	List<Step> steps = new ArrayList<>();
 
 	int curr = 0;
 
-	private Object currres;
+	private TraversalResult currres;
 
 	private transient Graphly g;
 
 	public GraphlyTraversal(long[] ids, Graphly g) {
-		this.currres = ids;
+		this.currres = new VertexResult(TLongArrayList.wrap(ids));
 		this.g = g;
 	}
 
-	public Object submit(ClientNode c) throws Exception {
+	public TraversalResult submit(ClientNode c) throws Exception {
 		return c.exec(new TraversalJob(this));
 	}
 
-	public <I, O> O next() throws Exception {
-		Step<I, O> step = (Step<I, O>) steps.get(curr++);
-		return (O) (this.currres = step.exec((I) currres));
+	public TraversalResult next() throws Exception {
+		Step step = steps.get(curr++);
+		return this.currres = step.exec(currres);
 	}
 
-	public Object exec() throws Exception {
+	public TraversalResult exec() throws Exception {
 		for (int i = curr; i < steps.size(); i++) {
 			next();
 		}
@@ -52,12 +61,12 @@ public class GraphlyTraversal implements Serializable, Transferible {
 		return to(Dir.OUT);
 	}
 
-	public GraphlyTraversal to(Dir dir) {
-		addStep(new VertexStep(dir, this));
+	public GraphlyTraversal to(Dir dir, int max_edges) {
+		addStep(new VertexStep(dir, max_edges, this));
 		return this;
 	}
 
-	private <I, O> void addStep(Step<I, O> vertexStep) {
+	private void addStep(Step vertexStep) {
 		steps.add(vertexStep);
 	}
 
@@ -94,7 +103,7 @@ public class GraphlyTraversal implements Serializable, Transferible {
 		return this;
 	}
 
-	public GraphlyTraversal countOut() {
+	public GraphlyTraversal countOut(String k) {
 		return count(Dir.OUT);
 	}
 
@@ -108,7 +117,7 @@ public class GraphlyTraversal implements Serializable, Transferible {
 	}
 
 	public GraphlyTraversal filterBy(String... k) {
-		addStep(new VarFilterStep(k, this));
+		addStep(new VarFilterStep(k, this, true));
 		return this;
 	}
 
@@ -117,31 +126,72 @@ public class GraphlyTraversal implements Serializable, Transferible {
 		return this;
 	}
 
-	public GraphlyTraversal traverse(String[] filters, Dir... dirs)
-			throws Exception {
+	public GraphlyTraversal traverse(int max_edges, Dir... dirs) {
+		return this.traverse(new String[] {}, max_edges, dirs);
+	}
 
+	public GraphlyTraversal traverse(String[] filters, int max_edges,
+			Dir... dirs) {
 		if (dirs.length == 0)
 			return this;
 
 		for (int i = 0; i < dirs.length; i++) {
-			to(dirs[i]);
+			to(dirs[i], max_edges);
 			filterBy(filters);
 		}
-
 		return this;
 	}
 
 	public GraphlyTraversal randomOut() {
-		return toRandom(Dir.OUT);
+		return random(Dir.OUT, new long[] {});
 	}
 
-	private GraphlyTraversal toRandom(Dir dir) {
-		addStep(new RandomStep(dir, this));
-		return null;
-	}
-
-	public <T> GraphlyTraversal repeat(int steps, ForEach<T> forEach) {
-		addStep(new RepeatStep<T>(steps, forEach, this));
+	public GraphlyTraversal random(Dir dir, long[] subset) {
+		addStep(new RandomStep(dir, subset, this));
 		return this;
 	}
+
+	public <T> GraphlyTraversal each(int steps, String key, ForEach<T> forEach) {
+		addStep(new EachStep(key, steps, forEach, this));
+		return this;
+	}
+
+	public GraphlyTraversal join(String from, String to, Join join) {
+		addStep(new JoinStep(from, to, join, this));
+		return this;
+	}
+
+	public GraphlyTraversal filterNeg(long[] before) {
+		addStep(new FilterStep(before, this, true));
+		return this;
+	}
+
+	public GraphlyTraversal update(Update update) {
+		addStep(new UpdateStep(update, this));
+		return this;
+	}
+
+	public GraphlyTraversal repeat(int steps, Repeat<long[]> rfunc) {
+		addStep(new RepeatStep(steps, rfunc, this));
+		return this;
+	}
+
+	public GraphlyTraversal traverse(String[] strings, Dir[] copyOfRange) {
+		return traverse(strings, Integer.MAX_VALUE, copyOfRange);
+	}
+
+	public GraphlyTraversal to(Dir dir) {
+		return to(dir, -1);
+	}
+
+	public GraphlyTraversal filter(VertexFilter customFilter) {
+		addStep(new CustomFilterStep(customFilter, this));
+		return this;
+	}
+
+	public GraphlyTraversal customStep(CustomFunction f) {
+		addStep(new CustomStep(this, f));
+		return this;
+	}
+
 }

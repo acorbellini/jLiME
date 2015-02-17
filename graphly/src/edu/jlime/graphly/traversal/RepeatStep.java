@@ -1,68 +1,81 @@
 package edu.jlime.graphly.traversal;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.jobs.Mapper;
-import edu.jlime.graphly.traversal.recommendation.ForEach;
+import edu.jlime.graphly.recommendation.Repeat;
 import edu.jlime.jd.ClientNode;
+import edu.jlime.jd.JobDispatcher;
 import edu.jlime.jd.client.JobContext;
-import edu.jlime.jd.job.Job;
+import edu.jlime.jd.client.JobContextImpl;
+import edu.jlime.jd.job.RunJob;
+import edu.jlime.jd.task.ForkJoinTask;
+import edu.jlime.jd.task.ResultListener;
 import gnu.trove.list.array.TLongArrayList;
 
-public class RepeatStep<T> implements Step<Long, List<T>> {
+public class RepeatStep implements Step {
+	private static class RepeatJob extends RunJob {
 
-	public static class Rjob<T> implements Job<List<T>> {
+		private Repeat<long[]> func;
+		private long[] value;
 
-		private long vid;
-		private ForEach<T> fe;
-		private int steps;
-
-		public Rjob(int steps, long vid, ForEach<T> fe) {
-			this.vid = vid;
-			this.fe = fe;
-			this.steps = steps;
+		public RepeatJob(Repeat<long[]> rfunc, long[] ls) {
+			this.func = rfunc;
+			this.value = ls;
 		}
 
 		@Override
-		public List<T> call(JobContext env, ClientNode peer) throws Exception {
-			List<T> res = new ArrayList<>();
-			for (int i = 0; i < steps; i++) {
-				Graphly g = (Graphly) env.getGlobal("graphly");
-				res.add(fe.exec(vid, g));
-			}
-			return res;
+		public void run(JobContext env, ClientNode origin) throws Exception {
+			func.exec(value, (Graphly) env.getGlobal("graphly"));
 		}
-
 	}
 
-	private ForEach<T> forEach;
-	private int s;
+	private int steps;
+	private Repeat<long[]> rfunc;
 	private GraphlyTraversal tr;
 
-	public RepeatStep(int steps, ForEach<T> forEach, GraphlyTraversal tr) {
-		this.s = steps;
-		this.forEach = forEach;
+	public RepeatStep(int steps, Repeat<long[]> rfunc, GraphlyTraversal tr) {
+		this.steps = steps;
+		this.rfunc = rfunc;
 		this.tr = tr;
 	}
 
 	@Override
-	public List<T> exec(Long before) throws Exception {
-		final Mapper map = (Mapper) tr.get("mapper");
-		ClientNode local = tr.getGraph().getJobClient().getCluster()
-				.getLocalNode();
+	public TraversalResult exec(TraversalResult before) throws Exception {
+		Mapper map = (Mapper) tr.get("mapper");
 
-		return local.exec(new Job<List<T>>() {
-			@Override
-			public List<T> call(JobContext ctx, ClientNode peer)
-					throws Exception {
-				Map<ClientNode, TLongArrayList> m = map.map(
-						new long[] { before }, ctx);
-				return m.keySet().iterator().next()
-						.exec(new Rjob<T>(s, before, forEach));
+		JobDispatcher jobClient = tr.getGraph().getJobClient();
+
+		JobContextImpl ctx = jobClient.getEnv().getClientEnv(
+				jobClient.getLocalPeer());
+
+		long[] array = before.vertices().toArray();
+
+		Map<ClientNode, TLongArrayList> div = map.map(array, ctx);
+
+		for (int i = 0; i < steps; i++) {
+			ForkJoinTask<Boolean> fj = new ForkJoinTask<>();
+			for (Entry<ClientNode, TLongArrayList> e : div.entrySet()) {
+				fj.putJob(new RepeatJob(rfunc, e.getValue().toArray()),
+						e.getKey());
 			}
-		});
+			fj.execute(new ResultListener<Boolean, Boolean>() {
+				@Override
+				public void onSuccess(Boolean result) {
+				}
+
+				@Override
+				public Boolean onFinished() {
+					return null;
+				}
+
+				@Override
+				public void onFailure(Exception res) {
+				}
+			});
+		}
+		return before;
 	}
 }

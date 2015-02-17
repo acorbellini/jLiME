@@ -1,6 +1,7 @@
 package edu.jlime.graphly;
 
 import java.util.List;
+import java.util.Map;
 
 import com.tinkerpop.gremlin.structure.Edge;
 
@@ -8,7 +9,9 @@ import edu.jlime.collections.adjacencygraph.get.Dir;
 import edu.jlime.core.cluster.Peer;
 import edu.jlime.core.rpc.Cache;
 import edu.jlime.core.rpc.Sync;
+import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.map.hash.TLongIntHashMap;
+import gnu.trove.map.hash.TLongObjectHashMap;
 
 public interface GraphlyStoreNodeI {
 	@Sync
@@ -51,7 +54,8 @@ public interface GraphlyStoreNodeI {
 	public abstract void addEdges(Long vid, Dir dir, long[] dests)
 			throws Exception;
 
-	public abstract long[] getEdges(Dir dir, long[] vids) throws Exception;
+	public abstract long[] getEdges(Dir dir, Integer max_edges, long[] vids)
+			throws Exception;
 
 	@Cache
 	public abstract Peer getJobAddress() throws Exception;
@@ -59,6 +63,16 @@ public interface GraphlyStoreNodeI {
 	public abstract TLongIntHashMap countEdges(Dir dir, long[] vids)
 			throws Exception;
 
-	public abstract Long getRandomEdge(Long v, Dir d) throws Exception;
+	public abstract Long getRandomEdge(Long v, long[] subset, Dir d)
+			throws Exception;
+
+	@Sync
+	public abstract void setProperties(String to,
+			TLongObjectHashMap<Object> submap) throws Exception;
+
+	public abstract TLongObjectHashMap<Object> getProperties(String k,
+			TLongArrayList value) throws Exception;
+
+	public abstract int getEdgeCount(Long vid, Dir dir, long[] at) throws Exception;
 
 }
