@@ -166,7 +166,7 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 
 	private long[] getEdges(Dir type, long id) throws ExecutionException {
 		if (type.equals(Dir.BOTH)) {
-			TLongArrayList list = new TLongArrayList();
+			TLongHashSet list = new TLongHashSet();
 			list.addAll(getEdges0(id));
 			list.addAll(getEdges0(-id));
 			return list.toArray();
@@ -188,7 +188,6 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 					array = adj.load((int) id.longValue());
 					long[] byteArrayToLongArray = DataTypeUtils
 							.byteArrayToLongArray(array);
-					// Arrays.sort(byteArrayToLongArray);
 					return byteArrayToLongArray;
 				} catch (Exception e) {
 					return new long[] {};

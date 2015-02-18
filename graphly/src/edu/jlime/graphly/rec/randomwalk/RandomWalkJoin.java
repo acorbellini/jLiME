@@ -14,7 +14,7 @@ public class RandomWalkJoin implements Join<List<long[]>, TLongFloatHashMap> {
 		int cont = 0;
 		for (long[] ls : input) {
 			for (long l : ls) {
-				res.adjustOrPutValue(l, 1, 1);
+				res.adjustOrPutValue(l, 1f, 1f);
 				cont++;
 			}
 		}

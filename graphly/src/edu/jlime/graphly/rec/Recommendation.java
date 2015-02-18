@@ -54,16 +54,15 @@ public class Recommendation extends CustomTraversal {
 		return this;
 	}
 
-	public Recommendation randomwalk(String key, int steps, int max_depth,
-			long[] subset, Dir... dirs) {
-		tr.each(steps, key, new RandomWalkForeach(max_depth, subset, dirs));
+	public Recommendation randomwalk(String key, int steps, float max,
+			long[] subset, Dir... out) {
+		tr.each(steps, key, new RandomWalkForeach(max, subset, out));
 		tr.join(key, key, new RandomWalkJoin());
 		return this;
 	}
 
-	public Recommendation randomwalk(String key, int steps, int max_depth,
-			Dir... dirs) {
-		return randomwalk(key, steps, max_depth, new long[] {}, dirs);
+	public Recommendation randomwalk(String key, int steps, float max, Dir out) {
+		return randomwalk(key, steps, max, new long[] {}, out);
 	}
 
 	public Recommendation hits(String auth, String hub, int steps, int max_edges)
@@ -80,19 +79,19 @@ public class Recommendation extends CustomTraversal {
 	}
 
 	public Recommendation salsaRW(String auth, String hub, int steps,
-			int max_depth) throws Exception {
+			float max_depth) throws Exception {
 		tr.customStep(new SalsaStepRandomWalk(auth, hub, steps, max_depth));
 		return this;
 	}
 
 	public Recommendation whotofollow(String a, String h, int steps,
-			int max_depth, int top) {
+			float max_depth, int salsasteps, float maxsalsadepth, int top) {
 		circleOfTrust(steps, max_depth, top).asTraversal().customStep(
-				new WhoToFollowStep(a, h, steps, max_depth, top));
+				new WhoToFollowStep(a, h, salsasteps, maxsalsadepth, top));
 		return this;
 	}
 
-	private Recommendation circleOfTrust(int steps, int max_depth, int top) {
+	private Recommendation circleOfTrust(int steps, float max_depth, int top) {
 		tr.customStep(new CircleOfTrust(steps, max_depth, top));
 		return this;
 	}

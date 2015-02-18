@@ -8,16 +8,16 @@ import edu.jlime.graphly.traversal.each.ForEach;
 import gnu.trove.list.array.TLongArrayList;
 
 public class RandomWalkForeach implements ForEach<long[]> {
-	private int max_depth;
+	private float max_depth;
 	private Dir[] dirs;
 	private long[] subset;
 
-	public RandomWalkForeach(int md, long[] subset, Dir[] dirs) {
-		this.max_depth = md;
-		if (dirs.length == 0)
+	public RandomWalkForeach(float max, long[] subset, Dir... out) {
+		this.max_depth = max;
+		if (out.length == 0)
 			this.dirs = new Dir[] { Dir.OUT };
 		else
-			this.dirs = dirs;
+			this.dirs = out;
 		this.subset = subset;
 	}
 
@@ -27,30 +27,30 @@ public class RandomWalkForeach implements ForEach<long[]> {
 			SubGraph sg = g.getSubGraph("random-walk", subset);
 			TLongArrayList ret = new TLongArrayList();
 			boolean done = false;
-			long cursor = vid;
-			while (ret.size() < max_depth && !done) {
-				Long curr = cursor;
+			Long cursor = vid;
+			while (((max_depth < 1f && Math.random() > max_depth) || ret.size() < max_depth)
+					&& !done) {
 				for (Dir dir : dirs) {
-					curr = sg.getRandomEdge(dir, curr);
-					if (curr == null)
+					cursor = sg.getRandomEdge(dir, cursor);
+					if (cursor == null)
 						break;
 				}
-				if (curr == null) {
+				if (cursor == null) {
 					done = true;
-				} else {
-					cursor = curr;
-					if (cursor == vid)
-						done = true;
-					else
-						ret.add(cursor);
-				}
+				} else if (cursor == vid)
+					done = true;
+				else
+					ret.add(cursor);
 			}
+			if (ret.isEmpty())
+				return null;
 			return ret.toArray();
 		}
 		TLongArrayList ret = new TLongArrayList();
 		boolean done = false;
 		long cursor = vid;
-		while (ret.size() < max_depth && !done) {
+		while (((max_depth < 1f && Math.random() > max_depth) || ret.size() < max_depth)
+				&& !done) {
 			GraphlyTraversal tr = g.v(cursor);
 			for (Dir dir : dirs) {
 				tr.random(dir, subset);
@@ -66,6 +66,8 @@ public class RandomWalkForeach implements ForEach<long[]> {
 					ret.add(cursor);
 			}
 		}
+		if (ret.isEmpty())
+			return null;
 		return ret.toArray();
 	}
 }

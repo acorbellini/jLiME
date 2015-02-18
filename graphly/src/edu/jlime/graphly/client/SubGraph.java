@@ -67,7 +67,17 @@ public class SubGraph {
 
 			@Override
 			public long[] call() throws Exception {
-				return GraphlyUtil.filter(g.getEdges(in, vid), vertices);
+				long[] edges = null;
+				try {
+					edges = g.getEdges(in, vid);
+					if (edges == null)
+						return new long[] {};
+					else
+						return GraphlyUtil.filter(edges, vertices);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				return new long[] {};
 			}
 
 		});

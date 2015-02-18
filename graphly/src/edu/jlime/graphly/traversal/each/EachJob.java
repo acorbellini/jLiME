@@ -30,7 +30,8 @@ public class EachJob<T> extends RunJob {
 			Graphly g = (Graphly) env.getGlobal("graphly");
 			for (int i = 0; i < steps; i++) {
 				T feRes = fe.exec(vid, g);
-				subres.add(feRes);
+				if (feRes != null)
+					subres.add(feRes);
 			}
 			g.setProperty(vid, k, subres);
 		}

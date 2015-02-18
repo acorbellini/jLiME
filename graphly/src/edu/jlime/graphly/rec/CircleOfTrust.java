@@ -24,10 +24,10 @@ import gnu.trove.map.hash.TLongObjectHashMap;
 public class CircleOfTrust implements CustomFunction {
 
 	private int steps;
-	private int max;
+	private float max;
 	private int top;
 
-	public CircleOfTrust(int steps, int max_depth, int top) {
+	public CircleOfTrust(int steps, float max_depth, int top) {
 		this.steps = steps;
 		this.max = max_depth;
 		this.top = top;

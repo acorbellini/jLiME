@@ -83,15 +83,18 @@ public class QueryTest {
 		// System.out.println("Hub: "
 		// + g.collect("hubrw", 10, salsarw.vertices().toArray()));
 
-		// // Salsa
-		TraversalResult wtf = g.v(new long[] { 0 })
-				.set("mapper", new LocationMapper()).as(Recommendation.class)
-				.whotofollow("authwtf", "hubwtf", 5000, 10, 50)
+		// // WhoToFollow
+		TraversalResult wtf = g
+				.v(new long[] { 0 })
+				.set("mapper", new LocationMapper())
+				.as(Recommendation.class)
+				.whotofollow("authwtf", "hubwtf", 200000, 0.5f, 200000, 0.5f,
+						100)
 				.submit(g.getJobClient().getCluster().getAnyExecutor());
 		//
 		System.out.println("WTF");
 		System.out.println("Auth: "
-				+ g.collect("authwtf", 10, wtf.vertices().toArray()));
+				+ g.collect("authwtf", 50, wtf.vertices().toArray()));
 
 		g.close();
 	}

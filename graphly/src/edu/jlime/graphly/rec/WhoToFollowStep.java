@@ -12,14 +12,14 @@ public class WhoToFollowStep implements CustomFunction {
 	private String auth;
 	private String hub;
 	private int steps;
-	private int max_depth;
+	private float max_depth;
 
-	public WhoToFollowStep(String a, String h, int steps, int max_depth,
+	public WhoToFollowStep(String a, String h, int steps, float maxsalsadepth,
 			int circleTop) {
 		this.auth = a;
 		this.hub = h;
 		this.steps = steps;
-		this.max_depth = max_depth;
+		this.max_depth = maxsalsadepth;
 
 	}
 
@@ -29,7 +29,7 @@ public class WhoToFollowStep implements CustomFunction {
 		long[] target = before.vertices().toArray();
 		Graphly g = tr.getGraph();
 		g.v(target).set("mapper", tr.get("mapper")).as(Recommendation.class)
-				.salsa(auth, hub, steps, max_depth).exec();
+				.salsaRW(auth, hub, steps, max_depth).exec();
 		TLongObjectHashMap<Object> res = g.collect(auth, 100, target);
 		return new CountResult(res);
 	}

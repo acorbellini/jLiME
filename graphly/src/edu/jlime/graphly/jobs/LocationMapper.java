@@ -20,8 +20,8 @@ public class LocationMapper extends Mapper {
 	public Map<ClientNode, TLongArrayList> map(long[] data, JobContext cluster)
 			throws Exception {
 		Logger log = Logger.getLogger(LocationMapper.class);
-
-		log.info("Mapping " + data.length + " keys by location.");
+		if (log.isDebugEnabled())
+			log.debug("Mapping " + data.length + " keys by location.");
 
 		Graphly g = (Graphly) cluster.getGlobal("graphly");
 
@@ -31,8 +31,8 @@ public class LocationMapper extends Mapper {
 		for (Entry<GraphlyStoreNodeI, TLongArrayList> e : map.entrySet()) {
 			ret.put(g.getClientJobFor(e.getKey()), e.getValue());
 		}
-
-		log.info("Finished mapping " + data.length + " keys by location.");
+		if (log.isDebugEnabled())
+			log.debug("Finished mapping " + data.length + " keys by location.");
 
 		return ret;
 	}

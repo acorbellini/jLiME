@@ -29,7 +29,9 @@ public class LocationMapper extends Mapper {
 				mapName, cluster);
 		if (log.isDebugEnabled())
 			log.debug("Mapping " + data.length + " keys by location.");
+		
 		HashMap<ClientNode, TIntArrayList> map = simple.hashKeys(data);
+		
 		if (log.isDebugEnabled())
 			log.debug("Finished mapping " + data.length + " keys by location.");
 		return map;
