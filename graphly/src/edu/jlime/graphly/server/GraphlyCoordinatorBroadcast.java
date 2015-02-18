@@ -5,8 +5,8 @@ import java.util.Map;
 import edu.jlime.core.cluster.Peer;
 import edu.jlime.graphly.client.ConsistentHashing;
 
-public interface GraphlyCoordinatorBroadcast { 
+public interface GraphlyCoordinatorBroadcast {
 
-  public Map<Peer,ConsistentHashing>  getHash() throws Exception; 
+	public Map<Peer, ConsistentHashing> getHash() throws Exception;
 
 }

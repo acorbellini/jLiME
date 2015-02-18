@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import edu.jlime.graphly.recommendation.Update;
+import edu.jlime.graphly.rec.Update;
 import gnu.trove.iterator.TLongIterator;
 
 public class UpdateStep implements Step {

@@ -1,9 +1,7 @@
 package edu.jlime.graphly.traversal.each;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import edu.jlime.graphly.client.Graphly;
 import edu.jlime.jd.ClientNode;

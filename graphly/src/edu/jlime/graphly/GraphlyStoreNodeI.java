@@ -1,7 +1,6 @@
 package edu.jlime.graphly;
 
 import java.util.List;
-import java.util.Map;
 
 import com.tinkerpop.gremlin.structure.Edge;
 
@@ -71,8 +70,9 @@ public interface GraphlyStoreNodeI {
 			TLongObjectHashMap<Object> submap) throws Exception;
 
 	public abstract TLongObjectHashMap<Object> getProperties(String k,
-			TLongArrayList value) throws Exception;
+			Integer top, TLongArrayList value) throws Exception;
 
-	public abstract int getEdgeCount(Long vid, Dir dir, long[] at) throws Exception;
+	public abstract int getEdgeCount(Long vid, Dir dir, long[] at)
+			throws Exception;
 
 }

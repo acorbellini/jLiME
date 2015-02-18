@@ -11,12 +11,11 @@ import edu.jlime.collections.adjacencygraph.get.Dir;
 import edu.jlime.core.rpc.RPCDispatcher;
 import edu.jlime.core.rpc.Transferible;
 import edu.jlime.graphly.client.Graphly;
-import edu.jlime.graphly.recommendation.CustomStep;
-import edu.jlime.graphly.recommendation.CustomStep.CustomFunction;
-import edu.jlime.graphly.recommendation.MinEdgeFilter;
-import edu.jlime.graphly.recommendation.Repeat;
-import edu.jlime.graphly.recommendation.Update;
-import edu.jlime.graphly.recommendation.VertexFilter;
+import edu.jlime.graphly.rec.CustomStep;
+import edu.jlime.graphly.rec.CustomStep.CustomFunction;
+import edu.jlime.graphly.rec.Repeat;
+import edu.jlime.graphly.rec.Update;
+import edu.jlime.graphly.rec.VertexFilter;
 import edu.jlime.graphly.traversal.count.CountStep;
 import edu.jlime.graphly.traversal.each.EachStep;
 import edu.jlime.graphly.traversal.each.ForEach;
@@ -192,6 +191,12 @@ public class GraphlyTraversal implements Serializable, Transferible {
 	public GraphlyTraversal customStep(CustomFunction f) {
 		addStep(new CustomStep(this, f));
 		return this;
+	}
+
+	public GraphlyTraversal top(int top) {
+		addStep(new TopStep(top, this));
+		return this;
+
 	}
 
 }

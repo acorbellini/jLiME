@@ -27,9 +27,11 @@ public class LocationMapper extends Mapper {
 		Logger log = Logger.getLogger(LocationMapper.class);
 		PersistentIntIntArrayMap simple = PersistentIntIntArrayMap.getMap(
 				mapName, cluster);
-		log.info("Mapping " + data.length + " keys by location.");
-		HashMap<ClientNode, TIntArrayList> map = simple.hashKeys(data);		
-		log.info("Finished mapping " + data.length + " keys by location.");
+		if (log.isDebugEnabled())
+			log.debug("Mapping " + data.length + " keys by location.");
+		HashMap<ClientNode, TIntArrayList> map = simple.hashKeys(data);
+		if (log.isDebugEnabled())
+			log.debug("Finished mapping " + data.length + " keys by location.");
 		return map;
 	}
 

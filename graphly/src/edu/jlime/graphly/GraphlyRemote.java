@@ -11,11 +11,9 @@ public class GraphlyRemote implements GraphlyStore {
 	ClientManager<GraphlyStoreNodeI, GraphlyStoreNodeIBroadcast> mgr;
 
 	public GraphlyRemote(RPCDispatcher rpc) {
-		
-		
-		
+
 		mgr = rpc.manage(new GraphlyStoreNodeIFactory(rpc, "graph-node"), rpc
-				.getCluster().getLocalPeer());		
+				.getCluster().getLocalPeer());
 	}
 
 	@Override

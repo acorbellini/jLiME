@@ -5,7 +5,7 @@ import java.util.Map.Entry;
 
 import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.jobs.Mapper;
-import edu.jlime.graphly.recommendation.Repeat;
+import edu.jlime.graphly.rec.Repeat;
 import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.JobDispatcher;
 import edu.jlime.jd.client.JobContext;

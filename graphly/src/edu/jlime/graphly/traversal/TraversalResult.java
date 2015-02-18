@@ -26,11 +26,16 @@ public interface TraversalResult extends Serializable {
 		return null;
 	}
 
-	public default int getInt(long k) {
+	public default float getValue(long k) {
 		return 0;
 	}
 
-	public default void setInt(long k, int v) {
+	public default void setValue(long k, float v) {
 	}
+
+	public default TraversalResult top(int top) {
+		return this;
+
+	};
 
 }

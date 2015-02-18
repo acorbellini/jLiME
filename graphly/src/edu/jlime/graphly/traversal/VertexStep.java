@@ -46,7 +46,7 @@ public class VertexStep implements Step {
 			TLongHashSet ret = new TLongHashSet();
 
 			@Override
-			public synchronized void onSuccess(long[] result) {				
+			public synchronized void onSuccess(long[] result) {
 				ret.addAll(result);
 			}
 

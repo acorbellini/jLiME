@@ -55,8 +55,11 @@ public class TopQuery extends RemoteQuery<List<int[]>> {
 
 					@Override
 					public int compare(Integer o1, Integer o2) {
-						return Integer.compare(countres.get(o1),
+						int comp = Integer.compare(countres.get(o1),
 								countres.get(o2));
+						if (comp == 0)
+							return o1.compareTo(o2);
+						return comp;
 					}
 				});
 		TIntIntIterator it = countres.iterator();

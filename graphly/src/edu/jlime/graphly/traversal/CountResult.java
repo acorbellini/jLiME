@@ -1,15 +1,40 @@
 package edu.jlime.graphly.traversal;
 
+import gnu.trove.iterator.TLongFloatIterator;
+import gnu.trove.iterator.TLongObjectIterator;
 import gnu.trove.list.array.TLongArrayList;
-import gnu.trove.map.hash.TLongIntHashMap;
-import gnu.trove.procedure.TLongIntProcedure;
+import gnu.trove.map.hash.TLongFloatHashMap;
+import gnu.trove.map.hash.TLongObjectHashMap;
+import gnu.trove.procedure.TLongFloatProcedure;
+
+import java.util.Comparator;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.TreeSet;
 
 public class CountResult implements TraversalResult {
 
-	private TLongIntHashMap vals;
+	private TLongFloatHashMap vals;
 
-	public CountResult(TLongIntHashMap intvals) {
+	public CountResult(TLongFloatHashMap intvals) {
 		this.vals = intvals;
+	}
+
+	public CountResult(Map<Long, Integer> ret) {
+		this.vals = new TLongFloatHashMap();
+		for (Entry<Long, Integer> e : ret.entrySet()) {
+			vals.put(e.getKey(), e.getValue());
+		}
+
+	}
+
+	public CountResult(TLongObjectHashMap<Object> res) {
+		this.vals = new TLongFloatHashMap();
+		TLongObjectIterator<Object> it = res.iterator();
+		while (it.hasNext()) {
+			it.advance();
+			vals.put(it.key(), (Float) it.value());
+		}
 	}
 
 	@Override
@@ -18,16 +43,16 @@ public class CountResult implements TraversalResult {
 	}
 
 	@Override
-	public int getInt(long k) {
+	public float getValue(long k) {
 		return vals.get(k);
 	}
 
 	@Override
-	public TraversalResult removeAll(TLongArrayList v) {		
-		vals.retainEntries(new TLongIntProcedure() {
+	public TraversalResult removeAll(TLongArrayList v) {
+		vals.retainEntries(new TLongFloatProcedure() {
 
 			@Override
-			public boolean execute(long k, int val) {
+			public boolean execute(long k, float val) {
 				return !v.contains(k);
 			}
 		});
@@ -36,19 +61,51 @@ public class CountResult implements TraversalResult {
 
 	@Override
 	public TraversalResult retainAll(TLongArrayList v) {
-		vals.retainEntries(new TLongIntProcedure() {
+		vals.retainEntries(new TLongFloatProcedure() {
 
 			@Override
-			public boolean execute(long k, int val) {
+			public boolean execute(long k, float val) {
 				return v.contains(k);
 			}
 		});
 		return new CountResult(vals);
 	}
 
-	
 	@Override
 	public String toString() {
 		return vals.toString();
+	}
+
+	@Override
+	public TraversalResult top(int top) {
+		TreeSet<Long> finalRes = new TreeSet<Long>(new Comparator<Long>() {
+
+			@Override
+			public int compare(Long o1, Long o2) {
+				int comp = Float.compare(vals.get(o1), vals.get(o2));
+				if (comp == 0)
+					return o1.compareTo(o2);
+				return comp;
+			}
+		});
+		TLongFloatIterator it = vals.iterator();
+		while (it.hasNext()) {
+			it.advance();
+			long k = it.key();
+			float v = it.value();
+			if (finalRes.size() < top)
+				finalRes.add(k);
+			else {
+				if (v > vals.get(finalRes.first())) {
+					finalRes.remove(finalRes.first());
+					finalRes.add(k);
+				}
+			}
+		}
+		TLongFloatHashMap res = new TLongFloatHashMap();
+		for (Long k : finalRes) {
+			res.put(k, vals.get(k));
+		}
+		return new CountResult(res);
 	}
 }

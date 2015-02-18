@@ -66,7 +66,8 @@ public class LevelDb extends Store {
 						dirDB.mkdirs();
 					db = JniDBFactory.factory.open(dirDB, options);
 					// db.compactRange(null, null);
-					Logger.getLogger(LevelDb.class).info("Opened.");
+					if (log.isDebugEnabled())
+						log.debug("Opened.");
 				}
 			}
 		}

@@ -16,6 +16,7 @@ import edu.jlime.jd.task.ForkJoinTask;
 import edu.jlime.jd.task.ResultListener;
 import gnu.trove.iterator.TLongIntIterator;
 import gnu.trove.list.array.TLongArrayList;
+import gnu.trove.map.hash.TLongFloatHashMap;
 import gnu.trove.map.hash.TLongIntHashMap;
 
 public class CountStep implements Step {
@@ -46,22 +47,24 @@ public class CountStep implements Step {
 			fj.putJob(new CountJob(dir, e.getValue().toArray()), e.getKey());
 		}
 
-		TLongIntHashMap finalRes = fj
-				.execute(new ResultListener<TLongIntHashMap, TLongIntHashMap>() {
-					TLongIntHashMap ret = new TLongIntHashMap();
+		TLongFloatHashMap finalRes = fj
+				.execute(new ResultListener<TLongIntHashMap, TLongFloatHashMap>() {
+					TLongFloatHashMap ret = new TLongFloatHashMap();
 
 					@Override
 					public void onSuccess(TLongIntHashMap subres) {
-						TLongIntIterator it = subres.iterator();
-						while (it.hasNext()) {
-							it.advance();
-							ret.adjustOrPutValue(it.key(), it.value(),
-									it.value());
+						synchronized (ret) {
+							TLongIntIterator it = subres.iterator();
+							while (it.hasNext()) {
+								it.advance();
+								ret.adjustOrPutValue(it.key(), it.value(),
+										it.value());
+							}
 						}
 					}
 
 					@Override
-					public TLongIntHashMap onFinished() {
+					public TLongFloatHashMap onFinished() {
 						return ret;
 					}
 

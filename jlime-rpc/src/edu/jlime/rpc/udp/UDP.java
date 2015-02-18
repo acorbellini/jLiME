@@ -3,6 +3,7 @@ package edu.jlime.rpc.udp;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -211,8 +212,10 @@ public class UDP extends NetworkProtocol implements PacketReceiver {
 
 					for (Object obj : list) {
 						DatagramPacket dg = (DatagramPacket) obj;
-						if (dg.getAddress().getClass()
-								.equals(sock.getLocalAddress().getClass()))
+						InetAddress localAddress = sock.getLocalAddress();
+						if (localAddress != null
+								&& dg.getAddress().getClass()
+										.equals(localAddress.getClass()))
 							try {
 								sock.send(dg);
 							} catch (Exception e) {

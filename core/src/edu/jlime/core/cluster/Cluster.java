@@ -80,9 +80,9 @@ public class Cluster implements Iterable<Peer> {
 		synchronized (peers) {
 			if (peers.contains(peer))
 				return false;
-
-			log.info(localPeer.getData("app") + ": Added peer "
-					+ peer.getName());
+			if (log.isDebugEnabled())
+				log.debug(localPeer.getData("app") + ": Added peer "
+						+ peer.getName());
 
 			peers.add(peer);
 			peers.notifyAll();

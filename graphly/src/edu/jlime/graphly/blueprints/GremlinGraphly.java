@@ -20,16 +20,35 @@ public class GremlinGraphly implements Graph, Graph.Iterators,
 		WrappedGraph<Graphly> {
 
 	{
-        try {
-            TraversalStrategies.GlobalCache.registerStrategies(GremlinGraphly.class, TraversalStrategies.GlobalCache.getStrategies(Graph.class).clone().addStrategies(GraphlyGraphStepStrategy.instance()));
-            TraversalStrategies.GlobalCache.registerStrategies(GremlinGraphlyVertex.class, TraversalStrategies.GlobalCache.getStrategies(Vertex.class).clone().addStrategies(GraphlyElementStepStrategy.instance()));
-            TraversalStrategies.GlobalCache.registerStrategies(GremlinGraphlyEdge.class, TraversalStrategies.GlobalCache.getStrategies(Edge.class).clone().addStrategies(GraphlyElementStepStrategy.instance()));
-        } catch (final CloneNotSupportedException e) {
-            throw new IllegalStateException(e.getMessage(), e);
-        }
+		try {
+			TraversalStrategies.GlobalCache
+					.registerStrategies(
+							GremlinGraphly.class,
+							TraversalStrategies.GlobalCache
+									.getStrategies(Graph.class)
+									.clone()
+									.addStrategies(
+											GraphlyGraphStepStrategy.instance()));
+			TraversalStrategies.GlobalCache.registerStrategies(
+					GremlinGraphlyVertex.class,
+					TraversalStrategies.GlobalCache
+							.getStrategies(Vertex.class)
+							.clone()
+							.addStrategies(
+									GraphlyElementStepStrategy.instance()));
+			TraversalStrategies.GlobalCache.registerStrategies(
+					GremlinGraphlyEdge.class,
+					TraversalStrategies.GlobalCache
+							.getStrategies(Edge.class)
+							.clone()
+							.addStrategies(
+									GraphlyElementStepStrategy.instance()));
+		} catch (final CloneNotSupportedException e) {
+			throw new IllegalStateException(e.getMessage(), e);
+		}
 
 	}
-	
+
 	Graphly graphly;
 
 	public GremlinGraphly(Graphly graphly) {

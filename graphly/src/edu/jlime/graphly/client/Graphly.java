@@ -4,9 +4,12 @@ import java.io.Closeable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.NavigableSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+
+import com.google.common.collect.TreeMultimap;
 
 import edu.jlime.collections.adjacencygraph.get.Dir;
 import edu.jlime.core.cluster.DataFilter;
@@ -41,6 +44,8 @@ public class Graphly implements Closeable {
 	private JobDispatcher jobCli;
 
 	ExecutorService svc = Executors.newCachedThreadPool();
+
+	private Map<String, SubGraph> subgraphs = new HashMap<>();
 
 	private Graphly(GraphlyCoordinator coord,
 			ClientManager<GraphlyStoreNodeI, GraphlyStoreNodeIBroadcast> mgr,
@@ -238,12 +243,12 @@ public class Graphly implements Closeable {
 			});
 
 		}
+		svc.shutdown();
 		try {
 			svc.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
 		} catch (InterruptedException e1) {
 			e1.printStackTrace();
 		}
-		svc.shutdown();
 
 		return ret;
 	}
@@ -284,13 +289,54 @@ public class Graphly implements Closeable {
 		return prop;
 	}
 
-	public TLongObjectHashMap<Object> collect(String k, long[] vids)
+	public TLongObjectHashMap<Object> collect(String k, int top, long[] vids)
 			throws Exception {
-		Map<GraphlyStoreNodeI, TLongArrayList> divided = hashKeys(vids);
-		TLongObjectHashMap<Object> ret = new TLongObjectHashMap<Object>();
-		for (Entry<GraphlyStoreNodeI, TLongArrayList> l : divided.entrySet()) {
-			ret.putAll(l.getKey().getProperties(k, l.getValue()));
+		if (top <= 0) {
+			TLongObjectHashMap<Object> ret = new TLongObjectHashMap<Object>();
+			Map<GraphlyStoreNodeI, TLongArrayList> divided = hashKeys(vids);
+			for (Entry<GraphlyStoreNodeI, TLongArrayList> l : divided
+					.entrySet()) {
+				TLongObjectHashMap<Object> properties = l.getKey()
+						.getProperties(k, top, l.getValue());
+
+				ret.putAll(properties);
+			}
+			return ret;
 		}
+
+		TLongObjectHashMap<Object> ret = new TLongObjectHashMap<Object>();
+
+		TreeMultimap<Comparable, Long> sorted = TreeMultimap.create();
+
+		Map<GraphlyStoreNodeI, TLongArrayList> divided = hashKeys(vids);
+		for (Entry<GraphlyStoreNodeI, TLongArrayList> l : divided.entrySet()) {
+			TLongObjectHashMap<Object> properties = l.getKey().getProperties(k,
+					top, l.getValue());
+			TLongObjectIterator<Object> it = properties.iterator();
+			while (it.hasNext()) {
+				it.advance();
+				Comparable value = (Comparable) it.value();
+				if (value != null)
+					if (sorted.size() < top) {
+						sorted.put(value, it.key());
+					} else {
+						Comparable toRemove = sorted.asMap().firstKey();
+						if (toRemove.compareTo(value) < 0) {
+							NavigableSet<Long> navigableSet = sorted
+									.get(toRemove);
+							Long f = navigableSet.first();
+							navigableSet.remove(f);
+							sorted.put(value, it.key());
+						}
+					}
+			}
+
+			// ret.putAll(properties);
+		}
+		for (Entry<Comparable, Long> l : sorted.entries()) {
+			ret.put(l.getValue(), l.getKey());
+		}
+
 		return ret;
 	}
 
@@ -310,5 +356,18 @@ public class Graphly implements Closeable {
 
 	public int getEdgesCount(Dir dir, long vid, long[] at) throws Exception {
 		return getClientFor(vid).getEdgeCount(vid, dir, at);
+	}
+
+	public SubGraph getSubGraph(String string, long[] all) {
+		SubGraph sg = subgraphs.get(string);
+		if (sg == null) {
+			synchronized (subgraphs) {
+				if (sg == null) {
+					sg = new SubGraph(this, all);
+					subgraphs.put(string, sg);
+				}
+			}
+		}
+		return sg;
 	}
 }

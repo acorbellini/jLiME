@@ -1,6 +1,5 @@
 package edu.jlime.graphly.client;
 
-
 public class GraphlyVertex {
 
 	protected long id;

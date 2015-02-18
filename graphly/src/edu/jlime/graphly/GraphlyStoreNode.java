@@ -7,9 +7,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.NavigableSet;
 import java.util.Properties;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
@@ -17,6 +18,7 @@ import java.util.concurrent.ExecutionException;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.collect.TreeMultimap;
 import com.tinkerpop.gremlin.structure.Edge;
 
 import edu.jlime.collections.adjacencygraph.get.Dir;
@@ -29,6 +31,7 @@ import gnu.trove.iterator.TLongObjectIterator;
 import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.map.hash.TLongIntHashMap;
 import gnu.trove.map.hash.TLongObjectHashMap;
+import gnu.trove.set.hash.TLongHashSet;
 
 public class GraphlyStoreNode implements GraphlyStoreNodeI {
 
@@ -66,7 +69,7 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	// private Graph graph;
 	private LevelDb adj;
 
-	Cache<Long, long[]> adj_cache = CacheBuilder.newBuilder().maximumSize(100)
+	Cache<Long, long[]> adj_cache = CacheBuilder.newBuilder().maximumSize(5000)
 			.build();
 
 	private File localRanges;
@@ -130,7 +133,7 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	 */
 	@Override
 	public void addEdges(Long id, Dir type, long[] list) throws Exception {
-		if (type.equals(Dir.OUT))
+		if (type.equals(Dir.IN))
 			id = -id - 1;
 		adj.store(id, DataTypeUtils.longArrayToByteArray(list));
 	}
@@ -152,6 +155,7 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 				TLongArrayList toAdd = new TLongArrayList(edges);
 				while (toAdd.size() != max_edges)
 					toAdd.removeAt((int) (Math.random() * toAdd.size()));
+				ret.addAll(toAdd);
 			} else
 				ret.addAll(edges);
 		}
@@ -168,7 +172,7 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 			return list.toArray();
 		}
 
-		if (type.equals(Dir.OUT))
+		if (type.equals(Dir.IN))
 			id = -id - 1;
 
 		return getEdges0(id);
@@ -182,7 +186,10 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 				byte[] array;
 				try {
 					array = adj.load((int) id.longValue());
-					return DataTypeUtils.byteArrayToLongArray(array);
+					long[] byteArrayToLongArray = DataTypeUtils
+							.byteArrayToLongArray(array);
+					// Arrays.sort(byteArrayToLongArray);
+					return byteArrayToLongArray;
 				} catch (Exception e) {
 					return new long[] {};
 				}
@@ -377,21 +384,77 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	}
 
 	@Override
-	public TLongObjectHashMap<Object> getProperties(String k,
+	public TLongObjectHashMap<Object> getProperties(String k, Integer top,
 			TLongArrayList list) throws Exception {
-		TLongObjectHashMap<Object> res = new TLongObjectHashMap<>();
+		if (top <= 0) {
+			TLongObjectHashMap<Object> res = new TLongObjectHashMap<>();
+			TLongIterator it = list.iterator();
+			while (it.hasNext()) {
+				long vid = it.next();
+				res.put(vid, getProperty(vid, k));
+			}
+			return res;
+		}
+		TLongObjectHashMap<Object> ret = new TLongObjectHashMap<Object>();
+
+		TreeMultimap<Comparable, Long> sorted = TreeMultimap.create();
 		TLongIterator it = list.iterator();
 		while (it.hasNext()) {
 			long vid = it.next();
-			res.put(vid, getProperty(vid, k));
+			Comparable value = (Comparable) getProperty(vid, k);
+			if (value != null) {
+				if (sorted.size() < top) {
+					sorted.put(value, vid);
+				} else {
+					Comparable toRemove = sorted.asMap().lastKey();
+					if (toRemove.compareTo(value) < 0) {
+						NavigableSet<Long> navigableSet = sorted.get(toRemove);
+						Long f = navigableSet.first();
+						navigableSet.remove(f);
+						sorted.put(value, vid);
+					}
+				}
+			}
+			// ret.putAll(properties);
 		}
-		return res;
+		for (Entry<Comparable, Long> l : sorted.entries()) {
+			ret.put(l.getValue(), l.getKey());
+		}
+
+		return ret;
 	}
 
 	@Override
 	public int getEdgeCount(Long vid, Dir dir, long[] among) throws Exception {
-		TLongArrayList edges = new TLongArrayList(getEdges(dir, vid));
-		edges.retainAll(among);
-		return edges.size();
+		if (among == null || among.length == 0)
+			return getEdges(dir, vid).length;
+		long[] curr = getEdges(dir, vid);
+		if (curr == null || curr.length == 0)
+			return 0;
+		// int cont = 0;
+		//
+		// int edgesCur = 0;
+		// int amongCur = 0;
+		// while (edgesCur < curr.length && amongCur < among.length) {
+		// if (among[amongCur] == curr[edgesCur]) {
+		// cont++;
+		// edgesCur++;
+		// amongCur++;
+		// } else if (among[amongCur] > curr[edgesCur])
+		// edgesCur++;
+		// else
+		// amongCur++;
+		// }
+		// return cont;
+		long[] smaller = among;
+		long[] bigger = curr;
+		if (among.length > curr.length) {
+			smaller = curr;
+			bigger = among;
+		}
+		TLongHashSet aux = new TLongHashSet(smaller);
+		aux.retainAll(bigger);
+		return aux.size();
+
 	}
 }

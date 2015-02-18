@@ -48,9 +48,9 @@ public class TypeConverters {
 		this.rpc = rpcDispatcher;
 
 		registerTypeConverter(Long.class, new LongConverter());
-		
+
 		registerTypeConverter(Double.class, new DoubleConverter());
-		
+
 		registerTypeConverter(Integer.class, new IntegerConverter());
 
 		registerTypeConverter(Boolean.class, new BooleanConverter());
@@ -79,6 +79,8 @@ public class TypeConverters {
 		registerTypeConverter(byte[].class, new ByteArrayConverter());
 
 		registerTypeConverter(int[].class, new IntArrayConverter());
+
+		registerTypeConverter(long[].class, new LongArrayConverter());
 	}
 
 	public void registerTypeConverter(Class<?> classObj, TypeConverter conv) {

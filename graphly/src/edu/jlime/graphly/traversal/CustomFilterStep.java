@@ -1,6 +1,6 @@
 package edu.jlime.graphly.traversal;
 
-import edu.jlime.graphly.recommendation.VertexFilter;
+import edu.jlime.graphly.rec.VertexFilter;
 import gnu.trove.iterator.TLongIterator;
 import gnu.trove.list.array.TLongArrayList;
 

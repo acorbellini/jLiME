@@ -1,9 +1,9 @@
 package edu.jlime.graphly.traversal;
 
-import java.util.Arrays;
-
 import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.map.hash.TLongObjectHashMap;
+
+import java.util.Arrays;
 
 public class VertexResult implements TraversalResult {
 

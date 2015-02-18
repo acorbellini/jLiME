@@ -108,12 +108,16 @@ public class ByteBuffer extends Buffer {
 			// byte[] copy = buffered;
 			// byte[] bufferedExtended = ByteArrayCache
 			// .get(buffered.length == 0 ? INIT_SIZE : buffered.length * 2);
-			byte[] bufferedExtended = new byte[buffered.length == 0 ? INIT_SIZE
-					: buffered.length * 2];
-			System.arraycopy(buffered, 0, bufferedExtended, 0, buffered.length);
-			buffered = bufferedExtended;
+			duplicateSize();
 		}
 
+	}
+
+	private void duplicateSize() {
+		byte[] bufferedExtended = new byte[buffered.length == 0 ? INIT_SIZE
+				: buffered.length * 2];
+		System.arraycopy(buffered, 0, bufferedExtended, 0, buffered.length);
+		buffered = bufferedExtended;
 	}
 
 	public void clear() {
@@ -342,6 +346,22 @@ public class ByteBuffer extends Buffer {
 		String[] ret = new String[s];
 		for (int i = 0; i < ret.length; i++) {
 			ret[i] = getString();
+		}
+		return ret;
+	}
+
+	public void putLongArray(long[] array) {
+		putInt(array.length);
+		for (long i : array) {
+			putLong(i);
+		}
+	}
+
+	public long[] getLongArray() {
+		int size = getInt();
+		long[] ret = new long[size];
+		for (int j = 0; j < ret.length; j++) {
+			ret[j] = getLong();
 		}
 		return ret;
 	}

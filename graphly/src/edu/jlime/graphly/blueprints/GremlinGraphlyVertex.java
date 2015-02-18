@@ -92,5 +92,5 @@ public class GremlinGraphlyVertex implements Vertex, Vertex.Iterators {
 		// TODO Auto-generated method stub
 		return null;
 	}
-	
+
 }
