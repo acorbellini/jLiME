@@ -11,8 +11,11 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.TreeMap;
 
 import edu.jlime.jd.ClientCluster;
 import edu.jlime.jd.ClientNode;
@@ -21,11 +24,18 @@ import edu.jlime.util.CSV;
 
 public class ClusterProfiler {
 
+	private final class NodeComparator implements Comparator<ClientNode> {
+		@Override
+		public int compare(ClientNode o1, ClientNode o2) {
+			return o1.getName().compareTo(o2.getName());
+		}
+	}
+
 	public static final String SEP = ",";
 
 	long freq;
 
-	HashMap<Date, CompositeMetrics<ClientNode>> info = new HashMap<>();
+	TreeMap<Date, CompositeMetrics<ClientNode>> info = new TreeMap<>();
 
 	Timer timer;
 
@@ -44,7 +54,7 @@ public class ClusterProfiler {
 			public void run() {
 				try {
 					CompositeMetrics<ClientNode> clusterMetrics = c.getInfo();
-//					System.out.println(clusterMetrics);
+					// System.out.println(clusterMetrics);
 					info.put(Calendar.getInstance().getTime(), clusterMetrics);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -54,7 +64,8 @@ public class ClusterProfiler {
 	}
 
 	public void csv(CSV csv, MetricExtractor ext) {
-		HashMap<Date, CompositeMetrics<ClientNode>> info = new HashMap<>(this.info);
+		HashMap<Date, CompositeMetrics<ClientNode>> info = new HashMap<>(
+				this.info);
 
 		HashSet<ClientNode> peersUsed = new HashSet<>();
 		for (Date ci : info.keySet()) {
@@ -83,7 +94,7 @@ public class ClusterProfiler {
 			for (ClientNode peer : sorted) {
 				CompositeMetrics<ClientNode> i = info.get(date);
 				if (i.contains(peer))
-					csv.put(ext.get(i.get(peer)));
+					csv.put(ext.get(i.get(peer)).toString());
 
 				else
 					csv.put("");
@@ -110,5 +121,60 @@ public class ClusterProfiler {
 		StringWriter writer = new StringWriter();
 		csv(new CSV(writer), ext);
 		return writer.toString();
+	}
+
+	public Map<Date, CompositeMetrics<ClientNode>> getInfo() {
+		return info;
+	}
+
+	public <T> Map<ClientNode, T> calcPerNode(
+			ProfilerFunctionPerNode<T> profilerFunction, MetricExtractor<T> ext) {
+		Map<ClientNode, TreeMap<Date, T>> toCalc = new TreeMap<>(
+				new NodeComparator());
+		for (Entry<Date, CompositeMetrics<ClientNode>> e : info.entrySet()) {
+			CompositeMetrics<ClientNode> composite = e.getValue();
+			for (ClientNode clientNode : composite.getKeys()) {
+				TreeMap<Date, T> curr = toCalc.get(clientNode);
+				if (curr == null) {
+					curr = new TreeMap<>();
+					toCalc.put(clientNode, curr);
+				}
+				curr.put(e.getKey(), ext.get(composite.get(clientNode)));
+			}
+		}
+		TreeMap<ClientNode, T> ret = new TreeMap<>(new NodeComparator());
+		for (Entry<ClientNode, TreeMap<Date, T>> toCalcEntry : toCalc
+				.entrySet()) {
+			ret.put(toCalcEntry.getKey(),
+					profilerFunction.call(toCalcEntry.getValue()));
+		}
+		return ret;
+
+	}
+
+	public <T> Map<Date, T> calcPerDate(
+			ProfilerFunctionPerDate<T> profilerFunction, MetricExtractor<T> ext) {
+
+		Map<Date, TreeMap<ClientNode, T>> toCalc = new TreeMap<>();
+
+		for (Entry<Date, CompositeMetrics<ClientNode>> e : info.entrySet()) {
+			TreeMap<ClientNode, T> curr = toCalc.get(e.getKey());
+			if (curr == null) {
+				curr = new TreeMap<>();
+				toCalc.put(e.getKey(), curr);
+			}
+			CompositeMetrics<ClientNode> composite = e.getValue();
+			for (ClientNode clientNode : composite.getKeys()) {
+				curr.put(clientNode, ext.get(composite.get(clientNode)));
+			}
+		}
+		Map<Date, T> ret = new TreeMap<>();
+		for (Entry<Date, TreeMap<ClientNode, T>> toCalcEntry : toCalc
+				.entrySet()) {
+			ret.put(toCalcEntry.getKey(),
+					profilerFunction.call(toCalcEntry.getValue()));
+		}
+		return ret;
+
 	}
 }

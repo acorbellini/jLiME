@@ -2,6 +2,7 @@ package edu.jlime.graphly.traversal;
 
 import gnu.trove.list.array.TLongArrayList;
 
+
 public class FilterStep implements Step {
 
 	private TLongArrayList filter;

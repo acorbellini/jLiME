@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import edu.jlime.collections.adjacencygraph.get.Dir;
 import edu.jlime.core.rpc.RPCDispatcher;
 import edu.jlime.core.rpc.Transferible;
 import edu.jlime.graphly.client.Graphly;
@@ -21,7 +20,7 @@ import edu.jlime.graphly.traversal.each.EachStep;
 import edu.jlime.graphly.traversal.each.ForEach;
 import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.JobDispatcher;
-import gnu.trove.list.array.TLongArrayList;
+import gnu.trove.set.hash.TLongHashSet;
 
 public class GraphlyTraversal implements Serializable, Transferible {
 
@@ -36,7 +35,7 @@ public class GraphlyTraversal implements Serializable, Transferible {
 	private transient Graphly g;
 
 	public GraphlyTraversal(long[] ids, Graphly g) {
-		this.currres = new VertexResult(TLongArrayList.wrap(ids));
+		this.currres = new VertexResult(new TLongHashSet(ids));
 		this.g = g;
 	}
 

@@ -34,6 +34,10 @@ public class CSVBuilder {
 		this.csv = csv;
 	}
 
+	public CSVBuilder(String string) {
+		this(new File(string));
+	}
+
 	public static String escape(String sep) {
 		return sep.replaceAll("//.", "//.");
 	}
@@ -61,26 +65,29 @@ public class CSVBuilder {
 
 	public Table toTable() throws Exception {
 		final Table table = new Table();
-		read(new RowListener() {
+		try {
+			read(new RowListener() {
 
-			@Override
-			public void onNewRow(String[] split) {
-				Row row = table.newRow();
-				for (int i = 0; i < split.length; i++) {
-					ValueCell c = new ValueCell(split[i]);
-					try {
-						String newVal = c.value().replaceAll(
-								escape(getDecimalSep()), ".");
-						Double.valueOf(newVal);
-						c.setValue(newVal);
-						c.setFormat(Table.DoubleFormatter);
-					} catch (Exception e) {
+				@Override
+				public void onNewRow(String[] split) {
+					Row row = table.newRow();
+					for (int i = 0; i < split.length; i++) {
+						ValueCell c = new ValueCell(split[i]);
+						try {
+							String newVal = c.value().replaceAll(
+									escape(getDecimalSep()), ".");
+							Double.valueOf(newVal);
+							c.setValue(newVal);
+							c.setFormat(Table.DoubleFormatter);
+						} catch (Exception e) {
+						}
+						row.add(c);
 					}
-					row.add(c);
 				}
-			}
-		});
-
+			});
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		return table;
 
 	}

@@ -2,12 +2,10 @@ package edu.jlime.graphly;
 
 import java.util.List;
 
-import com.tinkerpop.gremlin.structure.Edge;
-
-import edu.jlime.collections.adjacencygraph.get.Dir;
 import edu.jlime.core.cluster.Peer;
 import edu.jlime.core.rpc.Cache;
 import edu.jlime.core.rpc.Sync;
+import edu.jlime.graphly.traversal.Dir;
 import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.map.hash.TLongIntHashMap;
 import gnu.trove.map.hash.TLongObjectHashMap;
@@ -29,9 +27,6 @@ public interface GraphlyStoreNodeI {
 	@Sync
 	public abstract void addEdge(Long orig, Long dest, String label,
 			Object[] keyValues) throws Exception;
-
-	public abstract List<Edge> getEdges(Long orig, Dir type, String... labels)
-			throws Exception;
 
 	public abstract List<Integer> getRanges() throws Exception;
 

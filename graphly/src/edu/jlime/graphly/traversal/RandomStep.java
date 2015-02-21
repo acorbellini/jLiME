@@ -1,8 +1,8 @@
 package edu.jlime.graphly.traversal;
 
-import edu.jlime.collections.adjacencygraph.get.Dir;
 import gnu.trove.iterator.TLongIterator;
-import gnu.trove.list.array.TLongArrayList;
+import gnu.trove.set.hash.TLongHashSet;
+
 
 public class RandomStep implements Step {
 
@@ -19,7 +19,7 @@ public class RandomStep implements Step {
 	@Override
 	public TraversalResult exec(TraversalResult before) throws Exception {
 		TLongIterator it = before.vertices().iterator();
-		TLongArrayList ret = new TLongArrayList();
+		TLongHashSet ret = new TLongHashSet();
 		while (it.hasNext()) {
 			long v = it.next();
 			Long r = tr.getGraph().getRandomEdge(v, subset, dir);

@@ -6,34 +6,34 @@ import gnu.trove.map.hash.TLongLongHashMap;
 
 import java.io.Serializable;
 
-public interface TraversalResult extends Serializable {
+public abstract class TraversalResult implements Serializable {
 
 	public abstract TLongArrayList vertices();
 
-	public default TLongLongHash edges() {
+	public TLongLongHash edges() {
 		return new TLongLongHashMap();
 	}
 
-	public TraversalResult removeAll(TLongArrayList v);
+	public abstract TraversalResult removeAll(TLongArrayList v);
 
-	public TraversalResult retainAll(TLongArrayList v);
+	public abstract TraversalResult retainAll(TLongArrayList v);
 
-	public default void set(long k, Object val) {
+	public void set(long k, Object val) {
 
 	}
 
-	public default Object get(long k) {
+	public Object get(long k) {
 		return null;
 	}
 
-	public default float getValue(long k) {
+	public float getValue(long k) {
 		return 0;
 	}
 
-	public default void setValue(long k, float v) {
+	public void setValue(long k, float v) {
 	}
 
-	public default TraversalResult top(int top) {
+	public TraversalResult top(int top) {
 		return this;
 
 	};

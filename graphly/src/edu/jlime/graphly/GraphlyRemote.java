@@ -2,9 +2,9 @@ package edu.jlime.graphly;
 
 import java.util.Map;
 
-import edu.jlime.collections.adjacencygraph.get.Dir;
 import edu.jlime.core.rpc.ClientManager;
 import edu.jlime.core.rpc.RPCDispatcher;
+import edu.jlime.graphly.traversal.Dir;
 
 public class GraphlyRemote implements GraphlyStore {
 

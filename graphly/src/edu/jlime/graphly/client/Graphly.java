@@ -11,7 +11,6 @@ import java.util.concurrent.TimeUnit;
 
 import com.google.common.collect.TreeMultimap;
 
-import edu.jlime.collections.adjacencygraph.get.Dir;
 import edu.jlime.core.cluster.DataFilter;
 import edu.jlime.core.cluster.Peer;
 import edu.jlime.core.rpc.ClientManager;
@@ -22,6 +21,7 @@ import edu.jlime.graphly.GraphlyStoreNodeIFactory;
 import edu.jlime.graphly.server.GraphlyCoordinator;
 import edu.jlime.graphly.server.GraphlyCoordinatorBroadcast;
 import edu.jlime.graphly.server.GraphlyCoordinatorFactory;
+import edu.jlime.graphly.traversal.Dir;
 import edu.jlime.graphly.traversal.GraphlyTraversal;
 import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.JobDispatcher;
@@ -147,9 +147,9 @@ public class Graphly implements Closeable {
 		return getEdges(dir, -1, vids);
 	}
 
-	public long[] getEdges(Dir dir, int max_edges, long... vids)
+	public long[] getEdges(final Dir dir, final int max_edges, long... vids)
 			throws Exception {
-		TLongHashSet ret = new TLongHashSet();
+		final TLongHashSet ret = new TLongHashSet();
 		Map<GraphlyStoreNodeI, TLongArrayList> map = new HashMap<>();
 		for (long l : vids) {
 			GraphlyStoreNodeI node = getClientFor(l);
@@ -166,7 +166,7 @@ public class Graphly implements Closeable {
 			return node.getEdges(dir, max_edges, vids);
 		}
 
-		for (Entry<GraphlyStoreNodeI, TLongArrayList> e : map.entrySet()) {
+		for (final Entry<GraphlyStoreNodeI, TLongArrayList> e : map.entrySet()) {
 			svc.execute(new Runnable() {
 
 				@Override
@@ -209,8 +209,8 @@ public class Graphly implements Closeable {
 		return jobCli.getCluster().getClientFor(node.getJobAddress());
 	}
 
-	public TLongIntHashMap countEdges(Dir dir, long[] vids) throws Exception {
-		TLongIntHashMap ret = new TLongIntHashMap();
+	public TLongIntHashMap countEdges(final Dir dir, long[] vids) throws Exception {
+		final TLongIntHashMap ret = new TLongIntHashMap();
 
 		Map<GraphlyStoreNodeI, TLongArrayList> map = hashKeys(vids);
 
@@ -219,7 +219,7 @@ public class Graphly implements Closeable {
 			return node.countEdges(dir, vids);
 		}
 
-		for (Entry<GraphlyStoreNodeI, TLongArrayList> e : map.entrySet()) {
+		for (final Entry<GraphlyStoreNodeI, TLongArrayList> e : map.entrySet()) {
 			svc.execute(new Runnable() {
 
 				@Override
@@ -370,4 +370,5 @@ public class Graphly implements Closeable {
 		}
 		return sg;
 	}
+
 }

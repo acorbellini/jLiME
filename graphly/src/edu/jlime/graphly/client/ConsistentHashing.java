@@ -37,7 +37,7 @@ public class ConsistentHashing implements Serializable {
 	private void createCircle(Map<Peer, GraphlyStoreNodeI> map, int vNodes)
 			throws Exception {
 		ArrayList<Peer> nodes = new ArrayList<>(map.keySet());
-		int points = vNodes * nodes.size();
+		int points = vNodes;
 		int range = keySpace / points;
 		for (int i = 0; i < vNodes; i++) {
 			Peer gs = nodes.get(i % nodes.size());

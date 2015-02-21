@@ -2,7 +2,6 @@ package edu.jlime.graphly.rec;
 
 import java.util.Arrays;
 
-import edu.jlime.collections.adjacencygraph.get.Dir;
 import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.rec.CustomStep.CustomFunction;
 import edu.jlime.graphly.rec.randomwalk.RandomWalkForeach;
@@ -10,6 +9,7 @@ import edu.jlime.graphly.rec.randomwalk.RandomWalkJoin;
 import edu.jlime.graphly.rec.salsa.SalsaStep;
 import edu.jlime.graphly.rec.salsa.SalsaStepRandomWalk;
 import edu.jlime.graphly.traversal.CustomTraversal;
+import edu.jlime.graphly.traversal.Dir;
 import edu.jlime.graphly.traversal.GraphlyTraversal;
 import edu.jlime.graphly.traversal.TraversalResult;
 
@@ -61,7 +61,8 @@ public class Recommendation extends CustomTraversal {
 		return this;
 	}
 
-	public Recommendation randomwalk(String key, int steps, float max, Dir out) {
+	public Recommendation randomwalk(String key, int steps, float max,
+			Dir... out) {
 		return randomwalk(key, steps, max, new long[] {}, out);
 	}
 
@@ -73,7 +74,7 @@ public class Recommendation extends CustomTraversal {
 	}
 
 	public Recommendation salsa(String auth, String hub, int steps,
-			int max_depth) throws Exception {
+			float max_depth) throws Exception {
 		tr.customStep(new SalsaStep(auth, hub, steps, max_depth));
 		return this;
 	}
@@ -85,9 +86,10 @@ public class Recommendation extends CustomTraversal {
 	}
 
 	public Recommendation whotofollow(String a, String h, int steps,
-			float max_depth, int salsasteps, float maxsalsadepth, int top) {
-		circleOfTrust(steps, max_depth, top).asTraversal().customStep(
-				new WhoToFollowStep(a, h, salsasteps, maxsalsadepth, top));
+			float max_depth, int topCircle, int salsasteps,
+			float maxsalsadepth, int topAuth) {
+		circleOfTrust(steps, max_depth, topCircle).asTraversal().customStep(
+				new WhoToFollowStep(a, h, salsasteps, maxsalsadepth, topAuth));
 		return this;
 	}
 

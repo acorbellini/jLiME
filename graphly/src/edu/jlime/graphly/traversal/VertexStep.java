@@ -3,7 +3,6 @@ package edu.jlime.graphly.traversal;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import edu.jlime.collections.adjacencygraph.get.Dir;
 import edu.jlime.graphly.jobs.Mapper;
 import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.JobDispatcher;
@@ -59,6 +58,6 @@ public class VertexStep implements Step {
 			public void onFailure(Exception res) {
 			}
 		});
-		return new VertexResult(TLongArrayList.wrap(finalRes));
+		return new VertexResult(new TLongHashSet(finalRes));
 	}
 }

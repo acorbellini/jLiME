@@ -5,7 +5,8 @@ import gnu.trove.map.hash.TLongLongHashMap;
 import gnu.trove.procedure.TLongLongProcedure;
 import gnu.trove.set.hash.TLongHashSet;
 
-public class EdgeResult implements TraversalResult {
+
+public class EdgeResult extends TraversalResult {
 	TLongLongHashMap edges = new TLongLongHashMap();
 
 	public EdgeResult(TLongLongHashMap edges) {
@@ -26,7 +27,8 @@ public class EdgeResult implements TraversalResult {
 
 	}
 
-	private TraversalResult retain(TLongArrayList toFilter, boolean remove) {
+	private TraversalResult retain(final TLongArrayList toFilter,
+			final boolean remove) {
 		edges.retainEntries(new TLongLongProcedure() {
 			@Override
 			public boolean execute(long k, long v) {

@@ -1,11 +1,16 @@
 package edu.jlime.util.table;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Locale;
+
+import com.google.common.io.Files;
 
 import edu.jlime.util.table.Cell.Formatter;
 import edu.jlime.util.table.Functions.CellFactory;
@@ -426,5 +431,46 @@ public class Table {
 			r.add(c);
 		}
 		delRow(from);
+	}
+
+	public void addRow(Object... data) {
+		Row row = newRow();
+		for (Object object : data) {
+			row.add(new ValueCell(object.toString()));
+		}
+
+	}
+
+	public boolean find(Object... pattern) {
+		for (int i = 0; i < getRowLimit(); i++) {
+			Row r = getRow(i);
+			if (findPatternInRow(r, pattern))
+				return true;
+		}
+		return false;
+	}
+
+	private boolean findPatternInRow(Row r, Object... pattern) {
+		int i = 0;
+		for (Cell cell : r) {
+			if (i == pattern.length)
+				return true;
+			Object object = pattern[i++];
+			if (!cell.value().equals(object.toString()))
+				return false;
+		}
+		if (i == pattern.length)
+			return true;
+		return false;
+	}
+
+	public void toCSV(String file) throws IOException {
+
+		BufferedWriter writer = new BufferedWriter(new FileWriter(file
+				+ ".temp"));
+		writer.write(toString());
+		writer.close();
+
+		Files.move(new File(file + ".temp"), new File(file));
 	}
 }

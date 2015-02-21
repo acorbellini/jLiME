@@ -1,7 +1,7 @@
 package edu.jlime.graphly.rec;
 
-import edu.jlime.collections.adjacencygraph.get.Dir;
 import edu.jlime.graphly.client.Graphly;
+import edu.jlime.graphly.traversal.Dir;
 
 public class MinEdgeFilter implements VertexFilter {
 

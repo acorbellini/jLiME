@@ -6,42 +6,17 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
-import edu.jlime.collections.adjacencygraph.Mapper;
 import edu.jlime.core.cluster.Peer;
 import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.client.JobContext;
 import gnu.trove.list.array.TIntArrayList;
+import gnu.trove.list.array.TLongArrayList;
 
 //Simple Round Robin
 
 public class RoundRobinMapper extends Mapper {
 
 	private static final long serialVersionUID = -2914997038447380314L;
-
-	@Override
-	public Map<ClientNode, TIntArrayList> map(int[] data, JobContext env) {
-		Logger log = Logger.getLogger(RoundRobinMapper.class);
-		HashMap<ClientNode, TIntArrayList> div = new HashMap<ClientNode, TIntArrayList>();
-
-		ArrayList<ClientNode> serverList = env.getCluster().getExecutors();
-		if (log.isDebugEnabled())
-			log.debug("Mapping " + data.length + " between "
-					+ serverList.size());
-		int count = 0;
-		for (int i : data) {
-			ClientNode p = serverList.get(count);
-			count = (count + 1) % serverList.size();
-			TIntArrayList uList = div.get(p);
-			if (uList == null) {
-				uList = new TIntArrayList();
-				div.put(p, uList);
-			}
-			uList.add(i);
-		}
-		if (log.isDebugEnabled())
-			log.debug("Resulting list (size " + div.size() + ")");
-		return div;
-	}
 
 	public static void main(String[] args) {
 		HashMap<ClientNode, TIntArrayList> div = new HashMap<ClientNode, TIntArrayList>();
@@ -67,5 +42,31 @@ public class RoundRobinMapper extends Mapper {
 		}
 		System.out.println("Resulting list (size " + div.size() + ")");
 		System.out.println(div);
+	}
+
+	@Override
+	public Map<ClientNode, TLongArrayList> map(long[] data, JobContext ctx)
+			throws Exception {
+		Logger log = Logger.getLogger(RoundRobinMapper.class);
+		HashMap<ClientNode, TLongArrayList> div = new HashMap<ClientNode, TLongArrayList>();
+
+		ArrayList<ClientNode> serverList = ctx.getCluster().getExecutors();
+		if (log.isDebugEnabled())
+			log.debug("Mapping " + data.length + " between "
+					+ serverList.size());
+		int count = 0;
+		for (long i : data) {
+			ClientNode p = serverList.get(count);
+			count = (count + 1) % serverList.size();
+			TLongArrayList uList = div.get(p);
+			if (uList == null) {
+				uList = new TLongArrayList();
+				div.put(p, uList);
+			}
+			uList.add(i);
+		}
+		if (log.isDebugEnabled())
+			log.debug("Resulting list (size " + div.size() + ")");
+		return div;
 	}
 }

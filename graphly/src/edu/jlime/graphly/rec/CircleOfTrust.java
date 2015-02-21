@@ -1,23 +1,18 @@
 package edu.jlime.graphly.rec;
 
-import java.util.Comparator;
-import java.util.Map;
-import java.util.NavigableSet;
-import java.util.TreeSet;
 import java.util.Map.Entry;
+import java.util.NavigableSet;
 
 import com.google.common.collect.TreeMultimap;
 
-import edu.jlime.collections.adjacencygraph.get.Dir;
-import edu.jlime.graphly.GraphlyStoreNodeI;
 import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.rec.CustomStep.CustomFunction;
 import edu.jlime.graphly.traversal.CountResult;
+import edu.jlime.graphly.traversal.Dir;
 import edu.jlime.graphly.traversal.GraphlyTraversal;
 import edu.jlime.graphly.traversal.TraversalResult;
 import gnu.trove.iterator.TLongFloatIterator;
 import gnu.trove.iterator.TLongObjectIterator;
-import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.map.hash.TLongFloatHashMap;
 import gnu.trove.map.hash.TLongObjectHashMap;
 
@@ -37,9 +32,11 @@ public class CircleOfTrust implements CustomFunction {
 	public TraversalResult execute(TraversalResult before, GraphlyTraversal tr)
 			throws Exception {
 		Graphly g = tr.getGraph();
+
 		TraversalResult cot = g.v(before.vertices().toArray())
 				.set("mapper", tr.get("mapper")).as(Recommendation.class)
 				.randomwalk("circleoftrust", steps, max, Dir.OUT).exec();
+
 		TLongObjectHashMap<Object> c = g.collect("circleoftrust", -1, cot
 				.vertices().toArray());
 

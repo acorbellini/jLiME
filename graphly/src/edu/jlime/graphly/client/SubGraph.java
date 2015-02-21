@@ -1,12 +1,14 @@
 package edu.jlime.graphly.client;
 
+import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
-import edu.jlime.collections.adjacencygraph.get.Dir;
+import edu.jlime.graphly.traversal.Dir;
 import edu.jlime.graphly.util.GraphlyUtil;
 
 public class SubGraph {
@@ -51,18 +53,20 @@ public class SubGraph {
 	private Graphly g;
 	private long[] vertices;
 
+	Cache<Long, Object> propcache = CacheBuilder.newBuilder()
+			.maximumSize(10000).build();
+
 	Cache<SubEdge, long[]> edgecache = CacheBuilder.newBuilder()
 			.maximumSize(10000).build();
 
-	Cache<SubEdge, Integer> countcache = CacheBuilder.newBuilder()
-			.maximumSize(100000).build();
+	Map<SubEdge, Integer> countcache = new ConcurrentHashMap<>();
 
 	public SubGraph(Graphly graphly, long[] all) {
 		this.g = graphly;
 		this.vertices = all;
 	}
 
-	public long[] getEdges(Dir in, Long vid) throws ExecutionException {
+	public long[] getEdges(final Dir in, final Long vid) throws ExecutionException {
 		return edgecache.get(new SubEdge(in, vid), new Callable<long[]>() {
 
 			@Override
@@ -83,22 +87,40 @@ public class SubGraph {
 		});
 	}
 
-	public int getEdgesCount(Dir in, long vid) throws ExecutionException {
-		return countcache.get(new SubEdge(in, vid), new Callable<Integer>() {
-
-			@Override
-			public Integer call() throws Exception {
-				return g.getEdgesCount(in, vid, vertices);
+	public int getEdgesCount(Dir in, long vid) throws Exception {
+		SubEdge subEdge = new SubEdge(in, vid);
+		Integer c = countcache.get(subEdge);
+		if (c == null) {
+			synchronized (countcache) {
+				if (c == null) {
+					c = g.getEdgesCount(in, vid, vertices);
+					countcache.put(subEdge, c);
+				}
 			}
-
-		});
+		}
+		return c;
 	}
 
-	public Long getRandomEdge(Dir dir, Long curr) throws ExecutionException {
+	public long getRandomEdge(Dir dir, Long curr) throws ExecutionException {
 		long[] edges = getEdges(dir, curr);
 		if (edges == null || edges.length == 0)
-			return null;
+			return -1;
 		return edges[(int) (Math.random() * edges.length)];
+	}
+
+	public void invalidateProperties() {
+		propcache.invalidateAll();
+	}
+
+	public Object getProperty(final Long w, final String a, final Object f)
+			throws ExecutionException {
+		return propcache.get(w, new Callable<Object>() {
+
+			@Override
+			public Object call() throws Exception {
+				return g.getProperty(w, a, f);
+			}
+		});
 	}
 
 }

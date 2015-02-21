@@ -2,7 +2,7 @@ package edu.jlime.jd.profiler;
 
 import edu.jlime.metrics.metric.Metrics;
 
-public abstract class MetricExtractor {
+public abstract class MetricExtractor<T> {
 
-	public abstract String get(Metrics m);
+	public abstract T get(Metrics m);
 }

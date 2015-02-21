@@ -1,7 +1,7 @@
 package edu.jlime.graphly.traversal.count;
 
-import edu.jlime.collections.adjacencygraph.get.Dir;
 import edu.jlime.graphly.client.Graphly;
+import edu.jlime.graphly.traversal.Dir;
 import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.Job;

@@ -9,15 +9,36 @@
 	</parent>
 	<artifactId>graphly</artifactId>
 	<name>Graphly</name>
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<configuration>
+							<tasks>
+								<copy todir="../jlime/dist/extra/graphly" file="target/graphly-${project.version}.jar"
+									failonerror="false"></copy>
+								<fileset id="graphly_scripts" dir="./scripts" includes="**" />
+								<copy todir="../jlime/dist/extra/graphly" failonerror="false">
+									<fileset refid="graphly_scripts" />
+								</copy>
+							</tasks>
+						</configuration>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
 	<dependencies>
 		<dependency>
 			<groupId>edu.jlime</groupId>
 			<artifactId>core</artifactId>
-			<version>1.0</version>
-		</dependency>
-		<dependency>
-			<groupId>edu.jlime</groupId>
-			<artifactId>collections</artifactId>
 			<version>1.0</version>
 		</dependency>
 		<dependency>
@@ -26,19 +47,24 @@
 			<version>4.0</version>
 		</dependency>
 		<dependency>
-			<groupId>com.tinkerpop</groupId>
-			<artifactId>gremlin-console</artifactId>
-			<version>3.0.0.M7</version>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-context</artifactId>
+			<version>4.1.4.RELEASE</version>
 		</dependency>
 		<dependency>
-			<groupId>com.tinkerpop</groupId>
-			<artifactId>gremlin-core</artifactId>
-			<version>3.0.0.M7</version>
+			<groupId>edu.jlime</groupId>
+			<artifactId>jobdispatcher</artifactId>
+			<version>1.0</version>
 		</dependency>
 		<dependency>
-			<groupId>com.tinkerpop</groupId>
-			<artifactId>neo4j-gremlin</artifactId>
-			<version>3.0.0.M7</version>
+			<groupId>net.sf.trove4j</groupId>
+			<artifactId>trove4j</artifactId>
+			<version>3.0.3</version>
+		</dependency>
+		<dependency>
+			<groupId>org.fusesource.leveldbjni</groupId>
+			<artifactId>leveldbjni-all</artifactId>
+			<version>1.8</version>
 		</dependency>
 	</dependencies>
 </project>

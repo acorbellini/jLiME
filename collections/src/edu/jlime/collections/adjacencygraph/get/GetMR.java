@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.log4j.Logger;
 
@@ -14,7 +13,6 @@ import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.Job;
 import gnu.trove.list.array.TIntArrayList;
-import gnu.trove.list.linked.TIntLinkedList;
 import gnu.trove.set.hash.TIntHashSet;
 
 public class GetMR extends GraphMR<TIntHashSet, int[]> {

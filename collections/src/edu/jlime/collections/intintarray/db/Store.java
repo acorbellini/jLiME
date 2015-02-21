@@ -1,7 +1,6 @@
 package edu.jlime.collections.intintarray.db;
 
 import java.io.Closeable;
-import java.util.List;
 
 import edu.jlime.collections.intintarray.client.jobs.StoreConfig;
 import edu.jlime.util.DataTypeUtils;

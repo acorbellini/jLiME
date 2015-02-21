@@ -2,11 +2,11 @@ package edu.jlime.graphly;
 
 import java.util.List;
 
-import edu.jlime.collections.adjacencygraph.get.Dir;
 import edu.jlime.core.cluster.Peer;
 import edu.jlime.core.rpc.RPCClient;
 import edu.jlime.core.rpc.RPCDispatcher;
 import edu.jlime.core.rpc.Transferible;
+import edu.jlime.graphly.traversal.Dir;
 import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.map.hash.TLongIntHashMap;
 import gnu.trove.map.hash.TLongObjectHashMap;
@@ -76,23 +76,49 @@ public class GraphlyStoreNodeIServerImpl extends RPCClient implements
 				new Object[] { arg0, arg1, arg2 });
 	}
 
-	public List getEdges(final Long arg0, final Dir arg1, final String[] arg2)
+	public void removeVertex(final Long arg0) throws Exception {
+		if (local != null) {
+			((GraphlyStoreNodeI) local.getTarget(targetID)).removeVertex(arg0);
+			return;
+		}
+		disp.callSync(dest, client, targetID, "removeVertex",
+				new Object[] { arg0 });
+	}
+
+	public void addRange(final Integer arg0) throws Exception {
+		if (local != null) {
+			((GraphlyStoreNodeI) local.getTarget(targetID)).addRange(arg0);
+			return;
+		}
+		disp.callSync(dest, client, targetID, "addRange", new Object[] { arg0 });
+	}
+
+	public Long getRandomEdge(final Long arg0, final long[] arg1, final Dir arg2)
 			throws Exception {
 		if (local != null) {
-			return ((GraphlyStoreNodeI) local.getTarget(targetID)).getEdges(
-					arg0, arg1, arg2);
+			return ((GraphlyStoreNodeI) local.getTarget(targetID))
+					.getRandomEdge(arg0, arg1, arg2);
 		}
-		return (List) disp.callSync(dest, client, targetID, "getEdges",
+		return (Long) disp.callSync(dest, client, targetID, "getRandomEdge",
 				new Object[] { arg0, arg1, arg2 });
 	}
 
-	public long[] getEdges(final Dir arg0, final Integer arg1, final long[] arg2)
+	public String getLabel(final Long arg0) throws Exception {
+		if (local != null) {
+			return ((GraphlyStoreNodeI) local.getTarget(targetID))
+					.getLabel(arg0);
+		}
+		return (String) disp.callSync(dest, client, targetID, "getLabel",
+				new Object[] { arg0 });
+	}
+
+	public int getEdgeCount(final Long arg0, final Dir arg1, final long[] arg2)
 			throws Exception {
 		if (local != null) {
-			return ((GraphlyStoreNodeI) local.getTarget(targetID)).getEdges(
-					arg0, arg1, arg2);
+			return ((GraphlyStoreNodeI) local.getTarget(targetID))
+					.getEdgeCount(arg0, arg1, arg2);
 		}
-		return (long[]) disp.callSync(dest, client, targetID, "getEdges",
+		return (int) disp.callSync(dest, client, targetID, "getEdgeCount",
 				new Object[] { arg0, arg1, arg2 });
 	}
 
@@ -107,82 +133,12 @@ public class GraphlyStoreNodeIServerImpl extends RPCClient implements
 				arg1, arg2, arg3 });
 	}
 
-	public String getLabel(final Long arg0) throws Exception {
-		if (local != null) {
-			return ((GraphlyStoreNodeI) local.getTarget(targetID))
-					.getLabel(arg0);
-		}
-		return (String) disp.callSync(dest, client, targetID, "getLabel",
-				new Object[] { arg0 });
-	}
-
-	public void addEdges(final Long arg0, final Dir arg1, final long[] arg2)
-			throws Exception {
-		if (local != null) {
-			((GraphlyStoreNodeI) local.getTarget(targetID)).addEdges(arg0,
-					arg1, arg2);
-			return;
-		}
-		disp.callSync(dest, client, targetID, "addEdges", new Object[] { arg0,
-				arg1, arg2 });
-	}
-
-	public boolean addVertex(final Long arg0, final String arg1)
-			throws Exception {
-		if (local != null) {
-			return ((GraphlyStoreNodeI) local.getTarget(targetID)).addVertex(
-					arg0, arg1);
-		}
-		return (boolean) disp.callSync(dest, client, targetID, "addVertex",
-				new Object[] { arg0, arg1 });
-	}
-
 	public List getRanges() throws Exception {
 		if (local != null) {
 			return ((GraphlyStoreNodeI) local.getTarget(targetID)).getRanges();
 		}
 		return (List) disp.callSync(dest, client, targetID, "getRanges",
 				new Object[] {});
-	}
-
-	public void setEdgeProperty(final Long arg0, final Long arg1,
-			final String arg2, final Object arg3, final String[] arg4)
-			throws Exception {
-		if (local != null) {
-			((GraphlyStoreNodeI) local.getTarget(targetID)).setEdgeProperty(
-					arg0, arg1, arg2, arg3, arg4);
-			return;
-		}
-		disp.callSync(dest, client, targetID, "setEdgeProperty", new Object[] {
-				arg0, arg1, arg2, arg3, arg4 });
-	}
-
-	public Object getEdgeProperty(final Long arg0, final Long arg1,
-			final String arg2, final String[] arg3) throws Exception {
-		if (local != null) {
-			return ((GraphlyStoreNodeI) local.getTarget(targetID))
-					.getEdgeProperty(arg0, arg1, arg2, arg3);
-		}
-		return (Object) disp.callSync(dest, client, targetID,
-				"getEdgeProperty", new Object[] { arg0, arg1, arg2, arg3 });
-	}
-
-	public void addRange(final Integer arg0) throws Exception {
-		if (local != null) {
-			((GraphlyStoreNodeI) local.getTarget(targetID)).addRange(arg0);
-			return;
-		}
-		disp.callSync(dest, client, targetID, "addRange", new Object[] { arg0 });
-	}
-
-	public int getEdgeCount(final Long arg0, final Dir arg1, final long[] arg2)
-			throws Exception {
-		if (local != null) {
-			return ((GraphlyStoreNodeI) local.getTarget(targetID))
-					.getEdgeCount(arg0, arg1, arg2);
-		}
-		return (int) disp.callSync(dest, client, targetID, "getEdgeCount",
-				new Object[] { arg0, arg1, arg2 });
 	}
 
 	public Peer getJobAddress() throws Exception {
@@ -201,23 +157,25 @@ public class GraphlyStoreNodeIServerImpl extends RPCClient implements
 		return getJobAddressCached;
 	}
 
-	public void removeVertex(final Long arg0) throws Exception {
-		if (local != null) {
-			((GraphlyStoreNodeI) local.getTarget(targetID)).removeVertex(arg0);
-			return;
-		}
-		disp.callSync(dest, client, targetID, "removeVertex",
-				new Object[] { arg0 });
-	}
-
-	public Long getRandomEdge(final Long arg0, final long[] arg1, final Dir arg2)
+	public void addEdges(final Long arg0, final Dir arg1, final long[] arg2)
 			throws Exception {
 		if (local != null) {
-			return ((GraphlyStoreNodeI) local.getTarget(targetID))
-					.getRandomEdge(arg0, arg1, arg2);
+			((GraphlyStoreNodeI) local.getTarget(targetID)).addEdges(arg0,
+					arg1, arg2);
+			return;
 		}
-		return (Long) disp.callSync(dest, client, targetID, "getRandomEdge",
-				new Object[] { arg0, arg1, arg2 });
+		disp.callSync(dest, client, targetID, "addEdges", new Object[] { arg0,
+				arg1, arg2 });
+	}
+
+	public Object getEdgeProperty(final Long arg0, final Long arg1,
+			final String arg2, final String[] arg3) throws Exception {
+		if (local != null) {
+			return ((GraphlyStoreNodeI) local.getTarget(targetID))
+					.getEdgeProperty(arg0, arg1, arg2, arg3);
+		}
+		return (Object) disp.callSync(dest, client, targetID,
+				"getEdgeProperty", new Object[] { arg0, arg1, arg2, arg3 });
 	}
 
 	public TLongIntHashMap countEdges(final Dir arg0, final long[] arg1)
@@ -228,6 +186,38 @@ public class GraphlyStoreNodeIServerImpl extends RPCClient implements
 		}
 		return (TLongIntHashMap) disp.callSync(dest, client, targetID,
 				"countEdges", new Object[] { arg0, arg1 });
+	}
+
+	public boolean addVertex(final Long arg0, final String arg1)
+			throws Exception {
+		if (local != null) {
+			return ((GraphlyStoreNodeI) local.getTarget(targetID)).addVertex(
+					arg0, arg1);
+		}
+		return (boolean) disp.callSync(dest, client, targetID, "addVertex",
+				new Object[] { arg0, arg1 });
+	}
+
+	public long[] getEdges(final Dir arg0, final Integer arg1, final long[] arg2)
+			throws Exception {
+		if (local != null) {
+			return ((GraphlyStoreNodeI) local.getTarget(targetID)).getEdges(
+					arg0, arg1, arg2);
+		}
+		return (long[]) disp.callSync(dest, client, targetID, "getEdges",
+				new Object[] { arg0, arg1, arg2 });
+	}
+
+	public void setEdgeProperty(final Long arg0, final Long arg1,
+			final String arg2, final Object arg3, final String[] arg4)
+			throws Exception {
+		if (local != null) {
+			((GraphlyStoreNodeI) local.getTarget(targetID)).setEdgeProperty(
+					arg0, arg1, arg2, arg3, arg4);
+			return;
+		}
+		disp.callSync(dest, client, targetID, "setEdgeProperty", new Object[] {
+				arg0, arg1, arg2, arg3, arg4 });
 	}
 
 	@Override

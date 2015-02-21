@@ -76,4 +76,12 @@ public class Col implements Dim {
 	public int column() {
 		return c;
 	}
+
+	public Cell find(String string) {
+		for (Cell c : this) {
+			if (string.equals(c.value()))
+				return c;
+		}
+		return null;
+	}
 }

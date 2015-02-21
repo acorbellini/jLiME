@@ -1,9 +1,9 @@
 package edu.jlime.graphly.rec.salsa;
 
-import edu.jlime.collections.adjacencygraph.get.Dir;
 import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.rec.CustomStep.CustomFunction;
 import edu.jlime.graphly.rec.MinEdgeFilter;
+import edu.jlime.graphly.traversal.Dir;
 import edu.jlime.graphly.traversal.GraphlyTraversal;
 import edu.jlime.graphly.traversal.TraversalResult;
 import gnu.trove.list.array.TLongArrayList;
@@ -12,13 +12,11 @@ public class SalsaStep implements CustomFunction {
 	private String auth;
 	private String hub;
 	private int steps;
-	private int max_depth;
 
-	public SalsaStep(String auth, String hub, int steps, int max_depth) {
+	public SalsaStep(String auth, String hub, int steps, float max_depth) {
 		this.auth = auth;
 		this.hub = hub;
 		this.steps = steps;
-		this.max_depth = max_depth;
 	}
 
 	@Override

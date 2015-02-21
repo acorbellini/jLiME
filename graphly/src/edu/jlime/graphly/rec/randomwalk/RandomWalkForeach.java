@@ -1,8 +1,8 @@
 package edu.jlime.graphly.rec.randomwalk;
 
-import edu.jlime.collections.adjacencygraph.get.Dir;
 import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.client.SubGraph;
+import edu.jlime.graphly.traversal.Dir;
 import edu.jlime.graphly.traversal.GraphlyTraversal;
 import edu.jlime.graphly.traversal.each.ForEach;
 import gnu.trove.list.array.TLongArrayList;
@@ -27,15 +27,15 @@ public class RandomWalkForeach implements ForEach<long[]> {
 			SubGraph sg = g.getSubGraph("random-walk", subset);
 			TLongArrayList ret = new TLongArrayList();
 			boolean done = false;
-			Long cursor = vid;
+			long cursor = vid;
 			while (((max_depth < 1f && Math.random() > max_depth) || ret.size() < max_depth)
 					&& !done) {
 				for (Dir dir : dirs) {
 					cursor = sg.getRandomEdge(dir, cursor);
-					if (cursor == null)
+					if (cursor < 0)
 						break;
 				}
-				if (cursor == null) {
+				if (cursor < 0) {
 					done = true;
 				} else if (cursor == vid)
 					done = true;

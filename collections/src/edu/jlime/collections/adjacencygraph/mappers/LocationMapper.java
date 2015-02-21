@@ -2,7 +2,6 @@ package edu.jlime.collections.adjacencygraph.mappers;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
 

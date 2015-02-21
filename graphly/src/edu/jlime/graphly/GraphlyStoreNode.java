@@ -19,12 +19,11 @@ import java.util.concurrent.ExecutionException;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.TreeMultimap;
-import com.tinkerpop.gremlin.structure.Edge;
 
-import edu.jlime.collections.adjacencygraph.get.Dir;
-import edu.jlime.collections.intintarray.db.LevelDb;
 import edu.jlime.core.cluster.Peer;
 import edu.jlime.core.rpc.RPCDispatcher;
+import edu.jlime.graphly.store.LevelDb;
+import edu.jlime.graphly.traversal.Dir;
 import edu.jlime.util.DataTypeUtils;
 import gnu.trove.iterator.TLongIterator;
 import gnu.trove.iterator.TLongObjectIterator;
@@ -178,7 +177,7 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 		return getEdges0(id);
 	}
 
-	private long[] getEdges0(Long id) throws ExecutionException {
+	private long[] getEdges0(final Long id) throws ExecutionException {
 		return adj_cache.get(id, new Callable<long[]>() {
 
 			@Override
@@ -246,24 +245,24 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	 * @see edu.jlime.graphly.GraphlyStoreNodeI#setEdgeProperty(java.lang.Long,
 	 * java.lang.Long, java.lang.String, java.lang.Object, java.lang.String)
 	 */
-	@Override
-	public void setEdgeProperty(Long v1, Long v2, String k, Object val,
-			String... labels) {
-		Edge edge = getEdge(v1, v2, labels);
-		if (edge != null) {
-			edge.property(k, val);
-		}
-	}
+	// @Override
+	// public void setEdgeProperty(Long v1, Long v2, String k, Object val,
+	// String... labels) {
+	// Edge edge = getEdge(v1, v2, labels);
+	// if (edge != null) {
+	// edge.property(k, val);
+	// }
+	// }
 
-	private Edge getEdge(Long v1, Long v2, String... labels) {
-		List<Edge> edges = getEdges(v1, Dir.OUT, labels);
-		for (Edge edge : edges) {
-			if (edge.outV().next().equals(v2)) {
-				return edge;
-			}
-		}
-		return null;
-	}
+	// private Edge getEdge(Long v1, Long v2, String... labels) {
+	// List<Edge> edges = getEdges(v1, Dir.OUT, labels);
+	// for (Edge edge : edges) {
+	// if (edge.outV().next().equals(v2)) {
+	// return edge;
+	// }
+	// }
+	// return null;
+	// }
 
 	/*
 	 * (non-Javadoc)
@@ -271,11 +270,12 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	 * @see edu.jlime.graphly.GraphlyStoreNodeI#getEdgeProperty(java.lang.Long,
 	 * java.lang.Long, java.lang.String, java.lang.String)
 	 */
-	@Override
-	public Object getEdgeProperty(Long v1, Long v2, String k, String... labels) {
-		Edge e = getEdge(v1, v2, labels);
-		return e.property(k);
-	}
+	// @Override
+	// public Object getEdgeProperty(Long v1, Long v2, String k, String...
+	// labels) {
+	// Edge e = getEdge(v1, v2, labels);
+	// return e.property(k);
+	// }
 
 	/*
 	 * (non-Javadoc)
@@ -283,22 +283,22 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	 * @see edu.jlime.graphly.GraphlyStoreNodeI#getEdge(java.lang.Long,
 	 * edu.jlime.collections.adjacencygraph.get.GetType, java.lang.String)
 	 */
-	@Override
-	public List<Edge> getEdges(Long orig, Dir type, String... labels) {
-		// List<Edge> edges = new ArrayList<>();
-		// Vertex v1 = graph.V(orig).next();
-		// if (v1 != null) {
-		// Direction dir = Direction.IN;
-		// if (type.equals(GraphlyDirection.BOTH))
-		// dir = Direction.BOTH;
-		// else if (type.equals(GraphlyDirection.OUT))
-		// dir = Direction.OUT;
-		// for (Edge edge : v1.toE(dir, labels).toList())
-		// edges.add(edge);
-		// }
-		// return edges;
-		return null;
-	}
+	// @Override
+	// public List<Edge> getEdges(Long orig, Dir type, String... labels) {
+	// List<Edge> edges = new ArrayList<>();
+	// Vertex v1 = graph.V(orig).next();
+	// if (v1 != null) {
+	// Direction dir = Direction.IN;
+	// if (type.equals(GraphlyDirection.BOTH))
+	// dir = Direction.BOTH;
+	// else if (type.equals(GraphlyDirection.OUT))
+	// dir = Direction.OUT;
+	// for (Edge edge : v1.toE(dir, labels).toList())
+	// edges.add(edge);
+	// }
+	// return edges;
+	// return null;
+	// }
 
 	@Override
 	public boolean addVertex(Long id, String label) throws Exception {
@@ -365,7 +365,8 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 			return edges[(int) (Math.random() * edges.length)];
 		else {
 			TLongArrayList diff = new TLongArrayList(subset);
-			diff.retainAll(edges);
+			TLongHashSet set = new TLongHashSet(edges);
+			diff.retainAll(set);
 			if (diff.isEmpty())
 				return null;
 			return diff.get((int) (Math.random() * diff.size()));
@@ -455,5 +456,19 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 		aux.retainAll(bigger);
 		return aux.size();
 
+	}
+
+	@Override
+	public void setEdgeProperty(Long v1, Long v2, String k, Object val,
+			String... labels) throws Exception {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public Object getEdgeProperty(Long v1, Long v2, String k, String... labels)
+			throws Exception {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

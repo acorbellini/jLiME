@@ -2,7 +2,7 @@ package edu.jlime.graphly.traversal;
 
 import edu.jlime.graphly.rec.VertexFilter;
 import gnu.trove.iterator.TLongIterator;
-import gnu.trove.list.array.TLongArrayList;
+import gnu.trove.set.hash.TLongHashSet;
 
 public class CustomFilterStep implements Step {
 
@@ -16,7 +16,7 @@ public class CustomFilterStep implements Step {
 
 	@Override
 	public TraversalResult exec(TraversalResult before) throws Exception {
-		TLongArrayList ret = new TLongArrayList();
+		TLongHashSet ret = new TLongHashSet();
 		TLongIterator it = before.vertices().iterator();
 		while (it.hasNext()) {
 			long next = it.next();

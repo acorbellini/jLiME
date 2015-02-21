@@ -1,6 +1,5 @@
 package edu.jlime.graphly.jobs;
 
-import edu.jlime.collections.adjacencygraph.Mapper;
 import edu.jlime.jd.ClientNode;
 import edu.jlime.metrics.sysinfo.filter.LogFilter;
 import edu.jlime.metrics.sysinfo.filter.SimpleInfoFilter;
@@ -12,8 +11,15 @@ public class MapperFactory {
 				new SimpleInfoFilter<ClientNode>("sysinfo.cpu.usage"), false));
 	}
 
-	public static Mapper memCriteria() {
-		return new CriteriaMapper(new SimpleInfoFilter<ClientNode>(
-				"jvminfo.mem.max"));
+	public static Mapper simple(String criteria) {
+		return new CriteriaMapper(new SimpleInfoFilter<ClientNode>(criteria));
+	}
+
+	public static Mapper location() {
+		return new LocationMapper();
+	}
+
+	public static Mapper rr() {
+		return new RoundRobinMapper();
 	}
 }

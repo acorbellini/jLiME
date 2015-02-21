@@ -2,17 +2,18 @@ package edu.jlime.graphly.traversal;
 
 import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.map.hash.TLongObjectHashMap;
+import gnu.trove.set.hash.TLongHashSet;
 
 import java.util.Arrays;
 
-public class VertexResult implements TraversalResult {
+public class VertexResult extends TraversalResult {
 
 	long[] ids = new long[] {};
 
 	TLongObjectHashMap<Object> values = new TLongObjectHashMap<Object>();
 
-	public VertexResult(TLongArrayList ret) {
-		this.ids = ret.toArray();
+	public VertexResult(TLongHashSet rem) {
+		this.ids = rem.toArray();
 	}
 
 	/*
@@ -52,14 +53,14 @@ public class VertexResult implements TraversalResult {
 
 	@Override
 	public TraversalResult removeAll(TLongArrayList v) {
-		TLongArrayList rem = new TLongArrayList(ids);
+		TLongHashSet rem = new TLongHashSet(ids);
 		rem.removeAll(v);
 		return new VertexResult(rem);
 	}
 
 	@Override
 	public TraversalResult retainAll(TLongArrayList v) {
-		TLongArrayList ret = new TLongArrayList(ids);
+		TLongHashSet ret = new TLongHashSet(ids);
 		ret.removeAll(v);
 		return new VertexResult(ret);
 	}

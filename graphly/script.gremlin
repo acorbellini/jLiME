@@ -1,4 +1,0 @@
-import edu.jlime.graphly.client.GraphlyFactory
-
-g = GraphlyFactory.build(4)
-

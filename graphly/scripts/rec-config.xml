@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans.xsd"
+	xmlns:util="http://www.springframework.org/schema/util">
+
+	<bean id="runs" class="java.lang.Integer">
+		<constructor-arg value="5" />
+	</bean>
+
+	<bean id="servers" class="java.lang.Integer">
+		<constructor-arg value="8" />
+	</bean>
+
+	<util:list id="mappers" value-type="edu.jlime.graphly.jobs.Mapper">
+		<ref bean="roundrobin" />
+		<ref bean="totalmemory" />
+		<ref bean="availablememory" />
+		<ref bean="locaware" />
+	</util:list>
+
+	<bean id="roundrobin"
+		class="edu.jlime.collections.adjacencygraph.mappers.MapperFactory"
+		factory-method="rr" lazy-init="true" />
+
+	<bean id="locaware"
+		class="edu.jlime.collections.adjacencygraph.mappers.MapperFactory"
+		factory-method="location" lazy-init="true" />
+
+	<bean id="totalmemory"
+		class="edu.jlime.collections.adjacencygraph.mappers.MapperFactory"
+		factory-method="simple" lazy-init="true">
+		<constructor-arg value="jvminfo.mem.max" />
+	</bean>
+
+	<bean id="availablememory"
+		class="edu.jlime.collections.adjacencygraph.mappers.MapperFactory"
+		factory-method="simple" lazy-init="true">
+		<constructor-arg value="sysinfo.mem.available" />
+	</bean>
+
+	<util:list id="queries" value-type="edu.jlime.graphly.util.QueryContainer">
+		<ref bean="commonneighbours" />
+		<ref bean="hits" />
+		<ref bean="salsa" />
+		<ref bean="exploratory" />
+		<ref bean="whotofollow" />
+	</util:list>
+
+	<util:map id="usergroups">
+		<entry key="user1" value="17242874" />
+		<entry key="user2" value="804204" />
+		<entry key="user3" value="11916652" />
+		<entry key="user4" value="20977313" />
+		<entry key="user5" value="13406702" />
+
+		<entry key="group-5-IS"
+			value="
+25431069 
+36324222 
+10316422 
+14527357 
+14819541 " />
+		<entry key="group-25-IS"
+			value="25431069 
+36324222 
+10316422 
+14527357 
+14819541 
+25914590 
+14649354 
+14140707 
+14984654 
+14886813 
+7174582  
+13396762 
+8255522  
+15323801 
+14974273 
+9733422  
+6255852  
+10452452 
+2898661  
+9544962  
+10733192 
+54646707 
+15147376 
+6806472  
+15187078" />
+		<entry key="group-50-IS"
+			value="25431069 
+36324222 
+10316422 
+14527357 
+14819541 
+25914590 
+14649354 
+14140707 
+14984654 
+14886813 
+7174582  
+13396762 
+8255522  
+15323801 
+14974273 
+9733422  
+6255852  
+10452452 
+2898661  
+9544962  
+10733192 
+54646707 
+15147376 
+6806472  
+15187078 
+14381339 
+14211802 
+14983850 
+14302268 
+14153378 
+15309254 
+14180136 
+14055920 
+14563260 
+14214772 
+14776551 
+9120732  
+10487982 
+14805828 
+15179986 
+15264105 
+11139102 
+10815782 
+14094296 
+14068579 
+12534022 
+14675522 
+14886943 
+14248461 
+14964379 " />
+		<entry key="group-5-followees"
+			value="
+14389132 
+16559157 
+14669398 
+17850012 
+15991049 " />
+		<entry key="group-25-followees"
+			value="14389132 
+16559157 
+14669398 
+17850012 
+15991049 
+5210841  
+11915432 
+13348    
+804455   
+14430060 
+18238282 
+16150075 
+15117375 
+17242874 
+13082862 
+15600217 
+15195171 
+20385404 
+11622712 
+898491   
+12504732 
+18539631 
+16429977 
+14079425 
+21836409 " />
+		<entry key="group-50-followees"
+			value="14389132 
+16559157 
+14669398 
+17850012 
+15991049 
+5210841  
+11915432 
+13348    
+804455   
+14430060 
+18238282 
+16150075 
+15117375 
+17242874 
+13082862 
+15600217 
+15195171 
+20385404 
+11622712 
+898491   
+12504732 
+18539631 
+16429977 
+14079425 
+21836409 
+14213491 
+18932935 
+16181186 
+15816264 
+15158464 
+17352423 
+14311992 
+14720411 
+14261168 
+9753672  
+7799412  
+14433007 
+19107253 
+18363508 
+18087450 
+20806376 
+13547812 
+31567254 
+14076588 
+16481781 
+14542767 
+18276100 
+15794195 
+17867513 
+15274836" />
+	</util:map>
+
+
+	<bean id="commonneighbours" class="edu.jlime.graphly.util.Queries"
+		factory-method="commonneighbours" lazy-init="true">
+		<constructor-arg value="" />
+	</bean>
+	<bean id="hits"
+		class="edu.jlime.collections.adjacencygraph.mappers.MapperFactory"
+		factory-method="simple" lazy-init="true">
+		<constructor-arg value="sysinfo.mem.available" />
+	</bean>
+	<bean id="salsa"
+		class="edu.jlime.collections.adjacencygraph.mappers.MapperFactory"
+		factory-method="simple" lazy-init="true">
+		<constructor-arg value="sysinfo.mem.available" />
+	</bean>
+	<bean id="exploratory"
+		class="edu.jlime.collections.adjacencygraph.mappers.MapperFactory"
+		factory-method="simple" lazy-init="true">
+		<constructor-arg value="sysinfo.mem.available" />
+	</bean>
+	<bean id="whotofollow"
+		class="edu.jlime.collections.adjacencygraph.mappers.MapperFactory"
+		factory-method="simple" lazy-init="true">
+		<constructor-arg value="sysinfo.mem.available" />
+	</bean>
+</beans>

@@ -7,12 +7,12 @@ import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
 
-import edu.jlime.collections.adjacencygraph.Mapper;
 import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.client.JobContext;
 import edu.jlime.metrics.metric.CompositeMetrics;
 import edu.jlime.metrics.sysinfo.filter.SysInfoFilter;
 import gnu.trove.list.array.TIntArrayList;
+import gnu.trove.list.array.TLongArrayList;
 
 public class CriteriaMapper extends Mapper {
 
@@ -25,12 +25,12 @@ public class CriteriaMapper extends Mapper {
 	}
 
 	@Override
-	public Map<ClientNode, TIntArrayList> map(int[] data, JobContext env)
+	public Map<ClientNode, TLongArrayList> map(long[] data, JobContext ctx)
 			throws Exception {
 		Logger log = Logger.getLogger(CriteriaMapper.class);
-		HashMap<ClientNode, TIntArrayList> div = new HashMap<ClientNode, TIntArrayList>();
+		HashMap<ClientNode, TLongArrayList> div = new HashMap<ClientNode, TLongArrayList>();
 
-		CompositeMetrics<ClientNode> info = env.getCluster().getInfo();
+		CompositeMetrics<ClientNode> info = ctx.getCluster().getInfo();
 
 		HashMap<ClientNode, Float> infoValues = filter.extract(info);
 
@@ -54,13 +54,13 @@ public class CriteriaMapper extends Mapper {
 			if (end >= data.length || count == infoValues.size())
 				end = data.length;
 
-			int[] dataCopy = Arrays.copyOfRange(data, init, end);
+			long[] dataCopy = Arrays.copyOfRange(data, init, end);
 			if (dataCopy.length != 0)
-				div.put(e.getKey(), new TIntArrayList(dataCopy));
+				div.put(e.getKey(), new TLongArrayList(dataCopy));
 			init = end;
 		}
 
-		for (Entry<ClientNode, TIntArrayList> e : div.entrySet()) {
+		for (Entry<ClientNode, TLongArrayList> e : div.entrySet()) {
 			log.info(e.getKey() + " -> " + e.getValue().size());
 		}
 

@@ -1,12 +1,10 @@
 package edu.jlime.graphly.rec.salsa;
 
-import java.util.Arrays;
-
-import edu.jlime.collections.adjacencygraph.get.Dir;
 import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.rec.CustomStep.CustomFunction;
 import edu.jlime.graphly.rec.MinEdgeFilter;
 import edu.jlime.graphly.rec.Recommendation;
+import edu.jlime.graphly.traversal.Dir;
 import edu.jlime.graphly.traversal.GraphlyTraversal;
 import edu.jlime.graphly.traversal.TraversalResult;
 
@@ -28,8 +26,6 @@ public class SalsaStepRandomWalk implements CustomFunction {
 	public TraversalResult execute(TraversalResult before, GraphlyTraversal tr)
 			throws Exception {
 		long[] res = before.vertices().toArray();
-
-		Arrays.sort(res);
 
 		Graphly g = tr.getGraph();
 

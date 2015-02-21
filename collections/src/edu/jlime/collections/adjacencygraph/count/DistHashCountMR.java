@@ -32,8 +32,7 @@ public class DistHashCountMR extends GraphMR<TIntIntHashMap, byte[]> {
 
 	ReentrantLock resultLock = new ReentrantLock();
 
-	public DistHashCountMR(int[] data, String mapName, Mapper mapper,
-			Dir type) {
+	public DistHashCountMR(int[] data, String mapName, Mapper mapper, Dir type) {
 		super(data, mapName, mapper);
 		super.setDontCacheSubResults(true);
 		this.hash = "CountHash - " + UUID.randomUUID();

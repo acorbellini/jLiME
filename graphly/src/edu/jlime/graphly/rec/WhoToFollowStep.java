@@ -29,7 +29,7 @@ public class WhoToFollowStep implements CustomFunction {
 		long[] target = before.vertices().toArray();
 		Graphly g = tr.getGraph();
 		g.v(target).set("mapper", tr.get("mapper")).as(Recommendation.class)
-				.salsaRW(auth, hub, steps, max_depth).exec();
+				.salsa(auth, hub, steps, max_depth).exec();
 		TLongObjectHashMap<Object> res = g.collect(auth, 100, target);
 		return new CountResult(res);
 	}

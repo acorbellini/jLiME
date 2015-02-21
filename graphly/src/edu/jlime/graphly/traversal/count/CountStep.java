@@ -3,9 +3,9 @@ package edu.jlime.graphly.traversal.count;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import edu.jlime.collections.adjacencygraph.get.Dir;
 import edu.jlime.graphly.jobs.Mapper;
 import edu.jlime.graphly.traversal.CountResult;
+import edu.jlime.graphly.traversal.Dir;
 import edu.jlime.graphly.traversal.GraphlyTraversal;
 import edu.jlime.graphly.traversal.Step;
 import edu.jlime.graphly.traversal.TraversalResult;

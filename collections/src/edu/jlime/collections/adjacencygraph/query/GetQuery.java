@@ -3,8 +3,8 @@ package edu.jlime.collections.adjacencygraph.query;
 import org.apache.log4j.Logger;
 
 import edu.jlime.collections.adjacencygraph.Mapper;
-import edu.jlime.collections.adjacencygraph.get.GetMR;
 import edu.jlime.collections.adjacencygraph.get.Dir;
+import edu.jlime.collections.adjacencygraph.get.GetMR;
 import edu.jlime.jd.client.JobContext;
 import gnu.trove.set.hash.TIntHashSet;
 

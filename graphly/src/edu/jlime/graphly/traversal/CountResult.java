@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeSet;
 
-public class CountResult implements TraversalResult {
+public class CountResult extends TraversalResult {
 
 	private TLongFloatHashMap vals;
 
@@ -48,7 +48,7 @@ public class CountResult implements TraversalResult {
 	}
 
 	@Override
-	public TraversalResult removeAll(TLongArrayList v) {
+	public TraversalResult removeAll(final TLongArrayList v) {
 		vals.retainEntries(new TLongFloatProcedure() {
 
 			@Override
@@ -60,7 +60,7 @@ public class CountResult implements TraversalResult {
 	}
 
 	@Override
-	public TraversalResult retainAll(TLongArrayList v) {
+	public TraversalResult retainAll(final TLongArrayList v) {
 		vals.retainEntries(new TLongFloatProcedure() {
 
 			@Override
@@ -73,7 +73,27 @@ public class CountResult implements TraversalResult {
 
 	@Override
 	public String toString() {
-		return vals.toString();
+		StringBuilder ret = new StringBuilder();
+		TreeSet<Long> res = new TreeSet<>(new Comparator<Long>() {
+			@Override
+			public int compare(Long o1, Long o2) {
+				int comp = Float.compare(vals.get(o1), vals.get(o2)) * -1;
+				if (comp == 0)
+					return o1.compareTo(o2);
+				return comp;
+			}
+		});
+		TLongFloatIterator it = vals.iterator();
+		while (it.hasNext()) {
+			it.advance();
+			res.add(it.key());
+		}
+
+		for (Long l : res) {
+			ret.append(l + "=" + vals.get(l) + "\n");
+		}
+
+		return ret.toString();
 	}
 
 	@Override

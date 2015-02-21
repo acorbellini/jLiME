@@ -2,7 +2,7 @@ package edu.jlime.graphly;
 
 import java.util.Map;
 
-import edu.jlime.collections.adjacencygraph.get.Dir;
+import edu.jlime.graphly.traversal.Dir;
 
 public interface GraphlyStore {
 

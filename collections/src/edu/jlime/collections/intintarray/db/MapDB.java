@@ -1,7 +1,6 @@
 package edu.jlime.collections.intintarray.db;
 
 import java.io.File;
-import java.util.List;
 
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
