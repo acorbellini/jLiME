@@ -22,7 +22,7 @@ import com.google.common.collect.TreeMultimap;
 
 import edu.jlime.core.cluster.Peer;
 import edu.jlime.core.rpc.RPCDispatcher;
-import edu.jlime.graphly.store.LevelDb;
+import edu.jlime.graphly.store.LocalStore;
 import edu.jlime.graphly.traversal.Dir;
 import edu.jlime.util.DataTypeUtils;
 import gnu.trove.iterator.TLongIterator;
@@ -66,7 +66,7 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	}
 
 	// private Graph graph;
-	private LevelDb adj;
+	private LocalStore adj;
 
 	Cache<Long, long[]> adj_cache = CacheBuilder.newBuilder().maximumSize(5000)
 			.build();
@@ -100,13 +100,8 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 				ranges.add(Integer.valueOf(rangeVal));
 			}
 		}
-
-		try {
-			Files.createDirectory(Paths.get(localpath + "/neo4j"));
-		} catch (Exception e) {
-		}
 		// this.graph = Neo4jGraph.open(localpath + "/neo4j");
-		this.adj = new LevelDb(name, localpath);
+		this.adj = new LocalStore(name, localpath);
 	}
 
 	@Override
