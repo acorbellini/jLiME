@@ -51,4 +51,16 @@ public class Gauge implements Metric<Float>, GaugeMBean {
 		return current.toString();
 	}
 
+	@Override
+	public Metric<Float> copy() {
+		Gauge g = new Gauge();
+		g.before = this.before;
+		g.max = this.max;
+		g.min = this.min;
+		g.current = this.current;
+		g.prom = this.prom;
+		g.counts = this.counts;
+		return g;
+	}
+
 }

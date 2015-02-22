@@ -1,16 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://www.springframework.org/schema/beans
-           http://www.springframework.org/schema/beans/spring-beans.xsd"
-	xmlns:util="http://www.springframework.org/schema/util">
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd  
+           http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.1.xsd">
 
 	<bean id="runs" class="java.lang.Integer">
-		<constructor-arg value="5" />
+		<constructor-arg value="1" />
+	</bean>
+
+	<bean id="executiontype" class="java.lang.String">
+		<constructor-arg value="local" />
+	</bean>
+
+	<bean id="localdir" class="java.lang.String">
+		<constructor-arg value="C:/Graphly/graph-$i" />
+	</bean>
+
+	<bean id="storename" class="java.lang.String">
+		<constructor-arg value="graph" />
 	</bean>
 
 	<bean id="servers" class="java.lang.Integer">
-		<constructor-arg value="8" />
+		<constructor-arg value="4" />
 	</bean>
 
 	<util:list id="mappers" value-type="edu.jlime.graphly.jobs.Mapper">
@@ -20,28 +31,24 @@
 		<ref bean="locaware" />
 	</util:list>
 
-	<bean id="roundrobin"
-		class="edu.jlime.collections.adjacencygraph.mappers.MapperFactory"
+	<bean id="roundrobin" class="edu.jlime.graphly.jobs.MapperFactory"
 		factory-method="rr" lazy-init="true" />
 
-	<bean id="locaware"
-		class="edu.jlime.collections.adjacencygraph.mappers.MapperFactory"
+	<bean id="locaware" class="edu.jlime.graphly.jobs.MapperFactory"
 		factory-method="location" lazy-init="true" />
 
-	<bean id="totalmemory"
-		class="edu.jlime.collections.adjacencygraph.mappers.MapperFactory"
+	<bean id="totalmemory" class="edu.jlime.graphly.jobs.MapperFactory"
 		factory-method="simple" lazy-init="true">
 		<constructor-arg value="jvminfo.mem.max" />
 	</bean>
 
-	<bean id="availablememory"
-		class="edu.jlime.collections.adjacencygraph.mappers.MapperFactory"
+	<bean id="availablememory" class="edu.jlime.graphly.jobs.MapperFactory"
 		factory-method="simple" lazy-init="true">
-		<constructor-arg value="sysinfo.mem.available" />
+		<constructor-arg value="jvminfo.mem.freemax" />
 	</bean>
 
 	<util:list id="queries" value-type="edu.jlime.graphly.util.QueryContainer">
-		<ref bean="commonneighbours" />
+		<!-- <ref bean="commonneighbours" /> -->
 		<ref bean="hits" />
 		<ref bean="salsa" />
 		<ref bean="exploratory" />
@@ -49,12 +56,9 @@
 	</util:list>
 
 	<util:map id="usergroups">
-		<entry key="user1" value="17242874" />
-		<entry key="user2" value="804204" />
-		<entry key="user3" value="11916652" />
-		<entry key="user4" value="20977313" />
-		<entry key="user5" value="13406702" />
-
+		<!-- <entry key="user1" value="17242874" /> <entry key="user2" value="804204" 
+			/> <entry key="user3" value="11916652" /> <entry key="user4" value="20977313" 
+			/> <entry key="user5" value="13406702" /> -->
 		<entry key="group-5-IS"
 			value="
 25431069 
@@ -139,115 +143,29 @@
 14886943 
 14248461 
 14964379 " />
-		<entry key="group-5-followees"
-			value="
-14389132 
-16559157 
-14669398 
-17850012 
-15991049 " />
-		<entry key="group-25-followees"
-			value="14389132 
-16559157 
-14669398 
-17850012 
-15991049 
-5210841  
-11915432 
-13348    
-804455   
-14430060 
-18238282 
-16150075 
-15117375 
-17242874 
-13082862 
-15600217 
-15195171 
-20385404 
-11622712 
-898491   
-12504732 
-18539631 
-16429977 
-14079425 
-21836409 " />
-		<entry key="group-50-followees"
-			value="14389132 
-16559157 
-14669398 
-17850012 
-15991049 
-5210841  
-11915432 
-13348    
-804455   
-14430060 
-18238282 
-16150075 
-15117375 
-17242874 
-13082862 
-15600217 
-15195171 
-20385404 
-11622712 
-898491   
-12504732 
-18539631 
-16429977 
-14079425 
-21836409 
-14213491 
-18932935 
-16181186 
-15816264 
-15158464 
-17352423 
-14311992 
-14720411 
-14261168 
-9753672  
-7799412  
-14433007 
-19107253 
-18363508 
-18087450 
-20806376 
-13547812 
-31567254 
-14076588 
-16481781 
-14542767 
-18276100 
-15794195 
-17867513 
-15274836" />
+		<!-- <entry key="group-5-followees" value=" 14389132 16559157 14669398 
+			17850012 15991049 " /> <entry key="group-25-followees" value="14389132 16559157 
+			14669398 17850012 15991049 5210841 11915432 13348 804455 14430060 18238282 
+			16150075 15117375 17242874 13082862 15600217 15195171 20385404 11622712 898491 
+			12504732 18539631 16429977 14079425 21836409 " /> <entry key="group-50-followees" 
+			value="14389132 16559157 14669398 17850012 15991049 5210841 11915432 13348 
+			804455 14430060 18238282 16150075 15117375 17242874 13082862 15600217 15195171 
+			20385404 11622712 898491 12504732 18539631 16429977 14079425 21836409 14213491 
+			18932935 16181186 15816264 15158464 17352423 14311992 14720411 14261168 9753672 
+			7799412 14433007 19107253 18363508 18087450 20806376 13547812 31567254 14076588 
+			16481781 14542767 18276100 15794195 17867513 15274836" /> -->
 	</util:map>
 
-
-	<bean id="commonneighbours" class="edu.jlime.graphly.util.Queries"
-		factory-method="commonneighbours" lazy-init="true">
-		<constructor-arg value="" />
+	<bean id="hits" class="edu.jlime.graphly.util.Queries"
+		factory-method="hits" lazy-init="true">
 	</bean>
-	<bean id="hits"
-		class="edu.jlime.collections.adjacencygraph.mappers.MapperFactory"
-		factory-method="simple" lazy-init="true">
-		<constructor-arg value="sysinfo.mem.available" />
+	<bean id="salsa" class="edu.jlime.graphly.util.Queries"
+		factory-method="salsa" lazy-init="true">
 	</bean>
-	<bean id="salsa"
-		class="edu.jlime.collections.adjacencygraph.mappers.MapperFactory"
-		factory-method="simple" lazy-init="true">
-		<constructor-arg value="sysinfo.mem.available" />
+	<bean id="exploratory" class="edu.jlime.graphly.util.Queries"
+		factory-method="ec" lazy-init="true">
 	</bean>
-	<bean id="exploratory"
-		class="edu.jlime.collections.adjacencygraph.mappers.MapperFactory"
-		factory-method="simple" lazy-init="true">
-		<constructor-arg value="sysinfo.mem.available" />
-	</bean>
-	<bean id="whotofollow"
-		class="edu.jlime.collections.adjacencygraph.mappers.MapperFactory"
-		factory-method="simple" lazy-init="true">
-		<constructor-arg value="sysinfo.mem.available" />
+	<bean id="whotofollow" class="edu.jlime.graphly.util.Queries"
+		factory-method="wtf" lazy-init="true">
 	</bean>
 </beans>

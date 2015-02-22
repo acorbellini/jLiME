@@ -35,5 +35,6 @@ public class JVMMemoryProvider extends InfoProvider {
 		mgr.gauge("jvminfo.mem.total").update(total);
 		mgr.gauge("jvminfo.mem.used").update(total - free);
 		mgr.gauge("jvminfo.mem.free").update(free);
+		mgr.gauge("jvminfo.mem.freemax").update(max - total + free);
 	}
 }

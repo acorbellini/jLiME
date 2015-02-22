@@ -13,6 +13,7 @@ import org.springframework.context.support.FileSystemXmlApplicationContext;
 
 import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.jobs.Mapper;
+import edu.jlime.graphly.server.GraphlyServer;
 import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.profiler.ClusterProfiler;
 import edu.jlime.jd.profiler.MetricExtractor;
@@ -23,10 +24,9 @@ import edu.jlime.util.CommandLineUtils;
 import edu.jlime.util.StringUtils;
 import edu.jlime.util.table.CSVBuilder;
 import edu.jlime.util.table.Table;
+import gnu.trove.list.array.TLongArrayList;
 
 public class RecommendationTest {
-
-	// private ClientCluster cluster;
 
 	private Graphly graph;
 
@@ -34,7 +34,7 @@ public class RecommendationTest {
 
 	private String xmlconf;
 
-	private String[] mappers;
+	private ArrayList<Mapper> mappers;
 
 	private Integer servers;
 
@@ -42,17 +42,31 @@ public class RecommendationTest {
 
 	private FileSystemXmlApplicationContext ctxt;
 
+	private ArrayList<QueryContainer> queries;
+
+	private Map<String, String> users;
+
+	private String execType;
+
+	private List<GraphlyServer> localServers;
+
 	public RecommendationTest(String results, String config) {
 		this.resultsDir = results;
 		this.xmlconf = config;
 
 		this.ctxt = new FileSystemXmlApplicationContext(xmlconf);
 
-		this.mappers = ctxt.getBean("mappers", String[].class);
+		this.mappers = ctxt.getBean("mappers", ArrayList.class);
 
 		this.servers = ctxt.getBean("servers", Integer.class);
 
+		this.execType = ctxt.getBean("executiontype", String.class);
+
 		this.runs = ctxt.getBean("runs", Integer.class);
+
+		this.queries = ctxt.getBean("queries", ArrayList.class);
+
+		this.users = ctxt.getBean("usergroups", Map.class);
 	}
 
 	public static void main(String[] args) throws Exception {
@@ -62,34 +76,47 @@ public class RecommendationTest {
 	}
 
 	private void execute() throws Exception {
+		String timeFile = resultsDir + "/time.csv";
+		String netFile = resultsDir + "/network.csv";
+		String memFile = resultsDir + "/memory.csv";
 
-		List<QueryContainer> queries = new ArrayList<>();
+		Table timeTable = new CSVBuilder(timeFile).toTable();
+		Table networkTable = new CSVBuilder(netFile).toTable();
+		Table memoryTable = new CSVBuilder(memFile).toTable();
+
 		for (QueryContainer q : queries) {
 
 			String queryID = q.getID();
-			String timeFile = resultsDir + "/" + queryID + "-time.csv";
-			String netFile = resultsDir + "/" + queryID + "-network.csv";
-			String memFile = resultsDir + "/" + queryID + "-memory.csv";
 
-			Table timeTable = new CSVBuilder(timeFile).toTable();
-			Table networkTable = new CSVBuilder(netFile).toTable();
-			Table memoryTable = new CSVBuilder(memFile).toTable();
-
-			for (String mapperName : mappers) {
-				Mapper mapper = ctxt.getBean(mapperName, Mapper.class);
-
-				for (int runID = 0; runID < Integer.valueOf(runs); runID++) {
-					if (timeTable.find(queryID, runID)) {
-						System.out.println("Experiment " + queryID
-								+ " and run " + runID + " already exists.");
-					} else {
-						run(mapper, mapperName, runID, queryID, q, timeTable,
-								networkTable, memoryTable);
-						timeTable.toCSV(timeFile);
-						networkTable.toCSV(netFile);
-						memoryTable.toCSV(memFile);
+			for (Mapper mapper : mappers) {
+				// Mapper mapper = ctxt.getBean(mapperName, Mapper.class);
+				for (Entry<String, String> ug : users.entrySet())
+					for (int runID = 0; runID < Integer.valueOf(runs); runID++) {
+						if (timeTable.find(queryID, runID, ug.getKey(),
+								mapper.getName())) {
+							System.out.println("Running Experiment " + queryID
+									+ " run " + runID + " mapper "
+									+ mapper.getName() + " users "
+									+ ug.getKey());
+						} else {
+							System.out.println("Running Experiment " + queryID
+									+ " run " + runID + " mapper "
+									+ mapper.getName() + " users "
+									+ ug.getKey());
+							String[] split = ug.getValue().trim()
+									.replaceAll("\\s+", " ").split(" ");
+							TLongArrayList list = new TLongArrayList();
+							for (String string : split) {
+								list.add(Long.valueOf(string));
+							}
+							run(mapper, mapper.getName(), runID, queryID, q,
+									ug.getKey(), list.toArray(), timeTable,
+									networkTable, memoryTable);
+							timeTable.toCSV(timeFile);
+							networkTable.toCSV(netFile);
+							memoryTable.toCSV(memFile);
+						}
 					}
-				}
 			}
 		}
 		ctxt.close();
@@ -97,15 +124,18 @@ public class RecommendationTest {
 	}
 
 	public void run(Mapper mapper, String mapperName, Integer runID,
-			String experiment, QueryContainer queryContainer, Table time,
-			Table net, Table mem) throws Exception, FileNotFoundException,
-			IOException {
-
-		System.out.println("Running experiment " + experiment);
-
-		CommandLineUtils
-				.execCommand("bash graphly.sh start eight.txt acorbellini");
-
+			String experiment, QueryContainer queryContainer, String ug,
+			long[] users, Table time, Table net, Table mem) throws Exception,
+			FileNotFoundException, IOException {
+		if (execType.equals("cluster"))
+			CommandLineUtils
+					.execCommand("bash graphly.sh start eight.txt acorbellini");
+		else {
+			String store = ctxt.getBean("storename", String.class);
+			String localdir = ctxt.getBean("localdir", String.class);
+			this.localServers = GraphlyServer.createServers(store, localdir,
+					this.servers, true, this.servers);
+		}
 		System.out.println("Creating client, waiting for " + servers
 				+ " execution nodes.");
 
@@ -114,9 +144,8 @@ public class RecommendationTest {
 		ClusterProfiler profiler = new ClusterProfiler(graph.getJobClient()
 				.getCluster(), 2000);
 		profiler.start();
-
 		long init = System.currentTimeMillis();
-		queryContainer.run();
+		queryContainer.run(graph, users, mapper);
 		long total = System.currentTimeMillis() - init;
 
 		System.out.println("Query Time:  " + StringUtils.readableTime(total));
@@ -127,7 +156,7 @@ public class RecommendationTest {
 
 		System.out.println("Saving profile information.");
 
-		time.addRow(experiment, runID, mapper, total / 1000);
+		time.addRow(experiment, runID, ug, mapper.getName(), total / 1000);
 
 		Map<ClientNode, Float> diffs = profiler.calcPerNode(
 				new ProfilerFunctionPerNode<Float>() {
@@ -143,7 +172,6 @@ public class RecommendationTest {
 				}, new MetricExtractor<Float>() {
 					@Override
 					public Float get(Metrics m) {
-
 						return Float.valueOf(m.list("sysinfo.net")
 								.findFirst("eth").get("sent_total").get());
 					}
@@ -153,7 +181,7 @@ public class RecommendationTest {
 			netSum += netentry.getValue();
 		}
 
-		net.addRow(experiment, runID, mapper, netSum);
+		net.addRow(experiment, runID, ug, mapper.getName(), netSum);
 
 		Map<Date, Float> memSums = profiler.calcPerDate(
 				new ProfilerFunctionPerDate<Float>() {
@@ -179,9 +207,14 @@ public class RecommendationTest {
 			if (memEntry.getValue() > memMax)
 				memMax = memEntry.getValue();
 		}
-		mem.addRow(experiment, runID, mapper, memMax);
-
-		CommandLineUtils
-				.execCommand("bash graphly.sh stop eight.txt acorbellini");
+		mem.addRow(experiment, runID, ug, mapper.getName(), memMax);
+		if (execType.equals("cluster"))
+			CommandLineUtils
+					.execCommand("bash graphly.sh stop eight.txt acorbellini");
+		else {
+			for (GraphlyServer l : this.localServers) {
+				l.stop();
+			}
+		}
 	}
 }

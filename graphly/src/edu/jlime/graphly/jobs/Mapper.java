@@ -1,17 +1,18 @@
 package edu.jlime.graphly.jobs;
 
 import java.io.Serializable;
-import java.util.Map;
+import java.util.List;
 
+import edu.jlime.graphly.util.Pair;
 import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.client.JobContext;
 import gnu.trove.list.array.TLongArrayList;
 
-public abstract class Mapper implements Serializable {
+public interface Mapper extends Serializable {
 
-	private static final long serialVersionUID = 6201330433508707230L;
-
-	public abstract Map<ClientNode, TLongArrayList> map(long[] data,
+	public List<Pair<ClientNode, TLongArrayList>> map(int max, long[] data,
 			JobContext ctx) throws Exception;
+
+	public String getName();
 
 }

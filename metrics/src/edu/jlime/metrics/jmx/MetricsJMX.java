@@ -54,7 +54,6 @@ public class MetricsJMX {
 		try {
 			mbs.registerMBean(metric, getObjectName(k));
 		} catch (Exception e) {
-			e.printStackTrace();
 		}
 	}
 

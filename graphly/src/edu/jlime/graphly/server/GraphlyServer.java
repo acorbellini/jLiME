@@ -1,5 +1,6 @@
 package edu.jlime.graphly.server;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -23,10 +24,16 @@ public class GraphlyServer {
 	private RPCDispatcher rpc;
 	private String storeName;
 	private String storeLoc;
+	private Boolean isCoord;
+	private GraphlyCoordinatorImpl coord;
+	private Integer rs;
 
-	public GraphlyServer(String storeName, String storeLoc) {
+	public GraphlyServer(String storeName, String storeLoc, Boolean isCoord,
+			Integer rs) {
 		this.storeName = storeName;
 		this.storeLoc = storeLoc;
+		this.isCoord = isCoord;
+		this.rs = rs;
 	}
 
 	public static void main(final String[] args) throws Exception {
@@ -37,19 +44,19 @@ public class GraphlyServer {
 		Boolean coord = Boolean.valueOf(args[3]);
 		final Integer remoteServers = Integer.valueOf(args[4]);
 
-		if (coord)
-			new Thread() {
-				public void run() {
-					try {
-						new GraphlyCoordinatorImpl(remoteServers);
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-				};
-			}.start();
+		createServers(storeName, storeDir, localServers, coord, remoteServers);
+
+	}
+
+	public static ArrayList<GraphlyServer> createServers(
+			final String storeName, final String storeDir,
+			final Integer localServers, final Boolean coord,
+			final Integer remoteServers) throws Exception, InterruptedException {
+
+		final ArrayList<GraphlyServer> ret = new ArrayList<>();
 
 		if (localServers == 1)
-			createServer(storeName, storeDir, 0);
+			ret.add(createServer(storeName, storeDir, 0, coord, remoteServers));
 		else {
 			ExecutorService svc = Executors.newCachedThreadPool();
 			for (int i = 0; i < localServers; i++) {
@@ -59,25 +66,48 @@ public class GraphlyServer {
 					@Override
 					public void run() {
 						try {
-							createServer(storeName, storeDir, curr);
+							boolean isCoord = false;
+							if (curr == 0 && coord)
+								isCoord = true;
+							GraphlyServer srv = createServer(storeName,
+									storeDir, curr, isCoord, remoteServers);
+							synchronized (ret) {
+								ret.add(srv);
+							}
+
 						} catch (Exception e) {
 							e.printStackTrace();
 						}
 					}
 				});
 			}
-			svc.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
 			svc.shutdown();
+			svc.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
 		}
-
+		return ret;
 	}
 
-	private static void createServer(String sname, String sdir, int i)
-			throws Exception {
-		new GraphlyServer(sname, sdir.replaceAll("\\$i", i + "")).start();
+	public static GraphlyServer createServer(String sname, String sdir, int i,
+			Boolean isCoord, Integer remoteServers) throws Exception {
+		GraphlyServer g = new GraphlyServer(sname, sdir.replaceAll("\\$i", i
+				+ ""), isCoord, remoteServers);
+		g.start();
+		return g;
 	}
 
 	public void start() throws Exception {
+
+		if (isCoord)
+			new Thread() {
+				public void run() {
+					try {
+						GraphlyServer.this.coord = new GraphlyCoordinatorImpl(
+								rs);
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				};
+			}.start();
 
 		Map<String, String> data = new HashMap<>();
 		data.put("app", "graphly");
@@ -111,5 +141,7 @@ public class GraphlyServer {
 	public void stop() throws Exception {
 		rpc.stop();
 		jobs.stop();
+		if (coord != null)
+			coord.stop();
 	}
 }

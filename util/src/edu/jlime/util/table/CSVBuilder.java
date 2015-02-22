@@ -3,6 +3,7 @@ package edu.jlime.util.table;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -20,7 +21,7 @@ public class CSVBuilder {
 
 	private int expectedFields = -1;
 
-	boolean useWindowsNewLine = true;
+	boolean useWindowsNewLine = false;
 
 	private int maxLines = -1;
 
@@ -73,23 +74,33 @@ public class CSVBuilder {
 					Row row = table.newRow();
 					for (int i = 0; i < split.length; i++) {
 						ValueCell c = new ValueCell(split[i]);
-						try {
-							String newVal = c.value().replaceAll(
-									escape(getDecimalSep()), ".");
-							Double.valueOf(newVal);
-							c.setValue(newVal);
-							c.setFormat(Table.DoubleFormatter);
-						} catch (Exception e) {
-						}
+
+						if (!isInt(c.value()))
+							try {
+								String newVal = c.value().replaceAll(
+										escape(getDecimalSep()), ".");
+								Double.valueOf(newVal);
+								c.setValue(newVal);
+								c.setFormat(Table.DoubleFormatter);
+							} catch (Exception e) {
+							}
 						row.add(c);
 					}
 				}
 			});
-		} catch (Exception e) {
-			e.printStackTrace();
+		} catch (FileNotFoundException e) {
 		}
 		return table;
 
+	}
+
+	protected boolean isInt(String value) {
+		try {
+			Integer.valueOf(value);
+			return true;
+		} catch (Exception e) {
+		}
+		return false;
 	}
 
 	public void read(RowListener rl) throws IOException {

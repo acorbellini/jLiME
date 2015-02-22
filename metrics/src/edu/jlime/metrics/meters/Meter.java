@@ -52,4 +52,14 @@ public class Meter implements Metric<Float>, MeterMBean {
 	public String get() {
 		return meterValue.toString();
 	}
+
+	@Override
+	public Metric<Float> copy() {
+		Meter ret = new Meter();
+		ret.g = (Gauge) this.g.copy();
+		ret.lastTime = this.lastTime;
+		ret.meterValue = this.meterValue;
+		ret.perf = this.perf;
+		return ret;
+	}
 }

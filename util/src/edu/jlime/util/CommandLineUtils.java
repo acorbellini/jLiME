@@ -20,10 +20,10 @@ public class CommandLineUtils {
 
 			if (dir.exists())
 				procbuilder = new ProcessBuilder("C:/cygwin/bin/bash.exe",
-						"--login", cmd);
+						"-c", cmd);
 			else if (dir64.exists())
 				procbuilder = new ProcessBuilder("C:/cygwin64/bin/bash.exe",
-						"--login", cmd);
+						"-c", cmd);
 			else
 				throw new Exception("Cygwin not found");
 

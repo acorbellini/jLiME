@@ -569,7 +569,7 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 	}
 
 	public Metrics getMetrics() {
-		return metrics;
+		return Metrics.copyOf(metrics);
 	}
 
 	public void setGlobal(String k, Object v) {

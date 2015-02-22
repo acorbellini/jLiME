@@ -33,7 +33,7 @@ public class Metrics implements Serializable, IMetrics {
 
 	private String id;
 
-	private static final long FREQ = 5000;
+	private static final long FREQ = 2000;
 
 	public Metrics(String id) {
 		this.id = id;
@@ -219,5 +219,13 @@ public class Metrics implements Serializable, IMetrics {
 
 	public void gauge(String string, float f) {
 		this.gauge(string).update(f);
+	}
+
+	public static Metrics copyOf(Metrics m) {
+		Metrics ret = new Metrics(m.id);
+		for (Entry<String, Metric<?>> e : m.metrics.entrySet()) {
+			ret.metrics.put(e.getKey(), e.getValue().copy());
+		}
+		return ret;
 	}
 }

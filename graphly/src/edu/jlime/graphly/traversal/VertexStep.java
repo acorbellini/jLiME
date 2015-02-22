@@ -1,9 +1,10 @@
 package edu.jlime.graphly.traversal;
 
-import java.util.Map;
-import java.util.Map.Entry;
+import java.util.List;
 
+import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.jobs.Mapper;
+import edu.jlime.graphly.util.Pair;
 import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.JobDispatcher;
 import edu.jlime.jd.client.JobContextImpl;
@@ -34,10 +35,10 @@ public class VertexStep implements Step {
 		JobContextImpl ctx = jobClient.getEnv().getClientEnv(
 				jobClient.getLocalPeer());
 
-		Map<ClientNode, TLongArrayList> div = map.map(before.vertices()
-				.toArray(), ctx);
+		List<Pair<ClientNode, TLongArrayList>> div = map.map(
+				Graphly.MAX_IDS_PER_JOB, before.vertices().toArray(), ctx);
 		ForkJoinTask<long[]> fj = new ForkJoinTask<>();
-		for (Entry<ClientNode, TLongArrayList> e : div.entrySet()) {
+		for (Pair<ClientNode, TLongArrayList> e : div) {
 			fj.putJob(new VertexJob(dir, max_edges, e.getValue().toArray()),
 					e.getKey());
 		}

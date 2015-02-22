@@ -8,4 +8,6 @@ public interface Metric<T> extends Serializable {
 
 	public String get();
 
+	public Metric<T> copy();
+
 }

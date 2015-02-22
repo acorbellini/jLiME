@@ -4,8 +4,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.TreeMap;
 
 import edu.jlime.core.cluster.Peer;
 import edu.jlime.graphly.GraphlyStoreNodeI;
@@ -13,15 +11,23 @@ import gnu.trove.list.array.TLongArrayList;
 
 public class ConsistentHashing implements Serializable {
 
-	int keySpace = 50000;
+	int keySpace = 50021;
 
-	TreeMap<Integer, Peer> circle = new TreeMap<>();
+	HashMap<Integer, Peer> circle = new HashMap<>();
+
+	Peer firstPeer;
+
+	private int vnodes;
+
+	private int range;
 
 	public ConsistentHashing(Map<Peer, GraphlyStoreNodeI> nodes, int vNodes)
 			throws Exception {
+		this.vnodes = vNodes;
+		this.range = keySpace / vNodes;
 		initCircle(nodes);
 		if (circle.isEmpty()) {
-			createCircle(nodes, vNodes);
+			createCircle(nodes);
 		}
 	}
 
@@ -34,12 +40,10 @@ public class ConsistentHashing implements Serializable {
 		}
 	}
 
-	private void createCircle(Map<Peer, GraphlyStoreNodeI> map, int vNodes)
+	private void createCircle(Map<Peer, GraphlyStoreNodeI> map)
 			throws Exception {
 		ArrayList<Peer> nodes = new ArrayList<>(map.keySet());
-		int points = vNodes;
-		int range = keySpace / points;
-		for (int i = 0; i < vNodes; i++) {
+		for (int i = 0; i < vnodes; i++) {
 			Peer gs = nodes.get(i % nodes.size());
 			int j = range * i;
 			circle.put(j, gs);
@@ -48,12 +52,13 @@ public class ConsistentHashing implements Serializable {
 	}
 
 	Peer getNode(long k) {
-		Entry<Integer, Peer> ceilingEntry = circle
-				.ceilingEntry((int) ((k * 20000003) % keySpace));
+		int hashed = (int) ((k * 20000003) % keySpace);
+		int vNode = ((hashed / range) + 1) * range;
+		Peer ceilingEntry = circle.get(vNode);
 		if (ceilingEntry == null)
-			return circle.firstEntry().getValue();
+			return circle.get(0);
 		else
-			return ceilingEntry.getValue();
+			return ceilingEntry;
 	}
 
 	public Map<Peer, TLongArrayList> hashKeys(long[] data) {

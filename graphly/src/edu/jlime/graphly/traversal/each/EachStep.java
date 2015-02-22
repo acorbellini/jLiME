@@ -1,12 +1,15 @@
 package edu.jlime.graphly.traversal.each;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.jobs.Mapper;
 import edu.jlime.graphly.traversal.GraphlyTraversal;
 import edu.jlime.graphly.traversal.Step;
 import edu.jlime.graphly.traversal.TraversalResult;
+import edu.jlime.graphly.util.Pair;
 import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.JobDispatcher;
 import edu.jlime.jd.client.JobContextImpl;
@@ -38,12 +41,12 @@ public class EachStep<T> implements Step {
 		JobContextImpl ctx = jobClient.getEnv().getClientEnv(
 				jobClient.getLocalPeer());
 
-		Map<ClientNode, TLongArrayList> mapped = map.map(before.vertices()
-				.toArray(), ctx);
+		List<Pair<ClientNode, TLongArrayList>> mapped = map.map(
+				Graphly.MAX_IDS_PER_JOB, before.vertices().toArray(), ctx);
 
 		ForkJoinTask<Boolean> fj = new ForkJoinTask<>();
 
-		for (Entry<ClientNode, TLongArrayList> e : mapped.entrySet()) {
+		for (Pair<ClientNode, TLongArrayList> e : mapped) {
 			fj.putJob(new EachJob<T>(s, key, e.getValue().toArray(), forEach),
 					e.getKey());
 		}

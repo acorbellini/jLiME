@@ -15,10 +15,11 @@ public class GraphlyCoordinatorImpl implements GraphlyCoordinator {
 
 	private ClientManager<GraphlyStoreNodeI, GraphlyStoreNodeIBroadcast> mgr;
 	private ConsistentHashing hash;
+	private RPCDispatcher rpc;
 
 	public GraphlyCoordinatorImpl(int nodes) throws Exception {
-		RPCDispatcher rpc = new JLiMEFactory(DataUtil.map("app:graphly",
-				"type:coord"), new DataFilter("app", "graphly")).build();
+		this.rpc = new JLiMEFactory(DataUtil.map("app:graphly", "type:coord"),
+				new DataFilter("app", "graphly")).build();
 		rpc.registerTarget("Coordinator", this, true, RPCStatus.INIT);
 		rpc.start();
 
@@ -33,5 +34,9 @@ public class GraphlyCoordinatorImpl implements GraphlyCoordinator {
 
 	public ConsistentHashing getHash() {
 		return this.hash;
+	}
+
+	public void stop() throws Exception {
+		this.rpc.stop();
 	}
 }

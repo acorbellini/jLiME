@@ -2,11 +2,14 @@ package edu.jlime.graphly.jobs;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
 
+import edu.jlime.graphly.util.GraphlyUtil;
+import edu.jlime.graphly.util.Pair;
 import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.client.JobContext;
 import edu.jlime.metrics.metric.CompositeMetrics;
@@ -14,7 +17,7 @@ import edu.jlime.metrics.sysinfo.filter.SysInfoFilter;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.list.array.TLongArrayList;
 
-public class CriteriaMapper extends Mapper {
+public class CriteriaMapper implements Mapper {
 
 	private static final long serialVersionUID = -821812463957389816L;
 
@@ -25,8 +28,8 @@ public class CriteriaMapper extends Mapper {
 	}
 
 	@Override
-	public Map<ClientNode, TLongArrayList> map(long[] data, JobContext ctx)
-			throws Exception {
+	public List<Pair<ClientNode, TLongArrayList>> map(int max, long[] data,
+			JobContext ctx) throws Exception {
 		Logger log = Logger.getLogger(CriteriaMapper.class);
 		HashMap<ClientNode, TLongArrayList> div = new HashMap<ClientNode, TLongArrayList>();
 
@@ -64,6 +67,11 @@ public class CriteriaMapper extends Mapper {
 			log.info(e.getKey() + " -> " + e.getValue().size());
 		}
 
-		return div;
+		return GraphlyUtil.divide(div, max);
+	}
+
+	@Override
+	public String getName() {
+		return "criteria-" + filter.toString();
 	}
 }

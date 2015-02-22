@@ -22,12 +22,16 @@ import edu.jlime.jd.ClientNode;
 import edu.jlime.metrics.metric.CompositeMetrics;
 import edu.jlime.util.CSV;
 
-public class ClusterProfiler {
+public class ClusterProfiler implements Profiler {
 
-	private final class NodeComparator implements Comparator<ClientNode> {
+	public static class NodeComparator implements Comparator<ClientNode> {
 		@Override
 		public int compare(ClientNode o1, ClientNode o2) {
-			return o1.getName().compareTo(o2.getName());
+			int comp = o1.getName().compareTo(o2.getName());
+			if (comp == 0)
+				comp = o1.getPeer().getAddress()
+						.compareTo(o2.getPeer().getAddress());
+			return comp;
 		}
 	}
 
@@ -47,6 +51,12 @@ public class ClusterProfiler {
 		this.c = c;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see edu.jlime.jd.profiler.Profiler#start()
+	 */
+	@Override
 	public void start() {
 		timer = new Timer("Cluster Profiler", true);
 		timer.schedule(new TimerTask() {
@@ -57,10 +67,10 @@ public class ClusterProfiler {
 					// System.out.println(clusterMetrics);
 					info.put(Calendar.getInstance().getTime(), clusterMetrics);
 				} catch (Exception e) {
-					e.printStackTrace();
+					// e.printStackTrace();
 				}
 			}
-		}, freq, freq);
+		}, 0, freq);
 	}
 
 	public void csv(CSV csv, MetricExtractor ext) {
@@ -108,6 +118,12 @@ public class ClusterProfiler {
 		}
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see edu.jlime.jd.profiler.Profiler#stop()
+	 */
+	@Override
 	public void stop() {
 		timer.cancel();
 	}
@@ -127,6 +143,13 @@ public class ClusterProfiler {
 		return info;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see edu.jlime.jd.profiler.Profiler#calcPerNode(edu.jlime.jd.profiler.
+	 * ProfilerFunctionPerNode, edu.jlime.jd.profiler.MetricExtractor)
+	 */
+	@Override
 	public <T> Map<ClientNode, T> calcPerNode(
 			ProfilerFunctionPerNode<T> profilerFunction, MetricExtractor<T> ext) {
 		Map<ClientNode, TreeMap<Date, T>> toCalc = new TreeMap<>(
@@ -152,15 +175,21 @@ public class ClusterProfiler {
 
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see edu.jlime.jd.profiler.Profiler#calcPerDate(edu.jlime.jd.profiler.
+	 * ProfilerFunctionPerDate, edu.jlime.jd.profiler.MetricExtractor)
+	 */
+	@Override
 	public <T> Map<Date, T> calcPerDate(
 			ProfilerFunctionPerDate<T> profilerFunction, MetricExtractor<T> ext) {
-
 		Map<Date, TreeMap<ClientNode, T>> toCalc = new TreeMap<>();
 
 		for (Entry<Date, CompositeMetrics<ClientNode>> e : info.entrySet()) {
 			TreeMap<ClientNode, T> curr = toCalc.get(e.getKey());
 			if (curr == null) {
-				curr = new TreeMap<>();
+				curr = new TreeMap<>(new NodeComparator());
 				toCalc.put(e.getKey(), curr);
 			}
 			CompositeMetrics<ClientNode> composite = e.getValue();
@@ -175,6 +204,5 @@ public class ClusterProfiler {
 					profilerFunction.call(toCalcEntry.getValue()));
 		}
 		return ret;
-
 	}
 }

@@ -42,13 +42,13 @@ public class Recommendation extends CustomTraversal {
 		super(tr);
 	}
 
-	public Recommendation exploratoryCount(int max_edges, int top, Dir first,
-			Dir... dirs) throws Exception {
+	public Recommendation exploratoryCount(int max_edges, int top, Dir... dirs)
+			throws Exception {
 		tr.save("target")
-				.to(first, max_edges)
+				.to(dirs[0], max_edges)
 				.save("first")
 				.traverse(new String[] { "first", "target" }, max_edges,
-						Arrays.copyOf(dirs, dirs.length - 1))
+						Arrays.copyOfRange(dirs, 1, dirs.length - 1))
 				.count(dirs[dirs.length - 1]).filterBy("first", "target")
 				.top(top);
 		return this;
@@ -95,6 +95,11 @@ public class Recommendation extends CustomTraversal {
 
 	private Recommendation circleOfTrust(int steps, float max_depth, int top) {
 		tr.customStep(new CircleOfTrust(steps, max_depth, top));
+		return this;
+	}
+
+	public Recommendation commonNeighbours() {
+		
 		return this;
 	}
 }

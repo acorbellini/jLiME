@@ -100,6 +100,11 @@ public class RPCDispatcher implements TransportListener {
 
 	public void callAsync(final Peer dest, final Peer clientID,
 			final MethodCall call) throws Exception {
+		if (asyncExec.isShutdown()) {
+			log.warn("Async Executor is shutted down, maybe the rpc dispatcher was closed.");
+			return;
+		}
+
 		asyncExec.execute(new Runnable() {
 			@Override
 			public void run() {

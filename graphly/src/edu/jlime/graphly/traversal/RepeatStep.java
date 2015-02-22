@@ -1,11 +1,13 @@
 package edu.jlime.graphly.traversal;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.jobs.Mapper;
 import edu.jlime.graphly.rec.Repeat;
+import edu.jlime.graphly.util.Pair;
 import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.JobDispatcher;
 import edu.jlime.jd.client.JobContext;
@@ -53,11 +55,12 @@ public class RepeatStep implements Step {
 
 		long[] array = before.vertices().toArray();
 
-		Map<ClientNode, TLongArrayList> div = map.map(array, ctx);
+		List<Pair<ClientNode, TLongArrayList>> div = map.map(
+				Graphly.MAX_IDS_PER_JOB, array, ctx);
 
 		for (int i = 0; i < steps; i++) {
 			ForkJoinTask<Boolean> fj = new ForkJoinTask<>();
-			for (Entry<ClientNode, TLongArrayList> e : div.entrySet()) {
+			for (Pair<ClientNode, TLongArrayList> e : div) {
 				fj.putJob(new RepeatJob(rfunc, e.getValue().toArray()),
 						e.getKey());
 			}

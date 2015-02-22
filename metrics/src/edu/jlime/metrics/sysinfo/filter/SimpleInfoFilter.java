@@ -30,4 +30,9 @@ public class SimpleInfoFilter<T> implements SysInfoFilter<T> {
 		return Float.valueOf(metric.get());
 	}
 
+	@Override
+	public String toString() {
+		return sel;
+	}
+
 }

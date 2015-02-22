@@ -67,7 +67,6 @@ final class GraphReader implements Iterator<Pair<Long, long[]>> {
 		try {
 			return nextLine != null || reader.ready();
 		} catch (IOException e) {
-			e.printStackTrace();
 		}
 		return false;
 	}

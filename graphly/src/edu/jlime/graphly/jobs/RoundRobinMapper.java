@@ -2,11 +2,14 @@ package edu.jlime.graphly.jobs;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
 
 import edu.jlime.core.cluster.Peer;
+import edu.jlime.graphly.util.GraphlyUtil;
+import edu.jlime.graphly.util.Pair;
 import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.client.JobContext;
 import gnu.trove.list.array.TIntArrayList;
@@ -14,7 +17,7 @@ import gnu.trove.list.array.TLongArrayList;
 
 //Simple Round Robin
 
-public class RoundRobinMapper extends Mapper {
+public class RoundRobinMapper implements Mapper {
 
 	private static final long serialVersionUID = -2914997038447380314L;
 
@@ -45,15 +48,14 @@ public class RoundRobinMapper extends Mapper {
 	}
 
 	@Override
-	public Map<ClientNode, TLongArrayList> map(long[] data, JobContext ctx)
+	public List<Pair<ClientNode, TLongArrayList>> map(int max, long[] data, JobContext ctx)
 			throws Exception {
 		Logger log = Logger.getLogger(RoundRobinMapper.class);
 		HashMap<ClientNode, TLongArrayList> div = new HashMap<ClientNode, TLongArrayList>();
 
 		ArrayList<ClientNode> serverList = ctx.getCluster().getExecutors();
-		if (log.isDebugEnabled())
-			log.debug("Mapping " + data.length + " between "
-					+ serverList.size());
+		// if (log.isDebugEnabled())
+		log.info("Mapping " + data.length + " between " + serverList);
 		int count = 0;
 		for (long i : data) {
 			ClientNode p = serverList.get(count);
@@ -67,6 +69,11 @@ public class RoundRobinMapper extends Mapper {
 		}
 		if (log.isDebugEnabled())
 			log.debug("Resulting list (size " + div.size() + ")");
-		return div;
+		return GraphlyUtil.divide(div, max);
+	}
+
+	@Override
+	public String getName() {
+		return "roundrobin";
 	}
 }

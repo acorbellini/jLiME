@@ -35,6 +35,8 @@ import gnu.trove.map.hash.TLongObjectHashMap;
 import gnu.trove.set.hash.TLongHashSet;
 
 public class Graphly implements Closeable {
+	public static final int MAX_IDS_PER_JOB = 50;
+
 	private RPCDispatcher rpc;
 
 	ClientManager<GraphlyStoreNodeI, GraphlyStoreNodeIBroadcast> mgr;
@@ -163,7 +165,12 @@ public class Graphly implements Closeable {
 
 		if (map.size() == 1) {
 			GraphlyStoreNodeI node = map.entrySet().iterator().next().getKey();
-			return node.getEdges(dir, max_edges, vids);
+			try {
+				return node.getEdges(dir, max_edges, vids);
+			} catch (Exception e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
 		}
 
 		for (final Entry<GraphlyStoreNodeI, TLongArrayList> e : map.entrySet()) {
@@ -184,12 +191,12 @@ public class Graphly implements Closeable {
 			});
 
 		}
+		svc.shutdown();
 		try {
 			svc.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
 		} catch (InterruptedException e1) {
 			e1.printStackTrace();
 		}
-		svc.shutdown();
 
 		return ret.toArray();
 	}
@@ -209,7 +216,8 @@ public class Graphly implements Closeable {
 		return jobCli.getCluster().getClientFor(node.getJobAddress());
 	}
 
-	public TLongIntHashMap countEdges(final Dir dir, long[] vids) throws Exception {
+	public TLongIntHashMap countEdges(final Dir dir, long[] vids)
+			throws Exception {
 		final TLongIntHashMap ret = new TLongIntHashMap();
 
 		Map<GraphlyStoreNodeI, TLongArrayList> map = hashKeys(vids);

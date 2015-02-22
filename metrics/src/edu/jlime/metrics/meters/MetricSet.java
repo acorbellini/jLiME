@@ -37,4 +37,11 @@ public class MetricSet implements Metric<Object>, MetricSetMBean {
 		return set.toString();
 	}
 
+	@Override
+	public Metric<Object> copy() {
+		MetricSet ret = new MetricSet();
+		ret.set.addAll(this.set);
+		return ret;
+	}
+
 }

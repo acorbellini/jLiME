@@ -2,27 +2,26 @@ package edu.jlime.graphly.util;
 
 public class Queries {
 	public static QueryContainer commonneighbours() {
-		return null;
-
+		return new CommonNeightBoursQC();
 	}
 
 	public static QueryContainer hits() {
-		return null;
+		return new HITSQC();
 
 	}
 
 	public static QueryContainer salsa() {
-		return null;
+		return new SALSAQC();
 
 	}
 
 	public static QueryContainer wtf() {
-		return null;
+		return new WhoToFolloQC();
 
 	}
 
 	public static QueryContainer ec() {
-		return null;
+		return new ExploratoryCountQC();
 
 	}
 

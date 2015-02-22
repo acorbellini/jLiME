@@ -30,4 +30,11 @@ public class Simple implements Metric<Object>, SimpleMBean {
 		return val.toString();
 	}
 
+	@Override
+	public Metric<Object> copy() {
+		Simple ret = new Simple();
+		ret.val = this.val;
+		return ret;
+	}
+
 }
