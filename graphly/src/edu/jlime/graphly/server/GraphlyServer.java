@@ -7,8 +7,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.log4j.Logger;
+
 import edu.jlime.core.cluster.DataFilter;
 import edu.jlime.core.rpc.RPCDispatcher;
+import edu.jlime.core.rpc.RPCDispatcher.RPCStatus;
 import edu.jlime.graphly.GraphlyStoreNode;
 import edu.jlime.graphly.client.Graphly;
 import edu.jlime.jd.server.ClusterProvider;
@@ -27,6 +30,7 @@ public class GraphlyServer {
 	private Boolean isCoord;
 	private GraphlyCoordinatorImpl coord;
 	private Integer rs;
+	protected Logger log = Logger.getLogger(GraphlyServer.class);
 
 	public GraphlyServer(String storeName, String storeLoc, Boolean isCoord,
 			Integer rs) {
@@ -101,8 +105,10 @@ public class GraphlyServer {
 			new Thread() {
 				public void run() {
 					try {
+						log.info("Initializing Coordinator");
 						GraphlyServer.this.coord = new GraphlyCoordinatorImpl(
 								rs);
+						log.info("Finished Initializing Coordinator");
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
@@ -124,18 +130,27 @@ public class GraphlyServer {
 
 		rpc.start();
 
+		log.info("Initializing Job Dispatcher");
 		jobs = JobServer.jLiME();
-		jobs.getJd().setGlobal("graphly", Graphly.build(rpc, jobs.getJd(), 0));
+		log.info("Finished Initializing Job Dispatcher");
+
+		log.info("Adding Graphly as global");
+		jobs.getJd().setGlobal("graphly", Graphly.build(rpc, jobs.getJd(), rs));
+		log.info("Finished adding Graphly as global");
+
+		log.info("Starting Job Dispatcher");
 		jobs.start();
+		log.info("Finished starting Job Dispatcher");
 
 		storeNode.setJobExecutorID(jobs.getJd().getLocalPeer());
-
+		log.info("Starting metrics");
 		Metrics mgr = new Metrics(rpc.getCluster().getLocalPeer().getName());
 		for (InfoProvider sysinfo : SysInfoProvider.get())
 			sysinfo.load(mgr);
 		new ClusterProvider(jobs.getJd()).load(mgr);
 		MetricsJMX jmx = new MetricsJMX(mgr);
 		jmx.start();
+		log.info("Finshed Starting metrics");
 	}
 
 	public void stop() throws Exception {

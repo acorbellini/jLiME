@@ -3,6 +3,9 @@ package edu.jlime.graphly.traversal;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import org.apache.log4j.Logger;
 
 import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.jobs.Mapper;
@@ -30,6 +33,9 @@ public class RepeatStep implements Step {
 
 		@Override
 		public void run(JobContext env, ClientNode origin) throws Exception {
+			// Logger log = Logger.getLogger(RepeatJob.class);
+			// if (log.isDebugEnabled())
+			// log.debug("Executing Repeat job");
 			func.exec(value, (Graphly) env.getGlobal("graphly"));
 		}
 	}
@@ -46,6 +52,7 @@ public class RepeatStep implements Step {
 
 	@Override
 	public TraversalResult exec(TraversalResult before) throws Exception {
+		Logger log = Logger.getLogger(RepeatStep.class);
 		Mapper map = (Mapper) tr.get("mapper");
 
 		JobDispatcher jobClient = tr.getGraph().getJobClient();
@@ -55,18 +62,26 @@ public class RepeatStep implements Step {
 
 		long[] array = before.vertices().toArray();
 
-		List<Pair<ClientNode, TLongArrayList>> div = map.map(
-				Graphly.MAX_IDS_PER_JOB, array, ctx);
-
 		for (int i = 0; i < steps; i++) {
+			final List<Pair<ClientNode, TLongArrayList>> div = map.map(
+					Graphly.NUM_JOBS, array, ctx);
+			if (log.isDebugEnabled()) {
+				log.debug("Current Repeat Step: " + i + "/" + steps);
+				log.debug("Executing " + div.size() + " jobs.");
+			}
 			ForkJoinTask<Boolean> fj = new ForkJoinTask<>();
 			for (Pair<ClientNode, TLongArrayList> e : div) {
 				fj.putJob(new RepeatJob(rfunc, e.getValue().toArray()),
 						e.getKey());
 			}
+
 			fj.execute(new ResultListener<Boolean, Boolean>() {
+				AtomicInteger cont = new AtomicInteger(div.size());
+
 				@Override
 				public void onSuccess(Boolean result) {
+					// System.out.println("Completed job, remaining "
+					// + cont.decrementAndGet());
 				}
 
 				@Override
@@ -76,6 +91,7 @@ public class RepeatStep implements Step {
 
 				@Override
 				public void onFailure(Exception res) {
+					res.printStackTrace();
 				}
 			});
 		}

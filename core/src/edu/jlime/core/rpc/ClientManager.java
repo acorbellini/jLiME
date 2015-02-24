@@ -10,6 +10,8 @@ import java.util.Map.Entry;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import org.apache.log4j.Logger;
+
 import edu.jlime.core.cluster.Cluster;
 import edu.jlime.core.cluster.ClusterChangeListener;
 import edu.jlime.core.cluster.Peer;
@@ -34,13 +36,17 @@ public class ClientManager<T, B> implements ClusterChangeListener {
 
 	private Peer client;
 
+	private Logger log = Logger.getLogger(ClientManager.class);
+
 	public ClientManager(RPCDispatcher rpc, ClientFactory<T, B> factory,
 			PeerFilter filter, Peer client) {
 		this.rpc = rpc;
 		this.filter = filter;
 		this.factory = factory;
 		this.client = client;
+
 		this.rpc.getCluster().addChangeListener(this);
+
 		for (Peer p : rpc.getCluster()) {
 			peerAdded(p, rpc.getCluster());
 		}
@@ -60,6 +66,14 @@ public class ClientManager<T, B> implements ClusterChangeListener {
 	public void peerAdded(Peer peer, Cluster c) {
 		if (filter.verify(peer)) {
 			synchronized (this) {
+				if (log.isDebugEnabled())
+					log.debug("Adding peer " + peer + " to client manager.");
+				if (clients.containsKey(peer)) {
+					if (log.isDebugEnabled())
+						log.debug("Ignoring peer " + peer
+								+ " already exists on client manager.");
+					return;
+				}
 				clients.put(peer, factory.get(peer, client));
 				notify();
 				cachedPeers = buildCachedPeers();
@@ -98,8 +112,12 @@ public class ClientManager<T, B> implements ClusterChangeListener {
 
 	public List<T> waitForClient(int min) throws Exception {
 		synchronized (this) {
-			while (clients.size() < min)
+			while (clients.size() < min) {
+				log.info("Client Manager is waiting for "
+						+ (min - clients.size()) + " current peers: "
+						+ clients.keySet());
 				wait(2000);
+			}
 		}
 
 		return getAll();
@@ -115,9 +133,11 @@ public class ClientManager<T, B> implements ClusterChangeListener {
 	}
 
 	private List<Peer> buildCachedPeers() {
-		ArrayList<Peer> clientList = new ArrayList<>(clients.keySet());
-		Collections.sort(clientList);
-		return clientList;
+		synchronized (this) {
+			ArrayList<Peer> clientList = new ArrayList<>(clients.keySet());
+			Collections.sort(clientList);
+			return clientList;
+		}
 	}
 
 	public T get(Peer peer) {

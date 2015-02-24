@@ -16,6 +16,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 
+import org.apache.log4j.Logger;
+
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.TreeMultimap;
@@ -33,6 +35,8 @@ import gnu.trove.map.hash.TLongObjectHashMap;
 import gnu.trove.set.hash.TLongHashSet;
 
 public class GraphlyStoreNode implements GraphlyStoreNodeI {
+
+	Logger log = Logger.getLogger(GraphlyStoreNode.class);
 
 	private static class InMemoryGraphProperties {
 		ConcurrentHashMap<Long, Map<String, Object>> props = new ConcurrentHashMap<>();
@@ -141,19 +145,38 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	@Override
 	public long[] getEdges(Dir type, Integer max_edges, long[] id)
 			throws ExecutionException {
+		if (log.isDebugEnabled())
+			log.debug("Obtaining edges");
 		TLongArrayList ret = new TLongArrayList();
 		for (long l : id) {
+			if (log.isDebugEnabled())
+				log.debug("Processing vid " + l);
 			long[] edges = getEdges(type, l);
+			if (log.isDebugEnabled())
+				log.debug("Got processing vid " + edges);
 
 			if (edges.length > max_edges && max_edges > 0) {
-				TLongArrayList toAdd = new TLongArrayList(edges);
-				while (toAdd.size() != max_edges)
-					toAdd.removeAt((int) (Math.random() * toAdd.size()));
-				ret.addAll(toAdd);
+
+				if (log.isDebugEnabled())
+					log.debug("Filtering " + edges + " getting only "
+							+ max_edges);
+				int in = 0;
+				for (in = 0; in < edges.length && ret.size() < max_edges; in++) {
+					int rn = edges.length - in;
+					int rm = max_edges - ret.size();
+					if (Math.random() * rn < rm)
+						/* Take it */
+						ret.add(edges[in]); /*
+											 * +1 since your range begins from 1
+											 */
+				}
+				if (log.isDebugEnabled())
+					log.debug("Finished filtering for " + l);
 			} else
 				ret.addAll(edges);
 		}
-
+		if (log.isDebugEnabled())
+			log.debug("Returning " + ret.size());
 		return ret.toArray();
 
 	}
@@ -180,13 +203,16 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 				byte[] array;
 				try {
 					array = adj.load((int) id.longValue());
-					long[] byteArrayToLongArray = DataTypeUtils
-							.byteArrayToLongArray(array);
-					return byteArrayToLongArray;
+					if (array != null) {
+						long[] byteArrayToLongArray = DataTypeUtils
+								.byteArrayToLongArray(array);
+						return byteArrayToLongArray;
+					}
 				} catch (Exception e) {
 					e.printStackTrace();
-					return new long[] {};
+
 				}
+				return new long[] {};
 			}
 		});
 
@@ -340,15 +366,17 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	}
 
 	@Override
-	public TLongIntHashMap countEdges(Dir dir, long[] vids) throws Exception {
+	public GraphlyCount countEdges(Dir dir, Integer max_edges, long[] vids)
+			throws Exception {
 		TLongIntHashMap map = new TLongIntHashMap();
 		for (long l : vids) {
-			long[] curr = getEdges(dir, l);
+			long[] curr = getEdges(dir, max_edges, new long[] { l });
 			for (long m : curr) {
 				map.adjustOrPutValue(m, 1, 1);
 			}
 		}
-		return map;
+		GraphlyCount c = new GraphlyCount(map.keys(), map.values());
+		return c;
 	}
 
 	@Override

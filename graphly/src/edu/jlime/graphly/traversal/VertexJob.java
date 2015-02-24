@@ -1,5 +1,7 @@
 package edu.jlime.graphly.traversal;
 
+import org.apache.log4j.Logger;
+
 import edu.jlime.graphly.client.Graphly;
 import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.client.JobContext;
@@ -24,6 +26,9 @@ public class VertexJob implements Job<long[]> {
 	@Override
 	public long[] call(JobContext ctx, ClientNode peer) throws Exception {
 		Graphly g = (Graphly) ctx.getGlobal("graphly");
+		Logger log = Logger.getLogger(VertexJob.class);
+		if (log.isDebugEnabled())
+			log.debug("Vertex Job obtaining " + data.length + ".");
 		return g.getEdges(dir, max_edges, data);
 	}
 }

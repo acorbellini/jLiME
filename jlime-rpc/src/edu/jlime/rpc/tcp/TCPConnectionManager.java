@@ -8,7 +8,6 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
@@ -21,7 +20,6 @@ import edu.jlime.core.transport.Address;
 import edu.jlime.rpc.message.AddressType;
 import edu.jlime.rpc.message.SocketAddress;
 import edu.jlime.util.ByteBuffer;
-import edu.jlime.util.PerfMeasure;
 import edu.jlime.util.RingQueue;
 import edu.jlime.util.StreamUtils;
 
@@ -104,6 +102,7 @@ class TCPConnectionManager {
 			public void run() {
 				SocketAddress addr = pkt.addr;
 				TCPPacketConnection bestConn = getConnection(addr);
+				//TODO esto no es correcto, debería cancelar el envío del paquete.
 				if (bestConn == null)
 					writeQueue.put(pkt);
 				else {
@@ -117,8 +116,10 @@ class TCPConnectionManager {
 						bestConn.write(pkt.data, pkt.data.length);
 						// PerfMeasure.takeTime("mgr");
 					} catch (Exception e) {
-						// log.info("Error writing to " + bestConn
-						// + ". Removing connection and trying again.");
+						if (log.isDebugEnabled())
+							log.debug("Error sending to " + addr + " using "
+									+ bestConn
+									+ ". Removing connection and trying again.");
 						remove(bestConn);
 						writeQueue.put(pkt);
 					}
@@ -161,7 +162,8 @@ class TCPConnectionManager {
 				createConnection(addr);
 			}
 		}
-
+		if (connections.isEmpty())
+			return null;
 		TCPPacketConnection conn = connections
 				.get((int) (Math.random() * connections.size()));
 		// if (log.isDebugEnabled())
@@ -194,9 +196,9 @@ class TCPConnectionManager {
 				os.flush();
 				return addConnection(sock);
 			} catch (ConnectException e) {
-				// if (log.isDebugEnabled())
-				log.info("Could not open socket to " + addr + " : "
-						+ e.getMessage());
+				if (log.isDebugEnabled())
+					log.debug("Could not open socket to " + addr + " : "
+							+ e.getMessage());
 				return null;
 			} catch (Exception e) {
 				log.info("Could not open socket to " + addr + " socket is "

@@ -27,7 +27,7 @@ public class Metrics implements Serializable, IMetrics {
 	private SortedMap<String, Metric<?>> metrics = Collections
 			.synchronizedSortedMap(new TreeMap<String, Metric<?>>());
 
-	private transient Timer timer = new Timer(true);
+	private transient volatile Timer timer;
 
 	private transient ArrayList<MetricsListener> listeners = new ArrayList<>();
 
@@ -49,7 +49,8 @@ public class Metrics implements Serializable, IMetrics {
 	}
 
 	public void stop() {
-		timer.cancel();
+		if (timer != null)
+			timer.cancel();
 	}
 
 	private Metric<?> create(String k, MetricFactory<?> meterFactory) {
@@ -72,17 +73,24 @@ public class Metrics implements Serializable, IMetrics {
 	}
 
 	private void notifyMetricAdded(String k, Metric<?> m) {
-		for (MetricsListener metricsListener : listeners) {
-			metricsListener.metricAdded(k, m);
+		synchronized (listeners) {
+			for (MetricsListener metricsListener : listeners) {
+				metricsListener.metricAdded(k, m);
+			}
 		}
+
 	}
 
 	public void listen(MetricsListener m) {
-		listeners.add(m);
+		synchronized (listeners) {
+			listeners.add(m);
+		}
 	}
 
 	public void removeListener(MetricsListener m) {
-		listeners.remove(m);
+		synchronized (listeners) {
+			listeners.remove(m);
+		}
 	}
 
 	@Override
@@ -124,6 +132,13 @@ public class Metrics implements Serializable, IMetrics {
 	}
 
 	public void createTimedSensor(final SensorMeasure timed) {
+		if (timer == null) {
+			synchronized (this) {
+				if (timer == null) {
+					timer = new Timer("Metrics Timer", true);
+				}
+			}
+		}
 		timer.schedule(new TimerTask() {
 			@Override
 			public void run() {

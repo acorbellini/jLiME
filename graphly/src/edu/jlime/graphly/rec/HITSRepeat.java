@@ -1,6 +1,7 @@
 package edu.jlime.graphly.rec;
 
 import edu.jlime.graphly.client.Graphly;
+import edu.jlime.graphly.client.SubGraph;
 
 class HITSRepeat implements Repeat<long[]> {
 	private String authKey;
@@ -15,6 +16,11 @@ class HITSRepeat implements Repeat<long[]> {
 
 	@Override
 	public Object exec(long[] before, Graphly g) throws Exception {
+
+		SubGraph sg = g.getSubGraph("hits-sub", current);
+
+		sg.invalidateProperties();
+
 		return g.v(before).update(new HITSUpdate(current, authKey, hubKey))
 				.exec();
 	}

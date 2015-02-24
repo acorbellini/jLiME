@@ -96,13 +96,13 @@ public class GraphlyTraversal implements Serializable, Transferible {
 		return this;
 	}
 
-	public GraphlyTraversal count(Dir dir) {
-		addStep(new CountStep(dir, this));
+	public GraphlyTraversal count(Dir dir, int top, int max_edges) {
+		addStep(new CountStep(dir, top, max_edges, this));
 		return this;
 	}
 
-	public GraphlyTraversal countOut(String k) {
-		return count(Dir.OUT);
+	public GraphlyTraversal countOut(String k, int top, int max_edges) {
+		return count(Dir.OUT, top, max_edges);
 	}
 
 	public <T extends CustomTraversal> T as(Class<T> c) throws Exception {

@@ -2,6 +2,12 @@ package edu.jlime.graphly.rec;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import com.google.common.util.concurrent.AtomicDouble;
 
 import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.client.SubGraph;
@@ -21,7 +27,7 @@ final class HITSUpdate implements Update {
 		this.h = hubKey;
 	}
 
-	public Map<String, Object> exec(Long vid, Graphly g) throws Exception {
+	public Map<String, Object> exec(Long vid, final Graphly g) throws Exception {
 
 		SubGraph sg = g.getSubGraph("hits-sub", originalList);
 
@@ -30,23 +36,32 @@ final class HITSUpdate implements Update {
 		float sumAuthQuad = 0f;
 		int contAuth = 0;
 		for (long in : sg.getEdges(Dir.IN, vid)) {
-			Float currHub = (Float) g.getProperty(in, h,
+			final long curr = in;
+
+			Float currHub = (Float) sg.getProperty(curr, h,
 					(float) Math.sqrt(1f / originalList.length));
+			float quad = currHub * currHub;
 			sumAuth += currHub;
-			sumAuthQuad += currHub * currHub;
+			sumAuthQuad += quad;
 			contAuth++;
+
 		}
 
 		float sumHub = 0f;
-		int contHub = 0;
 		float sumHubQuad = 0f;
+		int contHub = 0;
 		for (long out : sg.getEdges(Dir.OUT, vid)) {
-			Float currAuth = (Float) g.getProperty(out, a,
+			final long curr = out;
+
+			Float currAuth = (Float) sg.getProperty(curr, a,
 					(float) Math.sqrt(1f / originalList.length));
+			float quad = currAuth * currAuth;
 			sumHub += currAuth;
-			sumHubQuad += currAuth * currAuth;
+			sumHubQuad += quad;
 			contHub++;
+
 		}
+
 		// ret.put(a, sumAuth);
 		ret.put(a, contAuth == 0 ? 0 : sumAuth / (float) Math.sqrt(sumAuthQuad));
 		// ret.put(h, sumHub);

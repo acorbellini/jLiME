@@ -15,6 +15,7 @@ import edu.jlime.core.cluster.DataFilter;
 import edu.jlime.core.cluster.Peer;
 import edu.jlime.core.rpc.ClientManager;
 import edu.jlime.core.rpc.RPCDispatcher;
+import edu.jlime.graphly.GraphlyCount;
 import edu.jlime.graphly.GraphlyStoreNodeI;
 import edu.jlime.graphly.GraphlyStoreNodeIBroadcast;
 import edu.jlime.graphly.GraphlyStoreNodeIFactory;
@@ -35,7 +36,7 @@ import gnu.trove.map.hash.TLongObjectHashMap;
 import gnu.trove.set.hash.TLongHashSet;
 
 public class Graphly implements Closeable {
-	public static final int MAX_IDS_PER_JOB = 50;
+	public static final int NUM_JOBS = 16;
 
 	private RPCDispatcher rpc;
 
@@ -44,8 +45,6 @@ public class Graphly implements Closeable {
 	private ConsistentHashing consistenthash;
 
 	private JobDispatcher jobCli;
-
-	ExecutorService svc = Executors.newCachedThreadPool();
 
 	private Map<String, SubGraph> subgraphs = new HashMap<>();
 
@@ -58,8 +57,21 @@ public class Graphly implements Closeable {
 		this.consistenthash = coord.getHash();
 	}
 
-	private GraphlyStoreNodeI getClientFor(final long vertex) {
-		return mgr.get(consistenthash.getNode(vertex));
+	private GraphlyStoreNodeI getClientFor(final Long vertex) {
+		if (vertex == null)
+			System.out.println("Vertex is null");
+		if (consistenthash == null)
+			System.out.println("Consistent hash is not set.");
+		if (mgr == null)
+			System.out.println("mgr is not set.");
+		Peer node = consistenthash.getNode(vertex);
+		if (node == null)
+			System.out.println("nodes is null.");
+		GraphlyStoreNodeI graphlyStoreNodeI = mgr.get(node);
+		if (graphlyStoreNodeI == null)
+			System.out.println("graphlyStoreNodeI is null for " + node
+					+ " clients: " + mgr.getPeers());
+		return graphlyStoreNodeI;
 	}
 
 	public GraphlyTraversal v(long... id) {
@@ -117,9 +129,13 @@ public class Graphly implements Closeable {
 		RPCDispatcher rpc = new JLiMEFactory(d,
 				new DataFilter("app", "graphly")).build();
 		rpc.start();
+
 		JobDispatcher jd = Client.build(min).getJd();
+
 		Graphly build = build(rpc, jd, min);
+
 		jd.setGlobal("graphly", build);
+
 		return build;
 
 	}
@@ -151,6 +167,9 @@ public class Graphly implements Closeable {
 
 	public long[] getEdges(final Dir dir, final int max_edges, long... vids)
 			throws Exception {
+
+		ExecutorService svc = Executors.newCachedThreadPool();
+
 		final TLongHashSet ret = new TLongHashSet();
 		Map<GraphlyStoreNodeI, TLongArrayList> map = new HashMap<>();
 		for (long l : vids) {
@@ -168,7 +187,6 @@ public class Graphly implements Closeable {
 			try {
 				return node.getEdges(dir, max_edges, vids);
 			} catch (Exception e1) {
-				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
 		}
@@ -216,25 +234,26 @@ public class Graphly implements Closeable {
 		return jobCli.getCluster().getClientFor(node.getJobAddress());
 	}
 
-	public TLongIntHashMap countEdges(final Dir dir, long[] vids)
-			throws Exception {
+	public GraphlyCount countEdges(final Dir dir, final int max_edges,
+			long[] vids) throws Exception {
+		ExecutorService svc = Executors.newCachedThreadPool();
+
 		final TLongIntHashMap ret = new TLongIntHashMap();
 
 		Map<GraphlyStoreNodeI, TLongArrayList> map = hashKeys(vids);
 
 		if (map.size() == 1) {
 			GraphlyStoreNodeI node = map.entrySet().iterator().next().getKey();
-			return node.countEdges(dir, vids);
+			return node.countEdges(dir, max_edges, vids);
 		}
 
 		for (final Entry<GraphlyStoreNodeI, TLongArrayList> e : map.entrySet()) {
 			svc.execute(new Runnable() {
-
 				@Override
 				public void run() {
 					try {
-						TLongIntHashMap count = e.getKey().countEdges(dir,
-								e.getValue().toArray());
+						GraphlyCount count = e.getKey().countEdges(dir,
+								max_edges, e.getValue().toArray());
 						synchronized (ret) {
 							TLongIntIterator it = count.iterator();
 							while (it.hasNext()) {
@@ -258,7 +277,7 @@ public class Graphly implements Closeable {
 			e1.printStackTrace();
 		}
 
-		return ret;
+		return new GraphlyCount(ret.keys(), ret.values());
 	}
 
 	public Map<GraphlyStoreNodeI, TLongArrayList> hashKeys(long[] data) {

@@ -12,7 +12,7 @@ function stop(){
 	PID_List=""
 	
 	function killServer {
-		LIST=$(ssh $user@$1 "ps -Af | grep edu.jlime | grep java | grep -v bash | tr -s ' ' | cut -d' ' -f2")
+		LIST=$(ssh $user@$1 "ps -Af | grep edu.jlime.graphly.server.GraphlyServer | grep java | grep -v bash | tr -s ' ' | cut -d' ' -f2")
 		for pid in $LIST;do
 			ssh $user@$1 "kill -KILL $pid"
 		done	

@@ -122,6 +122,9 @@ public abstract class Discovery implements DiscoveryProvider, StackElement {
 						notifyAddressList(disco.getId(), disco.getAddresses());
 
 						for (SocketAddress sock : disco.getAddresses()) {
+							if (log.isDebugEnabled())
+								log.debug("Sending discovery response to "
+										+ m.getFrom() + " to socket " + sock);
 							Message response = newDiscoveryResponseMessage();
 							response.setTo(new Address(disco.getId()));
 							response.setInetSocketAddress(sock);

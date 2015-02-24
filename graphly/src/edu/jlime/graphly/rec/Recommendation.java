@@ -2,8 +2,6 @@ package edu.jlime.graphly.rec;
 
 import java.util.Arrays;
 
-import edu.jlime.graphly.client.Graphly;
-import edu.jlime.graphly.rec.CustomStep.CustomFunction;
 import edu.jlime.graphly.rec.randomwalk.RandomWalkForeach;
 import edu.jlime.graphly.rec.randomwalk.RandomWalkJoin;
 import edu.jlime.graphly.rec.salsa.SalsaStep;
@@ -11,32 +9,8 @@ import edu.jlime.graphly.rec.salsa.SalsaStepRandomWalk;
 import edu.jlime.graphly.traversal.CustomTraversal;
 import edu.jlime.graphly.traversal.Dir;
 import edu.jlime.graphly.traversal.GraphlyTraversal;
-import edu.jlime.graphly.traversal.TraversalResult;
 
 public class Recommendation extends CustomTraversal {
-
-	private final class HITSCustomStep implements CustomFunction {
-		private String auth;
-		private String hub;
-		private int steps;
-		private int max_edges;
-
-		public HITSCustomStep(String auth, String hub, int steps, int max_edges) {
-			this.auth = auth;
-			this.hub = hub;
-			this.steps = steps;
-			this.max_edges = max_edges;
-		}
-
-		@Override
-		public TraversalResult execute(TraversalResult before,
-				GraphlyTraversal tr) throws Exception {
-			long[] subgraph = before.vertices().toArray();
-			Graphly g = tr.getGraph();
-			return g.v(subgraph).set("mapper", tr.get("mapper"))
-					.repeat(steps, new HITSRepeat(auth, hub, subgraph)).exec();
-		}
-	}
 
 	public Recommendation(GraphlyTraversal tr) {
 		super(tr);
@@ -49,8 +23,8 @@ public class Recommendation extends CustomTraversal {
 				.save("first")
 				.traverse(new String[] { "first", "target" }, max_edges,
 						Arrays.copyOfRange(dirs, 1, dirs.length - 1))
-				.count(dirs[dirs.length - 1]).filterBy("first", "target")
-				.top(top);
+				.count(dirs[dirs.length - 1], top, max_edges)
+				.filterBy("first", "target");
 		return this;
 	}
 
@@ -99,7 +73,7 @@ public class Recommendation extends CustomTraversal {
 	}
 
 	public Recommendation commonNeighbours() {
-		
+
 		return this;
 	}
 }

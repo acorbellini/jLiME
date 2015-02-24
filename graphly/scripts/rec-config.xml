@@ -5,11 +5,11 @@
            http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.1.xsd">
 
 	<bean id="runs" class="java.lang.Integer">
-		<constructor-arg value="1" />
+		<constructor-arg value="5" />
 	</bean>
 
 	<bean id="executiontype" class="java.lang.String">
-		<constructor-arg value="local" />
+		<constructor-arg value="cluster" />
 	</bean>
 
 	<bean id="localdir" class="java.lang.String">
@@ -21,7 +21,7 @@
 	</bean>
 
 	<bean id="servers" class="java.lang.Integer">
-		<constructor-arg value="4" />
+		<constructor-arg value="8" />
 	</bean>
 
 	<util:list id="mappers" value-type="edu.jlime.graphly.jobs.Mapper">

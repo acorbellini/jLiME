@@ -472,7 +472,11 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 		}
 		rpc.start();
 		if (executorsSize() < minServers)
-			initLock.acquire();
+			while (!initLock.tryAcquire()) {
+				log.info("Currently waiting for "
+						+ (minServers - executorsSize()));
+				Thread.sleep(5000);
+			}
 
 	}
 
@@ -521,13 +525,14 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 	private void checkSize() {
 		if (minServers >= 0 && executorsSize() >= getMinServers()) {
 			initLock.release();
-		} else
-			// ACA SE PUEDE AMPLIAR A ESPERAR POR CIERTOS TAGS A QUE APAREZCAN
-			log.info("Still waiting for "
-					+ (getMinServers() - executorsSize())
-					+ ((getMinServers() - executorsSize()) != 1 ? " executors "
-							: " executor") + " to show up. I am : "
-					+ getLocalPeer());
+		}
+		// else
+		// // ACA SE PUEDE AMPLIAR A ESPERAR POR CIERTOS TAGS A QUE APAREZCAN
+		// log.info("Still waiting for "
+		// + (getMinServers() - executorsSize())
+		// + ((getMinServers() - executorsSize()) != 1 ? " executors "
+		// : " executor") + " to show up. I am : "
+		// + getLocalPeer());
 
 	}
 

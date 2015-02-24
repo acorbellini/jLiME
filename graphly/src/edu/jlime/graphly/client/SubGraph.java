@@ -1,5 +1,6 @@
 package edu.jlime.graphly.client;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
@@ -53,20 +54,20 @@ public class SubGraph {
 	private Graphly g;
 	private long[] vertices;
 
-	Cache<Long, Object> propcache = CacheBuilder.newBuilder()
-			.maximumSize(10000).build();
+	Cache<Long, Object> propcache = CacheBuilder.newBuilder().build();
 
-	Cache<SubEdge, long[]> edgecache = CacheBuilder.newBuilder()
-			.maximumSize(10000).build();
+	Cache<SubEdge, long[]> edgecache = CacheBuilder.newBuilder().build();
 
 	Map<SubEdge, Integer> countcache = new ConcurrentHashMap<>();
 
 	public SubGraph(Graphly graphly, long[] all) {
 		this.g = graphly;
 		this.vertices = all;
+		Arrays.sort(vertices);
 	}
 
-	public long[] getEdges(final Dir in, final Long vid) throws ExecutionException {
+	public long[] getEdges(final Dir in, final Long vid)
+			throws ExecutionException {
 		return edgecache.get(new SubEdge(in, vid), new Callable<long[]>() {
 
 			@Override
@@ -76,8 +77,10 @@ public class SubGraph {
 					edges = g.getEdges(in, vid);
 					if (edges == null)
 						return new long[] {};
-					else
+					else {
+						Arrays.sort(edges);
 						return GraphlyUtil.filter(edges, vertices);
+					}
 				} catch (Exception e) {
 					e.printStackTrace();
 				}

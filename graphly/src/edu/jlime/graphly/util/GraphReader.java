@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Iterator;
 
 final class GraphReader implements Iterator<Pair<Long, long[]>> {
@@ -59,7 +60,9 @@ final class GraphReader implements Iterator<Pair<Long, long[]>> {
 			e.printStackTrace();
 		}
 
-		return Pair.build(curr, map.toArray());
+		long[] array = map.toArray();
+		Arrays.sort(array);
+		return Pair.build(curr, array);
 	}
 
 	@Override

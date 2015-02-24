@@ -3,6 +3,7 @@ package edu.jlime.graphly;
 import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.jobs.LocationMapper;
 import edu.jlime.graphly.rec.Recommendation;
+import edu.jlime.graphly.traversal.Dir;
 import edu.jlime.graphly.traversal.TraversalResult;
 
 public class QueryTest {
@@ -27,31 +28,32 @@ public class QueryTest {
 		// }
 
 		// Exploratory Count
-		// TraversalResult res = g.v(new long[] { 0 })
-		// .set("mapper", new LocationMapper()).as(Recommendation.class)
-		// .exploratoryCount(100, 10, Dir.OUT, Dir.IN, Dir.OUT)
-		// .submit(g.getJobClient().getCluster().getAnyExecutor());
+		TraversalResult res = g.v(new long[] { 0 })
+				.set("mapper", new LocationMapper()).as(Recommendation.class)
+				.exploratoryCount(100, 10, Dir.OUT, Dir.IN, Dir.OUT)
+				.submit(g.getJobClient().getCluster().getAnyExecutor());
 		//
-		// System.out.println("Exploratory Count: " + res);
+		System.out.println("Exploratory Count: " + res);
 		//
-		long[] target = new long[] { 0, 1, 2, 3 };
+		// long[] target = new long[] { 0, 1, 2, 3 };
 		//
 		// Random Walk
-		TraversalResult rwRes = g.v(target).set("mapper", new LocationMapper())
-				.as(Recommendation.class).randomwalk("rw", 1000, 0.8f)
-				.submit(g.getJobClient().getCluster().getAnyExecutor());
-		System.out.println("Random Walk: "
-				+ g.collect("rw", -1, rwRes.vertices().toArray()));
+		// TraversalResult rwRes = g.v(target).set("mapper", new
+		// LocationMapper())
+		// .as(Recommendation.class).randomwalk("rw", 1000, 0.8f)
+		// .submit(g.getJobClient().getCluster().getAnyExecutor());
+		// System.out.println("Random Walk: "
+		// + g.collect("rw", -1, rwRes.vertices().toArray()));
 		//
 		// HITS
-		TraversalResult tr = g.v(target).set("mapper", new LocationMapper())
-				.as(Recommendation.class).hits("auth", "hub", 5000, 10).exec();
-
-		System.out.println("HITS");
-		System.out.println("Auth: "
-				+ g.collect("auth", 10, tr.vertices().toArray()));
-		System.out.println("Hub: "
-				+ g.collect("hub", 10, tr.vertices().toArray()));
+		// TraversalResult tr = g.v(target).set("mapper", new LocationMapper())
+		// .as(Recommendation.class).hits("auth", "hub", 5000, 10).exec();
+		//
+		// System.out.println("HITS");
+		// System.out.println("Auth: "
+		// + g.collect("auth", 10, tr.vertices().toArray()));
+		// System.out.println("Hub: "
+		// + g.collect("hub", 10, tr.vertices().toArray()));
 		// //
 		// long[] salsatarget = new long[] { 0 };
 		// //
@@ -82,16 +84,16 @@ public class QueryTest {
 		// + g.collect("hubrw", 10, salsarw.vertices().toArray()));
 
 		// WhoToFollow
-		TraversalResult wtf = g
-				.v(new long[] { 0 })
-				.set("mapper", new LocationMapper())
-				.as(Recommendation.class)
-				.whotofollow("authwtf", "hubwtf", 10000, 0.3f, 500, 50, 0.7f,
-						100)
-				.submit(g.getJobClient().getCluster().getAnyExecutor());
+		// TraversalResult wtf = g
+		// .v(new long[] { 0 })
+		// .set("mapper", new LocationMapper())
+		// .as(Recommendation.class)
+		// .whotofollow("authwtf", "hubwtf", 10000, 0.3f, 500, 50, 0.7f,
+		// 100)
+		// .submit(g.getJobClient().getCluster().getAnyExecutor());
 		//
-		System.out.println("WTF");
-		System.out.println("wtf-auth:\n" + wtf);
+		// System.out.println("WTF");
+		// System.out.println("wtf-auth:\n" + wtf);
 
 		g.close();
 	}

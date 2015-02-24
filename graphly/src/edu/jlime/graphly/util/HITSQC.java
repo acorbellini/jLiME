@@ -8,8 +8,13 @@ public class HITSQC implements QueryContainer {
 
 	@Override
 	public void run(Graphly g, long[] users, Mapper mapper) throws Exception {
+		int steps = 100;
+		if (users.length > 10)
+			steps = 50;
+		if (users.length > 30)
+			steps = 25;
 		g.v(users).set("mapper", mapper).as(Recommendation.class)
-				.hits("hits-auth", "hits-hub", 1000, 200).exec();
+				.hits("hits-auth", "hits-hub", steps, 200).exec();
 	}
 
 	@Override

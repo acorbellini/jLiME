@@ -36,9 +36,9 @@ public class CriteriaMapper implements Mapper {
 		CompositeMetrics<ClientNode> info = ctx.getCluster().getInfo();
 
 		HashMap<ClientNode, Float> infoValues = filter.extract(info);
-
-		log.info("Obtained Info for Criteria Mapper  : " + this + " - values "
-				+ infoValues);
+		if (log.isDebugEnabled())
+			log.debug("Obtained Info for Criteria Mapper  : " + this
+					+ " - values " + infoValues);
 
 		// Normalize to [0,1]
 		float sum = 0;

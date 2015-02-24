@@ -167,7 +167,7 @@ public class RPCDispatcher implements TransportListener {
 
 	protected Object callTarget(MethodCall mc) throws Exception {
 		try {
-			Object target = targets.get(mc.getObjectKey());
+			Object target = getTarget(mc.getObjectKey());
 			Class<?> objClass = target.getClass();
 			Method m = findMethod(objClass, mc,
 					targetsMethods.get(mc.getObjectKey()));
@@ -372,7 +372,7 @@ public class RPCDispatcher implements TransportListener {
 	public Class<?> loadClass(Peer classSource, String name)
 			throws ClassNotFoundException {
 		if (classSource == null)
-			return null;
+			return this.getClass().getClassLoader().loadClass(name);
 
 		ClientClassLoader loader = cl.getCL(classSource);
 		if (loader == null) {

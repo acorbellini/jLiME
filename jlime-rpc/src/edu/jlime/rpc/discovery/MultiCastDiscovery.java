@@ -31,15 +31,11 @@ public class MultiCastDiscovery extends Discovery {
 			return;
 		t = new Thread("Multicast Discovery Thread") {
 			public void run() {
-				try {
-					discoveryInit.queue(newDiscoveryMessage());
-				} catch (Exception e1) {
-					e1.printStackTrace();
-				}
+
 				int times = 0;
 				while (!stopped && times < config.disc_num_tries) {
 					try {
-
+						discoveryInit.queue(newDiscoveryMessage());
 					} catch (Exception e) {
 						log.error("Could not send discovery message.");
 					}

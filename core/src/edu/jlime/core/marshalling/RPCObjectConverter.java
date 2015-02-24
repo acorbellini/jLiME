@@ -27,6 +27,6 @@ public class RPCObjectConverter implements TypeConverter {
 		Class<RPCObject> cl = (Class<RPCObject>) tc.getRPC().loadClass(cli,
 				className);
 		RPCObject inst = cl.newInstance();
-		return inst.fromByteArray(buff);
+		return inst.fromByteArray(new ByteBuffer(buff.getByteArray()));
 	}
 }

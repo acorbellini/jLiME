@@ -13,6 +13,7 @@ public abstract class RunJob implements Job<Boolean> {
 		return true;
 	}
 
-	public abstract void run(JobContext env, ClientNode origin) throws Exception;
+	public abstract void run(JobContext env, ClientNode origin)
+			throws Exception;
 
 }

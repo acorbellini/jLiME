@@ -14,7 +14,6 @@ import edu.jlime.metrics.metric.Metrics;
 import edu.jlime.rpc.data.DataListener;
 import edu.jlime.rpc.data.DataMessage;
 import edu.jlime.rpc.data.Response;
-import edu.jlime.util.PerfMeasure;
 
 public class jLiMETransport extends Transport implements DataListener {
 
@@ -22,8 +21,8 @@ public class jLiMETransport extends Transport implements DataListener {
 
 	private Stack commStack;
 
-	private ExecutorService handleExecutor = Executors
-			.newCachedThreadPool(new ThreadFactory() {
+	private ExecutorService handleExecutor = Executors.newFixedThreadPool(8,
+			new ThreadFactory() {
 				@Override
 				public Thread newThread(Runnable r) {
 					Thread t = Executors.defaultThreadFactory().newThread(r);

@@ -54,8 +54,8 @@ public interface GraphlyStoreNodeI {
 	@Cache
 	public abstract Peer getJobAddress() throws Exception;
 
-	public abstract TLongIntHashMap countEdges(Dir dir, long[] vids)
-			throws Exception;
+	public abstract GraphlyCount countEdges(Dir dir, Integer max_edges,
+			long[] vids) throws Exception;
 
 	public abstract Long getRandomEdge(Long v, long[] subset, Dir d)
 			throws Exception;

@@ -42,7 +42,7 @@ public class EachStep<T> implements Step {
 				jobClient.getLocalPeer());
 
 		List<Pair<ClientNode, TLongArrayList>> mapped = map.map(
-				Graphly.MAX_IDS_PER_JOB, before.vertices().toArray(), ctx);
+				Graphly.NUM_JOBS, before.vertices().toArray(), ctx);
 
 		ForkJoinTask<Boolean> fj = new ForkJoinTask<>();
 

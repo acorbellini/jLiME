@@ -30,8 +30,6 @@ public class SalsaUpdate implements Update {
 
 		SubGraph sg = g.getSubGraph("salsa-sub", all);
 
-		sg.invalidateProperties();
-
 		Map<String, Object> ret = new HashMap<>();
 		float authCalc = 0f;
 		long[] inEdges = sg.getEdges(Dir.IN, vid);

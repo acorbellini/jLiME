@@ -69,8 +69,8 @@ public class Configuration {
 		this.mcastport = getInt("mcast.port", 3000);
 		this.mcast_port_range = getInt("mcast.port_range", 20);
 
-		this.disc_num_tries = getInt("disco.tries", 3);
-		this.disc_delay = getInt("disco.delay", 1500);
+		this.disc_num_tries = getInt("disco.tries", 10);
+		this.disc_delay = getInt("disco.delay", 1000);
 
 		this.max_pings = getInt("fd.max_pings", 30);
 		this.ping_delay = getInt("fd.ping_delay", 1500);
@@ -105,7 +105,7 @@ public class Configuration {
 		this.fcConfig.max_send_initial = getInt("fc.max_send", 6000);
 
 		this.tcp_config = new TCPConfig();
-		this.tcp_config.conn_limit = getInt("tcp.conn_limit", 30);
+		this.tcp_config.conn_limit = getInt("tcp.conn_limit", 5);
 		this.tcp_config.time_limit = getInt("tcp.time_limit", 15000);
 		this.tcp_config.tcp_rcv_buffer = getInt("tcp.rcv_buffer",
 				25 * 1024 * 1024);

@@ -18,7 +18,7 @@ public class ForkJoinTask<T> extends TaskBase<T> {
 	}
 
 	@Override
-	protected Map<Job<T>, ClientNode> getMap() {
+	public Map<Job<T>, ClientNode> getMap() {
 		return map;
 	}
 }

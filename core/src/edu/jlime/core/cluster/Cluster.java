@@ -74,8 +74,12 @@ public class Cluster implements Iterable<Peer> {
 	};
 
 	public boolean addPeer(Peer peer) {
-		if (filter != null && !filter.verify(peer))
+		if (filter != null && !filter.verify(peer)) {
+			if (log.isDebugEnabled())
+				log.debug("Filtering " + peer + " app: "
+						+ localPeer.getData("app"));
 			return false;
+		}
 
 		synchronized (peers) {
 			if (peers.contains(peer))
