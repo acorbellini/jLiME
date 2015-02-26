@@ -1,8 +1,6 @@
 package edu.jlime.graphly.traversal;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.log4j.Logger;
@@ -40,14 +38,21 @@ public class RepeatStep implements Step {
 		}
 	}
 
+	public interface RepeatSync<T> {
+		public void exec(T before, Graphly g) throws Exception;
+	}
+
 	private int steps;
 	private Repeat<long[]> rfunc;
 	private GraphlyTraversal tr;
+	private RepeatSync<long[]> sync;
 
-	public RepeatStep(int steps, Repeat<long[]> rfunc, GraphlyTraversal tr) {
+	public RepeatStep(int steps, Repeat<long[]> rfunc, RepeatSync<long[]> sync,
+			GraphlyTraversal tr) {
 		this.steps = steps;
 		this.rfunc = rfunc;
 		this.tr = tr;
+		this.sync = sync;
 	}
 
 	@Override
@@ -62,9 +67,13 @@ public class RepeatStep implements Step {
 
 		long[] array = before.vertices().toArray();
 
+		List<Pair<ClientNode, TLongArrayList>> div = map.map(Graphly.NUM_JOBS,
+				array, ctx);
+
 		for (int i = 0; i < steps; i++) {
-			final List<Pair<ClientNode, TLongArrayList>> div = map.map(
-					Graphly.NUM_JOBS, array, ctx);
+			if (map.isDynamic())
+				div = map.map(Graphly.NUM_JOBS, array, ctx);
+			final int divSize = div.size();
 			if (log.isDebugEnabled()) {
 				log.debug("Current Repeat Step: " + i + "/" + steps);
 				log.debug("Executing " + div.size() + " jobs.");
@@ -76,7 +85,7 @@ public class RepeatStep implements Step {
 			}
 
 			fj.execute(new ResultListener<Boolean, Boolean>() {
-				AtomicInteger cont = new AtomicInteger(div.size());
+				AtomicInteger cont = new AtomicInteger(divSize);
 
 				@Override
 				public void onSuccess(Boolean result) {
@@ -94,6 +103,8 @@ public class RepeatStep implements Step {
 					res.printStackTrace();
 				}
 			});
+
+			sync.exec(array, tr.getGraph());
 		}
 		return before;
 	}

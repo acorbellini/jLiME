@@ -25,10 +25,10 @@
 	</bean>
 
 	<util:list id="mappers" value-type="edu.jlime.graphly.jobs.Mapper">
-		<ref bean="roundrobin" />
 		<ref bean="totalmemory" />
 		<ref bean="availablememory" />
 		<ref bean="locaware" />
+		<ref bean="roundrobin" />
 	</util:list>
 
 	<bean id="roundrobin" class="edu.jlime.graphly.jobs.MapperFactory"
@@ -40,11 +40,13 @@
 	<bean id="totalmemory" class="edu.jlime.graphly.jobs.MapperFactory"
 		factory-method="simple" lazy-init="true">
 		<constructor-arg value="jvminfo.mem.max" />
+		<constructor-arg value="false" type="java.lang.Boolean" />
 	</bean>
 
 	<bean id="availablememory" class="edu.jlime.graphly.jobs.MapperFactory"
 		factory-method="simple" lazy-init="true">
 		<constructor-arg value="jvminfo.mem.freemax" />
+		<constructor-arg value="true" type="java.lang.Boolean" />
 	</bean>
 
 	<util:list id="queries" value-type="edu.jlime.graphly.util.QueryContainer">

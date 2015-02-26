@@ -1,82 +1,15 @@
 package edu.jlime.graphly;
 
-import edu.jlime.core.cluster.BroadcastException;
-import edu.jlime.graphly.GraphlyStoreNodeI;
-import edu.jlime.core.rpc.RPCDispatcher;
-import edu.jlime.core.rpc.RPCClient;
-import edu.jlime.core.cluster.Peer;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import edu.jlime.core.rpc.Transferible;
-import java.lang.Long;
-import java.lang.String;
-import java.lang.Object;
-import java.lang.Exception;
-import java.lang.Long;
-import java.lang.String;
-import java.lang.Object;
-import java.lang.Exception;
-import java.lang.String;
-import java.lang.Integer;
+
+import edu.jlime.core.cluster.Peer;
+import edu.jlime.core.rpc.RPCDispatcher;
+import edu.jlime.graphly.traversal.Dir;
 import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.map.hash.TLongObjectHashMap;
-import java.lang.Exception;
-import java.lang.String;
-import gnu.trove.map.hash.TLongObjectHashMap;
-import java.lang.Exception;
-import java.lang.Long;
-import java.lang.Long;
-import java.lang.String;
-import java.lang.Exception;
-import edu.jlime.graphly.traversal.Dir;
-import java.lang.Integer;
-import edu.jlime.graphly.GraphlyCount;
-import java.lang.Exception;
-import java.lang.Long;
-import java.lang.Exception;
-import java.lang.Long;
-import java.lang.Long;
-import java.lang.String;
-import java.lang.Object;
-import java.lang.Exception;
-import java.util.List;
-import java.lang.Exception;
-import edu.jlime.core.cluster.Peer;
-import java.lang.Exception;
-import java.lang.Long;
-import java.lang.Long;
-import java.lang.String;
-import java.lang.Object;
-import java.lang.String;
-import java.lang.Exception;
-import java.lang.Long;
-import java.lang.Long;
-import java.lang.String;
-import java.lang.String;
-import java.lang.Object;
-import java.lang.Exception;
-import java.lang.Long;
-import java.lang.String;
-import java.lang.Exception;
-import java.lang.Long;
-import edu.jlime.graphly.traversal.Dir;
-import java.lang.Exception;
-import java.lang.Long;
-import edu.jlime.graphly.traversal.Dir;
-import java.lang.Exception;
-import java.lang.Long;
-import java.lang.String;
-import java.lang.Exception;
-import java.lang.Long;
-import edu.jlime.graphly.traversal.Dir;
-import java.lang.Long;
-import java.lang.Exception;
-import java.lang.Integer;
-import java.lang.Exception;
-import edu.jlime.graphly.traversal.Dir;
-import java.lang.Integer;
-import java.lang.Exception;
 
 public class GraphlyStoreNodeIBroadcastImpl implements GraphlyStoreNodeIBroadcast {
 
@@ -109,28 +42,48 @@ public class GraphlyStoreNodeIBroadcastImpl implements GraphlyStoreNodeIBroadcas
     disp.multiCall( dest, client, targetID, "setProperties",new Object[] { arg0,arg1 });
   }
 
+  public void setTempProperties(final HashMap<java.lang.Long,java.util.Map<java.lang.String, java.lang.Object>> arg0) throws Exception {
+    disp.multiCall( dest, client, targetID, "setTempProperties",new Object[] { arg0 });
+  }
+
   public void addInEdgePlaceholder(final Long arg0, final Long arg1, final String arg2) throws Exception {
     disp.multiCall( dest, client, targetID, "addInEdgePlaceholder",new Object[] { arg0,arg1,arg2 });
   }
 
-  public Map<Peer,GraphlyCount>  countEdges(final Dir arg0, final Integer arg1, final long[] arg2) throws Exception {
-    return disp.multiCall( dest, client, targetID, "countEdges",new Object[] { arg0,arg1,arg2 });
+  public Map<Peer,long[]>  getEdges(final Dir arg0, final Integer arg1, final long[] arg2) throws Exception {
+    return disp.multiCall( dest, client, targetID, "getEdges",new Object[] { arg0,arg1,arg2 });
+  }
+
+  public Map<Peer,Long>  getRandomEdge(final Long arg0, final long[] arg1, final Dir arg2) throws Exception {
+    return disp.multiCall( dest, client, targetID, "getRandomEdge",new Object[] { arg0,arg1,arg2 });
+  }
+
+  public Map<Peer,Peer>  getJobAddress() throws Exception {
+    return disp.multiCall( dest, client, targetID, "getJobAddress",new Object[] {  });
   }
 
   public void removeVertex(final Long arg0) throws Exception {
     disp.multiCall( dest, client, targetID, "removeVertex",new Object[] { arg0 });
   }
 
-  public void addEdge(final Long arg0, final Long arg1, final String arg2, final Object[] arg3) throws Exception {
-    disp.multiCall( dest, client, targetID, "addEdge",new Object[] { arg0,arg1,arg2,arg3 });
+  public void addRange(final Integer arg0) throws Exception {
+    disp.multiCall( dest, client, targetID, "addRange",new Object[] { arg0 });
+  }
+
+  public Map<Peer,Integer>  getEdgeCount(final Long arg0, final Dir arg1, final long[] arg2) throws Exception {
+    return disp.multiCall( dest, client, targetID, "getEdgeCount",new Object[] { arg0,arg1,arg2 });
   }
 
   public Map<Peer,List>  getRanges() throws Exception {
     return disp.multiCall( dest, client, targetID, "getRanges",new Object[] {  });
   }
 
-  public Map<Peer,Peer>  getJobAddress() throws Exception {
-    return disp.multiCall( dest, client, targetID, "getJobAddress",new Object[] {  });
+  public Map<Peer,Boolean>  addVertex(final Long arg0, final String arg1) throws Exception {
+    return disp.multiCall( dest, client, targetID, "addVertex",new Object[] { arg0,arg1 });
+  }
+
+  public void commitUpdates(final String[] arg0) throws Exception {
+    disp.multiCall( dest, client, targetID, "commitUpdates",new Object[] { arg0 });
   }
 
   public void setEdgeProperty(final Long arg0, final Long arg1, final String arg2, final Object arg3, final String[] arg4) throws Exception {
@@ -141,32 +94,20 @@ public class GraphlyStoreNodeIBroadcastImpl implements GraphlyStoreNodeIBroadcas
     return disp.multiCall( dest, client, targetID, "getEdgeProperty",new Object[] { arg0,arg1,arg2,arg3 });
   }
 
-  public Map<Peer,String>  getLabel(final Long arg0) throws Exception {
-    return disp.multiCall( dest, client, targetID, "getLabel",new Object[] { arg0 });
+  public void addEdge(final Long arg0, final Long arg1, final String arg2, final Object[] arg3) throws Exception {
+    disp.multiCall( dest, client, targetID, "addEdge",new Object[] { arg0,arg1,arg2,arg3 });
   }
 
-  public Map<Peer,Integer>  getEdgeCount(final Long arg0, final Dir arg1, final long[] arg2) throws Exception {
-    return disp.multiCall( dest, client, targetID, "getEdgeCount",new Object[] { arg0,arg1,arg2 });
+  public Map<Peer,String>  getLabel(final Long arg0) throws Exception {
+    return disp.multiCall( dest, client, targetID, "getLabel",new Object[] { arg0 });
   }
 
   public void addEdges(final Long arg0, final Dir arg1, final long[] arg2) throws Exception {
     disp.multiCall( dest, client, targetID, "addEdges",new Object[] { arg0,arg1,arg2 });
   }
 
-  public Map<Peer,Boolean>  addVertex(final Long arg0, final String arg1) throws Exception {
-    return disp.multiCall( dest, client, targetID, "addVertex",new Object[] { arg0,arg1 });
-  }
-
-  public Map<Peer,Long>  getRandomEdge(final Long arg0, final long[] arg1, final Dir arg2) throws Exception {
-    return disp.multiCall( dest, client, targetID, "getRandomEdge",new Object[] { arg0,arg1,arg2 });
-  }
-
-  public void addRange(final Integer arg0) throws Exception {
-    disp.multiCall( dest, client, targetID, "addRange",new Object[] { arg0 });
-  }
-
-  public Map<Peer,long[]>  getEdges(final Dir arg0, final Integer arg1, final long[] arg2) throws Exception {
-    return disp.multiCall( dest, client, targetID, "getEdges",new Object[] { arg0,arg1,arg2 });
+  public Map<Peer,GraphlyCount>  countEdges(final Dir arg0, final Integer arg1, final long[] arg2) throws Exception {
+    return disp.multiCall( dest, client, targetID, "countEdges",new Object[] { arg0,arg1,arg2 });
   }
 
 }

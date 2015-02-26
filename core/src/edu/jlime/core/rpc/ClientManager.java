@@ -113,9 +113,10 @@ public class ClientManager<T, B> implements ClusterChangeListener {
 	public List<T> waitForClient(int min) throws Exception {
 		synchronized (this) {
 			while (clients.size() < min) {
-				log.info("Client Manager is waiting for "
-						+ (min - clients.size()) + " current peers: "
-						+ clients.keySet());
+				if (log.isDebugEnabled())
+					log.debug("Client Manager is waiting for "
+							+ (min - clients.size()) + " current peers: "
+							+ clients.keySet());
 				wait(2000);
 			}
 		}

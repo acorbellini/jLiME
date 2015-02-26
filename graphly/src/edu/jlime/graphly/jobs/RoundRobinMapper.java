@@ -3,16 +3,13 @@ package edu.jlime.graphly.jobs;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.log4j.Logger;
 
-import edu.jlime.core.cluster.Peer;
 import edu.jlime.graphly.util.GraphlyUtil;
 import edu.jlime.graphly.util.Pair;
 import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.client.JobContext;
-import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.list.array.TLongArrayList;
 
 //Simple Round Robin
@@ -76,5 +73,10 @@ public class RoundRobinMapper implements Mapper {
 	@Override
 	public String getName() {
 		return "roundrobin";
+	}
+
+	@Override
+	public boolean isDynamic() {
+		return false;
 	}
 }

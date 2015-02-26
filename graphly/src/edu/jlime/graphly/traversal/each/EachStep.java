@@ -1,8 +1,6 @@
 package edu.jlime.graphly.traversal.each;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 
 import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.jobs.Mapper;

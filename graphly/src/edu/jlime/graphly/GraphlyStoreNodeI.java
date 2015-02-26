@@ -1,13 +1,14 @@
 package edu.jlime.graphly;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import edu.jlime.core.cluster.Peer;
 import edu.jlime.core.rpc.Cache;
 import edu.jlime.core.rpc.Sync;
 import edu.jlime.graphly.traversal.Dir;
 import gnu.trove.list.array.TLongArrayList;
-import gnu.trove.map.hash.TLongIntHashMap;
 import gnu.trove.map.hash.TLongObjectHashMap;
 
 public interface GraphlyStoreNodeI {
@@ -69,5 +70,12 @@ public interface GraphlyStoreNodeI {
 
 	public abstract int getEdgeCount(Long vid, Dir dir, long[] at)
 			throws Exception;
+
+	@Sync
+	public abstract void setTempProperties(
+			HashMap<Long, Map<String, Object>> temps) throws Exception;
+
+	@Sync
+	public void commitUpdates(String[] k) throws Exception;
 
 }

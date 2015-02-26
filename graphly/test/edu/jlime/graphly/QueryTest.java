@@ -35,7 +35,7 @@ public class QueryTest {
 		//
 		System.out.println("Exploratory Count: " + res);
 		//
-		// long[] target = new long[] { 0, 1, 2, 3 };
+		long[] target = new long[] { 0, 1, 2, 3 };
 		//
 		// Random Walk
 		// TraversalResult rwRes = g.v(target).set("mapper", new
@@ -46,42 +46,41 @@ public class QueryTest {
 		// + g.collect("rw", -1, rwRes.vertices().toArray()));
 		//
 		// HITS
-		// TraversalResult tr = g.v(target).set("mapper", new LocationMapper())
-		// .as(Recommendation.class).hits("auth", "hub", 5000, 10).exec();
+		TraversalResult tr = g.v(target).set("mapper", new LocationMapper())
+				.as(Recommendation.class).hits("auth", "hub", 200, 10).exec();
+
+		System.out.println("HITS");
+		System.out.println("Auth: "
+				+ g.collect("auth", 10, tr.vertices().toArray()));
+		System.out.println("Hub: "
+				+ g.collect("hub", 10, tr.vertices().toArray()));
+		// //
+		long[] salsatarget = new long[] { 0 };
+		// //
+		// Salsa
+		TraversalResult salsa = g.v(salsatarget).traverse(30, Dir.OUT, Dir.OUT)
+				.set("mapper", new LocationMapper()).as(Recommendation.class)
+				.salsa("auth", "hub", 100)
+				.submit(g.getJobClient().getCluster().getAnyExecutor());
 		//
-		// System.out.println("HITS");
-		// System.out.println("Auth: "
-		// + g.collect("auth", 10, tr.vertices().toArray()));
-		// System.out.println("Hub: "
-		// + g.collect("hub", 10, tr.vertices().toArray()));
-		// //
-		// long[] salsatarget = new long[] { 0 };
-		// //
-		// // Salsa
-		// TraversalResult salsa = g.v(salsatarget).traverse(30, Dir.OUT,
-		// Dir.OUT)
-		// .set("mapper", new LocationMapper()).as(Recommendation.class)
-		// .salsa("auth", "hub", 20, 10)
-		// .submit(g.getJobClient().getCluster().getAnyExecutor());
-		// //
-		// System.out.println("SALSA");
-		// System.out.println("Auth: "
-		// + g.collect("auth", 10, salsa.vertices().toArray()));
-		// System.out.println("Hub: "
-		// + g.collect("hub", 10, salsa.vertices().toArray()));
+		System.out.println("SALSA");
+		System.out.println("Auth: "
+				+ g.collect("auth", 10, salsa.vertices().toArray()));
+		System.out.println("Hub: "
+				+ g.collect("hub", 10, salsa.vertices().toArray()));
 		//
-		// // Salsa
-		// TraversalResult salsarw = g.v(salsatarget)
-		// .traverse(30, Dir.OUT, Dir.OUT)
-		// .set("mapper", new LocationMapper()).as(Recommendation.class)
-		// .salsaRW("authrw", "hubrw", 1000, 10)
-		// .submit(g.getJobClient().getCluster().getAnyExecutor());
-		// //
-		// System.out.println("SALSA RandomWalk");
-		// System.out.println("Auth: "
-		// + g.collect("authrw", 10, salsarw.vertices().toArray()));
-		// System.out.println("Hub: "
-		// + g.collect("hubrw", 10, salsarw.vertices().toArray()));
+//		// Salsa
+//		TraversalResult salsarw = g.v(salsatarget)
+//				.traverse(30, Dir.OUT, Dir.OUT)
+//				.set("mapper", new LocationMapper()).as(Recommendation.class)
+//				.salsaRW("authrw", "hubrw", 1000, 10)
+//				.submit(g.getJobClient().getCluster().getAnyExecutor());
+//		//
+//		System.out.println("SALSA RandomWalk");
+//		System.out.println("Auth: "
+//				+ g.collect("authrw", 10, salsarw.vertices().toArray()));
+//		System.out.println("Hub: "
+//				+ g.collect("hubrw", 10, salsarw.vertices().toArray()));
 
 		// WhoToFollow
 		// TraversalResult wtf = g

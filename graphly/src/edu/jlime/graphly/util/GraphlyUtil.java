@@ -1,9 +1,7 @@
 package edu.jlime.graphly.util;
 
 import edu.jlime.jd.ClientNode;
-import gnu.trove.iterator.TLongIterator;
 import gnu.trove.list.array.TLongArrayList;
-import gnu.trove.set.hash.TIntHashSet;
 import gnu.trove.set.hash.TLongHashSet;
 
 import java.util.ArrayList;

@@ -1,10 +1,10 @@
 package edu.jlime.graphly;
 
+import java.io.Serializable;
+
 import edu.jlime.core.rpc.RPCObject;
 import edu.jlime.util.ByteBuffer;
 import gnu.trove.iterator.TLongIntIterator;
-
-import java.io.Serializable;
 
 public class GraphlyCount implements Serializable, RPCObject {
 	long[] vids;

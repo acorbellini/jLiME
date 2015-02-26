@@ -24,6 +24,6 @@ final class HITSCustomStep implements CustomFunction {
 		long[] subgraph = before.vertices().toArray();
 		Graphly g = tr.getGraph();
 		return g.v(subgraph).set("mapper", tr.get("mapper"))
-				.repeat(steps, new HITSRepeat(auth, hub, subgraph)).exec();
+				.repeat(steps, new HITSRepeat(auth, hub, subgraph), new HITSSync(auth, hub)).exec();
 	}
 }

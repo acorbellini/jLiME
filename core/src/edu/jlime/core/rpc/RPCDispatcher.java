@@ -497,7 +497,8 @@ public class RPCDispatcher implements TransportListener {
 		synchronized (targetsStatuses) {
 			while (!targetsStatuses.get(name).equals(RPCStatus.STARTED))
 				try {
-					log.info("Waiting for target " + name + " to start.");
+					if (log.isDebugEnabled())
+						log.debug("Waiting for target " + name + " to start.");
 					targetsStatuses.wait();
 				} catch (InterruptedException e) {
 					e.printStackTrace();

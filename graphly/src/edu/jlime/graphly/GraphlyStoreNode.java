@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -79,6 +80,8 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	private List<Integer> ranges = new ArrayList<>();
 	private Peer je;
 	private InMemoryGraphProperties props = new InMemoryGraphProperties();
+
+	private Map<Long, Map<String, Object>> temps = new ConcurrentHashMap<>();
 
 	// Store store;
 
@@ -494,5 +497,25 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 			throws Exception {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public void setTempProperties(HashMap<Long, Map<String, Object>> temps)
+			throws Exception {
+		this.temps.putAll(temps);
+	}
+
+	@Override
+	public void commitUpdates(String[] k) throws Exception {
+		for (Entry<Long, Map<String, Object>> e : temps.entrySet()) {
+			Long vid = e.getKey();
+			Map<String, Object> map = e.getValue();
+			for (String temp : k) {
+				Object val = map.get(temp);
+				if (val != null)
+					setProperty(vid, temp, val);
+			}
+		}
+		temps.clear();
 	}
 }

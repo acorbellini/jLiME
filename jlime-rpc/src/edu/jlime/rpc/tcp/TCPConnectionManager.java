@@ -102,7 +102,8 @@ class TCPConnectionManager {
 			public void run() {
 				SocketAddress addr = pkt.addr;
 				TCPPacketConnection bestConn = getConnection(addr);
-				//TODO esto no es correcto, debería cancelar el envío del paquete.
+				// TODO esto no es correcto, debería cancelar el envío del
+				// paquete.
 				if (bestConn == null)
 					writeQueue.put(pkt);
 				else {

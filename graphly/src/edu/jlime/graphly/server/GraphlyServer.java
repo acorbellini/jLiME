@@ -11,7 +11,6 @@ import org.apache.log4j.Logger;
 
 import edu.jlime.core.cluster.DataFilter;
 import edu.jlime.core.rpc.RPCDispatcher;
-import edu.jlime.core.rpc.RPCDispatcher.RPCStatus;
 import edu.jlime.graphly.GraphlyStoreNode;
 import edu.jlime.graphly.client.Graphly;
 import edu.jlime.jd.server.ClusterProvider;
@@ -105,10 +104,12 @@ public class GraphlyServer {
 			new Thread() {
 				public void run() {
 					try {
-						log.info("Initializing Coordinator");
+						if (log.isDebugEnabled())
+							log.debug("Initializing Coordinator");
 						GraphlyServer.this.coord = new GraphlyCoordinatorImpl(
 								rs);
-						log.info("Finished Initializing Coordinator");
+						if (log.isDebugEnabled())
+							log.debug("Finished Initializing Coordinator");
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
@@ -130,27 +131,38 @@ public class GraphlyServer {
 
 		rpc.start();
 
-		log.info("Initializing Job Dispatcher");
+		if (log.isDebugEnabled())
+			log.debug("Initializing Job Dispatcher");
 		jobs = JobServer.jLiME();
-		log.info("Finished Initializing Job Dispatcher");
+		if (log.isDebugEnabled())
+			log.debug("Finished Initializing Job Dispatcher");
 
-		log.info("Adding Graphly as global");
+		if (log.isDebugEnabled())
+			log.debug("Adding Graphly as global");
 		jobs.getJd().setGlobal("graphly", Graphly.build(rpc, jobs.getJd(), rs));
-		log.info("Finished adding Graphly as global");
+		if (log.isDebugEnabled())
+			log.debug("Finished adding Graphly as global");
 
-		log.info("Starting Job Dispatcher");
+		if (log.isDebugEnabled())
+			log.debug("Starting Job Dispatcher");
 		jobs.start();
-		log.info("Finished starting Job Dispatcher");
+		if (log.isDebugEnabled())
+			log.debug("Finished starting Job Dispatcher");
 
 		storeNode.setJobExecutorID(jobs.getJd().getLocalPeer());
-		log.info("Starting metrics");
+		if (log.isDebugEnabled())
+			log.debug("Starting metrics");
 		Metrics mgr = new Metrics(rpc.getCluster().getLocalPeer().getName());
 		for (InfoProvider sysinfo : SysInfoProvider.get())
 			sysinfo.load(mgr);
 		new ClusterProvider(jobs.getJd()).load(mgr);
 		MetricsJMX jmx = new MetricsJMX(mgr);
 		jmx.start();
-		log.info("Finshed Starting metrics");
+		if (log.isDebugEnabled())
+			log.debug("Finshed Starting metrics");
+
+		log.info("Graphly Server Fully Started on peer"
+				+ rpc.getCluster().getLocalPeer());
 	}
 
 	public void stop() throws Exception {

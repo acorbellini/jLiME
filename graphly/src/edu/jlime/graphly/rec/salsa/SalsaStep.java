@@ -13,7 +13,7 @@ public class SalsaStep implements CustomFunction {
 	private String hub;
 	private int steps;
 
-	public SalsaStep(String auth, String hub, int steps, float max_depth) {
+	public SalsaStep(String auth, String hub, int steps) {
 		this.auth = auth;
 		this.hub = hub;
 		this.steps = steps;
@@ -32,7 +32,7 @@ public class SalsaStep implements CustomFunction {
 				.filter(new MinEdgeFilter(Dir.OUT, 1, subgraph)).exec()
 				.vertices();
 		return g.v(subgraph).set("mapper", tr.get("mapper"))
-				.repeat(steps, new SalsaRepeat(auth, hub, authSet, hubSet))
+				.repeat(steps, new SalsaRepeat(auth, hub, authSet, hubSet), new SalsaSync(auth, hub))
 				.exec();
 	}
 }

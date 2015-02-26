@@ -398,4 +398,35 @@ public class Graphly implements Closeable {
 		return sg;
 	}
 
+	public void commitUpdates(String... k) throws Exception {
+		mgr.broadcast().commitUpdates(k);
+	}
+
+	public void setTempProperties(long[] before,
+			final HashMap<Long, Map<String, Object>> temps)
+			throws InterruptedException {
+		Map<GraphlyStoreNodeI, TLongArrayList> map = hashKeys(before);
+		// ExecutorService svc = Executors.newCachedThreadPool();
+		for (Entry<GraphlyStoreNodeI, TLongArrayList> entry : map.entrySet()) {
+			final GraphlyStoreNodeI node = entry.getKey();
+			final long[] current = entry.getValue().toArray();
+
+			// svc.execute(new Runnable() {
+			// @Override
+			// public void run() {
+			HashMap<Long, Map<String, Object>> subProp = new HashMap<>();
+			for (long l : current) {
+				subProp.put(l, temps.get(l));
+			}
+			try {
+				node.setTempProperties(subProp);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			// }
+			// });
+		}
+		// svc.shutdown();
+		// svc.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
+	}
 }

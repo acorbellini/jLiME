@@ -6,7 +6,6 @@ import edu.jlime.graphly.traversal.Dir;
 import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.Job;
-import gnu.trove.map.hash.TLongIntHashMap;
 
 public class CountJob implements Job<GraphlyCount> {
 

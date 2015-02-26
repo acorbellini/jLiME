@@ -471,12 +471,19 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 			peerAdded(p, cluster);
 		}
 		rpc.start();
-		if (executorsSize() < minServers)
-			while (!initLock.tryAcquire()) {
-				log.info("Currently waiting for "
+
+		if (executorsSize() < minServers) {
+			if (log.isDebugEnabled())
+				log.debug("Currently waiting for "
 						+ (minServers - executorsSize()));
-				Thread.sleep(5000);
-			}
+			initLock.acquire();
+		}
+		// while (!initLock.tryAcquire()) {
+		// if (log.isDebugEnabled())
+		// log.debug("Currently waiting for "
+		// + (minServers - executorsSize()));
+		// Thread.sleep(1000);
+		// }
 
 	}
 

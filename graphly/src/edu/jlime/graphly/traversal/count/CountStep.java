@@ -1,21 +1,11 @@
 package edu.jlime.graphly.traversal.count;
 
-import java.util.Arrays;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
-import java.util.NavigableSet;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.log4j.Logger;
-import org.mapdb.BTreeMap;
-import org.mapdb.DB;
-import org.mapdb.DBMaker;
-import org.mapdb.Fun;
-import org.mapdb.Fun.Tuple2;
-import org.mapdb.HTreeMap;
-import org.mapdb.Serializer;
 
 import edu.jlime.graphly.GraphlyCount;
 import edu.jlime.graphly.client.Graphly;
@@ -35,7 +25,6 @@ import gnu.trove.iterator.TLongFloatIterator;
 import gnu.trove.iterator.TLongIntIterator;
 import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.map.hash.TLongFloatHashMap;
-import gnu.trove.map.hash.TLongIntHashMap;
 
 public class CountStep implements Step {
 
@@ -79,7 +68,7 @@ public class CountStep implements Step {
 		// final NavigableSet<Tuple2<Integer, Long>> second = db.createTreeSet(
 		// "count-set").make();
 
-		TLongFloatHashMap finalRes = fj.execute(50,
+		TLongFloatHashMap finalRes = fj.execute(16,
 				new ResultListener<GraphlyCount, TLongFloatHashMap>() {
 					final TLongFloatHashMap temp = new TLongFloatHashMap();
 

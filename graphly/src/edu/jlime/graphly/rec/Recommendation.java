@@ -42,14 +42,14 @@ public class Recommendation extends CustomTraversal {
 
 	public Recommendation hits(String auth, String hub, int steps, int max_edges)
 			throws Exception {
-		tr.traverse(max_edges, Dir.BOTH);
-		tr.customStep(new HITSCustomStep(auth, hub, steps, max_edges));
+		tr.to(Dir.BOTH, max_edges).customStep(
+				new HITSCustomStep(auth, hub, steps, max_edges));
 		return this;
 	}
 
-	public Recommendation salsa(String auth, String hub, int steps,
-			float max_depth) throws Exception {
-		tr.customStep(new SalsaStep(auth, hub, steps, max_depth));
+	public Recommendation salsa(String auth, String hub, int steps)
+			throws Exception {
+		tr.customStep(new SalsaStep(auth, hub, steps));
 		return this;
 	}
 

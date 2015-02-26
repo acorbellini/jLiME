@@ -3,6 +3,7 @@ package edu.jlime.graphly.util;
 import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.jobs.Mapper;
 import edu.jlime.graphly.rec.Recommendation;
+import edu.jlime.graphly.traversal.Dir;
 
 public class SALSAQC implements QueryContainer {
 
@@ -14,8 +15,8 @@ public class SALSAQC implements QueryContainer {
 		if (users.length > 30)
 			steps = 100;
 
-		g.v(users).set("mapper", mapper).as(Recommendation.class)
-				.salsa("salsa-auth", "salsa-hub", steps, 5).exec();
+		g.v(users).set("mapper", mapper).to(Dir.BOTH, 50).as(Recommendation.class)
+				.salsa("salsa-auth", "salsa-hub", steps).exec();
 	}
 
 	@Override

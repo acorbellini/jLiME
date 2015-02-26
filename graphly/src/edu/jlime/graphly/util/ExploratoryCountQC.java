@@ -9,9 +9,9 @@ public class ExploratoryCountQC implements QueryContainer {
 
 	@Override
 	public void run(Graphly g, long[] users, Mapper mapper) throws Exception {
-		int size = 500;
+		int size = 400;
 		if (users.length > 10)
-			size = 250;
+			size = 200;
 		if (users.length > 30)
 			size = 100;
 

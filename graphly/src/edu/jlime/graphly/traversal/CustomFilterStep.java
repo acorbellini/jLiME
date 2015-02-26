@@ -1,5 +1,9 @@
 package edu.jlime.graphly.traversal;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
 import edu.jlime.graphly.rec.VertexFilter;
 import gnu.trove.iterator.TLongIterator;
 import gnu.trove.set.hash.TLongHashSet;
@@ -16,15 +20,32 @@ public class CustomFilterStep implements Step {
 
 	@Override
 	public TraversalResult exec(TraversalResult before) throws Exception {
-		TLongHashSet ret = new TLongHashSet();
+		ExecutorService exec = Executors.newFixedThreadPool(Runtime
+				.getRuntime().availableProcessors());
+		final TLongHashSet ret = new TLongHashSet();
 		TLongIterator it = before.vertices().iterator();
 		while (it.hasNext()) {
-			long next = it.next();
-			if (f.filter(next, tr.getGraph())) {
-				ret.add(next);
-			}
+			final long next = it.next();
+			exec.execute(new Runnable() {
+
+				@Override
+				public void run() {
+					try {
+						if (f.filter(next, tr.getGraph())) {
+							synchronized (ret) {
+								ret.add(next);
+							}
+						}
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+
+				}
+			});
 
 		}
+		exec.shutdown();
+		exec.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
 		return new VertexResult(ret);
 	}
 

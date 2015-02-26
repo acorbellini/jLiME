@@ -238,8 +238,10 @@ public class Metrics implements Serializable, IMetrics {
 
 	public static Metrics copyOf(Metrics m) {
 		Metrics ret = new Metrics(m.id);
-		for (Entry<String, Metric<?>> e : m.metrics.entrySet()) {
-			ret.metrics.put(e.getKey(), e.getValue().copy());
+		synchronized (m.metrics) {
+			for (Entry<String, Metric<?>> e : m.metrics.entrySet()) {
+				ret.metrics.put(e.getKey(), e.getValue().copy());
+			}
 		}
 		return ret;
 	}

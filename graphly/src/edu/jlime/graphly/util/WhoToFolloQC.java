@@ -8,14 +8,17 @@ public class WhoToFolloQC implements QueryContainer {
 
 	@Override
 	public void run(Graphly g, long[] users, Mapper mapper) throws Exception {
+
 		int steps = 200;
 		if (users.length > 10)
 			steps = 100;
 		if (users.length > 30)
 			steps = 50;
 
-		g.v(users).set("mapper", mapper).as(Recommendation.class)
-				.whotofollow("wtf-auth", "wtf-hub", steps, 5, 500, steps, 5, 20)
+		g.v(users)
+				.set("mapper", mapper)
+				.as(Recommendation.class)
+				.whotofollow("wtf-auth", "wtf-hub", steps, 5, 200, steps, 5, 20)
 				.exec();
 	}
 

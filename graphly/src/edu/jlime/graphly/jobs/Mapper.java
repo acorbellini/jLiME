@@ -15,4 +15,6 @@ public interface Mapper extends Serializable {
 
 	public String getName();
 
+	public boolean isDynamic();
+
 }

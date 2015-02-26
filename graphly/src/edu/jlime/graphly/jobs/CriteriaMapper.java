@@ -3,7 +3,6 @@ package edu.jlime.graphly.jobs;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
@@ -14,7 +13,6 @@ import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.client.JobContext;
 import edu.jlime.metrics.metric.CompositeMetrics;
 import edu.jlime.metrics.sysinfo.filter.SysInfoFilter;
-import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.list.array.TLongArrayList;
 
 public class CriteriaMapper implements Mapper {
@@ -23,8 +21,11 @@ public class CriteriaMapper implements Mapper {
 
 	private SysInfoFilter<ClientNode> filter;
 
-	public CriteriaMapper(SysInfoFilter<ClientNode> ext) {
+	private boolean dynamic;
+
+	public CriteriaMapper(SysInfoFilter<ClientNode> ext, boolean dynamic) {
 		this.filter = ext;
+		this.dynamic = dynamic;
 	}
 
 	@Override
@@ -63,9 +64,9 @@ public class CriteriaMapper implements Mapper {
 			init = end;
 		}
 
-		for (Entry<ClientNode, TLongArrayList> e : div.entrySet()) {
-			log.info(e.getKey() + " -> " + e.getValue().size());
-		}
+		// for (Entry<ClientNode, TLongArrayList> e : div.entrySet()) {
+		// log.info(e.getKey() + " -> " + e.getValue().size());
+		// }
 
 		return GraphlyUtil.divide(div, max);
 	}
@@ -73,5 +74,10 @@ public class CriteriaMapper implements Mapper {
 	@Override
 	public String getName() {
 		return "criteria-" + filter.toString();
+	}
+
+	@Override
+	public boolean isDynamic() {
+		return dynamic;
 	}
 }

@@ -8,11 +8,13 @@ public class MapperFactory {
 
 	public static Mapper cpuCriteria() {
 		return new CriteriaMapper(new LogFilter<ClientNode>(
-				new SimpleInfoFilter<ClientNode>("sysinfo.cpu.usage"), false));
+				new SimpleInfoFilter<ClientNode>("sysinfo.cpu.usage"), false),
+				true);
 	}
 
-	public static Mapper simple(String criteria) {
-		return new CriteriaMapper(new SimpleInfoFilter<ClientNode>(criteria));
+	public static Mapper simple(String criteria, Boolean dynamic) {
+		return new CriteriaMapper(new SimpleInfoFilter<ClientNode>(criteria),
+				dynamic);
 	}
 
 	public static Mapper location() {

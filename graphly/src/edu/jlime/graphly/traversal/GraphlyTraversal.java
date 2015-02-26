@@ -13,8 +13,8 @@ import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.rec.CustomStep;
 import edu.jlime.graphly.rec.CustomStep.CustomFunction;
 import edu.jlime.graphly.rec.Repeat;
-import edu.jlime.graphly.rec.Update;
 import edu.jlime.graphly.rec.VertexFilter;
+import edu.jlime.graphly.traversal.RepeatStep.RepeatSync;
 import edu.jlime.graphly.traversal.count.CountStep;
 import edu.jlime.graphly.traversal.each.EachStep;
 import edu.jlime.graphly.traversal.each.ForEach;
@@ -164,13 +164,9 @@ public class GraphlyTraversal implements Serializable, Transferible {
 		return this;
 	}
 
-	public GraphlyTraversal update(Update update) {
-		addStep(new UpdateStep(update, this));
-		return this;
-	}
-
-	public GraphlyTraversal repeat(int steps, Repeat<long[]> rfunc) {
-		addStep(new RepeatStep(steps, rfunc, this));
+	public GraphlyTraversal repeat(int steps, Repeat<long[]> rfunc,
+			RepeatSync<long[]> sync) {
+		addStep(new RepeatStep(steps, rfunc, sync, this));
 		return this;
 	}
 

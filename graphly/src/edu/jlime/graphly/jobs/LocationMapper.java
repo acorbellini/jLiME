@@ -30,12 +30,22 @@ public class LocationMapper implements Mapper {
 
 		Map<GraphlyStoreNodeI, TLongArrayList> map = g.hashKeys(data);
 
+		// log.info("Mapped results");
+		// for (Entry<GraphlyStoreNodeI, TLongArrayList> e : map.entrySet()) {
+		// log.info(e.getKey() + " -> " + e.getValue().size());
+		// }
+
 		Map<ClientNode, TLongArrayList> ret = new HashMap<>();
 		for (Entry<GraphlyStoreNodeI, TLongArrayList> e : map.entrySet()) {
 			ret.put(g.getClientJobFor(e.getKey()), e.getValue());
 		}
-		if (log.isDebugEnabled())
-			log.debug("Finished mapping " + data.length + " keys by location.");
+		// log.info("Mapped results to job clients.");
+		// if (log.isDebugEnabled())
+		// log.debug("Finished mapping " + data.length + " keys by location.");
+
+		// for (Entry<ClientNode, TLongArrayList> e : ret.entrySet()) {
+		// log.info(e.getKey() + " -> " + e.getValue().size());
+		// }
 
 		return GraphlyUtil.divide(ret, max);
 	}
@@ -43,5 +53,10 @@ public class LocationMapper implements Mapper {
 	@Override
 	public String getName() {
 		return "location";
+	}
+
+	@Override
+	public boolean isDynamic() {
+		return false;
 	}
 }
