@@ -58,9 +58,9 @@ public class QueryTest {
 		long[] salsatarget = new long[] { 0 };
 		// //
 		// Salsa
-		TraversalResult salsa = g.v(salsatarget).traverse(30, Dir.OUT, Dir.OUT)
+		TraversalResult salsa = g.v(salsatarget).traverse(30, Dir.OUT)
 				.set("mapper", new LocationMapper()).as(Recommendation.class)
-				.salsa("auth", "hub", 100)
+				.salsa("auth", "hub", 1000)
 				.submit(g.getJobClient().getCluster().getAnyExecutor());
 		//
 		System.out.println("SALSA");
@@ -69,30 +69,30 @@ public class QueryTest {
 		System.out.println("Hub: "
 				+ g.collect("hub", 10, salsa.vertices().toArray()));
 		//
-//		// Salsa
-//		TraversalResult salsarw = g.v(salsatarget)
-//				.traverse(30, Dir.OUT, Dir.OUT)
-//				.set("mapper", new LocationMapper()).as(Recommendation.class)
-//				.salsaRW("authrw", "hubrw", 1000, 10)
-//				.submit(g.getJobClient().getCluster().getAnyExecutor());
-//		//
-//		System.out.println("SALSA RandomWalk");
-//		System.out.println("Auth: "
-//				+ g.collect("authrw", 10, salsarw.vertices().toArray()));
-//		System.out.println("Hub: "
-//				+ g.collect("hubrw", 10, salsarw.vertices().toArray()));
+		// // Salsa
+		// TraversalResult salsarw = g.v(salsatarget)
+		// .traverse(30, Dir.OUT, Dir.OUT)
+		// .set("mapper", new LocationMapper()).as(Recommendation.class)
+		// .salsaRW("authrw", "hubrw", 1000, 10)
+		// .submit(g.getJobClient().getCluster().getAnyExecutor());
+		// //
+		// System.out.println("SALSA RandomWalk");
+		// System.out.println("Auth: "
+		// + g.collect("authrw", 10, salsarw.vertices().toArray()));
+		// System.out.println("Hub: "
+		// + g.collect("hubrw", 10, salsarw.vertices().toArray()));
 
 		// WhoToFollow
-		// TraversalResult wtf = g
-		// .v(new long[] { 0 })
-		// .set("mapper", new LocationMapper())
-		// .as(Recommendation.class)
-		// .whotofollow("authwtf", "hubwtf", 10000, 0.3f, 500, 50, 0.7f,
-		// 100)
-		// .submit(g.getJobClient().getCluster().getAnyExecutor());
-		//
-		// System.out.println("WTF");
-		// System.out.println("wtf-auth:\n" + wtf);
+		TraversalResult wtf = g
+				.v(new long[] { 0 })
+				.set("mapper", new LocationMapper())
+				.as(Recommendation.class)
+				.whotofollow("authwtf", "hubwtf", 10000, 0.3f, 500, 50, 0.7f,
+						100)
+				.submit(g.getJobClient().getCluster().getAnyExecutor());
+
+		System.out.println("WTF");
+		System.out.println("wtf-auth:\n" + wtf);
 
 		g.close();
 	}

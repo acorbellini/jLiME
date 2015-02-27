@@ -13,6 +13,7 @@ import edu.jlime.core.cluster.DataFilter;
 import edu.jlime.core.rpc.RPCDispatcher;
 import edu.jlime.graphly.GraphlyStoreNode;
 import edu.jlime.graphly.client.Graphly;
+import edu.jlime.jd.JobDispatcher;
 import edu.jlime.jd.server.ClusterProvider;
 import edu.jlime.jd.server.JobServer;
 import edu.jlime.metrics.jmx.MetricsJMX;
@@ -119,6 +120,11 @@ public class GraphlyServer {
 		Map<String, String> data = new HashMap<>();
 		data.put("app", "graphly");
 		data.put("type", "server");
+		// data.put(
+		// "app",
+		// "graphly-server," + JobDispatcher.SERVER + coord ?
+		// GraphlyCoordinatorImpl.COORDINATOR
+		// : "");
 
 		rpc = new JLiMEFactory(data, new DataFilter("app", "graphly")).build();
 

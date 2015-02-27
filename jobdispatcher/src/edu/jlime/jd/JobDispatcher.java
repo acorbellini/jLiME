@@ -67,15 +67,15 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 
 	private StreamProvider streamer;
 
-	private ExecutorService exec = Executors
-			.newCachedThreadPool(new ThreadFactory() {
-				@Override
-				public Thread newThread(Runnable r) {
-					Thread t = Executors.defaultThreadFactory().newThread(r);
-					t.setName("JobDispatcher");
-					return t;
-				}
-			});
+	private ExecutorService exec = Executors.newFixedThreadPool(Runtime
+			.getRuntime().availableProcessors(), new ThreadFactory() {
+		@Override
+		public Thread newThread(Runnable r) {
+			Thread t = Executors.defaultThreadFactory().newThread(r);
+			t.setName("JobDispatcher");
+			return t;
+		}
+	});
 
 	private List<CloseListener> closeListeners = new ArrayList<>();
 

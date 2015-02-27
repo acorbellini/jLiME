@@ -180,8 +180,7 @@ public class UDP extends NetworkProtocol implements PacketReceiver {
 		}
 		DatagramPacket dg = new DatagramPacket(built, built.length,
 				realSockAddr.getSockTo());
-
-		packetsTx.put(dg);
+		send(getDatagramSocket(), dg);
 	}
 
 	@Override
@@ -200,41 +199,20 @@ public class UDP extends NetworkProtocol implements PacketReceiver {
 	public void onStart(Object socket) {
 		rx = new DatagramReceiver((DatagramSocket) socket, max_bytes, this);
 
-		Thread t = new Thread("UDP Datagram Sender") {
-			@Override
-			public void run() {
-				while (true) {
-					Object[] list = packetsTx.take();
-					if (stopped)
-						return;
+	}
 
-					DatagramSocket sock = getDatagramSocket();
-
-					for (Object obj : list) {
-						DatagramPacket dg = (DatagramPacket) obj;
-						InetAddress localAddress = sock.getLocalAddress();
-						if (localAddress != null
-								&& dg.getAddress().getClass()
-										.equals(localAddress.getClass()))
-							try {
-								sock.send(dg);
-							} catch (Exception e) {
-								log.debug(
-										"Failed sending datagram to "
-												+ dg.getAddress() + ":"
-												+ dg.getPort() + " with size "
-												+ dg.getLength()
-												+ " on socket "
-												+ sock.getLocalSocketAddress(),
-										e);
-							}
-					}
-
-				}
+	private void send(DatagramSocket sock, Object obj) {
+		DatagramPacket dg = (DatagramPacket) obj;
+		InetAddress localAddress = sock.getLocalAddress();
+		if (localAddress != null
+				&& dg.getAddress().getClass().equals(localAddress.getClass()))
+			try {
+				sock.send(dg);
+			} catch (Exception e) {
+				log.debug("Failed sending datagram to " + dg.getAddress() + ":"
+						+ dg.getPort() + " with size " + dg.getLength()
+						+ " on socket " + sock.getLocalSocketAddress(), e);
 			}
-		};
-		t.start();
-
 	}
 
 	@Override

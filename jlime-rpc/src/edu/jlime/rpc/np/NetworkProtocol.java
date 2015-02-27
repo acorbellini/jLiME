@@ -31,7 +31,7 @@ public abstract class NetworkProtocol extends SimpleMessageProcessor implements
 
 	protected ConcurrentHashMap<Address, List<SocketAddress>> backup = new ConcurrentHashMap<>();
 
-	private RingQueue packetsRx = new RingQueue();
+	// private RingQueue packetsRx = new RingQueue();
 
 	private String addr;
 
@@ -57,30 +57,30 @@ public abstract class NetworkProtocol extends SimpleMessageProcessor implements
 		this.setAddr(addr);
 		this.port = port;
 		this.portrange = range;
-		Thread t = new Thread("Network Protocol Data Packet Reader") {
-			@Override
-			public void run() {
-				while (!stopped)
-					try {
-						Object[] pack = packetsRx.take();
-						if (stopped)
-							return;
-						for (Object object : pack) {
-							processPacket((DataPacket) object);
-						}
-
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-			}
-		};
-		t.setDaemon(true);
-		t.start();
+		// Thread t = new Thread("Network Protocol Data Packet Reader") {
+		// @Override
+		// public void run() {
+		// while (!stopped)
+		// try {
+		// Object[] pack = packetsRx.take();
+		// if (stopped)
+		// return;
+		// for (Object object : pack) {
+		// processPacket((DataPacket) object);
+		// }
+		//
+		// } catch (Exception e) {
+		// e.printStackTrace();
+		// }
+		// }
+		// };
+		// t.setDaemon(true);
+		// t.start();
 	}
 
 	public void notifyPacketRvcd(DataPacket pkt) throws Exception {
-		packetsRx.put(pkt);
-		// processPacket(pkt);
+		// packetsRx.put(pkt);
+		processPacket(pkt);
 	};
 
 	private void processPacket(DataPacket pkt) throws Exception {
@@ -210,7 +210,7 @@ public abstract class NetworkProtocol extends SimpleMessageProcessor implements
 			log.debug("Stopping network protocol type " + getType()
 					+ " and socket " + socket);
 
-		packetsRx.put(new DataPacket(null, null));
+		// packetsRx.put(new DataPacket(null, null));
 		if (metrics != null)
 			metrics.set("jlime.interface").remove(
 					this.socket.getAddr() + ":" + this.socket.getPort());

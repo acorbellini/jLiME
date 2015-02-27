@@ -105,7 +105,7 @@ public class Configuration {
 		this.fcConfig.max_send_initial = getInt("fc.max_send", 6000);
 
 		this.tcp_config = new TCPConfig();
-		this.tcp_config.conn_limit = getInt("tcp.conn_limit", 5);
+		this.tcp_config.conn_limit = getInt("tcp.conn_limit", 1);
 		this.tcp_config.time_limit = getInt("tcp.time_limit", 15000);
 		this.tcp_config.tcp_rcv_buffer = getInt("tcp.rcv_buffer",
 				25 * 1024 * 1024);

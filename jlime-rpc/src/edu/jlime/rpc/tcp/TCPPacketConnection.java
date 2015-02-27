@@ -17,7 +17,7 @@ class TCPPacketConnection {
 
 	Logger log = Logger.getLogger(TCPPacketConnection.class);
 
-	long lastTimeUsed;
+	// long lastTimeUsed;
 
 	Socket conn;
 
@@ -44,7 +44,7 @@ class TCPPacketConnection {
 			throws IOException {
 		this.mgr = mgr;
 		this.conn = sock;
-		this.lastTimeUsed = System.currentTimeMillis();
+		// this.lastTimeUsed = System.currentTimeMillis();
 		is = sock.getInputStream();
 		os = sock.getOutputStream();
 	}
@@ -71,14 +71,14 @@ class TCPPacketConnection {
 			// log.debug("Writing to " + out.length + " bytes to " + conn);
 
 			os.write(DataTypeUtils.intToByteArray(id));
-			this.lastTimeUsed = System.currentTimeMillis();
+			// this.lastTimeUsed = System.currentTimeMillis();
 			if (id >= 0)
 				os.write(out);
 			// PerfMeasure.takeTime("write", false);
 			// PerfMeasure.takeTime("read", false);
 			//
 			// PerfMeasure.startTimer("write", 1000, false);
-			this.lastTimeUsed = System.currentTimeMillis();
+			// this.lastTimeUsed = System.currentTimeMillis();
 			// os.flush();
 			// if (log.isDebugEnabled())
 			// log.debug("Finished Writing to " + conn);
@@ -103,7 +103,7 @@ class TCPPacketConnection {
 			int id = StreamUtils.readInt(is);
 			// if (log.isDebugEnabled())
 			// log.debug("Read " + (id < 0 ? " ID " : " SIZE ") + id);
-			this.lastTimeUsed = System.currentTimeMillis();
+			// this.lastTimeUsed = System.currentTimeMillis();
 			// if (log.isDebugEnabled())
 			// log.debug(" Fully reading from " + conn + " " + id + " bytes.");
 
@@ -114,7 +114,7 @@ class TCPPacketConnection {
 			// PerfMeasure.takeTime("write", false);
 			//
 			// PerfMeasure.takeTime("dataproc", false);
-			this.lastTimeUsed = System.currentTimeMillis();
+			// this.lastTimeUsed = System.currentTimeMillis();
 			// if (log.isDebugEnabled())
 			// log.debug("FINISHED READING ON SOCKET " + conn);
 
@@ -131,7 +131,7 @@ class TCPPacketConnection {
 
 	@Override
 	public String toString() {
-		return this.conn + "/" + this.lastTimeUsed / 1000;
+		return this.conn.toString();
 	}
 
 	public void stop() {
@@ -141,6 +141,22 @@ class TCPPacketConnection {
 			conn.close();
 		} catch (IOException e) {
 			e.printStackTrace();
+		}
+	}
+
+	public byte[] try_read() throws Exception {
+		try {
+			if (is.available() > 0) {
+				int id = StreamUtils.readInt(is);
+				byte[] data = StreamUtils.read(is, id);
+				return data;
+			} else
+				return null;
+		} catch (Exception e) {
+			throw new Exception("Error reading from " + conn, e);
+		} finally {
+			// readLock.unlock();
+
 		}
 	}
 }

@@ -11,7 +11,7 @@ public class DatagramReceiver {
 
 	private DatagramSocket sock;
 
-	private RingQueue packets = new RingQueue();
+	// private RingQueue packets = new RingQueue();
 
 	private int buff_size;
 
@@ -43,41 +43,40 @@ public class DatagramReceiver {
 		// read.setDaemon(true);
 		read.start();
 
-		Thread consume = new Thread("UDP Datagram Receiver") {
-			@Override
-			public void run() {
-				while (!stopped)
-					try {
-						Object[] array = packets.take();
-						for (Object object : array) {
-							DatagramPacket pkt = (DatagramPacket) object;
-							if (stopped)
-								return;
-							rcvr.datagramReceived(pkt);
-						}
-
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-			}
-		};
+		// Thread consume = new Thread("UDP Datagram Receiver") {
+		// @Override
+		// public void run() {
+		// while (!stopped)
+		// try {
+		// Object[] array = packets.take();
+		// for (Object object : array) {
+		// DatagramPacket pkt = (DatagramPacket) object;
+		// if (stopped)
+		// return;
+		// rcvr.datagramReceived(pkt);
+		// }
+		//
+		// } catch (Exception e) {
+		// e.printStackTrace();
+		// }
+		// }
+		// };
 		// consume.setDaemon(true);
-		consume.start();
+		// consume.start();
 	}
 
 	public void read() throws Exception {
 		byte[] b = new byte[buff_size];
 		DatagramPacket d = new DatagramPacket(b, buff_size);
-
 		sock.receive(d);
-		packets.put(d);
-
+		// packets.put(d);
+		rcvr.datagramReceived(d);
 	}
 
 	public void setStopped() {
 		this.stopped = true;
 		// try {
-		packets.put(new DatagramPacket(new byte[] {}, 0));
+		// packets.put(new DatagramPacket(new byte[] {}, 0));
 		// } catch (InterruptedException e) {
 		// e.printStackTrace();
 		// }
