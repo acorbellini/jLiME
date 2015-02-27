@@ -48,6 +48,10 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 
 	private static final int TIME_TO_SHOWUP = 20000;
 
+	public static final String SERVER = "job-server";
+
+	public static final String CLIENT = "job-client";
+
 	private ExecEnvironment env;
 
 	private RPCDispatcher rpc;
@@ -470,7 +474,7 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 		for (Peer p : cluster) {
 			peerAdded(p, cluster);
 		}
-		rpc.start();
+		// rpc.start();
 
 		if (executorsSize() < minServers) {
 			if (log.isDebugEnabled())
@@ -499,10 +503,10 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 
 	@Override
 	public void peerRemoved(Peer p, Cluster c) {
-		String[] tags = p.getData(TAGS).split(",");
-		for (String tag : tags)
-			byTag.get(tag).remove(p);
-		Boolean isExec = Boolean.valueOf(p.getData(ISEXEC));
+		// String[] tags = p.getData(TAGS).split(",");
+		// for (String tag : tags)
+		// byTag.get(tag).remove(p);
+		Boolean isExec = Boolean.valueOf(p.getData("app").contains(SERVER));
 		if (isExec)
 			executors.remove(p);
 
@@ -512,14 +516,14 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 
 	@Override
 	public void peerAdded(Peer p, Cluster c) {
-		String[] tags = p.getData(TAGS).split(",");
-		for (String tag : tags) {
-			if (!byTag.containsKey(tag))
-				byTag.put(tag, new ArrayList<Peer>());
-			byTag.get(tag).add(p);
-		}
+		// String[] tags = p.getData(TAGS).split(",");
+		// for (String tag : tags) {
+		// if (!byTag.containsKey(tag))
+		// byTag.put(tag, new ArrayList<Peer>());
+		// byTag.get(tag).add(p);
+		// }
 
-		Boolean isExec = Boolean.valueOf(p.getData(ISEXEC));
+		Boolean isExec = Boolean.valueOf(p.getData("app").contains(SERVER));
 		if (isExec)
 			executors.add(p);
 		checkSize();
@@ -585,11 +589,46 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 	}
 
 	public void setGlobal(String k, Object v) {
-		globals.put(k, v);
+		synchronized (globals) {
+			globals.put(k, v);
+			globals.notifyAll();
+		}
 	}
 
 	public Object getGlobal(String k) {
-		return globals.get(k);
+		synchronized (globals) {
+			Object g = globals.get(k);
+			while (g == null)
+				try {
+					globals.wait();
+					g = globals.get(k);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			return g;
+		}
+
+	}
+
+	public static JobDispatcher build(int i, final RPCDispatcher rpc) {
+		JobDispatcher disp = new JobDispatcher(0, rpc);
+		disp.setStreamer(new StreamProvider() {
+
+			@Override
+			public RemoteOutputStream getOutputStream(UUID streamID,
+					Peer streamSource) {
+				return rpc.getStreamer().getOutputStream(streamID,
+						streamSource.getAddress());
+			}
+
+			@Override
+			public RemoteInputStream getInputStream(UUID streamID,
+					Peer streamSource) {
+				return rpc.getStreamer().getInputStream(streamID,
+						streamSource.getAddress());
+			}
+		});
+		return disp;
 	}
 
 }

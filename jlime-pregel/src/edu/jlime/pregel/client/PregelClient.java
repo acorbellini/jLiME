@@ -34,7 +34,7 @@ public class PregelClient {
 		data.put("app", "pregel");
 		data.put("type", "client");
 		this.rpc = new JLiMEFactory(config, data, new DataFilter("app",
-				"pregel")).build();
+				"pregel", true)).build();
 		this.rpc.start();
 		this.minWorkers = numWorkers;
 

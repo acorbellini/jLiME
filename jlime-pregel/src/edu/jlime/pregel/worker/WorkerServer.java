@@ -5,8 +5,6 @@ import java.util.HashMap;
 import org.apache.log4j.Logger;
 
 import edu.jlime.core.cluster.DataFilter;
-import edu.jlime.core.cluster.Peer;
-import edu.jlime.core.cluster.PeerFilter;
 import edu.jlime.core.rpc.ClientManager;
 import edu.jlime.core.rpc.RPCDispatcher;
 import edu.jlime.pregel.coordinator.rpc.Coordinator;
@@ -32,7 +30,7 @@ public class WorkerServer {
 		data.put("type", "worker");
 
 		JLiMEFactory fact = new JLiMEFactory(config, data, new DataFilter(
-				"app", "graphly"));
+				"app", "graphly", true));
 		disp = fact.build();
 
 		// coord = disp.manage(new CoordinatorFactory(disp, "coordinator"),

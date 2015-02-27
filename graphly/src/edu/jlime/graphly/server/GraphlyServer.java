@@ -23,7 +23,7 @@ import edu.jlime.metrics.sysinfo.SysInfoProvider;
 import edu.jlime.rpc.JLiMEFactory;
 
 public class GraphlyServer {
-	private JobServer jobs;
+	private JobDispatcher jobs;
 	private RPCDispatcher rpc;
 	private String storeName;
 	private String storeLoc;
@@ -101,6 +101,14 @@ public class GraphlyServer {
 
 	public void start() throws Exception {
 
+		Map<String, String> data = new HashMap<>();
+		// data.put("app", "graphly");
+		// data.put("type", "server");
+		data.put("app", "graphly-server," + JobDispatcher.SERVER
+				+ (isCoord ? "," + GraphlyCoordinatorImpl.COORDINATOR : ""));
+
+		rpc = new JLiMEFactory(data, null).build();
+
 		if (isCoord)
 			new Thread() {
 				public void run() {
@@ -108,7 +116,7 @@ public class GraphlyServer {
 						if (log.isDebugEnabled())
 							log.debug("Initializing Coordinator");
 						GraphlyServer.this.coord = new GraphlyCoordinatorImpl(
-								rs);
+								rpc, rs);
 						if (log.isDebugEnabled())
 							log.debug("Finished Initializing Coordinator");
 					} catch (Exception e) {
@@ -117,55 +125,36 @@ public class GraphlyServer {
 				};
 			}.start();
 
-		Map<String, String> data = new HashMap<>();
-		data.put("app", "graphly");
-		data.put("type", "server");
-		// data.put(
-		// "app",
-		// "graphly-server," + JobDispatcher.SERVER + coord ?
-		// GraphlyCoordinatorImpl.COORDINATOR
-		// : "");
-
-		rpc = new JLiMEFactory(data, new DataFilter("app", "graphly")).build();
-
 		GraphlyStoreNode storeNode = new GraphlyStoreNode(storeName, storeLoc,
 				rpc);
 
 		rpc.registerTarget("graphly", storeNode, false);
 
-		// rpc.setMetrics(mgr);
+		jobs = JobDispatcher.build(0, rpc);
+
+		jobs.start();
 
 		rpc.start();
 
-		if (log.isDebugEnabled())
-			log.debug("Initializing Job Dispatcher");
-		jobs = JobServer.jLiME();
-		if (log.isDebugEnabled())
-			log.debug("Finished Initializing Job Dispatcher");
-
-		if (log.isDebugEnabled())
-			log.debug("Adding Graphly as global");
-		jobs.getJd().setGlobal("graphly", Graphly.build(rpc, jobs.getJd(), rs));
-		if (log.isDebugEnabled())
-			log.debug("Finished adding Graphly as global");
-
-		if (log.isDebugEnabled())
-			log.debug("Starting Job Dispatcher");
-		jobs.start();
-		if (log.isDebugEnabled())
-			log.debug("Finished starting Job Dispatcher");
-
-		storeNode.setJobExecutorID(jobs.getJd().getLocalPeer());
-		if (log.isDebugEnabled())
-			log.debug("Starting metrics");
-		Metrics mgr = new Metrics(rpc.getCluster().getLocalPeer().getName());
+		Metrics mgr = new Metrics(rpc.getCluster().getLocalPeer().toString());
 		for (InfoProvider sysinfo : SysInfoProvider.get())
 			sysinfo.load(mgr);
-		new ClusterProvider(jobs.getJd()).load(mgr);
+
+		new ClusterProvider(jobs).load(mgr);
+
 		MetricsJMX jmx = new MetricsJMX(mgr);
 		jmx.start();
 		if (log.isDebugEnabled())
 			log.debug("Finshed Starting metrics");
+
+		jobs.setMetrics(mgr);
+
+		storeNode.setJobExecutorID(jobs.getLocalPeer());
+
+		jobs.setGlobal("graphly", Graphly.build(rpc, jobs, rs));
+
+		if (log.isDebugEnabled())
+			log.debug("Starting metrics");
 
 		log.info("Graphly Server Fully Started on peer"
 				+ rpc.getCluster().getLocalPeer());

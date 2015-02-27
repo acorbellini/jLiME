@@ -38,7 +38,7 @@ public class Client implements Closeable {
 		Configuration config = new Configuration();
 
 		final RPCDispatcher rpc = new JLiMEFactory(config, jdData,
-				new DataFilter("app", "jobdispatcher")).build();
+				new DataFilter("app", "job", true)).build();
 
 		JobDispatcher jd = new JobDispatcher(i, rpc);
 		jd.setStreamer(new StreamProvider() {

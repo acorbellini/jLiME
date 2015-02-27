@@ -83,7 +83,6 @@ public class Graphly implements Closeable {
 			return getVertex(id);
 		}
 		return null;
-
 	}
 
 	public GraphlyVertex getVertex(long id) {
@@ -123,15 +122,16 @@ public class Graphly implements Closeable {
 
 	public static Graphly build(int min) throws Exception {
 		Map<String, String> d = new HashMap<>();
-		d.put("app", "graphly");
-		d.put("type", "client");
+		d.put("app", "graphly-client," + JobDispatcher.CLIENT);
 
-		RPCDispatcher rpc = new JLiMEFactory(d,
-				new DataFilter("app", "graphly")).build();
+		RPCDispatcher rpc = new JLiMEFactory(d, null).build();
+
 		rpc.start();
 
-		JobDispatcher jd = Client.build(min).getJd();
+		JobDispatcher jd = JobDispatcher.build(min, rpc);
 
+		jd.start();
+		
 		Graphly build = build(rpc, jd, min);
 
 		jd.setGlobal("graphly", build);
@@ -144,13 +144,13 @@ public class Graphly implements Closeable {
 			throws Exception {
 		ClientManager<GraphlyStoreNodeI, GraphlyStoreNodeIBroadcast> mgr = rpc
 				.manage(new GraphlyStoreNodeIFactory(rpc, "graphly"),
-						new DataFilter("type", "server"), rpc.getCluster()
-								.getLocalPeer());
+						new DataFilter("app", "graphly-server", true), rpc
+								.getCluster().getLocalPeer());
 
 		ClientManager<GraphlyCoordinator, GraphlyCoordinatorBroadcast> coordMgr = rpc
 				.manage(new GraphlyCoordinatorFactory(rpc, "Coordinator"),
-						new DataFilter("type", "coord"), rpc.getCluster()
-								.getLocalPeer());
+						new DataFilter("app", "coordinator", true), rpc
+								.getCluster().getLocalPeer());
 
 		mgr.waitForClient(min);
 		coordMgr.waitFirst();

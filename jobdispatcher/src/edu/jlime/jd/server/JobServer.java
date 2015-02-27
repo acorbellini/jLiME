@@ -61,26 +61,11 @@ public class JobServer {
 		jdData.put(JobDispatcher.TAGS, "Server");
 
 		final RPCDispatcher rpc = new JLiMEFactory(new Configuration(), jdData,
-				new DataFilter("app", "jobdispatcher")).build();
+				new DataFilter("app", JobDispatcher.SERVER, true)).build();
 
 		// JD
-		final JobDispatcher disp = new JobDispatcher(0, rpc);
-		disp.setStreamer(new StreamProvider() {
+		final JobDispatcher disp = JobDispatcher.build(0, rpc);
 
-			@Override
-			public RemoteOutputStream getOutputStream(UUID streamID,
-					Peer streamSource) {
-				return rpc.getStreamer().getOutputStream(streamID,
-						streamSource.getAddress());
-			}
-
-			@Override
-			public RemoteInputStream getInputStream(UUID streamID,
-					Peer streamSource) {
-				return rpc.getStreamer().getInputStream(streamID,
-						streamSource.getAddress());
-			}
-		});
 		return new JobServer(disp);
 	}
 
