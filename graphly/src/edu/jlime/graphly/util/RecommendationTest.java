@@ -28,8 +28,6 @@ import gnu.trove.list.array.TLongArrayList;
 
 public class RecommendationTest {
 
-	private Graphly graph;
-
 	private String resultsDir;
 
 	private String xmlconf;
@@ -139,7 +137,7 @@ public class RecommendationTest {
 		System.out.println("Creating client, waiting for " + servers
 				+ " execution nodes.");
 
-		graph = Graphly.build(servers);
+		Graphly graph = Graphly.build(servers);
 
 		ClusterProfiler profiler = new ClusterProfiler(graph.getJobClient()
 				.getCluster(), 2000);

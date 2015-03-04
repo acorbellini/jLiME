@@ -21,8 +21,6 @@ import edu.jlime.rpc.message.SimpleMessageProcessor;
 import edu.jlime.rpc.message.SocketAddress;
 import edu.jlime.util.Buffer;
 import edu.jlime.util.ByteBuffer;
-import edu.jlime.util.PerfMeasure;
-import edu.jlime.util.RingQueue;
 
 public abstract class NetworkProtocol extends SimpleMessageProcessor implements
 		AddressListProvider, Streamer {

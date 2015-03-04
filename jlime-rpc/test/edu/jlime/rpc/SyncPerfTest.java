@@ -1,7 +1,6 @@
 package edu.jlime.rpc;
 
 import edu.jlime.core.rpc.RPCDispatcher;
-import edu.jlime.util.PerfMeasure;
 
 public class SyncPerfTest {
 

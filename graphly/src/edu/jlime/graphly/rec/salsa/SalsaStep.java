@@ -1,5 +1,9 @@
 package edu.jlime.graphly.rec.salsa;
 
+import java.util.Arrays;
+
+import org.apache.log4j.Logger;
+
 import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.rec.CustomStep.CustomFunction;
 import edu.jlime.graphly.rec.MinEdgeFilter;
@@ -22,17 +26,27 @@ public class SalsaStep implements CustomFunction {
 	@Override
 	public TraversalResult execute(TraversalResult before, GraphlyTraversal tr)
 			throws Exception {
+		Logger log = Logger.getLogger(SalsaStep.class);
+
 		long[] subgraph = before.vertices().toArray();
+		Arrays.sort(subgraph);
+		log.info("Executing Salsa Step on " + subgraph.length);
 
 		Graphly g = tr.getGraph();
+
+		log.info("Filtering authority side");
 		TLongArrayList authSet = g.v(subgraph)
 				.filter(new MinEdgeFilter(Dir.IN, 1, subgraph)).exec()
 				.vertices();
+		log.info("Filtering hub side");
 		TLongArrayList hubSet = g.v(subgraph)
 				.filter(new MinEdgeFilter(Dir.OUT, 1, subgraph)).exec()
 				.vertices();
-		return g.v(subgraph).set("mapper", tr.get("mapper"))
-				.repeat(steps, new SalsaRepeat(auth, hub, authSet, hubSet), new SalsaSync(auth, hub))
-				.exec();
+		log.info("Executing SalsaRepeat with hubset " + hubSet.size()
+				+ " and auth " + authSet.size());
+		return g.v(subgraph)
+				.set("mapper", tr.get("mapper"))
+				.repeat(steps, new SalsaRepeat(auth, hub, authSet, hubSet),
+						new SalsaSync(auth, hub)).exec();
 	}
 }

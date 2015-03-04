@@ -20,7 +20,7 @@
 					<execution>
 						<phase>package</phase>
 						<configuration>
-							<tasks>								
+							<tasks>
 								<copy todir="../jlime/dist/lib/" file="target/jlime-rpc-${project.version}.jar" />
 							</tasks>
 						</configuration>
@@ -50,6 +50,13 @@
 			<groupId>edu.jlime</groupId>
 			<artifactId>core</artifactId>
 			<version>1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.lmax</groupId>
+			<artifactId>disruptor</artifactId>
+			<version>3.3.0</version>
+			<scope>system</scope>
+			<systemPath>${project.basedir}/lib/disruptor-3.3.0.jar</systemPath>
 		</dependency>
 	</dependencies>
 	<parent>

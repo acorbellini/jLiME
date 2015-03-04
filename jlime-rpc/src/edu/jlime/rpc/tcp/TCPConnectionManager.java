@@ -7,9 +7,9 @@ import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -20,6 +20,7 @@ import edu.jlime.core.transport.Address;
 import edu.jlime.rpc.message.AddressType;
 import edu.jlime.rpc.message.SocketAddress;
 import edu.jlime.util.ByteBuffer;
+import edu.jlime.util.RingQueue;
 import edu.jlime.util.StreamUtils;
 
 class TCPConnectionManager {
@@ -32,7 +33,18 @@ class TCPConnectionManager {
 				@Override
 				public Thread newThread(Runnable r) {
 					Thread t = Executors.defaultThreadFactory().newThread(r);
-					t.setName("TCP Data Thread");
+					t.setName("TCP Worker Thread");
+					return t;
+				}
+			});
+
+	private ExecutorService connection_exec = Executors
+			.newCachedThreadPool(new ThreadFactory() {
+
+				@Override
+				public Thread newThread(Runnable r) {
+					Thread t = Executors.defaultThreadFactory().newThread(r);
+					t.setName("TCP Connection Reader");
 					return t;
 				}
 			});
@@ -43,7 +55,7 @@ class TCPConnectionManager {
 
 	private TCP rcvr;
 
-	private List<TCPPacketConnection> connections = new ArrayList<TCPPacketConnection>();
+	private List<TCPPacketConnection> connections = new CopyOnWriteArrayList<TCPPacketConnection>();
 
 	private int conn_limit = 1;
 
@@ -53,15 +65,17 @@ class TCPConnectionManager {
 
 	Address localID;
 
-	// private Timer closer;
-
-	// private RingQueue data_queue = new RingQueue();
-
 	private int input_buffer;
 
 	private int output_buffer;
 
 	private Thread receiver;
+
+	RingQueue packets = new RingQueue();
+
+	// RingQueue writeQueue = new RingQueue();
+
+	private Thread reader;
 
 	public TCPConnectionManager(Address addr, Address localID, TCP rcvr,
 			TCPConfig config) {
@@ -72,60 +86,87 @@ class TCPConnectionManager {
 		this.rcvr = rcvr;
 		this.to = addr;
 		this.localID = localID;
-		// this.rcv = Executors.newCachedThreadPool(new ThreadFactory() {
+
+		// Thread t = new Thread("Writer Queue reader for " + to) {
 		// @Override
-		// public Thread newThread(Runnable r) {
-		// Thread t = Executors.defaultThreadFactory().newThread(r);
-		// t.setName("TCP connection reader");
-		// return t;
+		// public void run() {
+		// while (!stopped) {
+		// Object[] list = writeQueue.take();
+		// if (stopped)
+		// return;
+		// for (Object pkt : list) {
+		// writeToConn((OutPacket) pkt);
 		// }
-		// });
-		receiver = new Thread("TCP Connection Reader") {
+		// }
+		// }
+		// };
+		// t.start();
+
+		reader = new Thread("TCP Packet Reader") {
 			@Override
 			public void run() {
 				while (!stopped) {
-					List<TCPPacketConnection> conn;
-					synchronized (connections) {
-						conn = new ArrayList<>(connections);
-					}
-					for (final TCPPacketConnection c : conn) {
-						final byte[] d;
-						try {
-							d = c.try_read();
-							if (d != null) {
-								exec.execute(new Runnable() {
-									@Override
-									public void run() {
-										try {
-											TCPConnectionManager.this.rcvr
-													.dataReceived(
-															d,
-															(InetSocketAddress) c.conn
-																	.getRemoteSocketAddress());
-										} catch (Exception e) {
-											e.printStackTrace();
-										}
-									}
+					Object[] list = packets.take();
+					for (Object object : list) {
+						final TCPPacket pkt = (TCPPacket) object;
+						if (pkt.d == null)
+							return;
+						exec.execute(new Runnable() {
 
-								});
+							@Override
+							public void run() {
+								try {
+									TCPConnectionManager.this.rcvr
+											.dataReceived(
+													pkt.d,
+													(InetSocketAddress) pkt.c.conn
+															.getRemoteSocketAddress());
+								} catch (Exception e) {
+									// TODO Auto-generated catch block
+									e.printStackTrace();
+								}
 							}
-						} catch (Exception e) {
-							if (log.isDebugEnabled())
-								log.debug("Error reading from " + c
-										+ " removing connection.: "
-										+ e.getMessage());
-							remove(c);
-						}
-					}
-					try {
-						Thread.sleep(0, 100);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
+						});
 					}
 				}
 			}
 		};
-		receiver.start();
+		reader.start();
+
+		// receiver = new Thread("TCP Connection Reader") {
+		// @Override
+		// public void run() {
+		// while (!stopped) {
+		// boolean read = false;
+		// for (final TCPPacketConnection c : connections) {
+		// try {
+		// if (c.try_read()) {
+		// read = true;
+		// final byte[] d = c.getBuffer();
+		// if (d != null) {
+		// packets.put(new TCPPacket(d, c));
+		// }
+		// }
+		// } catch (Exception e) {
+		// if (log.isDebugEnabled())
+		// log.debug("Error reading from " + c
+		// + " removing connection.: "
+		// + e.getMessage());
+		// remove(c);
+		// }
+		// }
+		// // if (cont > 100000) {
+		// // cont = 0;
+		// if (!read)
+		// try {
+		// Thread.sleep(5);
+		// } catch (InterruptedException e) {
+		// e.printStackTrace();
+		// }
+		// }
+		// }
+		// };
+		// receiver.start();
 
 		// closer = new Timer("Connection Closer");
 		// Thread t = new Thread("Writer Queue reader for " + to) {
@@ -205,24 +246,21 @@ class TCPConnectionManager {
 				log.debug("Won't send a packet to " + realSockAddr);
 			return;
 		}
-
-		// if (log.isDebugEnabled())
-		// log.debug("Adding " + data.length + " to write queue.");
 		writeToConn(new OutPacket(data, realSockAddr));
+		// writeQueue.put(new OutPacket(data, realSockAddr));
 	}
 
 	private TCPPacketConnection getConnection(SocketAddress addr) {
 		if (connections.size() < conn_limit && addr != null) {
 			synchronized (connections) {
-				createConnection(addr);
+				if (connections.size() < conn_limit && addr != null)
+					createConnection(addr);
 			}
 		}
 		if (connections.isEmpty())
 			return null;
 		TCPPacketConnection conn = connections
 				.get((int) (Math.random() * connections.size()));
-		// if (log.isDebugEnabled())
-		// log.debug("Returning connection " + conn);
 		return conn;
 
 	}
@@ -279,22 +317,42 @@ class TCPConnectionManager {
 			throws Exception {
 		final TCPPacketConnection c = new TCPPacketConnection(conn, time_limit,
 				this, input_buffer, output_buffer);
-		synchronized (connections) {
-			connections.add(c);
-			connections.notifyAll();
-		}
+		connections.add(c);
+
+		connection_exec.execute(c);
+		// new Runnable() {
+		//
+		// @Override
+		// public void run() {
+		// while (!stopped) {
+		// try {
+		// byte[] d = c.read();
+		// if (d != null) {
+		// packets.put(new TCPPacket(d, c));
+		// }
+		// } catch (Exception e) {
+		// if (log.isDebugEnabled())
+		// log.debug("Error reading from " + c
+		// + " removing connection.: "
+		// + e.getMessage());
+		// remove(c);
+		// }
+		// }
+		// }
+		// });
+
 		return c;
 	}
 
 	public void stop() {
 		// rcv.shutdown();
 		exec.shutdown();
+		connection_exec.shutdown();
 		stopped = true;
 		// writeQueue.put(new OutPacket(new byte[] {}, null));
-		synchronized (connections) {
-			for (TCPPacketConnection c : connections)
-				c.stop();
-		}
+		packets.put(new TCPPacket(null, null));
+		for (TCPPacketConnection c : connections)
+			c.stop();
 
 	}
 
@@ -308,9 +366,6 @@ class TCPConnectionManager {
 	}
 
 	public void remove(TCPPacketConnection tcpConnection) {
-		synchronized (connections) {
-			connections.remove(tcpConnection);
-			connections.notifyAll();
-		}
+		connections.remove(tcpConnection);
 	}
 }

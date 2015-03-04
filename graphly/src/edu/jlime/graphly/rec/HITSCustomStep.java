@@ -1,5 +1,7 @@
 package edu.jlime.graphly.rec;
 
+import java.util.Arrays;
+
 import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.rec.CustomStep.CustomFunction;
 import edu.jlime.graphly.traversal.GraphlyTraversal;
@@ -19,11 +21,14 @@ final class HITSCustomStep implements CustomFunction {
 	}
 
 	@Override
-	public TraversalResult execute(TraversalResult before,
-			GraphlyTraversal tr) throws Exception {
+	public TraversalResult execute(TraversalResult before, GraphlyTraversal tr)
+			throws Exception {
 		long[] subgraph = before.vertices().toArray();
+		Arrays.sort(subgraph);
 		Graphly g = tr.getGraph();
-		return g.v(subgraph).set("mapper", tr.get("mapper"))
-				.repeat(steps, new HITSRepeat(auth, hub, subgraph), new HITSSync(auth, hub)).exec();
+		return g.v(subgraph)
+				.set("mapper", tr.get("mapper"))
+				.repeat(steps, new HITSRepeat(auth, hub, subgraph),
+						new HITSSync(auth, hub)).exec();
 	}
 }

@@ -29,9 +29,7 @@ import edu.jlime.core.transport.Address;
 import edu.jlime.core.transport.Streamer;
 import edu.jlime.core.transport.Transport;
 import edu.jlime.metrics.metric.Metrics;
-import edu.jlime.util.PerfMeasure;
 import edu.jlime.util.StreamUtils;
-import edu.jlime.util.PerfMeasure.PerfTime;
 
 public class RPCDispatcher implements TransportListener {
 
@@ -63,16 +61,16 @@ public class RPCDispatcher implements TransportListener {
 
 	private Metrics metrics;
 
-	// private ExecutorService asyncExec = Executors
-	// .newCachedThreadPool(new ThreadFactory() {
-	//
-	// @Override
-	// public Thread newThread(Runnable r) {
-	// Thread t = Executors.defaultThreadFactory().newThread(r);
-	// t.setName("RPCAsyncThreads");
-	// return t;
-	// }
-	// });
+	private ExecutorService asyncExec = Executors
+			.newCachedThreadPool(new ThreadFactory() {
+
+				@Override
+				public Thread newThread(Runnable r) {
+					Thread t = Executors.defaultThreadFactory().newThread(r);
+					t.setName("RPCAsyncThreads");
+					return t;
+				}
+			});
 
 	private ExecutorService broadcastExec = Executors
 			.newCachedThreadPool(new ThreadFactory() {
@@ -100,21 +98,21 @@ public class RPCDispatcher implements TransportListener {
 
 	public void callAsync(final Peer dest, final Peer clientID,
 			final MethodCall call) throws Exception {
-		// if (asyncExec.isShutdown()) {
-		// log.warn("Async Executor is shutted down, maybe the rpc dispatcher was closed.");
-		// return;
-		// }
+		if (asyncExec.isShutdown()) {
+			log.warn("Async Executor is shutted down, maybe the rpc dispatcher was closed.");
+			return;
+		}
 
-		// asyncExec.execute(new Runnable() {
-		// @Override
-		// public void run() {
-		// try {
-		call(dest, clientID, call, false);
-		// } catch (Exception e) {
-		// e.printStackTrace();
-		// }
-		// }
-		// });
+		asyncExec.execute(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					call(dest, clientID, call, false);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
 
 	}
 
@@ -159,7 +157,7 @@ public class RPCDispatcher implements TransportListener {
 	}
 
 	public void stop() throws Exception {
-		// asyncExec.shutdown();
+		asyncExec.shutdown();
 		broadcastExec.shutdown();
 		tr.stop();
 		localdispatchers.remove(localPeer);
@@ -167,6 +165,8 @@ public class RPCDispatcher implements TransportListener {
 
 	protected Object callTarget(MethodCall mc) throws Exception {
 		try {
+			if (mc.getName().equals("getRanges"))
+				System.out.println("getting ranges");
 			Object target = getTarget(mc.getObjectKey());
 			Class<?> objClass = target.getClass();
 			Method m = findMethod(objClass, mc,
@@ -211,18 +211,17 @@ public class RPCDispatcher implements TransportListener {
 	public void multiCallAsync(final List<Peer> peers, final Peer client,
 			final String target, final String method, final Object[] objects)
 			throws Exception {
-		// asyncExec.execute(new Runnable() {
-		//
-		// @Override
-		// public void run() {
-		// try {
-		multiCall(peers, client, new MethodCall(target, method, objects));
-		// } catch (Exception e) {
-		// log.error("Error executing asynchronous multiCall", e);
-		// }
-		// }
-		// });
-
+		asyncExec.execute(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					multiCall(peers, client, new MethodCall(target, method,
+							objects));
+				} catch (Exception e) {
+					log.error("Error executing asynchronous multiCall", e);
+				}
+			}
+		});
 	}
 
 	public <T> Map<Peer, T> multiCall(List<Peer> peers, Peer client,

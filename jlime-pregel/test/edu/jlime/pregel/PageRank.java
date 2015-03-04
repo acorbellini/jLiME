@@ -8,7 +8,6 @@ import edu.jlime.pregel.client.WorkerContext;
 import edu.jlime.pregel.graph.VertexFunction;
 import edu.jlime.pregel.graph.rpc.Graph;
 import edu.jlime.pregel.worker.PregelMessage;
-import edu.jlime.util.PerfMeasure;
 
 public class PageRank implements VertexFunction {
 

@@ -88,8 +88,8 @@ public class PersistentIntIntArrayMap {
 		if (log.isDebugEnabled())
 			log.debug("Obtaining Futures of executing MultiGetJob");
 		for (Entry<ClientNode, TIntArrayList> map : byServer.entrySet()) {
-			list.add(map.getKey().execAsyncWithFuture(
-					new MultiGetJob(map.getValue().toArray(), store)));
+			// list.add(map.getKey().execAsyncWithFuture(
+			// new MultiGetJob(map.getValue().toArray(), store)));
 		}
 
 		while (!list.isEmpty()) {

@@ -49,14 +49,17 @@ public class GraphlySintetic {
 		int edges = Integer.valueOf(args[2]);
 		float connectivity = Float.valueOf(args[3]);
 
-		BufferedReader reader = new BufferedReader(new FileReader(new File(
-				args[5])));
 		TLongArrayList vids = new TLongArrayList();
-		while (reader.ready()) {
-			long vid = Long.valueOf(reader.readLine().trim());
-			vids.add(vid);
+		if (args.length > 5) {
+			BufferedReader reader = new BufferedReader(new FileReader(new File(
+					args[5])));
+
+			while (reader.ready()) {
+				long vid = Long.valueOf(reader.readLine().trim());
+				vids.add(vid);
+			}
+			reader.close();
 		}
-		reader.close();
 
 		GraphlySintetic sint = new GraphlySintetic(vertices, edges,
 				connectivity, vids.toArray());
@@ -97,7 +100,7 @@ public class GraphlySintetic {
 			double r = Math.random();
 			if (r <= connectivity) {
 				double src = Math.random();
-				if (src >= 0.5)
+				if (src >= 0.5 && ul.length > 0)
 					ret.add(ul[(int) (Math.random() * ul.length)]);
 				else
 					ret.add((long) (Math.random() * vertices));

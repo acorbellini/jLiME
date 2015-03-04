@@ -70,7 +70,7 @@ public class CoordinatorTask {
 		if (config.isExecuteOnAll()) {
 			WorkerBroadcast workerBroadcast = workerMgr.broadcast();
 			workerBroadcast.createTask(taskID, cli, func, config,
-					new HashSet<>());
+					new HashSet<Long>());
 			workerBroadcast
 					.sendMessage(new PregelMessage(-1, -1, null), taskID);
 			for (Worker w : workerMgr.getAll()) {
@@ -103,7 +103,7 @@ public class CoordinatorTask {
 					w.createTask(taskID, cli, func, config,
 							new TLongSetDecorator(divided.get(w)));
 				else
-					w.createTask(taskID, cli, func, config, new HashSet<>());
+					w.createTask(taskID, cli, func, config, new HashSet<Long>());
 			}
 		}
 		int step = 0;

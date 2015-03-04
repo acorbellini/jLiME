@@ -8,29 +8,26 @@ import java.io.ObjectInput;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class StreamUtils {
-	private static final int BUFFER_SIZE = 32 * 1024;
+	// private static final int BUFFER_SIZE = 32 * 1024;
+
+	private static volatile int cont = 0;
+	private static volatile int promCount = 0;
 
 	public static byte[] read(InputStream inputStream, int size)
 			throws IOException {
-		// byte[] data = new byte[BUFFER_SIZE];
 		int read = 0;
 		int remaining = size;
-		// byte[] buffer = new byte[BUFFER_SIZE];
+
 		byte[] buffer = new byte[size];
-		// ByteBuffer buff = new ByteBuffer(size);
 		while (remaining != 0
-		// && (read = inputStream.read(data, 0,
-		// Math.min(remaining, BUFFER_SIZE))) != -1) {
 				&& (read = inputStream
-						.read(buffer, size - remaining, remaining)) != -1) {
-			// buff.putRawByteArray(data, read);
+						.read(buffer, size - remaining, remaining)) != -1)
 			remaining -= read;
-		}
 		if (read == -1 && remaining != 0)
 			throw new IOException("Stream closed before finishing read.");
-		// return buff.build();
 		return buffer;
 	}
 

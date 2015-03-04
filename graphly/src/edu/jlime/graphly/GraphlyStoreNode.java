@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +28,7 @@ import edu.jlime.core.cluster.Peer;
 import edu.jlime.core.rpc.RPCDispatcher;
 import edu.jlime.graphly.store.LocalStore;
 import edu.jlime.graphly.traversal.Dir;
+import edu.jlime.graphly.util.GraphlyUtil;
 import edu.jlime.util.DataTypeUtils;
 import gnu.trove.iterator.TLongIterator;
 import gnu.trove.iterator.TLongObjectIterator;
@@ -453,36 +455,24 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 
 	@Override
 	public int getEdgeCount(Long vid, Dir dir, long[] among) throws Exception {
+		if (log.isDebugEnabled())
+			log.debug("Getting edge count of vid among " + among.length);
+
 		if (among == null || among.length == 0)
 			return getEdges(dir, vid).length;
+
 		long[] curr = getEdges(dir, vid);
+
+		if (log.isDebugEnabled())
+			log.debug("Intersecting " + among.length + " curr " + curr.length);
 		if (curr == null || curr.length == 0)
 			return 0;
-		// int cont = 0;
-		//
-		// int edgesCur = 0;
-		// int amongCur = 0;
-		// while (edgesCur < curr.length && amongCur < among.length) {
-		// if (among[amongCur] == curr[edgesCur]) {
-		// cont++;
-		// edgesCur++;
-		// amongCur++;
-		// } else if (among[amongCur] > curr[edgesCur])
-		// edgesCur++;
-		// else
-		// amongCur++;
-		// }
-		// return cont;
-		long[] smaller = among;
-		long[] bigger = curr;
-		if (among.length > curr.length) {
-			smaller = curr;
-			bigger = among;
-		}
-		TLongHashSet aux = new TLongHashSet(smaller);
-		aux.retainAll(bigger);
-		return aux.size();
-
+		// Arrays.sort(among);
+		int ret = GraphlyUtil.filter(among, curr).length;
+		if (log.isDebugEnabled())
+			log.debug("Returning intersection bt " + among.length + " curr "
+					+ curr.length);
+		return ret;
 	}
 
 	@Override
@@ -517,5 +507,22 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 			}
 		}
 		temps.clear();
+	}
+
+	@Override
+	public Map<Long, Map<String, Object>> getProperties(long[] array,
+			String... k) throws Exception {
+		Map<Long, Map<String, Object>> ret = new HashMap<>();
+		for (long l : array) {
+			for (String propKey : k) {
+				Map<String, Object> map = ret.get(l);
+				if (map == null) {
+					map = new HashMap<>();
+					ret.put(l, map);
+				}
+				map.put(propKey, props.get(l, propKey));
+			}
+		}
+		return ret;
 	}
 }

@@ -9,7 +9,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import edu.jlime.pregel.graph.rpc.Graph;
 import edu.jlime.pregel.worker.VertexData;
-import gnu.trove.decorator.TLongListDecorator;
 import gnu.trove.decorator.TLongSetDecorator;
 import gnu.trove.iterator.TLongIterator;
 import gnu.trove.iterator.TLongObjectIterator;

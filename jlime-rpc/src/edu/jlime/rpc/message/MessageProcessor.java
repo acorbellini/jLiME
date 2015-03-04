@@ -45,23 +45,23 @@ public abstract class MessageProcessor implements StackElement {
 	}
 
 	public final void start() throws Exception {
-		// Thread t = new Thread("Outcoming Timer for " + name) {
-		// public void run() {
-		// while (!stopped)
-		// try {
-		// final Object[] m = out.take();
-		// if (stopped)
-		// return;
-		// for (Object e : m) {
-		// send((Message) e);
-		// }
-		//
-		// } catch (Exception e1) {
-		// e1.printStackTrace();
-		// }
-		// };
-		// };
-		// t.start();
+		Thread t = new Thread("Outcoming Timer for " + name) {
+			public void run() {
+				while (!stopped)
+					try {
+						final Object[] m = out.take();
+						if (stopped)
+							return;
+						for (Object e : m) {
+							send((Message) e);
+						}
+
+					} catch (Exception e1) {
+						e1.printStackTrace();
+					}
+			};
+		};
+		t.start();
 
 		onStart();
 	};
@@ -73,7 +73,7 @@ public abstract class MessageProcessor implements StackElement {
 		if (stopped)
 			return;
 		stopped = true;
-		// out.put(new MessageSimple(null, null, null, null));
+		out.put(new MessageSimple(null, null, null, null));
 
 		for (MessageQueue mq : secondaryMessage) {
 			mq.stop();
@@ -132,8 +132,8 @@ public abstract class MessageProcessor implements StackElement {
 	}
 
 	public void queue(Message msg) throws Exception {
-		// out.put(msg);
-		send(msg);
+		out.put(msg);
+		// send(msg);
 	}
 
 	public synchronized void addMessageListener(MessageType type,

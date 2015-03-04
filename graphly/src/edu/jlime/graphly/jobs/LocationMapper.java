@@ -7,7 +7,7 @@ import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
 
-import edu.jlime.graphly.GraphlyStoreNodeI;
+import edu.jlime.core.cluster.Peer;
 import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.util.GraphlyUtil;
 import edu.jlime.graphly.util.Pair;
@@ -28,25 +28,13 @@ public class LocationMapper implements Mapper {
 
 		Graphly g = (Graphly) cluster.getGlobal("graphly");
 
-		Map<GraphlyStoreNodeI, TLongArrayList> map = g.hashKeys(data);
-
-		// log.info("Mapped results");
-		// for (Entry<GraphlyStoreNodeI, TLongArrayList> e : map.entrySet()) {
-		// log.info(e.getKey() + " -> " + e.getValue().size());
-		// }
-
+		Map<Peer, TLongArrayList> map = g.getHash().hashKeys(data);
+		
 		Map<ClientNode, TLongArrayList> ret = new HashMap<>();
-		for (Entry<GraphlyStoreNodeI, TLongArrayList> e : map.entrySet()) {
-			ret.put(g.getClientJobFor(e.getKey()), e.getValue());
+		for (Entry<Peer, TLongArrayList> e : map.entrySet()) {
+			ret.put(g.getJobClient().getCluster().getClientFor(e.getKey()),
+					e.getValue());
 		}
-		// log.info("Mapped results to job clients.");
-		// if (log.isDebugEnabled())
-		// log.debug("Finished mapping " + data.length + " keys by location.");
-
-		// for (Entry<ClientNode, TLongArrayList> e : ret.entrySet()) {
-		// log.info(e.getKey() + " -> " + e.getValue().size());
-		// }
-
 		return GraphlyUtil.divide(ret, max);
 	}
 

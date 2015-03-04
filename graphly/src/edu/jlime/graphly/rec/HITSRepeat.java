@@ -2,7 +2,11 @@ package edu.jlime.graphly.rec;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.ThreadFactory;
 
 import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.client.SubGraph;
@@ -12,6 +16,7 @@ class HITSRepeat implements Repeat<long[]> {
 	private String authKey;
 	private String hubKey;
 	private long[] current;
+	static transient volatile ExecutorService exec;
 
 	public HITSRepeat(String authKey, String hubKey, long[] current) {
 		this.authKey = authKey;
@@ -21,17 +26,43 @@ class HITSRepeat implements Repeat<long[]> {
 
 	@Override
 	public Object exec(long[] before, Graphly g) throws Exception {
+		if (exec == null) {
+			synchronized (this) {
+				if (exec == null)
+					exec = Executors.newFixedThreadPool(Runtime.getRuntime()
+							.availableProcessors(), new ThreadFactory() {
 
-		SubGraph sg = g.getSubGraph("hits-sub", current);
-
-		sg.invalidateProperties();
-
-		HashMap<Long, Map<String, Object>> temps = new HashMap<>();
-
-		for (long vid : before) {
-			Map<String, Object> ret = hitsforvid(sg, vid);
-			temps.put(vid, ret);
+						@Override
+						public Thread newThread(Runnable r) {
+							Thread t = Executors.defaultThreadFactory()
+									.newThread(r);
+							t.setName("Salsa Repeat Step");
+							return t;
+						}
+					});
+			}
 		}
+
+		final SubGraph sg = g.getSubGraph("hits-sub", current);
+
+		final Map<Long, Map<String, Object>> temps = new ConcurrentHashMap<>();
+		final Semaphore sem = new Semaphore(-before.length + 1);
+		for (final long vid : before) {
+			exec.execute(new Runnable() {
+
+				@Override
+				public void run() {
+					try {
+						Map<String, Object> ret = hitsforvid(sg, vid);
+						temps.put(vid, ret);
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+					sem.release();
+				}
+			});
+		}
+		sem.acquire();
 
 		g.setTempProperties(before, temps);
 
@@ -39,7 +70,7 @@ class HITSRepeat implements Repeat<long[]> {
 	}
 
 	private Map<String, Object> hitsforvid(SubGraph sg, long vid)
-			throws ExecutionException {
+			throws Exception {
 		Map<String, Object> ret = new HashMap<>();
 		float sumAuth = 0f;
 		float sumAuthQuad = 0f;

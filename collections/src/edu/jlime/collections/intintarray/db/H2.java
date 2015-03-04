@@ -1,7 +1,12 @@
 package edu.jlime.collections.intintarray.db;
 
+import edu.jlime.util.DataTypeUtils;
+import gnu.trove.list.array.TLongArrayList;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
@@ -9,6 +14,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Arrays;
 
 public class H2 extends Store {
 
@@ -155,4 +161,64 @@ public class H2 extends Store {
 
 	}
 
+	public static void main(String[] args) throws IOException {
+		H2 h2 = new H2(null, "D:/TwitterAdjacencyGraph");
+
+		// int[] byteArrayToIntArray = DataTypeUtils.byteArrayToIntArray(h2
+		// .load(12));
+		// Arrays.sort(byteArrayToIntArray);
+		// System.out.println(Arrays.toString(byteArrayToIntArray));
+		// int[] byteArrayToIntArray2 = DataTypeUtils.byteArrayToIntArray(h2
+		// .load(-12));
+		// Arrays.sort(byteArrayToIntArray2);
+		// System.out.println(Arrays.toString(byteArrayToIntArray2));
+
+		h2.dumpAll("D:/tweet-adj.txt");
+		h2.close();
+
+	}
+
+	private void dumpAll(String file) throws IOException {
+		File f = new File(file);
+		if (!f.exists())
+			f.createNewFile();
+
+		TLongArrayList list = getUsers();
+
+		FileWriter writer = new FileWriter(f);
+		for (int i = 0; i < list.size(); i++) {
+			long user = list.get(i);
+			int[] sub = DataTypeUtils.byteArrayToIntArray(load(user));
+			Arrays.sort(sub);
+			for (int l : sub) {
+				writer.append(user + " " + l + "\n");
+			}
+
+		}
+		writer.close();
+	}
+
+	private TLongArrayList getUsers() {
+		TLongArrayList ret = new TLongArrayList();
+		try {
+			if (conn == null || conn.isClosed())
+				open();
+		} catch (ClassNotFoundException e1) {
+			e1.printStackTrace();
+		} catch (SQLException e1) {
+			e1.printStackTrace();
+		}
+		try {
+
+			PreparedStatement stmt = conn.prepareStatement("SELECT key FROM "
+					+ storeName + " WHERE key>0;");
+			ResultSet rs = stmt.executeQuery();
+			while (rs.next()) {
+				ret.add(rs.getLong(1));
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return ret;
+	}
 }

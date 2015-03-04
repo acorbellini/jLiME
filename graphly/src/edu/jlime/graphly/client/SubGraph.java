@@ -1,107 +1,102 @@
 package edu.jlime.graphly.client;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
-
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 
 import edu.jlime.graphly.traversal.Dir;
 import edu.jlime.graphly.util.GraphlyUtil;
 
 public class SubGraph {
 
-	private static class SubEdge {
-		Dir dir;
-		long vid;
-
-		public SubEdge(Dir dir, long vid) {
-			super();
-			this.dir = dir;
-			this.vid = vid;
-		}
-
-		@Override
-		public int hashCode() {
-			final int prime = 31;
-			int result = 1;
-			result = prime * result + ((dir == null) ? 0 : dir.hashCode());
-			result = prime * result + (int) (vid ^ (vid >>> 32));
-			return result;
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (this == obj)
-				return true;
-			if (obj == null)
-				return false;
-			if (getClass() != obj.getClass())
-				return false;
-			SubEdge other = (SubEdge) obj;
-			if (dir != other.dir)
-				return false;
-			if (vid != other.vid)
-				return false;
-			return true;
-		}
-
-	}
-
+	private static final int LOCKS = 1021;
 	private Graphly g;
 	private long[] vertices;
 
-	Cache<Long, Object> propcache = CacheBuilder.newBuilder().build();
+	private ConcurrentHashMap<Long, Map<String, Object>> props = new ConcurrentHashMap<>(
+			1000, 0.9f, 8);
+	private Object[] propLocks = new Object[LOCKS];
 
-	Cache<SubEdge, long[]> edgecache = CacheBuilder.newBuilder().build();
+	private ConcurrentHashMap<String, Object> temps = new ConcurrentHashMap<>(
+			1000, 0.9f, 8);
+	private Object[] tempsLocks = new Object[LOCKS];
 
-	Map<SubEdge, Integer> countcache = new ConcurrentHashMap<>();
+	private ConcurrentHashMap<Long, long[]> edges = new ConcurrentHashMap<>(
+			1000, 0.9f, 8);
+	private Object[] edgesLocks = new Object[LOCKS];
+
+	private ConcurrentHashMap<Long, Integer> counts = new ConcurrentHashMap<>(
+			1000, 0.9f, 8);
+	private Object[] countsLocks = new Object[LOCKS];
 
 	public SubGraph(Graphly graphly, long[] all) {
+		for (int i = 0; i < LOCKS; i++) {
+			propLocks[i] = new Object();
+			tempsLocks[i] = new Object();
+			edgesLocks[i] = new Object();
+			countsLocks[i] = new Object();
+		}
 		this.g = graphly;
-		this.vertices = all;
+		// long[] vs = all;
+		// Arrays.sort(vs);
+
+		vertices = Arrays.copyOf(all, all.length);
 		Arrays.sort(vertices);
 	}
 
-	public long[] getEdges(final Dir in, final Long vid)
+	public long[] getEdges(final Dir dir, final Long vid)
 			throws ExecutionException {
-		return edgecache.get(new SubEdge(in, vid), new Callable<long[]>() {
+		// if (dir.equals(Dir.IN))
+		// return get(dir, edgecacheIn, vid);
+		// else if (dir.equals(Dir.OUT))
+		// return get(dir, edgecacheOut, vid);
+		// return null;
+		Long k = vid;
+		if (dir.equals(Dir.IN))
+			k = -k - 1;
 
-			@Override
-			public long[] call() throws Exception {
-				long[] edges = null;
-				try {
-					edges = g.getEdges(in, vid);
-					if (edges == null)
-						return new long[] {};
-					else {
-						Arrays.sort(edges);
-						return GraphlyUtil.filter(edges, vertices);
+		long[] res = edges.get(k);
+		if (res == null) {
+			synchronized (edgesLocks[Math.abs((int) (k * 31) % LOCKS)]) {
+				res = edges.get(k);
+				if (res == null) {
+
+					try {
+						long[] e = g.getEdges(dir, vid);
+						Arrays.sort(e);
+						res = GraphlyUtil.filter(e, vertices);
+
+					} catch (Exception e) {
+						e.printStackTrace();
 					}
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-				return new long[] {};
-			}
-
-		});
-	}
-
-	public int getEdgesCount(Dir in, long vid) throws Exception {
-		SubEdge subEdge = new SubEdge(in, vid);
-		Integer c = countcache.get(subEdge);
-		if (c == null) {
-			synchronized (countcache) {
-				if (c == null) {
-					c = g.getEdgesCount(in, vid, vertices);
-					countcache.put(subEdge, c);
+					edges.put(k, res);
 				}
 			}
 		}
-		return c;
+		return res;
+	}
+
+	public Integer getEdgesCount(final Dir dir, final long vid)
+			throws Exception {
+		Long k = vid;
+		if (dir.equals(Dir.IN))
+			k = -k - 1;
+
+		Integer res = counts.get(k);
+		if (res == null) {
+			synchronized (countsLocks[Math.abs((int) (k * 31) % LOCKS)]) {
+				res = counts.get(k);
+				if (res == null) {
+					res = g.getEdgesCount(dir, vid, vertices);
+					counts.put(k, res);
+				}
+			}
+		}
+		return res;
 	}
 
 	public long getRandomEdge(Dir dir, Long curr) throws ExecutionException {
@@ -112,18 +107,89 @@ public class SubGraph {
 	}
 
 	public void invalidateProperties() {
-		propcache.invalidateAll();
+		// propcache.invalidateAll();
+		props.clear();
 	}
 
 	public Object getProperty(final Long w, final String a, final Object f)
-			throws ExecutionException {
-		return propcache.get(w, new Callable<Object>() {
-
-			@Override
-			public Object call() throws Exception {
-				return g.getProperty(w, a, f);
+			throws Exception {
+		Map<String, Object> p = props.get(w);
+		if (p == null) {
+			synchronized (propLocks[(int) ((w * 31) % LOCKS)]) {
+				p = props.get(w);
+				if (p == null) {
+					p = new ConcurrentHashMap<>(4, 0.9f, 1);
+					props.put(w, p);
+				}
 			}
-		});
+		}
+
+		Object ret = p.get(a);
+		if (ret == null)
+			synchronized (propLocks[(int) ((w * 31) % LOCKS)]) {
+				ret = p.get(a);
+				if (ret == null) {
+					ret = g.getProperty(w, a, f);
+					p.put(a, ret);
+				}
+			}
+
+		return ret;
+		// return propcache.get(w, new Callable<Object>() {
+		//
+		// @Override
+		// public Object call() throws Exception {
+		// return
+		// }
+		// });
 	}
 
+	public void remove(long vid) {
+		// vertices.remove(vid);
+	}
+
+	public Object getTemp(String k, Callable<Object> callable) throws Exception {
+		Object val = temps.get(k);
+		if (val == null) {
+			synchronized (tempsLocks[Math.abs((k.hashCode() * 31) % LOCKS)]) {
+				val = temps.get(k);
+				if (val == null) {
+					val = callable.call();
+					temps.put(k, val);
+				}
+			}
+		}
+		// else
+		// System.out.println("FOUND TEMP " + k);
+		return val;
+	}
+
+	public void invalidateTemps() {
+		temps.clear();
+	}
+
+	public void loadProperties(String authKey, Object defaultauth)
+			throws Exception {
+		synchronized (this) {
+			Map<Long, Map<String, Object>> props = g.getProperties(vertices,
+					authKey);
+			for (Entry<Long, Map<String, Object>> e : props.entrySet()) {
+				Long l = e.getKey();
+				Map<String, Object> value = e.getValue();
+				Object object = value.get(authKey);
+				if (object == null)
+					object = defaultauth;
+				setProperty(l, authKey, object);
+			}
+		}
+	}
+
+	private void setProperty(long l, String authKey, Object defaultauth) {
+		Map<String, Object> data = props.get(l);
+		if (data == null) {
+			data = new ConcurrentHashMap<>(4, 0.9f, 1);
+			props.put(l, data);
+		}
+		data.put(authKey, defaultauth);
+	}
 }

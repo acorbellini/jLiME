@@ -24,9 +24,9 @@ import edu.jlime.graphly.server.GraphlyCoordinatorBroadcast;
 import edu.jlime.graphly.server.GraphlyCoordinatorFactory;
 import edu.jlime.graphly.traversal.Dir;
 import edu.jlime.graphly.traversal.GraphlyTraversal;
+import edu.jlime.graphly.util.GraphlyUtil;
 import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.JobDispatcher;
-import edu.jlime.jd.client.Client;
 import edu.jlime.rpc.JLiMEFactory;
 import gnu.trove.iterator.TLongIntIterator;
 import gnu.trove.iterator.TLongObjectIterator;
@@ -36,7 +36,7 @@ import gnu.trove.map.hash.TLongObjectHashMap;
 import gnu.trove.set.hash.TLongHashSet;
 
 public class Graphly implements Closeable {
-	public static final int NUM_JOBS = 16;
+	public static final int NUM_JOBS = 1;
 
 	private RPCDispatcher rpc;
 
@@ -131,7 +131,7 @@ public class Graphly implements Closeable {
 		JobDispatcher jd = JobDispatcher.build(min, rpc);
 
 		jd.start();
-		
+
 		Graphly build = build(rpc, jd, min);
 
 		jd.setGlobal("graphly", build);
@@ -387,7 +387,7 @@ public class Graphly implements Closeable {
 
 	public SubGraph getSubGraph(String string, long[] all) {
 		SubGraph sg = subgraphs.get(string);
-		if (sg == null) {
+		if (sg == null && all != null) {
 			synchronized (subgraphs) {
 				if (sg == null) {
 					sg = new SubGraph(this, all);
@@ -403,7 +403,7 @@ public class Graphly implements Closeable {
 	}
 
 	public void setTempProperties(long[] before,
-			final HashMap<Long, Map<String, Object>> temps)
+			final Map<Long, Map<String, Object>> temps)
 			throws InterruptedException {
 		Map<GraphlyStoreNodeI, TLongArrayList> map = hashKeys(before);
 		// ExecutorService svc = Executors.newCachedThreadPool();
@@ -429,4 +429,34 @@ public class Graphly implements Closeable {
 		// svc.shutdown();
 		// svc.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
 	}
+
+	public TLongObjectHashMap<Object> get(String hubKey) {
+		return null;
+	}
+
+	public SubGraph getSubGraph(String string) {
+		return getSubGraph(string, null);
+	}
+
+	public long[] getEdges(Dir in, long vid, long[] all) {
+		try {
+			long[] edges = getEdges(in, vid);
+			if (edges != null)
+				return GraphlyUtil.filter(edges, all);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return new long[] {};
+	}
+
+	public Map<Long, Map<String, Object>> getProperties(long[] array,
+			String... k) throws Exception {
+		Map<Long, Map<String, Object>> props = new HashMap<>();
+		Map<GraphlyStoreNodeI, TLongArrayList> div = hashKeys(array);
+		for (Entry<GraphlyStoreNodeI, TLongArrayList> entry : div.entrySet()) {
+			props.putAll(entry.getKey().getProperties(array, k));
+		}
+		return props;
+	}
+
 }

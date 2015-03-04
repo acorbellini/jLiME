@@ -6,7 +6,6 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.util.Scanner;
 
 import edu.jlime.util.table.FunctionCell;
 import edu.jlime.util.table.Functions;

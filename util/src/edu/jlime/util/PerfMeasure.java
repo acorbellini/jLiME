@@ -1,6 +1,5 @@
 package edu.jlime.util;
 
-import java.io.IOException;
 import java.util.HashMap;
 
 public class PerfMeasure {

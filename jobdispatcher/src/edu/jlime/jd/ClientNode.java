@@ -4,7 +4,6 @@ import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.Future;
 
 import edu.jlime.core.cluster.Peer;
 import edu.jlime.core.cluster.StreamResult;
@@ -46,10 +45,10 @@ public class ClientNode implements Serializable {
 		jd.execAsync(this, cliJob, rm);
 	}
 
-	public <R> Future<R> execAsyncWithFuture(Job<R> j) {
-		ClientJob<R> cliJob = new ClientJob<>(j, clientID);
-		return jd.execAsyncWithFuture(this, cliJob);
-	}
+	// public <R> Future<R> execAsyncWithFuture(Job<R> j) {
+	// ClientJob<R> cliJob = new ClientJob<>(j, clientID);
+	// return jd.execAsyncWithFuture(this, cliJob);
+	// }
 
 	public IMetrics getInfo() throws Exception {
 		return jd.getMetrics();

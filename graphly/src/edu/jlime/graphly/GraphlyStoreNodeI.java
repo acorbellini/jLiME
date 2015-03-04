@@ -78,4 +78,7 @@ public interface GraphlyStoreNodeI {
 	@Sync
 	public void commitUpdates(String[] k) throws Exception;
 
+	public Map<Long, Map<String, Object>> getProperties(long[] array,
+			String... hubKey) throws Exception;
+
 }

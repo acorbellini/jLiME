@@ -9,7 +9,7 @@ import edu.jlime.rpc.message.Message;
 public class DataResponse {
 
 	private DataProcessor dp;
-	private Semaphore wait = new Semaphore(0);
+	// private Semaphore wait = new Semaphore(0);
 	private volatile Message msg = null;
 	private UUID id;
 	private Address addr;
@@ -21,10 +21,25 @@ public class DataResponse {
 	}
 
 	public Message getResponse() {
-		try {
-			wait.acquire();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
+		// try {
+		// wait.acquire();
+		// } catch (InterruptedException e) {
+		// e.printStackTrace();
+		// }
+		int cont = 0;
+		while (msg == null) {
+			cont++;
+			if (cont == 1000) {
+				synchronized (this) {
+					try {
+						wait(0, 10);
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+				cont = 0;
+			}
 		}
 		dp.removeResponse(addr, id);
 		return msg;
@@ -32,7 +47,9 @@ public class DataResponse {
 
 	public void setMsg(Message msg) {
 		this.msg = msg;
-		wait.release();
+		synchronized (this) {
+			notify();
+		}
 	}
 
 }

@@ -3,12 +3,12 @@ package edu.jlime.core.rpc;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.SortedMap;
-import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.log4j.Logger;
 
@@ -27,8 +27,7 @@ public class ClientManager<T, B> implements ClusterChangeListener {
 
 	private ClientFactory<T, B> factory;
 
-	SortedMap<Peer, T> clients = Collections
-			.synchronizedSortedMap(new TreeMap<Peer, T>());
+	ConcurrentHashMap<Peer, T> clients = new ConcurrentHashMap<>();
 
 	private PeerFilter filter;
 
@@ -134,11 +133,14 @@ public class ClientManager<T, B> implements ClusterChangeListener {
 	}
 
 	private List<Peer> buildCachedPeers() {
-		synchronized (this) {
-			ArrayList<Peer> clientList = new ArrayList<>(clients.keySet());
-			Collections.sort(clientList);
-			return clientList;
+		ArrayList<Peer> clientList = new ArrayList<>();
+		Enumeration<Peer> e = clients.keys();
+		while (e.hasMoreElements()) {
+			Peer peer = (Peer) e.nextElement();
+			clientList.add(peer);
 		}
+		Collections.sort(clientList);
+		return clientList;
 	}
 
 	public T get(Peer peer) {

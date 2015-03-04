@@ -1,10 +1,10 @@
 package edu.jlime.collections.adjacencygraph.query;
 
+import java.util.Map;
+
 import edu.jlime.collections.adjacencygraph.get.Dir;
 import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
-
-import java.util.Map;
 
 public interface ListQuery extends Query<int[]> {
 

@@ -15,8 +15,8 @@ public class SalsaSync implements RepeatSync<long[]> {
 
 	@Override
 	public void exec(long[] before, Graphly g) throws Exception {
+		g.getJobClient().getCluster().broadcast(new SubGraphClean("salsa-sub"));
 		g.commitUpdates(auth, hub);
-
 	}
 
 }

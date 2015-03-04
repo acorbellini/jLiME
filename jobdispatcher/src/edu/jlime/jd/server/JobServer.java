@@ -1,15 +1,10 @@
 package edu.jlime.jd.server;
 
 import java.util.HashMap;
-import java.util.UUID;
 
 import edu.jlime.core.cluster.DataFilter;
-import edu.jlime.core.cluster.Peer;
 import edu.jlime.core.rpc.RPCDispatcher;
-import edu.jlime.core.stream.RemoteInputStream;
-import edu.jlime.core.stream.RemoteOutputStream;
 import edu.jlime.jd.JobDispatcher;
-import edu.jlime.jd.StreamProvider;
 import edu.jlime.metrics.jmx.MetricsJMX;
 import edu.jlime.metrics.metric.Metrics;
 import edu.jlime.metrics.sysinfo.InfoProvider;

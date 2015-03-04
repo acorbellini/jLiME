@@ -9,14 +9,16 @@ public class SALSAQC implements QueryContainer {
 
 	@Override
 	public void run(Graphly g, long[] users, Mapper mapper) throws Exception {
-		int steps = 500;
+		int steps = 200;
 		if (users.length > 10)
-			steps = 250;
-		if (users.length > 30)
 			steps = 100;
+		if (users.length > 30)
+			steps = 50;
 
-		g.v(users).set("mapper", mapper).to(Dir.BOTH, 50).as(Recommendation.class)
-				.salsa("salsa-auth", "salsa-hub", steps).exec();
+		g.v(users).set("mapper", mapper).to(Dir.BOTH, 50)
+				.as(Recommendation.class)
+				.salsa("salsa-auth", "salsa-hub", steps)
+				.submit(g.getJobClient().getCluster().getExecutors().get(0));
 	}
 
 	@Override

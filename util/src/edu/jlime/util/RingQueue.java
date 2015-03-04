@@ -34,15 +34,19 @@ public class RingQueue {
 		int currentInit = init;
 		int currentEnd = end;
 		int currentReserved = reserved.getAndIncrement();
-
+		int cont = 0;
 		while (currentReserved - currentInit >= buffer.length
 				|| currentReserved - 1 != currentEnd) {
 			while (currentInit == init && currentEnd == end) {
-				synchronized (this) {
-					try {
-						wait(0, 10);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
+				cont++;
+				if (cont == 1000) {
+					synchronized (this) {
+						try {
+							wait(0, 10);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+						cont = 0;
 					}
 				}
 			}
@@ -61,14 +65,19 @@ public class RingQueue {
 
 	public Object[] take() {
 		int currentEnd = end;
+		int cont = 0;
 		while (init == currentEnd) {
 			while (currentEnd == end) {
-				synchronized (this) {
-					try {
-						wait(0, 10);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
+				cont++;
+				if (cont == 1000) {
+					synchronized (this) {
+						try {
+							wait(0, 10);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
 					}
+					cont = 0;
 				}
 			}
 			currentEnd = end;

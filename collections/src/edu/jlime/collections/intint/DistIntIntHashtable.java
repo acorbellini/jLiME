@@ -317,8 +317,9 @@ public class DistIntIntHashtable implements Iterable<int[]> {
 
 		for (ClientNode srv : keysPerServer.keySet()) {
 			TIntArrayList toRemove = keysPerServer.get(srv);
-			list.add(srv.execAsyncWithFuture(new RemoveJob(toRemove.toArray(),
-					internalHashName)));
+			// list.add(srv.execAsyncWithFuture(new
+			// RemoveJob(toRemove.toArray(),
+			// internalHashName)));
 		}
 
 		for (Future<Boolean> future : list) {

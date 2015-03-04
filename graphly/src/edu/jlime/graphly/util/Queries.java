@@ -16,7 +16,7 @@ public class Queries {
 	}
 
 	public static QueryContainer wtf() {
-		return new WhoToFolloQC();
+		return new WhoToFollowQC();
 
 	}
 

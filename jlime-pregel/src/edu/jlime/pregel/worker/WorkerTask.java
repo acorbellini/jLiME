@@ -14,7 +14,6 @@ import edu.jlime.pregel.graph.rpc.Graph;
 import edu.jlime.pregel.worker.rpc.Worker;
 import edu.jlime.pregel.worker.rpc.WorkerBroadcast;
 import edu.jlime.pregel.worker.rpc.WorkerFactory;
-import edu.jlime.util.PerfMeasure;
 import gnu.trove.iterator.TLongObjectIterator;
 import gnu.trove.map.hash.TLongObjectHashMap;
 import gnu.trove.set.hash.TLongHashSet;
@@ -274,8 +273,8 @@ public class WorkerTask {
 		}
 	}
 
-	private void execVertex(ExecutorService exec, Semaphore execCount,
-			Long currentVertex, List<PregelMessage> messages)
+	private void execVertex(ExecutorService exec, final Semaphore execCount,
+			final Long currentVertex, final List<PregelMessage> messages)
 			throws InterruptedException {
 		modified.add(currentVertex);
 		execCount.acquire();
@@ -387,7 +386,7 @@ public class WorkerTask {
 			list.add(pregelMessage);
 		}
 
-		for (Entry<Worker, List<PregelMessage>> e : div.entrySet()) {
+		for (final Entry<Worker, List<PregelMessage>> e : div.entrySet()) {
 			pool.execute(new Runnable() {
 
 				@Override
@@ -468,7 +467,7 @@ public class WorkerTask {
 		// toSend.addAll(perUser.getValue());
 		// }
 
-		ArrayList<PregelMessage> copy = new ArrayList<>(cacheBroadcast);
+		final ArrayList<PregelMessage> copy = new ArrayList<>(cacheBroadcast);
 		pool.execute(new Runnable() {
 
 			@Override

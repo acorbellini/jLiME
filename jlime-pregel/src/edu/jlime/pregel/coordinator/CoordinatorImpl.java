@@ -1,7 +1,6 @@
 package edu.jlime.pregel.coordinator;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.UUID;
 
 import edu.jlime.core.cluster.Peer;
@@ -9,7 +8,6 @@ import edu.jlime.core.rpc.ClientManager;
 import edu.jlime.core.rpc.RPCDispatcher;
 import edu.jlime.pregel.PregelExecution;
 import edu.jlime.pregel.client.PregelConfig;
-import edu.jlime.pregel.client.SplitFunction;
 import edu.jlime.pregel.coordinator.rpc.Coordinator;
 import edu.jlime.pregel.graph.VertexFunction;
 import edu.jlime.pregel.worker.rpc.Worker;

@@ -6,7 +6,6 @@ import edu.jlime.core.cluster.Cluster;
 import edu.jlime.core.cluster.Peer;
 import edu.jlime.core.rpc.MethodCall;
 import edu.jlime.core.rpc.RPCDispatcher;
-import edu.jlime.util.PerfMeasure;
 
 public class SyncPerfClient {
 	private static final int ITERS = 1000000;

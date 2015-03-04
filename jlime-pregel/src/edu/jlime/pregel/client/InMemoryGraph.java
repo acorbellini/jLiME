@@ -135,7 +135,7 @@ public class InMemoryGraph implements Graph, Transferible {
 	@Override
 	public Collection<Long> vertices() throws Exception {
 		// return new TLongSetDecorator(vertices);
-		Iterator<Graph> graphIt = cli.getAll().iterator();
+		final Iterator<Graph> graphIt = cli.getAll().iterator();
 		return new AbstractCollection<Long>() {
 			@Override
 			public Iterator<Long> iterator() {
@@ -309,7 +309,7 @@ public class InMemoryGraph implements Graph, Transferible {
 			toCreate.add(e[1]);
 		}
 
-		for (Entry<Graph, List<Long[]>> e : div.entrySet()) {
+		for (final Entry<Graph, List<Long[]>> e : div.entrySet()) {
 			max.acquire();
 			pool.execute(new Runnable() {
 				@Override
@@ -327,7 +327,7 @@ public class InMemoryGraph implements Graph, Transferible {
 			});
 		}
 
-		for (Entry<Graph, Set<Long>> e : create.entrySet()) {
+		for (final Entry<Graph, Set<Long>> e : create.entrySet()) {
 			max.acquire();
 			pool.execute(new Runnable() {
 				@Override

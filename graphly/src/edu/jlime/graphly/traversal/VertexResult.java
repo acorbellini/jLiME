@@ -14,6 +14,7 @@ public class VertexResult extends TraversalResult {
 
 	public VertexResult(TLongHashSet rem) {
 		this.ids = rem.toArray();
+		Arrays.sort(ids);
 	}
 
 	/*

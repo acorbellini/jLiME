@@ -7,7 +7,6 @@ import java.util.UUID;
 
 import edu.jlime.core.cluster.DataFilter;
 import edu.jlime.core.cluster.Peer;
-import edu.jlime.core.cluster.PeerFilter;
 import edu.jlime.core.rpc.RPCDispatcher;
 import edu.jlime.core.stream.RemoteInputStream;
 import edu.jlime.core.stream.RemoteOutputStream;

@@ -3,14 +3,12 @@ package edu.jlime.pregel.worker;
 import gnu.trove.list.TLongList;
 import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.set.TLongSet;
-import gnu.trove.set.hash.TLongHashSet;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class VertexData implements Serializable {
 
