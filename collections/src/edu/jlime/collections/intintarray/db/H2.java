@@ -184,12 +184,17 @@ public class H2 extends Store {
 			f.createNewFile();
 
 		TLongArrayList list = getUsers();
-
+		list.sort();
 		FileWriter writer = new FileWriter(f);
 		for (int i = 0; i < list.size(); i++) {
 			long user = list.get(i);
+
 			int[] sub = DataTypeUtils.byteArrayToIntArray(load(user));
+
 			Arrays.sort(sub);
+
+			if (user < 0)
+				user = -user;
 			for (int l : sub) {
 				writer.append(user + " " + l + "\n");
 			}
