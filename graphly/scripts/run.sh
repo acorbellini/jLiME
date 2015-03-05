@@ -6,7 +6,7 @@ function getMem {
 
 CP="../../lib/*:./*"
 
-OPTIONS="-Djava.net.preferIPv4Stack=true -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=9010 -Dcom.sun.management.jmxremote.local.only=false -Dcom.sun.management.jmxremote.authenticate=false"
+OPTIONS="-XX:+UseNUMA -XX:+UseParallelGC -XX:+TieredCompilation -XX:+UseCompressedOops -XX:+UnlockCommercialFeatures -XX:+FlightRecorder -Djava.net.preferIPv4Stack=true -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=9010 -Dcom.sun.management.jmxremote.local.only=false -Dcom.sun.management.jmxremote.authenticate=false"
 currMem=$(getMem)
 mem=$(( $currMem - 500))
 OPTIONS=$OPTIONS" -Xmx"$mem"m"
