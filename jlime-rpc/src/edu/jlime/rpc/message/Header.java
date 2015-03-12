@@ -1,9 +1,10 @@
 package edu.jlime.rpc.message;
 
-import edu.jlime.util.Buffer;
 import edu.jlime.util.ByteBuffer;
 
 public class Header {
+
+	public static int HEADER = 5;
 
 	MessageType type;
 
@@ -25,15 +26,15 @@ public class Header {
 	public byte[] toBytes() {
 
 		byte[] data = headerData.build();
-		ByteBuffer writer = new ByteBuffer(1 + 1 + data.length);
+		ByteBuffer writer = new ByteBuffer(HEADER + data.length);
 		writer.put(getType().getId());
-		writer.putShortByteArray(data);
+		writer.putByteArray(data);
 		return writer.build();
 	}
 
-	public static Header fromBytes(Buffer reader) {
+	public static Header fromBytes(ByteBuffer reader) {
 		MessageType type = MessageType.fromID(reader.get());
-		ByteBuffer headerData = new ByteBuffer(reader.getShortByteArray());
+		ByteBuffer headerData = new ByteBuffer(reader.getByteArray());
 		return new Header(type, headerData);
 	}
 
@@ -47,10 +48,10 @@ public class Header {
 
 	@Override
 	public String toString() {
-		return "TYPE: " + type + " Header size: " + headerData.size();
+		return "TYPE: " + type + " Header size: " + size();
 	}
 
 	public int size() {
-		return 2 + headerData.size();
+		return HEADER + headerData.size();
 	}
 }

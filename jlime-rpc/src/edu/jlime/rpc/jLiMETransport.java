@@ -64,8 +64,8 @@ public class jLiMETransport extends Transport implements DataListener {
 
 	@Override
 	public void messageReceived(final DataMessage msg, final Response handler) {
-		if (log.isDebugEnabled())
-			log.debug("Received data from processor");
+		// if (log.isDebugEnabled())
+		// log.debug("Received data from processor");
 
 		// handleExecutor.execute(new Runnable() {
 		// public void run() {
@@ -73,8 +73,8 @@ public class jLiMETransport extends Transport implements DataListener {
 		byte[] buff = msg.getData();
 		byte[] rsp = jLiMETransport.super.callTransportListener(origin, buff);
 
-		if (log.isDebugEnabled())
-			log.debug("Sending response using response handler: " + handler);
+		// if (log.isDebugEnabled())
+		// log.debug("Sending response using response handler: " + handler);
 		if (handler != null) {
 			try {
 				handler.sendResponse(rsp);

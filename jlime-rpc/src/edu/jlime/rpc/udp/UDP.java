@@ -22,7 +22,6 @@ import edu.jlime.rpc.message.AddressType;
 import edu.jlime.rpc.message.SocketAddress;
 import edu.jlime.rpc.np.DataPacket;
 import edu.jlime.rpc.np.NetworkProtocol;
-import edu.jlime.util.Buffer;
 import edu.jlime.util.ByteBuffer;
 import edu.jlime.util.RingQueue;
 
@@ -87,7 +86,7 @@ public class UDP extends NetworkProtocol implements PacketReceiver {
 		// + " local is " + getAddr());
 		// }
 
-		Buffer buffer = new ByteBuffer(p.getData(), p.getLength());
+		ByteBuffer buffer = new ByteBuffer(p.getData(), p.getLength());
 		DatagramType dt = DatagramType.fromID(buffer.get());
 		if (dt.equals(DatagramType.DATA)) {
 			// byte[] data = new byte[p.getLength() - 1];

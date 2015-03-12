@@ -2,16 +2,15 @@ package edu.jlime.rpc.np;
 
 import java.net.InetSocketAddress;
 
-import edu.jlime.util.Buffer;
+import edu.jlime.util.ByteBuffer;
 
 public class DataPacket {
 
-	Buffer reader;
+	ByteBuffer reader;
 
 	private InetSocketAddress addr;
 
-	public DataPacket(Buffer buffer,
-			InetSocketAddress socketAddress) {
+	public DataPacket(ByteBuffer buffer, InetSocketAddress socketAddress) {
 		this.reader = buffer;
 		this.addr = socketAddress;
 	}

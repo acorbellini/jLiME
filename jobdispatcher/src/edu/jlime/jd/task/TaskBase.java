@@ -4,14 +4,18 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.Semaphore;
 
+import org.apache.log4j.Logger;
+
 import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.job.Job;
 import edu.jlime.jd.job.ResultManager;
 
 public abstract class TaskBase<T> implements Task<T> {
+	private Logger log = Logger.getLogger(TaskBase.class);
+
 	@Override
 	public <R> R execute(ResultListener<T, R> listener) {
-		return this.execute(Integer.MAX_VALUE, listener);
+		return this.execute(Integer.MAX_VALUE / 2, listener);
 	}
 
 	@Override
@@ -30,6 +34,9 @@ public abstract class TaskBase<T> implements Task<T> {
 				e1.printStackTrace();
 			}
 			try {
+				if (log.isDebugEnabled())
+					log.debug("Sending to execute " + entry.getKey().toString()
+							+ "  to  " + entry.getValue().toString());
 				entry.getValue().execAsync(entry.getKey(),
 						new ResultManager<T>() {
 
@@ -41,8 +48,17 @@ public abstract class TaskBase<T> implements Task<T> {
 								} catch (Exception e) {
 									e.printStackTrace();
 								}
-								sem.release();
-								max.release();
+								try {
+									sem.release();
+								} catch (Exception e) {
+									// TODO Auto-generated catch block
+									e.printStackTrace();
+								}
+								try {
+									max.release();
+								} catch (Exception e) {
+									e.printStackTrace();
+								}
 							}
 
 							@Override
@@ -53,8 +69,16 @@ public abstract class TaskBase<T> implements Task<T> {
 								} catch (Exception e) {
 									e.printStackTrace();
 								}
-								sem.release();
-								max.release();
+								try {
+									sem.release();
+								} catch (Exception e) {
+									e.printStackTrace();
+								}
+								try {
+									max.release();
+								} catch (Exception e) {
+									e.printStackTrace();
+								}
 							}
 						});
 			} catch (Exception e) {

@@ -6,6 +6,9 @@ import java.nio.LongBuffer;
 
 public class DataTypeUtils {
 
+	private static final int INT_MASK = 0xFF;
+	private static final int LONG_MASK = 0xFFFF;
+
 	public static int byteArrayToInt(byte[] b) {
 		return byteArrayToInt(b, 0);
 	}
@@ -17,15 +20,15 @@ public class DataTypeUtils {
 	}
 
 	public static int byteArrayToInt(byte[] b, int i) {
-		return b[i + 3] & 0xFF | (b[i + 2] & 0xFF) << 8
-				| (b[i + 1] & 0xFF) << 16 | (b[i] & 0xFF) << 24;
+		return b[i + 3] & INT_MASK | (b[i + 2] & INT_MASK) << 8
+				| (b[i + 1] & INT_MASK) << 16 | (b[i] & INT_MASK) << 24;
 	}
 
 	public static void intToByteArray(int a, int i, byte[] ret) {
-		ret[i + 3] = (byte) (a & 0xFF);
-		ret[i + 2] = (byte) ((a >> 8) & 0xFF);
-		ret[i + 1] = (byte) ((a >> 16) & 0xFF);
-		ret[i + 0] = (byte) ((a >> 24) & 0xFF);
+		ret[i + 3] = (byte) (a & INT_MASK);
+		ret[i + 2] = (byte) ((a >> 8) & INT_MASK);
+		ret[i + 1] = (byte) ((a >> 16) & INT_MASK);
+		ret[i + 0] = (byte) ((a >> 24) & INT_MASK);
 
 	}
 
@@ -57,13 +60,20 @@ public class DataTypeUtils {
 		return byteArrayToLong(bytes, 0);
 	}
 
-	public static long byteArrayToLong(byte[] bytes, int offset) {
-		long l = 0;
-		for (int i = offset; i < offset + 8; i++) {
-			l <<= 8;
-			l ^= bytes[i] & 0xFF;
-		}
-		return l;
+	public static long byteArrayToLong(byte[] b, int i) {
+		return ((((long) b[0 + i] & INT_MASK) << 56)
+				| (((long) b[1 + i] & INT_MASK) << 48)
+				| (((long) b[2 + i] & INT_MASK) << 40)
+				| (((long) b[3 + i] & INT_MASK) << 32)
+				| (((long) b[4 + i] & INT_MASK) << 24)
+				| (((long) b[5 + i] & INT_MASK) << 16)
+				| (((long) b[6 + i] & INT_MASK) << 8) | (((long) b[7 + i] & INT_MASK)));
+		// long l = 0;
+		// for (int i = offset; i < offset + 8; i++) {
+		// l <<= 8;
+		// l ^= bytes[i] & INT_MASK;
+		// }
+		// return l;
 	}
 
 	public static byte[] longArrayToByteArray(long[] data) {
@@ -78,5 +88,10 @@ public class DataTypeUtils {
 		for (int i = 0; i < (data.length / 8); i++)
 			ret[i] = byteArrayToLong(data, i * 8);
 		return ret;
+	}
+
+	public static void main(String[] args) {
+		byte[] b = longToByteArray(3l);
+		System.out.println(byteArrayToLong(b));
 	}
 }

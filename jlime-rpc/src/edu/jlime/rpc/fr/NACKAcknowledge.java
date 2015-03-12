@@ -1,14 +1,11 @@
 package edu.jlime.rpc.fr;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.log4j.Logger;
 
@@ -23,17 +20,30 @@ import edu.jlime.rpc.message.MessageType;
 import edu.jlime.rpc.message.SimpleMessageProcessor;
 import edu.jlime.util.ByteBuffer;
 
-public class Acknowledge extends SimpleMessageProcessor {
+public class NACKAcknowledge extends SimpleMessageProcessor {
 
 	public static final int HEADER = Header.HEADER + 4;
 
 	Object[] locks = new Object[1021];
 
-	Logger log = Logger.getLogger(Acknowledge.class);
+	Logger log = Logger.getLogger(NACKAcknowledge.class);
 
-	ConcurrentHashMap<Address, AcknowledgeCounter> counters = new ConcurrentHashMap<>();
+	ConcurrentHashMap<Address, NACKAcknowledgeCounter> counters = new ConcurrentHashMap<>();
 
-	CopyOnWriteArrayList<AcknowledgeCounter> counterList = new CopyOnWriteArrayList<>();
+	public static class Nack {
+		public Nack(int seq2, boolean lastReceived) {
+			this.seq = seq2;
+			this.last = lastReceived;
+		}
+
+		int seq;
+		boolean last = false;
+
+		@Override
+		public String toString() {
+			return "[" + seq + "," + last + "]";
+		}
+	}
 
 	private int max_size_nack;
 
@@ -43,14 +53,13 @@ public class Acknowledge extends SimpleMessageProcessor {
 
 	private Configuration config;
 
-	// protected ConcurrentHashMap<Address, HashSet<Integer>> acks = new
-	// ConcurrentHashMap<>();
+	protected ConcurrentHashMap<Address, List<Nack>> nacks = new ConcurrentHashMap<>();
 
 	private int max_size;
 
 	private Timer t;
 
-	public Acknowledge(MessageProcessor next, int max_size_nack,
+	public NACKAcknowledge(MessageProcessor next, int max_size_nack,
 			int nack_delay, int ack_delay, int max_size, Configuration config) {
 		super(next, "Acknowledge");
 		this.max_size_nack = max_size_nack;
@@ -65,80 +74,86 @@ public class Acknowledge extends SimpleMessageProcessor {
 
 	@Override
 	public void onStart() throws Exception {
-
-		Thread send = new Thread("Ack Sender") {
-			int cont = 0;
+		Thread send = new Thread("NAck Sender") {
+			// int cont = 0;
 
 			@Override
 			public void run() {
+
 				while (!stopped) {
-					for (AcknowledgeCounter count : counterList) {
-						HashSet<Integer> list = count.getAcks();
-						// acks.get(count.to);
-						List<Message> send2 = count.getSend();
-						if (send2 != null)
-							for (Message message : send2) {
-								try {
-									attachAcks(message, list);
-									sendNext(message);
-									cont = 0;
-								} catch (Exception e) {
-									e.printStackTrace();
-								}
-							}
-					}
-					cont++;
-					if (cont == 1000)
-						synchronized (counters) {
-							cont = 0;
+
+					for (NACKAcknowledgeCounter count : counters.values()) {
+						boolean first = true;
+						for (Message message : count.getSend()) {
 							try {
-								counters.wait(200);
-							} catch (InterruptedException e) {
-								e.printStackTrace();
-							}
-						}
-
-				}
-			}
-		};
-		send.start();
-
-		this.t = new Timer("Ack Timer");
-
-		t.schedule(new TimerTask() {
-			@Override
-			public void run() {
-				for (AcknowledgeCounter count : counterList) {
-					HashSet<Integer> list = count.getAcks();
-					// acks.get(count.to);
-					ArrayList<Message> resend = count.getResend();
-					if (resend != null)
-						for (Message m : resend) {
-							attachAcks(m, list);
-							try {
-								sendNext(m);
+								// if (first) {
+								// attachNAcks(message, count.getNACK());
+								// first = false;
+								// }
+								sendNext(message);
+								// cont = 0;
 							} catch (Exception e) {
 								e.printStackTrace();
 							}
 						}
+
+					}
+					// cont++;
+					// if (cont >= 100000) {
+					// cont = 0;
+					synchronized (counters) {
+						try {
+							counters.wait(1);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+					}
+					// }
+				}
+
+			};
+		};
+		send.start();
+		this.t = new Timer("NAck Timer");
+		t.schedule(new TimerTask() {
+			@Override
+			public void run() {
+				for (NACKAcknowledgeCounter count : counters.values()) {
+					List<Nack> list = nacks.get(count.to);
+					if (list != null) {
+						synchronized (list) {
+							ArrayList<Message> resend = count.getResend(list);
+							// if (resend.size() > 0)
+							// System.out.println("Resending " + resend.size());
+							for (Message m : resend) {
+								// attachNAcks(m, count.getNACK());
+								try {
+									sendNext(m);
+								} catch (Exception e) {
+									e.printStackTrace();
+								}
+							}
+							list.clear();
+						}
+					}
 				}
 			}
 		}, config.retransmit_delay, config.retransmit_delay);
 
+		// Reenvía NACKS
 		t.schedule(new TimerTask() {
-
 			@Override
 			public void run() {
-				for (AcknowledgeCounter count : counterList) {
-					// for (Entry<Address, HashSet<Integer>> e :
-					// acks.entrySet()) {
-					HashSet<Integer> value = count.getAcks();
+				for (NACKAcknowledgeCounter count : counters.values()) {
+					List<Nack> value = count.getNACK();
+					// if (!value.isEmpty())
+					// System.out.println("Sending NACKS " + value.size());
 					if (value != null)
 						synchronized (value) {
 							while (!value.isEmpty()) {
 								Message ack = Message.newEmptyOutDataMessage(
-										MessageType.ACK, count.to);
-								attachAcks(ack, value);
+										MessageType.NACK, count.to);
+								attachNAcks(ack, value);
 								try {
 									sendNext(ack);
 								} catch (Exception e1) {
@@ -148,7 +163,7 @@ public class Acknowledge extends SimpleMessageProcessor {
 						}
 				}
 			}
-		}, config.ack_delay, config.ack_delay);
+		}, config.nack_delay, config.nack_delay);
 
 		getNext().addMessageListener(MessageType.ACK_SEQ,
 				new MessageListener() {
@@ -161,31 +176,15 @@ public class Acknowledge extends SimpleMessageProcessor {
 							log.trace("Received Ack'd msg with seq # " + seq
 									+ " from " + m.getFrom());
 
-						AcknowledgeCounter counter = getCounter(m.getFrom());
+						NACKAcknowledgeCounter counter = getCounter(m.getFrom());
 
 						if (counter.seqNumberArrived(seq))
 							notifyRcvd(Message.deEncapsulate(
 									m.getDataAsBytes(), m.getFrom(), m.getTo()));
 
 						Address from = m.getFrom();
-						// HashSet<Integer> list = acks.get(from);
-						// if (list == null) {
-						// synchronized (acks) {
-						// list = acks.get(from);
-						// if (list == null) {
-						// list = new HashSet<Integer>();
-						// acks.put(from, list);
-						// }
-						// }
-						// }
 
-						// synchronized (list) {
-						// list.add(seq);
-						// }
-
-						counters.get(from).addAck(seq);
-
-						receivedAckBuffer(from, headerBuffer);
+						receivedNAckBuffer(from, headerBuffer);
 
 						// Message ackMsg = Message.newEmptyOutDataMessage(
 						// MessageType.ACK, m.getFrom());
@@ -194,11 +193,11 @@ public class Acknowledge extends SimpleMessageProcessor {
 					}
 				});
 
-		getNext().addMessageListener(MessageType.ACK, new MessageListener() {
+		getNext().addMessageListener(MessageType.NACK, new MessageListener() {
 			@Override
 			public void rcv(Message m, MessageProcessor origin)
 					throws Exception {
-				receivedAckBuffer(m.getFrom(), m.getHeaderBuffer());
+				receivedNAckBuffer(m.getFrom(), m.getHeaderBuffer());
 				// int ackConfirm = m.getHeaderBuffer().getInt();
 				// if (log.isTraceEnabled())
 				// log.trace("Received message from " + m.getFrom()
@@ -214,24 +213,22 @@ public class Acknowledge extends SimpleMessageProcessor {
 
 	@Override
 	public void send(Message msg) throws Exception {
-		AcknowledgeCounter c = getCounter(msg.getTo());
-
+		NACKAcknowledgeCounter c = getCounter(msg.getTo());
 		c.send(msg);
 		synchronized (counters) {
 			counters.notifyAll();
 		}
 	}
 
-	private AcknowledgeCounter getCounter(Address to) throws Exception {
-		AcknowledgeCounter counter = counters.get(to);
+	private NACKAcknowledgeCounter getCounter(Address to) throws Exception {
+		NACKAcknowledgeCounter counter = counters.get(to);
 		if (counter == null) {
 			synchronized (counters) {
 				counter = counters.get(to);
 				if (counter == null) {
-					counter = new AcknowledgeCounter(to, max_size_nack,
+					counter = new NACKAcknowledgeCounter(to, max_size_nack,
 							nack_delay, ack_delay, config);
 					counters.put(to, counter);
-					counterList.add(counter);
 				}
 			}
 		}
@@ -246,9 +243,7 @@ public class Acknowledge extends SimpleMessageProcessor {
 
 	@Override
 	public void cleanupOnFailedPeer(Address addr) {
-		AcknowledgeCounter count = counters.remove(addr);
-		if (count != null)
-			counterList.remove(count);
+		counters.remove(addr);
 	}
 
 	@Override
@@ -256,23 +251,43 @@ public class Acknowledge extends SimpleMessageProcessor {
 
 	}
 
-	private void receivedAckBuffer(Address from, ByteBuffer headerBuffer)
+	private void receivedNAckBuffer(Address from, ByteBuffer headerBuffer)
 			throws Exception {
 		if (headerBuffer.hasRemaining()) {
 			int acksCount = headerBuffer.getInt();
 			for (int i = 0; i < acksCount; i++) {
-				int seq = headerBuffer.getInt();
-				AcknowledgeCounter c = getCounter(from);
-				c.confirm(seq);
-			}
-			synchronized (counters) {
-				counters.notifyAll();
-			}
-		}
 
+				int seq = headerBuffer.getInt();
+				boolean lastReceived = headerBuffer.getBoolean();
+
+				List<Nack> list = nacks.get(from);
+				if (list == null) {
+					synchronized (nacks) {
+						list = nacks.get(from);
+						if (list == null) {
+							list = new ArrayList<>();
+							nacks.put(from, list);
+						}
+					}
+				}
+
+				synchronized (list) {
+					list.add(new Nack(seq, lastReceived));
+				}
+
+				if (lastReceived) {
+					NACKAcknowledgeCounter c = getCounter(from);
+					c.confirm(seq);
+					synchronized (counters) {
+						counters.notifyAll();
+					}
+				}
+			}
+
+		}
 	}
 
-	private void attachAcks(Message msg, HashSet<Integer> list) {
+	private void attachNAcks(Message msg, List<Nack> list) {
 		if (list == null)
 			return;
 		ByteBuffer buff = msg.getHeaderBuffer();
@@ -283,10 +298,11 @@ public class Acknowledge extends SimpleMessageProcessor {
 			synchronized (list) {
 				if (!list.isEmpty()) {
 					buff.putInt(Math.min(count, list.size()));
-					Iterator<Integer> it = list.iterator();
+					Iterator<Nack> it = list.iterator();
 					for (int i = 0; i < count && it.hasNext(); i++) {
-						Integer uuid = it.next();
-						buff.putInt(uuid);
+						Nack n = it.next();
+						buff.putInt(n.seq);
+						buff.putBoolean(n.last);
 						it.remove();
 					}
 

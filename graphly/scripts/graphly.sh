@@ -51,5 +51,3 @@ if [ $order == "stop" ]; then
 elif [ $order == "start" ]; then
 	start $2 $3
 fi
-
-

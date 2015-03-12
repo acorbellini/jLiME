@@ -276,12 +276,19 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 		final JobContainer job = new JobContainer(j, new ClientNode(
 				cluster.getLocalPeer(), cli, this));
 		if (m != null) {
+			if (log.isDebugEnabled())
+				log.debug("Adding result manager for job " + job
+						+ " for client " + dest + ".");
 			ArrayList<ClientNode> al = new ArrayList<>();
 			al.add(dest);
 			addJobMapping(m, job.getJobID(), al);
 			job.setNoResponse(false);
-		} else
+		} else {
+			if (log.isDebugEnabled())
+				log.debug("Setting job " + job + " for client " + dest
+						+ " as NO RESPONSE.");
 			job.setNoResponse(true);
+		}
 
 		try {
 			JobExecutor localJD = DispatcherManager.getJD(dest.getPeer());
@@ -447,7 +454,7 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 			if (log.isDebugEnabled())
 				log.debug("Leaving result method for job " + jobID);
 		} catch (Exception e) {
-			log.error("", e);
+			log.error("Error processing result from jobID " + jobID, e);
 		}
 		// }
 		// });
@@ -591,6 +598,8 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 	}
 
 	public void removeMap(UUID jobID) {
+		if (log.isDebugEnabled())
+			log.debug("Removing result manager for job Id " + jobID + ".");
 		jobMap.remove(jobID);
 	}
 

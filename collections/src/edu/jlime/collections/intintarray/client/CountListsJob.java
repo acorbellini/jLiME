@@ -12,7 +12,6 @@ import edu.jlime.collections.intintarray.db.Store;
 import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.Job;
-import edu.jlime.util.Buffer;
 import edu.jlime.util.ByteBuffer;
 import edu.jlime.util.DataTypeUtils;
 import gnu.trove.iterator.TIntIntIterator;
@@ -127,7 +126,7 @@ public class CountListsJob implements Job<TIntIntHashMap> {
 
 	public static TIntIntHashMap fromBytes(byte[] bytes) {
 		TIntIntHashMap res = new TIntIntHashMap();
-		Buffer reader = new ByteBuffer(bytes);
+		ByteBuffer reader = new ByteBuffer(bytes);
 		int[] keys = DataTypeUtils.byteArrayToIntArray(reader.getByteArray());
 		int[] values = DataTypeUtils.byteArrayToIntArray(reader.getByteArray());
 		for (int i = 0; i < keys.length; i++) {

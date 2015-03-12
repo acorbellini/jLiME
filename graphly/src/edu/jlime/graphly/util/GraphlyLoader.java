@@ -7,6 +7,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.traversal.Dir;
@@ -56,10 +58,11 @@ public class GraphlyLoader {
 		final Graphly g = Graphly.build(min);
 
 		int cont = 0;
-
+		final AtomicInteger contProm = new AtomicInteger(0);
+		final AtomicLong sum = new AtomicLong(0);
 		Iterator<Pair<Long, long[]>> adj = GraphlySintetic.read(fname, sep);
 
-		ExecutorService exec = Executors.newFixedThreadPool(8);
+		ExecutorService exec = Executors.newFixedThreadPool(4);
 
 		final Semaphore sem = new Semaphore(10);
 		int last = -1;
@@ -83,7 +86,10 @@ public class GraphlyLoader {
 							Dir edgeDir = Dir.OUT;
 							if (dir.equals("in"))
 								edgeDir = Dir.IN;
+							long init = System.nanoTime();
 							g.addEdges(pair.getKey(), edgeDir, value);
+							sum.addAndGet(System.nanoTime() - init);
+							contProm.incrementAndGet();
 						} catch (Exception e) {
 							e.printStackTrace();
 						}
@@ -95,6 +101,8 @@ public class GraphlyLoader {
 		}
 		exec.shutdown();
 		exec.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
+
+		System.out.println(sum.get() / contProm.get());
 		g.close();
 	}
 }

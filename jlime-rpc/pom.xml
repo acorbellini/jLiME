@@ -58,6 +58,18 @@
 			<scope>system</scope>
 			<systemPath>${project.basedir}/lib/disruptor-3.3.0.jar</systemPath>
 		</dependency>
+		<dependency>
+			<groupId>com.github.mucaho</groupId>
+			<artifactId>jnetrobust</artifactId>
+			<version>0.0.2</version>
+			<scope>system</scope>
+			<systemPath>${project.basedir}/lib/jnetrobust-core-0.0.2.jar</systemPath>
+		</dependency>
+		<dependency>
+			<groupId>com.esotericsoftware</groupId>
+			<artifactId>kryo</artifactId>
+			<version>3.0.0</version>
+		</dependency>
 	</dependencies>
 	<parent>
 		<artifactId>jlime</artifactId>

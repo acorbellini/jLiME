@@ -26,7 +26,7 @@ public enum MessageType {
 
 	ACK((byte) 11),
 
-	BUNDLE((byte) 12);
+	BUNDLE((byte) 12), NACK((byte) 13);
 
 	private byte id;
 

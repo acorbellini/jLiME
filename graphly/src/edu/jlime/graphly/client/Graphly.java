@@ -13,6 +13,8 @@ import com.google.common.collect.TreeMultimap;
 
 import edu.jlime.core.cluster.DataFilter;
 import edu.jlime.core.cluster.Peer;
+import edu.jlime.core.marshalling.TypeConverter;
+import edu.jlime.core.marshalling.TypeConverters;
 import edu.jlime.core.rpc.ClientManager;
 import edu.jlime.core.rpc.RPCDispatcher;
 import edu.jlime.graphly.GraphlyCount;
@@ -28,6 +30,7 @@ import edu.jlime.graphly.util.GraphlyUtil;
 import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.JobDispatcher;
 import edu.jlime.rpc.JLiMEFactory;
+import edu.jlime.util.ByteBuffer;
 import gnu.trove.iterator.TLongIntIterator;
 import gnu.trove.iterator.TLongObjectIterator;
 import gnu.trove.list.array.TLongArrayList;
@@ -58,19 +61,8 @@ public class Graphly implements Closeable {
 	}
 
 	private GraphlyStoreNodeI getClientFor(final Long vertex) {
-		if (vertex == null)
-			System.out.println("Vertex is null");
-		if (consistenthash == null)
-			System.out.println("Consistent hash is not set.");
-		if (mgr == null)
-			System.out.println("mgr is not set.");
 		Peer node = consistenthash.getNode(vertex);
-		if (node == null)
-			System.out.println("nodes is null.");
 		GraphlyStoreNodeI graphlyStoreNodeI = mgr.get(node);
-		if (graphlyStoreNodeI == null)
-			System.out.println("graphlyStoreNodeI is null for " + node
-					+ " clients: " + mgr.getPeers());
 		return graphlyStoreNodeI;
 	}
 
@@ -142,6 +134,23 @@ public class Graphly implements Closeable {
 
 	public static Graphly build(RPCDispatcher rpc, JobDispatcher jd, int min)
 			throws Exception {
+
+		TypeConverters tc = rpc.getMarshaller().getTc();
+		tc.registerTypeConverter(Dir.class, new TypeConverter() {
+
+			@Override
+			public void toArray(Object o, ByteBuffer buffer, Peer cliID)
+					throws Exception {
+				Dir dir = (Dir) o;
+				buffer.put(dir.getID());
+			}
+
+			@Override
+			public Object fromArray(ByteBuffer buff) throws Exception {
+				return Dir.fromID(buff.get());
+			}
+		});
+
 		ClientManager<GraphlyStoreNodeI, GraphlyStoreNodeIBroadcast> mgr = rpc
 				.manage(new GraphlyStoreNodeIFactory(rpc, "graphly"),
 						new DataFilter("app", "graphly-server", true), rpc

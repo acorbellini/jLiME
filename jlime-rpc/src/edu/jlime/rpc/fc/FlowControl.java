@@ -11,7 +11,7 @@ import edu.jlime.rpc.message.MessageListener;
 import edu.jlime.rpc.message.MessageProcessor;
 import edu.jlime.rpc.message.MessageType;
 import edu.jlime.rpc.message.SimpleMessageProcessor;
-import edu.jlime.util.Buffer;
+import edu.jlime.util.ByteBuffer;
 
 public class FlowControl extends SimpleMessageProcessor {
 
@@ -33,7 +33,7 @@ public class FlowControl extends SimpleMessageProcessor {
 			public void rcv(Message msg, MessageProcessor origin)
 					throws Exception {
 				FlowControlPerNode fc = getFC(msg.getFrom());
-				Buffer reader = msg.getHeaderBuffer();
+				ByteBuffer reader = msg.getHeaderBuffer();
 				int max_send = reader.getInt();
 				fc.update(msg.getDataSize(), max_send);
 				notifyRcvd(Message.deEncapsulate(msg.getDataAsBytes(),

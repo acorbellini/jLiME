@@ -38,9 +38,9 @@
 						</goals>
 						<configuration>
 							<outputDirectory>../jlime/dist/lib</outputDirectory>
-							<!-- <overWriteReleases>true</overWriteReleases> -->
+							<overWriteReleases>true</overWriteReleases>
 							<overWriteSnapshots>true</overWriteSnapshots>
-							<!-- <overWriteIfNewer>false</overWriteIfNewer> -->
+							<overWriteIfNewer>true</overWriteIfNewer>
 						</configuration>
 					</execution>
 				</executions>

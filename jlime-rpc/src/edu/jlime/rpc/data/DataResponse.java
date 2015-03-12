@@ -1,7 +1,6 @@
 package edu.jlime.rpc.data;
 
 import java.util.UUID;
-import java.util.concurrent.Semaphore;
 
 import edu.jlime.core.transport.Address;
 import edu.jlime.rpc.message.Message;
@@ -32,9 +31,8 @@ public class DataResponse {
 			if (cont == 1000) {
 				synchronized (this) {
 					try {
-						wait(0, 10);
+						wait(1000);
 					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 				}
@@ -45,9 +43,11 @@ public class DataResponse {
 		return msg;
 	}
 
-	public void setMsg(Message msg) {
-		this.msg = msg;
-		synchronized (this) {
+	public synchronized void setMsg(Message msg) {
+		if (msg == null)
+			System.out.println("Msg is null!");
+		if (this.msg == null) {
+			this.msg = msg;
 			notify();
 		}
 	}

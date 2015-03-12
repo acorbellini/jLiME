@@ -17,9 +17,9 @@ public class Marshaller {
 	}
 
 	public Object getObject(byte[] array, Peer caller) throws Exception {
-		if (log.isDebugEnabled())
-			log.debug("Unmarshalling buffer of " + array.length
-					+ " bytes from " + caller);
+		// if (log.isDebugEnabled())
+		// log.debug("Unmarshalling buffer of " + array.length
+		// + " bytes from " + caller);
 
 		ByteBuffer buff = new ByteBuffer(array);
 

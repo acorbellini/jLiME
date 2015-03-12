@@ -1,6 +1,7 @@
 package edu.jlime.jd.job;
 
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.log4j.Logger;
 
@@ -11,17 +12,18 @@ public abstract class ResultManager<R> {
 
 	Logger log = Logger.getLogger(ResultManager.class);
 
-	private int remainingResults = 1;
+	private AtomicInteger remainingResults;
 
 	public int getRemainingResults() {
-		return remainingResults;
+		return remainingResults.get();
 	}
 
 	public ResultManager() {
+		this(1);
 	}
 
 	public ResultManager(int res) {
-		this.remainingResults = res;
+		this.remainingResults = new AtomicInteger(res);
 	}
 
 	protected abstract void handleException(Exception res, String jobID,
@@ -36,16 +38,14 @@ public abstract class ResultManager<R> {
 	}
 
 	public void manageResult(JobDispatcher jd, UUID jobID, R res, ClientNode req) {
-		int current_remaining;
-		synchronized (this) {
-			current_remaining = remainingResults--;
-		}
+		int current_remaining = remainingResults.decrementAndGet();
+
 		if (current_remaining < 0) {
 			if (res != null && Exception.class.isAssignableFrom(res.getClass()))
 				log.error("Unexpected exception from job " + jobID
 						+ " from server " + req, (Throwable) res);
 			else if (log.isDebugEnabled())
-				log.debug("Remaining result count is 0 for " + jobID
+				log.debug("Received result, but remaining result count is 0 for " + jobID
 						+ " from server " + req);
 			return;
 		} else if (current_remaining == 0) {

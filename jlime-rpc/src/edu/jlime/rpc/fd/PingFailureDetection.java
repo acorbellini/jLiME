@@ -6,6 +6,7 @@ import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.log4j.Logger;
 
@@ -37,7 +38,7 @@ public class PingFailureDetection implements StackElement, FailureProvider {
 
 	private ExecutorService failure = Executors.newCachedThreadPool();
 
-	private ConcurrentHashMap<Address, Integer> tries = new ConcurrentHashMap<>();
+	private ConcurrentHashMap<Address, AtomicInteger> tries = new ConcurrentHashMap<>();
 
 	@Override
 	public void addListener(FailureListener l) {
@@ -54,7 +55,7 @@ public class PingFailureDetection implements StackElement, FailureProvider {
 
 	@Override
 	public void addPeerToMonitor(Peer peer) throws Exception {
-		tries.put((Address) peer.getAddress(), 0);
+		tries.put(peer.getAddress(), new AtomicInteger(0));
 	}
 
 	@Override
@@ -65,30 +66,24 @@ public class PingFailureDetection implements StackElement, FailureProvider {
 					try {
 						Thread.sleep(ping_delay);
 
-						ArrayList<Entry<Address, Integer>> arrayList = null;
-						synchronized (tries) {
-							arrayList = new ArrayList<>(tries.entrySet());
-						}
-
-						for (Entry<Address, Integer> e : arrayList) {
-							if (e.getValue() > max_missed)
-								failed(e.getKey(), e.getValue());
+						for (Entry<Address, AtomicInteger> e : tries.entrySet()) {
+							AtomicInteger current = e.getValue();
+							Address peer = e.getKey();
+							if (current.get() > max_missed)
+								failed(peer, current.get());
 							else {
-								Integer integer = tries.get(e.getKey());
-								if (integer != null && integer != 0)
-									if (log.isDebugEnabled())
-										log.debug("Sending ping to "
-												+ e.getKey() + ", try number "
-												+ integer);
+								if (log.isDebugEnabled())
+									log.debug("Sending ping to " + peer
+											+ ", try number " + current.get());
 								try {
 									conn.queue(Message.newEmptyOutDataMessage(
-											MessageType.PING, e.getKey()));
+											MessageType.PING, peer));
 								} catch (Exception e1) {
 									e1.printStackTrace();
 								}
-								tries.put(e.getKey(), e.getValue() + 1);
-
+								current.incrementAndGet();
 							}
+
 						}
 					} catch (InterruptedException excep) {
 						excep.printStackTrace();
@@ -134,8 +129,9 @@ public class PingFailureDetection implements StackElement, FailureProvider {
 	private void pongArrived(Message m) {
 		if (log.isDebugEnabled())
 			log.debug("Received pong from " + m.getFrom() + ".");
-		if (tries.containsKey(m.getFrom()))
-			tries.put(m.getFrom(), 0);
+		AtomicInteger count = tries.get(m.getFrom());
+		if (count != null)
+			count.set(0);
 	}
 
 	@Override

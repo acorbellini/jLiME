@@ -37,6 +37,7 @@ public class MultiCastDiscovery extends Discovery {
 					try {
 						discoveryInit.queue(newDiscoveryMessage());
 					} catch (Exception e) {
+						e.printStackTrace();
 						log.error("Could not send discovery message.");
 					}
 					try {

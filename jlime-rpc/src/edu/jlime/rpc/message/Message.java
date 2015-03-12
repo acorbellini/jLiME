@@ -30,7 +30,7 @@ public abstract class Message {
 	public Message(Header h, Address from, Address to) {
 		this.from = from;
 		this.to = to;
-		header = h;
+		this.header = h;
 	}
 
 	public Address getFrom() {

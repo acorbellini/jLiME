@@ -12,7 +12,7 @@ import edu.jlime.rpc.message.MessageListener;
 import edu.jlime.rpc.message.MessageProcessor;
 import edu.jlime.rpc.message.MessageType;
 import edu.jlime.rpc.message.SimpleMessageProcessor;
-import edu.jlime.util.Buffer;
+import edu.jlime.util.ByteBuffer;
 
 public class MessageBundler extends SimpleMessageProcessor {
 
@@ -36,7 +36,7 @@ public class MessageBundler extends SimpleMessageProcessor {
 			@Override
 			public void rcv(Message message, MessageProcessor origin)
 					throws Exception {
-				Buffer reader = message.getDataBuffer();
+				ByteBuffer reader = message.getDataBuffer();
 				while (reader.hasRemaining()) {
 					byte[] msg = reader.getByteArray();
 					try {

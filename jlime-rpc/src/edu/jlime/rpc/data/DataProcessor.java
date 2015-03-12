@@ -18,7 +18,10 @@ import edu.jlime.rpc.message.MessageListener;
 import edu.jlime.rpc.message.MessageProcessor;
 import edu.jlime.rpc.message.MessageType;
 import edu.jlime.rpc.message.SimpleMessageProcessor;
-import edu.jlime.util.Buffer;
+import edu.jlime.util.ByteBuffer;
+import edu.jlime.util.PerfMeasure;
+import edu.jlime.util.compression.CompressionType;
+import edu.jlime.util.compression.Compressor;
 
 public class DataProcessor extends SimpleMessageProcessor implements
 		DataProvider {
@@ -38,6 +41,8 @@ public class DataProcessor extends SimpleMessageProcessor implements
 	private ConcurrentHashMap<UUID, DataResponse> responses = new ConcurrentHashMap<>();
 
 	private Metrics metrics;
+
+	Compressor comp = CompressionType.SNAPPY.getComp();
 
 	public DataProcessor(MessageProcessor next) {
 		super(next, "Data");
@@ -74,11 +79,12 @@ public class DataProcessor extends SimpleMessageProcessor implements
 	@Override
 	public byte[] sendData(byte[] msg, Address to, boolean waitForResponse)
 			throws Exception {
-
 		UUID id = UUID.randomUUID();
-		Message toSend = Message.newOutDataMessage(msg, MessageType.DATA, to);
-		Buffer headerWriter = toSend.getHeaderBuffer();
+		Message toSend = Message.newOutDataMessage(comp.compress(msg),
+				MessageType.DATA, to);
+		ByteBuffer headerWriter = toSend.getHeaderBuffer();
 		headerWriter.putUUID(id);
+		headerWriter.putInt(msg.length);
 		headerWriter.putBoolean(waitForResponse);
 
 		DataResponse r = null;
@@ -105,8 +111,8 @@ public class DataProcessor extends SimpleMessageProcessor implements
 			return null;
 		}
 		Message resp = r.getResponse();
-
-		return resp.getDataBuffer().build();
+		int originalSize = resp.getHeaderBuffer().getInt();
+		return comp.uncompress(resp.getDataBuffer().build(), originalSize);
 	}
 
 	@Override
@@ -125,23 +131,28 @@ public class DataProcessor extends SimpleMessageProcessor implements
 
 	private void processResponse(Message message) {
 		UUID id = message.getHeaderBuffer().getUUID();
-		if (log.isDebugEnabled())
-			log.debug("Received RESPONSE for DATA message with id " + id
-					+ " from " + message.getFrom());
-		responses.get(id).setMsg(message);
+		// if (log.isDebugEnabled())
+		// log.debug("Received RESPONSE for DATA message with id " + id
+		// + " from " + message.getFrom());
+		DataResponse resp = responses.get(id);
+		if (resp != null)
+			resp.setMsg(message);
 	}
 
 	private void processData(final Message m) {
-		Buffer head = m.getHeaderBuffer();
+		ByteBuffer head = m.getHeaderBuffer();
 		final UUID id = head.getUUID();
 		if (map.get(id) != null) {
 			return;
 		}
 
 		map.put(id, true);
-		if (log.isDebugEnabled())
-			log.debug("Received DATA message with id " + id + " from "
-					+ m.getFrom());
+		// if (log.isDebugEnabled())
+		// log.debug("Received DATA message with id " + id + " from "
+		// + m.getFrom());
+
+		int originalSize = head.getInt();
+
 		boolean requiresResponse = head.getBoolean();
 		Response resp = null;
 		if (requiresResponse) {
@@ -152,9 +163,12 @@ public class DataProcessor extends SimpleMessageProcessor implements
 					// if (log.isDebugEnabled())
 					// log.debug("Preparing RESPONSE for message id " + id
 					// + " to " + m.getFrom());
-					Message toSend = Message.newOutDataMessage(resp,
-							MessageType.RESPONSE, m.getFrom());
-					toSend.getHeaderBuffer().putUUID(this.msgID);
+					Message toSend = Message.newOutDataMessage(
+							comp.compress(resp), MessageType.RESPONSE,
+							m.getFrom());
+					ByteBuffer headerBuffer = toSend.getHeaderBuffer();
+					headerBuffer.putUUID(this.msgID);
+					headerBuffer.putInt(resp.length);
 					// if (log.isDebugEnabled())
 					// log.debug("Sending RESPONSE for message id " + id
 					// + " to " + m.getFrom());
@@ -165,8 +179,9 @@ public class DataProcessor extends SimpleMessageProcessor implements
 		// if (log.isDebugEnabled())
 		// log.debug("Curr listeners " + listeners.size());
 		for (DataListener l : listeners) {
-			DataMessage data = new DataMessage(m.getDataAsBytes(), id,
-					m.getTo(), m.getFrom());
+			DataMessage data = new DataMessage(comp.uncompress(
+					m.getDataAsBytes(), originalSize), id, m.getTo(),
+					m.getFrom());
 			// if (log.isDebugEnabled())
 			// log.debug("Sending data message to listener.");
 			l.messageReceived(data, resp);
@@ -180,10 +195,10 @@ public class DataProcessor extends SimpleMessageProcessor implements
 
 	public void removeResponse(Address addr, UUID id) {
 		Set<UUID> list = waiting.get(addr);
-		
-		if(list!=null)
+
+		if (list != null)
 			list.remove(id);
-		
+
 		responses.remove(id);
 	}
 }

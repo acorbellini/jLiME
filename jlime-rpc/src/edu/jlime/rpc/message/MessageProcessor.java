@@ -1,16 +1,14 @@
 package edu.jlime.rpc.message;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.log4j.Logger;
 
 import edu.jlime.core.transport.Address;
-import edu.jlime.util.RingQueue;
 
 public abstract class MessageProcessor implements StackElement {
 
@@ -20,13 +18,11 @@ public abstract class MessageProcessor implements StackElement {
 
 	private HashMap<String, MessageProcessor> processors = new HashMap<>();
 
-	private RingQueue out = new RingQueue();
+	// private RingQueue out = new RingQueue();
 
-	private List<MessageQueue> secondaryMessage = Collections
-			.synchronizedList(new ArrayList<MessageQueue>());
+	private List<MessageQueue> secondaryMessage = new CopyOnWriteArrayList<MessageQueue>();
 
-	private List<MessageQueue> all = Collections
-			.synchronizedList(new ArrayList<MessageQueue>());
+	private List<MessageQueue> all = new CopyOnWriteArrayList<MessageQueue>();
 
 	protected boolean stopped = false;
 
@@ -45,23 +41,23 @@ public abstract class MessageProcessor implements StackElement {
 	}
 
 	public final void start() throws Exception {
-		Thread t = new Thread("Outcoming Timer for " + name) {
-			public void run() {
-				while (!stopped)
-					try {
-						final Object[] m = out.take();
-						if (stopped)
-							return;
-						for (Object e : m) {
-							send((Message) e);
-						}
-
-					} catch (Exception e1) {
-						e1.printStackTrace();
-					}
-			};
-		};
-		t.start();
+		// Thread t = new Thread("Outcoming Timer for " + name) {
+		// public void run() {
+		// while (!stopped)
+		// try {
+		// final Object[] m = out.take();
+		// if (stopped)
+		// return;
+		// for (Object e : m) {
+		// send((Message) e);
+		// }
+		//
+		// } catch (Exception e1) {
+		// e1.printStackTrace();
+		// }
+		// };
+		// };
+		// t.start();
 
 		onStart();
 	};
@@ -73,7 +69,7 @@ public abstract class MessageProcessor implements StackElement {
 		if (stopped)
 			return;
 		stopped = true;
-		out.put(new MessageSimple(null, null, null, null));
+		// out.put(new MessageSimple(null, null, null, null));
 
 		for (MessageQueue mq : secondaryMessage) {
 			mq.stop();
@@ -98,16 +94,15 @@ public abstract class MessageProcessor implements StackElement {
 	protected abstract void send(Message msg) throws Exception;
 
 	protected void notifyRcvd(Message message) throws Exception {
-		if (log.isDebugEnabled())
-			log.debug("Notifying message " + message.getType() + " of size "
-					+ message.getSize());
+
 		for (MessageQueue l : all)
 			l.notify(message);
 
 		boolean notified = false;
-		List<MessageQueue> list = listeners.get(message.getType());
+		MessageType type = message.getType();
+		List<MessageQueue> list = listeners.get(type);
 		if (list != null) {
-			for (MessageQueue l : new ArrayList<>(list)) {
+			for (MessageQueue l : list) {
 				l.notify(message);
 				notified = true;
 			}
@@ -132,15 +127,15 @@ public abstract class MessageProcessor implements StackElement {
 	}
 
 	public void queue(Message msg) throws Exception {
-		out.put(msg);
-		// send(msg);
+		// out.put(msg);
+		send(msg);
 	}
 
 	public synchronized void addMessageListener(MessageType type,
 			MessageListener packList) {
 		List<MessageQueue> list = listeners.get(type);
 		if (list == null) {
-			list = new ArrayList<MessageQueue>();
+			list = new CopyOnWriteArrayList<MessageQueue>();
 			listeners.put(type, list);
 		}
 		list.add(new MessageQueue(packList, this, type.toString()));

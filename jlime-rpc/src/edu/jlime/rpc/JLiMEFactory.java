@@ -45,12 +45,27 @@ public class JLiMEFactory implements RPCFactory {
 		Address localAddress = new Address();
 		Peer p = new Peer(localAddress, config.name);
 		p.putData(localData);
-
+		Stack commStack = null;
 		// STACK
-		final Stack commStack = config.getProtocol().equals("tcp") ? Stack
-				.tcpStack(config, p.getAddress(), config.name) : Stack
-				.udpStack(config, p.getAddress(), config.name);
-
+		switch (config.getProtocol()) {
+		case "tcp":
+			commStack = Stack.tcpStack(config, p.getAddress(), config.name);
+			break;
+		case "jnet":
+			commStack = Stack.jnetStack(config, p.getAddress(), config.name);
+			break;
+		case "udp":
+			commStack = Stack.udpStack(config, p.getAddress(), config.name);
+			break;
+		case "niotcp":
+			commStack = Stack.tcpNioStack(config, p.getAddress(), config.name);
+			break;
+		case "nioudp":
+			commStack = Stack.udpNioStack(config, p.getAddress(), config.name);
+			break;
+		default:
+			break;
+		}
 		// Transport
 		jLiMETransport tr = new jLiMETransport(p, filter, commStack);
 

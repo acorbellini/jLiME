@@ -52,18 +52,24 @@ public class Configuration {
 
 	public Integer ping_delay;
 
+	public int tcpnio_max_msg_size;
+
+	public int retransmit_delay;
+
+	public int ack_max_resend_size;
+
 	public Configuration(Properties prop) {
 
 		this.prop = prop;
 
-		this.setProtocol(getString("protocol", "tcp"));
+		this.setProtocol(getString("protocol", "nioudp"));
 
 		this.port = getInt("port", 3550);
 		this.port_range = getInt("port_range", 1000);
 
-		this.rcvBuffer = getInt("udp.rcv_buffer", 1 * 1024 * 1024);
-		this.sendBuffer = getInt("udp.send_buffer", 1 * 1024 * 1024);
-		this.max_msg_size = getInt("udp.max_msg_size", 1024);
+		this.rcvBuffer = getInt("udp.rcv_buffer", 500 * 1024 * 1024);
+		this.sendBuffer = getInt("udp.send_buffer", 500 * 1024 * 1024);
+		this.max_msg_size = getInt("udp.max_msg_size", 1400);
 
 		this.mcast_addr = getString("mcast.addr", "224.0.113.0");
 		this.mcastport = getInt("mcast.port", 3000);
@@ -72,11 +78,15 @@ public class Configuration {
 		this.disc_num_tries = getInt("disco.tries", 10);
 		this.disc_delay = getInt("disco.delay", 1000);
 
-		this.max_pings = getInt("fd.max_pings", 30);
-		this.ping_delay = getInt("fd.ping_delay", 1500);
+		this.max_pings = getInt("fd.max_pings", 5);
+		this.ping_delay = getInt("fd.ping_delay", 1000);
 
-		this.nack_delay = getInt("ack.nack_delay", 1500);
-		this.ack_delay = getInt("ack.ack_delay", 1500);
+		this.nack_delay = getInt("ack.nack_delay", 150);
+
+		this.ack_delay = getInt("ack.ack_delay", 1);
+
+		this.retransmit_delay = getInt("ack.retransmit_delay", 5);
+		this.ack_max_resend_size = getInt("ack.max_resend_size", 32);
 
 		this.interface_max_update_time = getInt("multi.max_update_time", 10000);
 		try {
@@ -103,6 +113,8 @@ public class Configuration {
 				100000);
 		this.fcConfig.max_rcv_initial = getInt("fc.max_rcv", 100000);
 		this.fcConfig.max_send_initial = getInt("fc.max_send", 6000);
+
+		this.tcpnio_max_msg_size = getInt("tcpnio.max_msg_size", 2 * 1024);
 
 		this.tcp_config = new TCPConfig();
 		this.tcp_config.conn_limit = getInt("tcp.conn_limit", 1);

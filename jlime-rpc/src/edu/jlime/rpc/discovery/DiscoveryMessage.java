@@ -13,7 +13,7 @@ import edu.jlime.rpc.message.AddressType;
 import edu.jlime.rpc.message.Message;
 import edu.jlime.rpc.message.MessageType;
 import edu.jlime.rpc.message.SocketAddress;
-import edu.jlime.util.Buffer;
+import edu.jlime.util.ByteBuffer;
 
 public class DiscoveryMessage {
 
@@ -35,11 +35,11 @@ public class DiscoveryMessage {
 
 	public static DiscoveryMessage fromMessage(Message m)
 			throws UnknownHostException {
-		Buffer reader = m.getHeaderBuffer();
+		ByteBuffer reader = m.getHeaderBuffer();
 		UUID id = reader.getUUID();
 		String name = reader.getString();
 
-		Buffer data = m.getDataBuffer();
+		ByteBuffer data = m.getDataBuffer();
 		Map<String, String> additional = data.getMap();
 		int sizeOfAddresses = data.getInt();
 		List<SocketAddress> addresses = new ArrayList<>();
@@ -77,11 +77,11 @@ public class DiscoveryMessage {
 			String name, Map<String, String> discAdditionData,
 			List<SocketAddress> addresses) {
 		Message ret = Message.newEmptyBroadcastOutDataMessage(t);
-		Buffer headerWriter = ret.getHeaderBuffer();
+		ByteBuffer headerWriter = ret.getHeaderBuffer();
 		headerWriter.putUUID(localID.getId());
 		headerWriter.putString(name);
 
-		Buffer dataWriter = ret.getDataBuffer();
+		ByteBuffer dataWriter = ret.getDataBuffer();
 		dataWriter.putMap(discAdditionData);
 		dataWriter.putInt(addresses.size());
 		for (SocketAddress isa : addresses) {

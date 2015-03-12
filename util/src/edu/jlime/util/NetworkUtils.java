@@ -221,6 +221,10 @@ public class NetworkUtils {
 	}
 
 	public static String getFirstHostAddress() {
-		return getLocalAddress(false).get(0).getInet().getHostAddress();
+		return getFirstHostAddress(false);
+	}
+
+	public static String getFirstHostAddress(boolean ipv4) {
+		return getLocalAddress(ipv4).get(0).getInet().getHostAddress();
 	}
 }

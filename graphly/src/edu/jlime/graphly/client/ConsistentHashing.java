@@ -51,14 +51,13 @@ public class ConsistentHashing implements Serializable {
 		}
 	}
 
-	Peer getNode(long k) {
-		int hashed = (int) ((k * 20000003) % keySpace);
-		int vNode = ((hashed / range) + 1) * range;
+	public Peer getNode(long k) {
+		int hashed = Math.abs(((int) k * 31) % vnodes);
+		int vNode = (hashed + 1) * range;
 		Peer ceilingEntry = circle.get(vNode);
 		if (ceilingEntry == null)
 			return circle.get(0);
-		else
-			return ceilingEntry;
+		return ceilingEntry;
 	}
 
 	public Map<Peer, TLongArrayList> hashKeys(long[] data) {

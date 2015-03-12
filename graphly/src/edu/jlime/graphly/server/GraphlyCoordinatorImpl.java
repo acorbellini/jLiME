@@ -31,7 +31,7 @@ public class GraphlyCoordinatorImpl implements GraphlyCoordinator {
 
 		this.mgr.waitForClient(nodes);
 
-		this.hash = new ConsistentHashing(mgr.getMap(), 32);
+		this.hash = new ConsistentHashing(mgr.getMap(), 2048);
 
 		rpc.setTargetsStatuses("Coordinator", RPCStatus.STARTED);
 	}

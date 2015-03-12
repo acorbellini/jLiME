@@ -12,7 +12,7 @@ import edu.jlime.rpc.message.Message;
 import edu.jlime.rpc.message.MessageProcessor;
 import edu.jlime.rpc.message.MessageType;
 import edu.jlime.rpc.message.SimpleMessageProcessor;
-import edu.jlime.util.Buffer;
+import edu.jlime.util.ByteBuffer;
 
 class FlowControlPerNode extends SimpleMessageProcessor {
 
@@ -127,7 +127,7 @@ class FlowControlPerNode extends SimpleMessageProcessor {
 		getPermission(fc_msg.getDataSize());
 		lockWait.release();
 
-		Buffer writer = fc_msg.getHeaderBuffer();
+		ByteBuffer writer = fc_msg.getHeaderBuffer();
 		writer.putInt(max_send);
 		sendNext(fc_msg);
 	}

@@ -191,8 +191,8 @@ public class TCP extends NetworkProtocol implements DataReceiver {
 	@Override
 	public void dataReceived(byte[] array, InetSocketAddress addr)
 			throws Exception {
-		if (log.isDebugEnabled())
-			log.debug("Data (" + array.length + "b) received from " + addr);
+		// if (log.isDebugEnabled())
+		// log.debug("Data (" + array.length + "b) received from " + addr);
 		// if (!isEqualToLocalType(addr)) {
 		// if (log.isDebugEnabled())
 		// log.debug("Won't RECEIVE data from different address type.");

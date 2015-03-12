@@ -1,27 +1,32 @@
 package edu.jlime.rpc.frag;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.log4j.Logger;
 
 import edu.jlime.core.transport.Address;
 import edu.jlime.metrics.metric.Metrics;
 import edu.jlime.rpc.Option;
+import edu.jlime.rpc.message.Header;
 import edu.jlime.rpc.message.Message;
 import edu.jlime.rpc.message.MessageListener;
 import edu.jlime.rpc.message.MessageProcessor;
 import edu.jlime.rpc.message.MessageType;
 import edu.jlime.rpc.message.SimpleMessageProcessor;
-import edu.jlime.util.Buffer;
+import edu.jlime.util.ByteBuffer;
 
 public class Fragmenter extends SimpleMessageProcessor {
 
-	HashMap<UUID, IncompleteMessage> parts = new HashMap<>();
+	public static final int FRAG_OVERHEAD = 24 + Header.HEADER;
 
-	HashMap<Address, HashSet<UUID>> sent = new HashMap<>();
+	Object[] locks = new Object[4093];
+
+	ConcurrentHashMap<UUID, IncompleteMessage> parts = new ConcurrentHashMap<>();
+
+	ConcurrentHashMap<Address, HashSet<UUID>> receivedFragments = new ConcurrentHashMap<>();
 
 	Logger log = Logger.getLogger(Fragmenter.class);
 
@@ -29,7 +34,12 @@ public class Fragmenter extends SimpleMessageProcessor {
 
 	public Fragmenter(MessageProcessor next, int maxBytes) {
 		super(next, "Frag");
-		this.maxBytes = maxBytes;
+
+		this.maxBytes = maxBytes - FRAG_OVERHEAD;
+
+		for (int i = 0; i < locks.length; i++) {
+			locks[i] = new Object();
+		}
 	}
 
 	@Override
@@ -49,27 +59,39 @@ public class Fragmenter extends SimpleMessageProcessor {
 			@Override
 			public void rcv(Message message, MessageProcessor origin)
 					throws Exception {
-				Buffer header = message.getHeaderBuffer();
+				ByteBuffer header = message.getHeaderBuffer();
 
 				Address from = message.getFrom();
 				Address to = message.getTo();
 				// Only the first four bytes.
+
 				UUID fragID = header.getUUID();
+
 				int offset = header.getInt();
+
 				int messageLength = header.getInt();
+
 				IncompleteMessage incomplete = parts.get(fragID);
 				if (incomplete == null) {
 					synchronized (parts) {
 						incomplete = parts.get(fragID);
 						if (incomplete == null) {
-							incomplete = new IncompleteMessage(messageLength);
-							parts.put(fragID, incomplete);
-							HashSet<UUID> sentIDs = sent.get(to);
+							incomplete = new IncompleteMessage(from,
+									messageLength, fragID);
+
+							HashSet<UUID> sentIDs = receivedFragments.get(from);
 							if (sentIDs == null) {
-								sentIDs = new HashSet<>();
-								sent.put(to, sentIDs);
+								synchronized (receivedFragments) {
+									sentIDs = receivedFragments.get(from);
+									if (sentIDs == null) {
+										sentIDs = new HashSet<>();
+										receivedFragments.put(from, sentIDs);
+									}
+								}
 							}
 							sentIDs.add(fragID);
+
+							parts.put(fragID, incomplete);
 						}
 					}
 				}
@@ -84,8 +106,8 @@ public class Fragmenter extends SimpleMessageProcessor {
 							}
 						}
 					}
-				} else
-					System.out.println("Repeated");
+				} else if (log.isDebugEnabled())
+					log.debug("Repeated");
 
 			}
 		});
@@ -115,7 +137,7 @@ public class Fragmenter extends SimpleMessageProcessor {
 				Message toSend = Message.newOutDataMessage(fragData,
 						MessageType.FRAG, msg.getTo());
 
-				Buffer headerW = toSend.getHeaderBuffer();
+				ByteBuffer headerW = toSend.getHeaderBuffer();
 
 				// Frag UUID
 				headerW.putUUID(fragid);
@@ -134,7 +156,7 @@ public class Fragmenter extends SimpleMessageProcessor {
 	@Override
 	public void cleanupOnFailedPeer(Address addr) {
 		synchronized (parts) {
-			HashSet<UUID> sentIDs = sent.get(addr);
+			HashSet<UUID> sentIDs = receivedFragments.get(addr);
 			if (sentIDs != null) {
 				for (UUID id : sentIDs) {
 					parts.remove(id);

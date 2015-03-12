@@ -164,9 +164,7 @@ public class RPCDispatcher implements TransportListener {
 	};
 
 	protected Object callTarget(MethodCall mc) throws Exception {
-		try {
-			if (mc.getName().equals("getRanges"))
-				System.out.println("getting ranges");
+		try {			
 			Object target = getTarget(mc.getObjectKey());
 			Class<?> objClass = target.getClass();
 			Method m = findMethod(objClass, mc,
@@ -408,24 +406,24 @@ public class RPCDispatcher implements TransportListener {
 		try {
 			Peer peer = getCluster().getByAddress(origin);
 			Object obj = getMarshaller().getObject(buff, peer);
-			if (log.isDebugEnabled())
-				log.debug("Finished unmarshalling data received");
+			// if (log.isDebugEnabled())
+			// log.debug("Finished unmarshalling data received");
 			if (Exception.class.isAssignableFrom(obj.getClass())) {
 				AsyncLogger.logAsyncException((Exception) obj);
 				return null;
 			}
 			MethodCall mc = (MethodCall) obj;
-			if (log.isDebugEnabled())
-				log.debug("Received method call " + mc.getName() + " from "
-						+ getCluster().getByAddress(origin) + ", invoking.");
+			// if (log.isDebugEnabled())
+			// log.debug("Received method call " + mc.getName() + " from "
+			// + getCluster().getByAddress(origin) + ", invoking.");
 
 			Object callTarget = callTarget(mc);
 
 			byte[] byteArray = getMarshaller().toByteArray(callTarget);
-			if (log.isDebugEnabled())
-				log.debug("Returning from method call " + mc.getName()
-						+ " from " + getCluster().getByAddress(origin)
-						+ ", invoking.");
+			// if (log.isDebugEnabled())
+			// log.debug("Returning from method call " + mc.getName()
+			// + " from " + getCluster().getByAddress(origin)
+			// + ", invoking.");
 			return byteArray;
 		} catch (Exception e) {
 			log.error(e, e);

@@ -19,7 +19,6 @@ import edu.jlime.rpc.message.AddressType;
 import edu.jlime.rpc.message.Message;
 import edu.jlime.rpc.message.SimpleMessageProcessor;
 import edu.jlime.rpc.message.SocketAddress;
-import edu.jlime.util.Buffer;
 import edu.jlime.util.ByteBuffer;
 
 public abstract class NetworkProtocol extends SimpleMessageProcessor implements
@@ -82,7 +81,7 @@ public abstract class NetworkProtocol extends SimpleMessageProcessor implements
 	};
 
 	private void processPacket(DataPacket pkt) throws Exception {
-		Buffer buff = pkt.reader;
+		ByteBuffer buff = pkt.reader;
 		Address from = new Address(buff.getUUID());
 		Address to = new Address(buff.getUUID());
 

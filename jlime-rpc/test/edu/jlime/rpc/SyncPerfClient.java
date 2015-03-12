@@ -12,7 +12,7 @@ public class SyncPerfClient {
 
 	public static void main(String[] args) throws Exception {
 
-		System.in.read();
+		// System.in.read();
 
 		Configuration config = new Configuration();
 		config.port = 6070;
@@ -23,6 +23,7 @@ public class SyncPerfClient {
 		rpc.start();
 
 		Cluster cl = rpc.getCluster();
+		
 		while (cl.size() < 2) {
 			Thread.sleep(1000);
 		}

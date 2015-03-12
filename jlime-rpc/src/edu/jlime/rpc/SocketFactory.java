@@ -77,6 +77,5 @@ public abstract class SocketFactory {
 				return new jLimeSocket(sock, port, addr);
 			}
 		};
-
 	}
 }

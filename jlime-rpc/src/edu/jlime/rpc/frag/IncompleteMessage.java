@@ -1,8 +1,12 @@
 package edu.jlime.rpc.frag;
 
 import java.util.HashSet;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.log4j.Logger;
+
+import edu.jlime.core.transport.Address;
 
 public class IncompleteMessage {
 
@@ -10,24 +14,36 @@ public class IncompleteMessage {
 
 	private byte[] buff;
 
-	HashSet<Integer> added = new HashSet<>();
+	ConcurrentHashMap<Integer, Boolean> added = new ConcurrentHashMap<>();
 
 	int remaining;
 
-	public IncompleteMessage(int total) {
-		buff = new byte[total];
-		remaining = total;
+	UUID id;
+
+	private String from;
+
+	private int total;
+
+	public IncompleteMessage(Address from, int total, UUID id) {
+		this.buff = new byte[total];
+		this.from = from.toString();
+		this.total = total;
+		this.remaining = total;
+		this.id = id;
 	}
 
 	public void addPart(int offsetInOriginal, byte[] data) {
 
+		added.put(offsetInOriginal, true);
+
 		System.arraycopy(data, 0, buff, offsetInOriginal, data.length);
-		synchronized (this) {
-			remaining -= data.length;
-		}
+
+		remaining -= data.length;
 
 		if (log.isDebugEnabled())
-			log.debug("Remaining of incomplete message :" + remaining);
+			// if (remaining < 0)
+			log.debug("Remaining of incomplete message " + id + " :"
+					+ remaining + " offset: " + offsetInOriginal);
 
 	};
 
@@ -40,6 +56,6 @@ public class IncompleteMessage {
 	}
 
 	public boolean contains(int offset) {
-		return added.contains(offset);
+		return added.containsKey(offset);
 	}
 }

@@ -13,10 +13,9 @@ import edu.jlime.rpc.data.DataProvider;
 import edu.jlime.rpc.discovery.MultiCastDiscovery;
 import edu.jlime.rpc.fd.PingFailureDetection;
 import edu.jlime.rpc.fr.Acknowledge;
+import edu.jlime.rpc.fr.NACKAcknowledge;
 import edu.jlime.rpc.frag.Fragmenter;
-import edu.jlime.rpc.message.AddressType;
 import edu.jlime.rpc.message.StackElement;
-import edu.jlime.rpc.multi.MultiInterface;
 import edu.jlime.rpc.np.NetworkProtocol;
 import edu.jlime.util.NetworkUtils;
 
@@ -128,50 +127,154 @@ public class Stack {
 		return tcpStack;
 	}
 
-	public static Stack udpStack(Configuration config, Address id, String name) {
+	public static Stack udpStack(Configuration config, Address local,
+			String name) {
 
-		NetworkProtocolFactory udpFactory = NetworkProtocolFactory.udp(id,
-				config);
+		String iface = NetworkUtils.getFirstHostAddress();
 
-		NetworkProtocolFactory tcpFactory = NetworkProtocolFactory.tcp(id,
-				config);
+		NetworkProtocol udp = NetworkProtocolFactory.udp(local, config)
+				.getProtocol(iface);
 
-		NetworkProtocolFactory mcastFactory = NetworkProtocolFactory.mcast(id,
-				config);
+		NetworkProtocol mcast = NetworkProtocolFactory.mcast(local, config)
+				.getProtocol(iface);
 
-		MultiInterface udp = MultiInterface.create(AddressType.UDP, config,
-				udpFactory);
+		int max_size = config.max_msg_size - UDPNIO.HEADER - Acknowledge.HEADER;
 
-		MultiInterface tcp = MultiInterface.create(AddressType.TCP, config,
-				tcpFactory);
-
-		MultiInterface mcast = MultiInterface.create(AddressType.MCAST, config,
-				mcastFactory);
 		Acknowledge ack = new Acknowledge(udp, config.max_msg_size,
-				config.nack_delay, config.ack_delay);
+				config.nack_delay, config.ack_delay, max_size, config);
 
 		Fragmenter frag = new Fragmenter(ack, config.max_msg_size);
 
 		DataProcessor data = new DataProcessor(frag);
 
-		MultiDiscovery disco = new MultiDiscovery();
+		MultiCastDiscovery disco = new MultiCastDiscovery(local, name, config,
+				mcast, udp);
+		disco.addAddressListProvider(udp);
 
-		MultiCastDiscovery mcastDisco = new MultiCastDiscovery(id, name,
-				config, mcast, udp);
-		mcastDisco.addAddressListProvider(udp);
-		mcastDisco.addAddressListProvider(tcp);
-		disco.addDisco(mcastDisco);
+		PingFailureDetection fail = new PingFailureDetection(udp, config);
+		Stack tcpStack = Stack.newStack(udp, ack, frag, mcast, data, disco,
+				fail);
+		tcpStack.setFD(fail);
+		tcpStack.setDisco(disco);
+		tcpStack.setData(data);
+		return tcpStack;
+	}
+
+	public static Stack tcpNioStack(Configuration config, Address local,
+			String name) {
+
+		String iface = NetworkUtils.getFirstHostAddress();
+
+		NetworkProtocol udp = NetworkProtocolFactory.udp(local, config)
+				.getProtocol(iface);
+
+		TCPNIO tcp = new TCPNIO(local, config, iface);
+
+		NetworkProtocol mcast = NetworkProtocolFactory.mcast(local, config)
+				.getProtocol(iface);
+
+		Fragmenter frag = new Fragmenter(tcp, config.tcpnio_max_msg_size
+				- TCPNIO.HEADER);
+
+		DataProcessor data = new DataProcessor(frag);
+
+		MultiCastDiscovery disco = new MultiCastDiscovery(local, name, config,
+				mcast, udp);
+		disco.addAddressListProvider(udp);
+		disco.addAddressListProvider(tcp);
 
 		PingFailureDetection fail = new PingFailureDetection(udp, config);
 		fail.addPingProvider(tcp);
 
-		Stack tcpStack = Stack.newStack(tcp, udp,
-		// bundler,
-				ack, frag, mcast, data, disco, fail);
+		Stack tcpStack = Stack.newStack(tcp, udp, frag, mcast, data, disco,
+				fail);
 		tcpStack.setFD(fail);
 		tcpStack.setDisco(disco);
 		tcpStack.setData(data);
-		tcpStack.setStreamer(tcp);
+		// tcpStack.setStreamer(tcp);
+		return tcpStack;
+	}
+
+	public static Stack udpNioStack(Configuration config, Address local,
+			String name) {
+
+		String iface = NetworkUtils.getFirstHostAddress(true);
+
+		UDPNIO udp = new UDPNIO(local, config, iface);
+
+		NetworkProtocol mcast = NetworkProtocolFactory.mcast(local, config)
+				.getProtocol(iface);
+
+		// int max_size = config.max_msg_size - UDPNIO.HEADER
+		// - NACKAcknowledge.HEADER;
+		//
+		// NACKAcknowledge ack = new NACKAcknowledge(udp, config.max_msg_size,
+		// config.nack_delay, config.ack_delay, max_size, config);
+		//
+		// Fragmenter frag = new Fragmenter(ack, max_size);
+
+		int max_size = config.max_msg_size - UDPNIO.HEADER - Acknowledge.HEADER;
+
+		Acknowledge ack = new Acknowledge(udp, config.max_msg_size,
+				config.nack_delay, config.ack_delay, max_size, config);
+
+		Fragmenter frag = new Fragmenter(ack, max_size);
+
+		// int max_size = config.max_msg_size - UDPNIO.HEADER -
+		// UDPResender.HEADER;
+		//
+		// UDPResender ack = new UDPResender(udp, config, max_size);
+		//
+		// Fragmenter frag = new Fragmenter(ack, max_size);
+
+		DataProcessor data = new DataProcessor(frag);
+
+		MultiCastDiscovery disco = new MultiCastDiscovery(local, name, config,
+				mcast, udp);
+		disco.addAddressListProvider(udp);
+
+		PingFailureDetection fail = new PingFailureDetection(udp, config);
+
+		Stack tcpStack = Stack.newStack(udp, ack, frag, mcast, data, disco,
+				fail);
+		tcpStack.setFD(fail);
+		tcpStack.setDisco(disco);
+		tcpStack.setData(data);
+		return tcpStack;
+	}
+
+	public static Stack jnetStack(Configuration config, Address local,
+			String name) {
+
+		String iface = NetworkUtils.getFirstHostAddress();
+
+		NetworkProtocol udp = NetworkProtocolFactory.udp(local, config)
+				.getProtocol(iface);
+
+		JNET tcp = new JNET(local, config, iface);
+
+		NetworkProtocol mcast = NetworkProtocolFactory.mcast(local, config)
+				.getProtocol(iface);
+		//
+		Fragmenter frag = new Fragmenter(tcp, config.max_msg_size
+				- TCPNIO.HEADER);
+
+		DataProcessor data = new DataProcessor(frag);
+
+		MultiCastDiscovery disco = new MultiCastDiscovery(local, name, config,
+				mcast, udp);
+		disco.addAddressListProvider(udp);
+		disco.addAddressListProvider(tcp);
+
+		PingFailureDetection fail = new PingFailureDetection(udp, config);
+		fail.addPingProvider(tcp);
+
+		Stack tcpStack = Stack.newStack(tcp, udp, frag, mcast, data, disco,
+				fail);
+		tcpStack.setFD(fail);
+		tcpStack.setDisco(disco);
+		tcpStack.setData(data);
+		// tcpStack.setStreamer(tcp);
 		return tcpStack;
 	}
 

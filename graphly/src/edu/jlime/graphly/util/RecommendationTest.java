@@ -171,7 +171,7 @@ public class RecommendationTest {
 					@Override
 					public Float get(Metrics m) {
 						return Float.valueOf(m.list("sysinfo.net")
-								.findFirst("eth").get("sent_total").get());
+								.findFirst("eth|p7p1").get("sent_total").get());
 					}
 				});
 		float netSum = 0f;
