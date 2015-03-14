@@ -62,7 +62,7 @@ public class Bundler {
 
 		Message msg = Message.newOutDataMessage(
 				Arrays.copyOfRange(bundle, 0, pos), MessageType.BUNDLE, to);
-		next.queue(msg);
+		next.send(msg);
 
 		bundle = new byte[max_size];
 		pos = 0;

@@ -8,6 +8,8 @@ import edu.jlime.core.transport.DiscoveryProvider;
 import edu.jlime.core.transport.FailureProvider;
 import edu.jlime.core.transport.Streamer;
 import edu.jlime.metrics.metric.Metrics;
+import edu.jlime.rpc.bundler.Bundler;
+import edu.jlime.rpc.bundler.MessageBundler;
 import edu.jlime.rpc.data.DataProcessor;
 import edu.jlime.rpc.data.DataProvider;
 import edu.jlime.rpc.discovery.MultiCastDiscovery;
@@ -217,6 +219,8 @@ public class Stack {
 
 		Acknowledge ack = new Acknowledge(udp, config.max_msg_size,
 				config.nack_delay, config.ack_delay, max_size, config);
+
+		// MessageBundler bundler = new MessageBundler(ack, max_size);
 
 		Fragmenter frag = new Fragmenter(ack, max_size);
 

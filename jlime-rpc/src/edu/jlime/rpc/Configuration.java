@@ -69,7 +69,7 @@ public class Configuration {
 
 		this.rcvBuffer = getInt("udp.rcv_buffer", 500 * 1024 * 1024);
 		this.sendBuffer = getInt("udp.send_buffer", 500 * 1024 * 1024);
-		this.max_msg_size = getInt("udp.max_msg_size", 1400);
+		this.max_msg_size = getInt("udp.max_msg_size", 1500);
 
 		this.mcast_addr = getString("mcast.addr", "224.0.113.0");
 		this.mcastport = getInt("mcast.port", 3000);
@@ -85,8 +85,8 @@ public class Configuration {
 
 		this.ack_delay = getInt("ack.ack_delay", 1);
 
-		this.retransmit_delay = getInt("ack.retransmit_delay", 5);
-		this.ack_max_resend_size = getInt("ack.max_resend_size", 32);
+		this.retransmit_delay = getInt("ack.retransmit_delay", 10);
+		this.ack_max_resend_size = getInt("ack.max_resend_size", 512);
 
 		this.interface_max_update_time = getInt("multi.max_update_time", 10000);
 		try {

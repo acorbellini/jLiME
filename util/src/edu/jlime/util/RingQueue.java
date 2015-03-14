@@ -106,4 +106,51 @@ public class RingQueue {
 		}
 		return ret;
 	}
+
+	public Object tryTakeOne() {
+		int currentEnd = end;
+		// int cont = 0;
+		if (init == currentEnd) {
+			return null;
+			// while (currentEnd == end) {
+			// cont++;
+			// if (cont == 1000) {
+			// synchronized (this) {
+			// try {
+			// wait(0, 10);
+			// } catch (InterruptedException e) {
+			// e.printStackTrace();
+			// }
+			// }
+			// cont = 0;
+			// }
+			// }
+			// currentEnd = end;
+		}
+
+		// Object[] ret = new Object[currentEnd - init];
+
+		Object ret = buffer[pos(init)];
+		init = init + 1;
+		// int i = pos(init);
+		// int f = pos(currentEnd);
+		// if (f > i) {
+		// ret = Arrays.copyOfRange(buffer, i, f);
+		// Arrays.fill(buffer, i, f, null);
+		// } else if (f == i) {
+		// ret = Arrays.copyOf(buffer, buffer.length);
+		// Arrays.fill(buffer, null);
+		// } else {
+		// System.arraycopy(buffer, i, ret, 0, buffer.length - i);
+		// Arrays.fill(buffer, i, buffer.length, null);
+		// System.arraycopy(buffer, 0, ret, buffer.length - i, f);
+		// Arrays.fill(buffer, 0, f, null);
+		// }
+		//
+		// init = currentEnd;
+		synchronized (this) {
+			notifyAll();
+		}
+		return ret;
+	}
 }

@@ -46,7 +46,7 @@ public class Acknowledge extends SimpleMessageProcessor {
 	// protected ConcurrentHashMap<Address, HashSet<Integer>> acks = new
 	// ConcurrentHashMap<>();
 
-	private int max_size;
+	int max_size;
 
 	private Timer t;
 
@@ -66,86 +66,69 @@ public class Acknowledge extends SimpleMessageProcessor {
 	@Override
 	public void onStart() throws Exception {
 
-		Thread send = new Thread("Ack Sender") {
-			int cont = 0;
-
-			@Override
-			public void run() {
-				while (!stopped) {
-					for (AcknowledgeCounter count : counterList) {
-						HashSet<Integer> list = count.getAcks();
-						// acks.get(count.to);
-						List<Message> send2 = count.getSend();
-						if (send2 != null)
-							for (Message message : send2) {
-								try {
-									attachAcks(message, list);
-									sendNext(message);
-									cont = 0;
-								} catch (Exception e) {
-									e.printStackTrace();
-								}
-							}
-					}
-					cont++;
-					if (cont == 1000)
-						synchronized (counters) {
-							cont = 0;
-							try {
-								counters.wait(200);
-							} catch (InterruptedException e) {
-								e.printStackTrace();
-							}
-						}
-
-				}
-			}
-		};
-		send.start();
+		// Thread send = new Thread("Ack Sender") {
+		// int cont = 0;
+		//
+		// @Override
+		// public void run() {
+		// while (!stopped) {
+		// for (AcknowledgeCounter count : counterList) {
+		// HashSet<Integer> list = count.getAcks();
+		// // acks.get(count.to);
+		// Message message = null;
+		// while ((message = count.nextSend()) != null) {
+		// try {
+		// attachAcks(message, list);
+		// sendNext(message);
+		// cont = 0;
+		// } catch (Exception e) {
+		// e.printStackTrace();
+		// }
+		// }
+		// // List<Message> send2 = count.getSend();
+		// // if (send2 != null)
+		// // for (Message message : send2) {
+		// //
+		// // }
+		// }
+		// cont++;
+		// if (cont == 1000)
+		// synchronized (counters) {
+		// cont = 0;
+		// try {
+		// counters.wait(200);
+		// } catch (InterruptedException e) {
+		// e.printStackTrace();
+		// }
+		// }
+		//
+		// }
+		// }
+		// };
+		// send.start();
 
 		this.t = new Timer("Ack Timer");
 
-		t.schedule(new TimerTask() {
+		t.scheduleAtFixedRate(new TimerTask() {
 			@Override
 			public void run() {
 				for (AcknowledgeCounter count : counterList) {
-					HashSet<Integer> list = count.getAcks();
+					count.resend();
+					// HashSet<Integer> list = count.getAcks();
 					// acks.get(count.to);
-					ArrayList<Message> resend = count.getResend();
-					if (resend != null)
-						for (Message m : resend) {
-							attachAcks(m, list);
-							try {
-								sendNext(m);
-							} catch (Exception e) {
-								e.printStackTrace();
-							}
-						}
+
 				}
 			}
 		}, config.retransmit_delay, config.retransmit_delay);
 
-		t.schedule(new TimerTask() {
+		t.scheduleAtFixedRate(new TimerTask() {
 
 			@Override
 			public void run() {
 				for (AcknowledgeCounter count : counterList) {
 					// for (Entry<Address, HashSet<Integer>> e :
 					// acks.entrySet()) {
-					HashSet<Integer> value = count.getAcks();
-					if (value != null)
-						synchronized (value) {
-							while (!value.isEmpty()) {
-								Message ack = Message.newEmptyOutDataMessage(
-										MessageType.ACK, count.to);
-								attachAcks(ack, value);
-								try {
-									sendNext(ack);
-								} catch (Exception e1) {
-									e1.printStackTrace();
-								}
-							}
-						}
+					count.sendAcks();
 				}
 			}
 		}, config.ack_delay, config.ack_delay);
@@ -163,29 +146,15 @@ public class Acknowledge extends SimpleMessageProcessor {
 
 						AcknowledgeCounter counter = getCounter(m.getFrom());
 
-						if (counter.seqNumberArrived(seq))
+						if (counter.seqNumberArrived(seq)) {
 							notifyRcvd(Message.deEncapsulate(
 									m.getDataAsBytes(), m.getFrom(), m.getTo()));
+							// Address from = m.getFrom();
 
-						Address from = m.getFrom();
-						// HashSet<Integer> list = acks.get(from);
-						// if (list == null) {
-						// synchronized (acks) {
-						// list = acks.get(from);
-						// if (list == null) {
-						// list = new HashSet<Integer>();
-						// acks.put(from, list);
-						// }
-						// }
-						// }
+							// counters.get(from).addAck(seq);
 
-						// synchronized (list) {
-						// list.add(seq);
-						// }
-
-						counters.get(from).addAck(seq);
-
-						receivedAckBuffer(from, headerBuffer);
+						}
+						receivedAckBuffer(m.getFrom(), headerBuffer);
 
 						// Message ackMsg = Message.newEmptyOutDataMessage(
 						// MessageType.ACK, m.getFrom());
@@ -228,7 +197,7 @@ public class Acknowledge extends SimpleMessageProcessor {
 			synchronized (counters) {
 				counter = counters.get(to);
 				if (counter == null) {
-					counter = new AcknowledgeCounter(to, max_size_nack,
+					counter = new AcknowledgeCounter(this, to, max_size_nack,
 							nack_delay, ack_delay, config);
 					counters.put(to, counter);
 					counterList.add(counter);
@@ -265,33 +234,11 @@ public class Acknowledge extends SimpleMessageProcessor {
 				AcknowledgeCounter c = getCounter(from);
 				c.confirm(seq);
 			}
-			synchronized (counters) {
-				counters.notifyAll();
-			}
+			// synchronized (counters) {
+			// counters.notifyAll();
+			// }
 		}
 
-	}
-
-	private void attachAcks(Message msg, HashSet<Integer> list) {
-		if (list == null)
-			return;
-		ByteBuffer buff = msg.getHeaderBuffer();
-		int size = msg.getSize();
-		int diff = (max_size - 4) - size;
-		int count = diff / 16;
-		if (count > 0)
-			synchronized (list) {
-				if (!list.isEmpty()) {
-					buff.putInt(Math.min(count, list.size()));
-					Iterator<Integer> it = list.iterator();
-					for (int i = 0; i < count && it.hasNext(); i++) {
-						Integer uuid = it.next();
-						buff.putInt(uuid);
-						it.remove();
-					}
-
-				}
-			}
 	}
 
 }

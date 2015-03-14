@@ -44,8 +44,6 @@ public class DataResponse {
 	}
 
 	public synchronized void setMsg(Message msg) {
-		if (msg == null)
-			System.out.println("Msg is null!");
 		if (this.msg == null) {
 			this.msg = msg;
 			notify();

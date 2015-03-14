@@ -11,7 +11,7 @@ public class Header {
 	ByteBuffer headerData;
 
 	public Header(MessageType type) {
-		this(type, new ByteBuffer());
+		this(type, new ByteBuffer(HEADER));
 	}
 
 	public Header(MessageType type, ByteBuffer data) {

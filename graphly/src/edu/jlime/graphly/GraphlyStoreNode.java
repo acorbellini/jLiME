@@ -43,7 +43,7 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	private static class InMemoryGraphProperties {
 		ConcurrentHashMap<Long, Map<String, Object>> props = new ConcurrentHashMap<>();
 
-		public void put(Long vid, String k, Object val) {
+		public void put(long vid, String k, Object val) {
 			Map<String, Object> map = props.get(vid);
 			if (map == null) {
 				synchronized (props) {
@@ -57,7 +57,7 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 			map.put(k, val);
 		}
 
-		public Object get(Long vid, String k) {
+		public Object get(long vid, String k) {
 			Map<String, Object> map = props.get(vid);
 			if (map != null) {
 				return map.get(k);
@@ -118,7 +118,7 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	}
 
 	@Override
-	public synchronized void addRange(Integer range) throws IOException {
+	public synchronized void addRange(int range) throws IOException {
 		this.ranges.add(range);
 		FileWriter writer = new FileWriter(localRanges);
 		Properties prop = new Properties();
@@ -134,7 +134,7 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	 * adjacencygraph.get.GetType, java.lang.Long, long[])
 	 */
 	@Override
-	public void addEdges(Long id, Dir type, long[] list) throws Exception {
+	public void addEdges(long id, Dir type, long[] list) throws Exception {
 		if (type.equals(Dir.IN))
 			id = -id - 1;
 		adj.store(id, DataTypeUtils.longArrayToByteArray(list));
@@ -147,7 +147,7 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	 * adjacencygraph.get.GetType, java.lang.Long)
 	 */
 	@Override
-	public long[] getEdges(Dir type, Integer max_edges, long[] id)
+	public long[] getEdges(Dir type, int max_edges, long[] id)
 			throws ExecutionException {
 		if (log.isDebugEnabled())
 			log.debug("Obtaining edges");
@@ -199,14 +199,14 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 		return getEdges0(id);
 	}
 
-	private long[] getEdges0(final Long id) throws ExecutionException {
+	private long[] getEdges0(final long id) throws ExecutionException {
 		return adj_cache.get(id, new Callable<long[]>() {
 
 			@Override
 			public long[] call() throws Exception {
 				byte[] array;
 				try {
-					array = adj.load((int) id.longValue());
+					array = adj.load(id);
 					if (array != null) {
 						long[] byteArrayToLongArray = DataTypeUtils
 								.byteArrayToLongArray(array);
@@ -229,7 +229,7 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	 * java.lang.String, java.lang.Object)
 	 */
 	@Override
-	public void setProperty(Long vid, String k, Object val) throws Exception {
+	public void setProperty(long vid, String k, Object val) throws Exception {
 		props.put(vid, k, val);
 		// Iterator<Vertex> v = graph.iterators().vertexIterator(vid);
 		// Vertex v1 = null;
@@ -250,7 +250,7 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	 * java.lang.String)
 	 */
 	@Override
-	public Object getProperty(Long vid, String k) throws Exception {
+	public Object getProperty(long vid, String k) throws Exception {
 		return props.get(vid, k);
 		// Iterator<Vertex> v = graph.iterators().vertexIterator(vid);
 		// Vertex v1 = null;
@@ -272,7 +272,7 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	 * java.lang.Long, java.lang.String, java.lang.Object, java.lang.String)
 	 */
 	// @Override
-	// public void setEdgeProperty(Long v1, Long v2, String k, Object val,
+	// public void setEdgeProperty(long v1, long v2, String k, Object val,
 	// String... labels) {
 	// Edge edge = getEdge(v1, v2, labels);
 	// if (edge != null) {
@@ -280,7 +280,7 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	// }
 	// }
 
-	// private Edge getEdge(Long v1, Long v2, String... labels) {
+	// private Edge getEdge(long v1, long v2, String... labels) {
 	// List<Edge> edges = getEdges(v1, Dir.OUT, labels);
 	// for (Edge edge : edges) {
 	// if (edge.outV().next().equals(v2)) {
@@ -297,7 +297,7 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	 * java.lang.Long, java.lang.String, java.lang.String)
 	 */
 	// @Override
-	// public Object getEdgeProperty(Long v1, Long v2, String k, String...
+	// public Object getEdgeProperty(long v1, long v2, String k, String...
 	// labels) {
 	// Edge e = getEdge(v1, v2, labels);
 	// return e.property(k);
@@ -310,7 +310,7 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	 * edu.jlime.collections.adjacencygraph.get.GetType, java.lang.String)
 	 */
 	// @Override
-	// public List<Edge> getEdges(Long orig, Dir type, String... labels) {
+	// public List<Edge> getEdges(long orig, Dir type, String... labels) {
 	// List<Edge> edges = new ArrayList<>();
 	// Vertex v1 = graph.V(orig).next();
 	// if (v1 != null) {
@@ -327,7 +327,7 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	// }
 
 	@Override
-	public boolean addVertex(Long id, String label) throws Exception {
+	public boolean addVertex(long id, String label) throws Exception {
 		// if (label != null) {
 		// Vertex v = graph.addVertex(T.id, id, T.label, label);
 		// return v == null;
@@ -339,23 +339,23 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	}
 
 	@Override
-	public String getLabel(Long id) throws Exception {
+	public String getLabel(long id) throws Exception {
 		// return graph.V(id).next().label();
 		return null;
 	}
 
 	@Override
-	public void addEdge(Long orig, Long dest, String label, Object[] keyValues)
+	public void addEdge(long orig, long dest, String label, Object[] keyValues)
 			throws Exception {
 	}
 
 	@Override
-	public void removeVertex(Long id) throws Exception {
+	public void removeVertex(long id) throws Exception {
 		// graph.V(id).next().remove();
 	}
 
 	@Override
-	public void addInEdgePlaceholder(Long id2, Long id, String label)
+	public void addInEdgePlaceholder(long id2, long id, String label)
 			throws Exception {
 		// graph.V(id2).next().addEdge(label, graph.V(id).next());
 	}
@@ -370,7 +370,7 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	}
 
 	@Override
-	public GraphlyCount countEdges(Dir dir, Integer max_edges, long[] vids)
+	public GraphlyCount countEdges(Dir dir, int max_edges, long[] vids)
 			throws Exception {
 		TLongIntHashMap map = new TLongIntHashMap();
 		for (long l : vids) {
@@ -384,10 +384,10 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	}
 
 	@Override
-	public Long getRandomEdge(Long v, long[] subset, Dir d) throws Exception {
+	public long getRandomEdge(long v, long[] subset, Dir d) throws Exception {
 		long[] edges = getEdges(d, v);
 		if (edges == null || edges.length == 0)
-			return null;
+			return -1;
 
 		if (subset.length == 0)
 			return edges[(int) (Math.random() * edges.length)];
@@ -396,7 +396,7 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 			TLongHashSet set = new TLongHashSet(edges);
 			diff.retainAll(set);
 			if (diff.isEmpty())
-				return null;
+				return -1;
 			return diff.get((int) (Math.random() * diff.size()));
 		}
 	}
@@ -412,7 +412,7 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	}
 
 	@Override
-	public TLongObjectHashMap<Object> getProperties(String k, Integer top,
+	public TLongObjectHashMap<Object> getProperties(String k, int top,
 			TLongArrayList list) throws Exception {
 		if (top <= 0) {
 			TLongObjectHashMap<Object> res = new TLongObjectHashMap<>();
@@ -437,7 +437,7 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 					Comparable toRemove = sorted.asMap().lastKey();
 					if (toRemove.compareTo(value) < 0) {
 						NavigableSet<Long> navigableSet = sorted.get(toRemove);
-						Long f = navigableSet.first();
+						long f = navigableSet.first();
 						navigableSet.remove(f);
 						sorted.put(value, vid);
 					}
@@ -453,7 +453,7 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	}
 
 	@Override
-	public int getEdgeCount(Long vid, Dir dir, long[] among) throws Exception {
+	public int getEdgeCount(long vid, Dir dir, long[] among) throws Exception {
 		if (log.isDebugEnabled())
 			log.debug("Getting edge count of vid among " + among.length);
 
@@ -475,14 +475,14 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	}
 
 	@Override
-	public void setEdgeProperty(Long v1, Long v2, String k, Object val,
+	public void setEdgeProperty(long v1, long v2, String k, Object val,
 			String... labels) throws Exception {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public Object getEdgeProperty(Long v1, Long v2, String k, String... labels)
+	public Object getEdgeProperty(long v1, long v2, String k, String... labels)
 			throws Exception {
 		// TODO Auto-generated method stub
 		return null;
@@ -497,7 +497,7 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	@Override
 	public void commitUpdates(String[] k) throws Exception {
 		for (Entry<Long, Map<String, Object>> e : temps.entrySet()) {
-			Long vid = e.getKey();
+			long vid = e.getKey();
 			Map<String, Object> map = e.getValue();
 			for (String temp : k) {
 				Object val = map.get(temp);

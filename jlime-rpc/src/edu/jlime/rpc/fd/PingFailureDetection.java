@@ -76,7 +76,7 @@ public class PingFailureDetection implements StackElement, FailureProvider {
 									log.debug("Sending ping to " + peer
 											+ ", try number " + current.get());
 								try {
-									conn.queue(Message.newEmptyOutDataMessage(
+									conn.send(Message.newEmptyOutDataMessage(
 											MessageType.PING, peer));
 								} catch (Exception e1) {
 									e1.printStackTrace();

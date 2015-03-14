@@ -91,7 +91,7 @@ public class TCPNIO extends MessageProcessor implements AddressListProvider {
 	}
 
 	@Override
-	protected void send(Message msg) throws Exception {
+	public void send(Message msg) throws Exception {
 		// RingQueue map = q.get(msg.getTo());
 		// if (map == null) {
 		// synchronized (map) {

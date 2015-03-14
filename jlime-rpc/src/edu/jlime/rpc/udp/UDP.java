@@ -55,7 +55,8 @@ public class UDP extends NetworkProtocol implements PacketReceiver {
 
 	private static Logger log = Logger.getLogger(NetworkProtocol.class);
 
-	protected HashMap<Address, SocketAddress> currentSendAddress = new HashMap<>();
+	// protected HashMap<Address, SocketAddress> currentSendAddress = new
+	// HashMap<>();
 
 	protected ConcurrentHashMap<Address, HashMap<UUID, LinkedBlockingDeque<byte[]>>> streamData = new ConcurrentHashMap<>();
 
@@ -159,7 +160,7 @@ public class UDP extends NetworkProtocol implements PacketReceiver {
 			return;
 
 		if (to != null && realSockAddr == null) {
-			realSockAddr = currentSendAddress.get(to);
+			// realSockAddr = currentSendAddress.get(to);
 			if (realSockAddr == null) {
 				List<SocketAddress> bup = backup.get(to);
 				if (bup != null && !bup.isEmpty()) {
@@ -197,12 +198,11 @@ public class UDP extends NetworkProtocol implements PacketReceiver {
 
 	public void onStart(Object socket) {
 		rx = new DatagramReceiver((DatagramSocket) socket, max_bytes, this);
-
 	}
 
 	private void send(DatagramSocket sock, Object obj) {
 		DatagramPacket dg = (DatagramPacket) obj;
-		InetAddress localAddress = sock.getLocalAddress();
+		InetAddress localAddress = localAddr.getSockTo().getAddress();
 		if (localAddress != null
 				&& dg.getAddress().getClass().equals(localAddress.getClass()))
 			try {
@@ -216,8 +216,8 @@ public class UDP extends NetworkProtocol implements PacketReceiver {
 
 	@Override
 	public void beforeProcess(DataPacket pkt, Address from, Address to) {
-		currentSendAddress.put(from,
-				new SocketAddress(pkt.getAddr(), getType()));
+		// currentSendAddress.put(from,
+		// new SocketAddress(pkt.getAddr(), getType()));
 	}
 
 	@Override

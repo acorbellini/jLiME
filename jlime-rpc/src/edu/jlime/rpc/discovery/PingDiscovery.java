@@ -51,7 +51,7 @@ public class PingDiscovery extends Discovery {
 		msg.setTo(Address.noAddr());
 		msg.setInetSocketAddress(new SocketAddress(new InetSocketAddress(
 				inetaddr, port), AddressType.ANY));
-		discoveryData.queue(msg);
+		discoveryData.send(msg);
 	}
 
 	@Override

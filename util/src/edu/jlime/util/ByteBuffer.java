@@ -103,19 +103,18 @@ public class ByteBuffer {
 		return writePos - readPos;
 	}
 
-	void ensureCapacity(int i) {
+	public void ensureCapacity(int i) {
 		while (writePos + i > buffered.length) {
 			// byte[] copy = buffered;
 			// byte[] bufferedExtended = ByteArrayCache
 			// .get(buffered.length == 0 ? INIT_SIZE : buffered.length * 2);
-			duplicateSize();
+			setSize(writePos + i);
 		}
 
 	}
 
-	private void duplicateSize() {
-		byte[] bufferedExtended = new byte[buffered.length == 0 ? INIT_SIZE
-				: buffered.length * 2];
+	private void setSize(int i) {
+		byte[] bufferedExtended = new byte[buffered.length == 0 ? INIT_SIZE : i];
 		System.arraycopy(buffered, 0, bufferedExtended, 0, buffered.length);
 		buffered = bufferedExtended;
 	}

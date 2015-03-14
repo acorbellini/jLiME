@@ -64,7 +64,7 @@ public class SalsaRepeat implements Repeat<long[]> {
 		}
 		sg.loadProperties(authKey, defaultauth);
 		sg.loadProperties(hubKey, defaulthub);
-		
+
 		final Semaphore sem = new Semaphore(-before.length + 1);
 		final Map<Long, Map<String, Object>> temps = new ConcurrentHashMap<Long, Map<String, Object>>();
 		for (final long vid : before) {

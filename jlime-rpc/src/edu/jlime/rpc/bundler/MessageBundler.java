@@ -1,7 +1,11 @@
 package edu.jlime.rpc.bundler;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.log4j.Logger;
 
@@ -10,13 +14,29 @@ import edu.jlime.metrics.metric.Metrics;
 import edu.jlime.rpc.message.Message;
 import edu.jlime.rpc.message.MessageListener;
 import edu.jlime.rpc.message.MessageProcessor;
+import edu.jlime.rpc.message.MessageSimple;
 import edu.jlime.rpc.message.MessageType;
 import edu.jlime.rpc.message.SimpleMessageProcessor;
 import edu.jlime.util.ByteBuffer;
+import edu.jlime.util.RingQueue;
 
 public class MessageBundler extends SimpleMessageProcessor {
 
-	HashMap<Address, Bundler> bundles = new HashMap<>();
+	private static final int HEADER = 5;
+
+	private static class Bundle {
+		public Bundle(Address to) {
+			this.to = to;
+			this.queue = new RingQueue();
+		}
+
+		Address to;
+		RingQueue queue;
+	}
+
+	ConcurrentHashMap<Address, Bundle> bundles = new ConcurrentHashMap<>();
+
+	ArrayList<Bundle> bundleList = new ArrayList<>();
 
 	private int max_size;
 
@@ -26,7 +46,7 @@ public class MessageBundler extends SimpleMessageProcessor {
 
 	public MessageBundler(MessageProcessor next, int size) {
 		super(next, "Bundler");
-		this.max_size = 64;
+		this.max_size = size - HEADER;
 		this.timer = new Timer("Bundler Timer");
 	}
 
@@ -40,8 +60,9 @@ public class MessageBundler extends SimpleMessageProcessor {
 				while (reader.hasRemaining()) {
 					byte[] msg = reader.getByteArray();
 					try {
-						notifyRcvd(Message.deEncapsulate(msg,
-								message.getFrom(), message.getTo()));
+						MessageSimple deEncapsulate = Message.deEncapsulate(
+								msg, message.getFrom(), message.getTo());
+						notifyRcvd(deEncapsulate);
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
@@ -56,12 +77,38 @@ public class MessageBundler extends SimpleMessageProcessor {
 				notifyRcvd(message);
 			}
 		});
+
+		timer.schedule(new TimerTask() {
+			@Override
+			public void run() {
+				for (Bundle b : bundleList) {
+					Message msg = null;
+					Message curr = null;
+					while ((curr = (Message) b.queue.tryTakeOne()) != null) {
+						if (msg == null)
+							msg = Message.newEmptyOutDataMessage(
+									MessageType.BUNDLE, b.to);
+						if (msg.getSize() + curr.getSize() < max_size) {
+							msg.getDataBuffer()
+									.putByteArray(curr.toByteArray());
+						}
+					}
+					if (msg != null) {
+						try {
+							sendNext(msg);
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					}
+				}
+			}
+		}, 1, 1);
 	}
 
 	@Override
 	public void send(Message msg) throws Exception {
 		int size = msg.getSize();
-		if (size + 4 > max_size) {
+		if (size > max_size) {
 			if (log.isDebugEnabled())
 				log.debug("Sending NOT BUNDLED Message of type "
 						+ msg.getType() + " and size " + msg.getSize());
@@ -71,30 +118,25 @@ public class MessageBundler extends SimpleMessageProcessor {
 		Address to = (Address) msg.getTo();
 		if (to == null)
 			to = Address.noAddr();
-		Bundler bundler = bundles.get(to);
-		if (bundler == null)
+
+		Bundle b = bundles.get(to);
+		if (b == null) {
 			synchronized (bundles) {
-				bundler = bundles.get(to);
-				if (bundler == null) {
-					bundler = new Bundler(getNext(), max_size, to, timer);
-					bundles.put(to, bundler);
+				b = bundles.get(to);
+				if (b == null) {
+					b = new Bundle(to);
+					bundles.put(to, b);
+					bundleList.add(b);
 				}
 			}
-		bundler.send(msg);
+		}
+		b.queue.put(msg);
 	}
 
 	@Override
 	public void cleanupOnFailedPeer(Address addr) {
-		Bundler b = null;
-		synchronized (bundles) {
-			b = bundles.remove(addr);
-		}
-		if (b != null)
-			try {
-				b.stop();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+		bundles.remove(addr);
+		bundleList.remove(addr);
 	}
 
 	@Override

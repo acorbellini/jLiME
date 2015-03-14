@@ -7,7 +7,7 @@ public final class Address implements Comparable<Address>, Serializable {
 
 	UUID id;
 
-	String addr;
+	// String addr;
 
 	public Address() {
 		this(UUID.randomUUID());
@@ -15,7 +15,7 @@ public final class Address implements Comparable<Address>, Serializable {
 
 	public Address(UUID id) {
 		this.id = id;
-		this.addr = id.toString();
+		// this.addr = id.toString();
 	}
 
 	@Override

@@ -108,7 +108,7 @@ public class JNET extends MessageProcessor implements AddressListProvider,
 	}
 
 	@Override
-	protected void send(Message msg) throws Exception {
+	public void send(Message msg) throws Exception {
 		ProtocolHandle<byte[]> handle = handles.get(msg.getTo());
 		if (handle == null) {
 			synchronized (handles) {

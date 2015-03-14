@@ -309,8 +309,8 @@ public class RPCCreator {
 				int count = 0;
 				String type = c.getType().getSimpleName();
 
-				if (c.getType().isPrimitive())
-					throw new Exception("Primitive arguments not supported");
+				// if (c.getType().isPrimitive())
+				// throw new Exception("Primitive arguments not supported");
 
 				if (c.getType().getTypeParameters().length > 0) {
 					type = type + "<";

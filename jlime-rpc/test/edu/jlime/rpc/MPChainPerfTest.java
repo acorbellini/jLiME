@@ -55,7 +55,7 @@ public class MPChainPerfTest {
 		}
 		init = System.nanoTime();
 		for (int i = 1; i <= MSGS; i++) {
-			first.queue(Message.newEmptyOutDataMessage(MessageType.ACK,
+			first.send(Message.newEmptyOutDataMessage(MessageType.ACK,
 					new Address(UUID.randomUUID())));
 		}
 

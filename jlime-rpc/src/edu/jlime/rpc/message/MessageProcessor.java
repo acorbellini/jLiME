@@ -91,7 +91,7 @@ public abstract class MessageProcessor implements StackElement {
 	protected void onStop() throws Exception {
 	};
 
-	protected abstract void send(Message msg) throws Exception;
+	public abstract void send(Message msg) throws Exception;
 
 	protected void notifyRcvd(Message message) throws Exception {
 
@@ -122,14 +122,14 @@ public abstract class MessageProcessor implements StackElement {
 		if (proc != null) {
 			if (log.isDebugEnabled())
 				log.debug("Queuing message " + msg + " on processor " + proc);
-			proc.queue(msg);
+			proc.send(msg);
 		}
 	}
 
-	public void queue(Message msg) throws Exception {
-		// out.put(msg);
-		send(msg);
-	}
+	// public void send(Message msg) throws Exception {
+	// // out.put(msg);
+	// send(msg);
+	// }
 
 	public synchronized void addMessageListener(MessageType type,
 			MessageListener packList) {

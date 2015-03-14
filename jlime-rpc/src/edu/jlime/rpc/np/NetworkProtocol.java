@@ -36,7 +36,7 @@ public abstract class NetworkProtocol extends SimpleMessageProcessor implements
 
 	private int portrange;
 
-	private SocketAddress localAddr;
+	protected SocketAddress localAddr;
 
 	private Address local;
 

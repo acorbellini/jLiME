@@ -8,7 +8,8 @@ import edu.jlime.core.rpc.MethodCall;
 import edu.jlime.core.rpc.RPCDispatcher;
 
 public class SyncPerfClient {
-	private static final int ITERS = 1000000;
+
+	private static final int ITERS = 5000000;
 
 	public static void main(String[] args) throws Exception {
 
@@ -23,7 +24,7 @@ public class SyncPerfClient {
 		rpc.start();
 
 		Cluster cl = rpc.getCluster();
-		
+
 		while (cl.size() < 2) {
 			Thread.sleep(1000);
 		}
@@ -32,12 +33,20 @@ public class SyncPerfClient {
 		if (p.equals(cl.getLocalPeer())) {
 			p = peers.get(1);
 		}
+		int cont = 0;
+
 		long init = System.currentTimeMillis();
 		for (int i = 0; i < ITERS; i++) {
 			// PerfMeasure.startTimer("write", 1000, false);
 			// PerfMeasure.startTimer("data", 1000, false);
-			rpc.callSync(p, cl.getLocalPeer(), new MethodCall("remote",
-					"getString", new Object[] { 15d }));
+
+			if (cont % 10000 == 0)
+				System.out.println(cont);
+
+			cont++;
+
+			rpc.callAsync(p, cl.getLocalPeer(), new MethodCall("remote",
+					 "getString", new Object[] { 15d }));
 
 			// PerfMeasure.takeTime("read", false);
 

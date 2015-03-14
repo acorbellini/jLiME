@@ -1,5 +1,6 @@
 package edu.jlime.core.marshalling;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.UUID;
 
@@ -26,14 +27,17 @@ import edu.jlime.core.rpc.RPCObject;
 import edu.jlime.core.transport.Address;
 import edu.jlime.metrics.metric.Metrics;
 import edu.jlime.util.ByteBuffer;
+import gnu.trove.map.hash.TObjectByteHashMap;
 
 public class TypeConverters {
 
-	private HashMap<String, TypeConverter> convs = new HashMap<>();
+	// private HashMap<String, TypeConverter> convs = new HashMap<>();
 
-	private HashMap<String, Byte> ids = new HashMap<>();
+	private ArrayList<TypeConverter> convs = new ArrayList<>();
 
-	private HashMap<Byte, String> types = new HashMap<>();
+	private TObjectByteHashMap<String> ids = new TObjectByteHashMap<String>();
+
+	private ArrayList<String> types = new ArrayList<>();
 
 	private byte count = 0;
 
@@ -87,18 +91,19 @@ public class TypeConverters {
 		byte id = count++;
 		String className = classObj.getName();
 
-		types.put(id, className);
+		types.add(className);
+		convs.add(conv);
 
 		ids.put(className, id);
-		convs.put(className, conv);
+
 	}
 
 	public TypeConverter getTypeConverter(Class<?> classObj) {
 		String className = classObj.getName();
-		return convs.get(className);
+		return convs.get(ids.get(className));
 	}
 
-	public Byte getTypeId(Class<?> classObj) {
+	public byte getTypeId(Class<?> classObj) {
 		String className = classObj.getName();
 		return ids.get(className);
 	}
@@ -112,7 +117,7 @@ public class TypeConverters {
 		Class<?> classOfObject = o == null ? NullType.class : o.getClass();
 		// Default converter
 		TypeConverter converter = getTypeConverter(classOfObject);
-		Byte type = getTypeId(classOfObject);
+		byte type = getTypeId(classOfObject);
 		if (converter == null) {
 
 			if (RPCObject.class.isAssignableFrom(classOfObject)) {
@@ -134,8 +139,8 @@ public class TypeConverters {
 
 	public Object getObjectFromArray(ByteBuffer buff) throws Exception {
 		byte type = buff.get();
-		String className = types.get(type);
-		TypeConverter converter = convs.get(className);
+		// String className = types.get(type);
+		TypeConverter converter = convs.get(type);
 		return converter.fromArray(buff);
 	}
 }

@@ -35,7 +35,7 @@ public class MultiCastDiscovery extends Discovery {
 				int times = 0;
 				while (!stopped && times < config.disc_num_tries) {
 					try {
-						discoveryInit.queue(newDiscoveryMessage());
+						discoveryInit.send(newDiscoveryMessage());
 					} catch (Exception e) {
 						e.printStackTrace();
 						log.error("Could not send discovery message.");

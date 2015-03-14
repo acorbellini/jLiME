@@ -15,8 +15,8 @@ public abstract class SimpleMessageProcessor extends MessageProcessor {
 		return next;
 	}
 
-	protected void sendNext(Message msg) throws Exception {
+	public void sendNext(Message msg) throws Exception {
 		// sendToProc("next", msg);
-		next.queue(msg);
+		next.send(msg);
 	}
 }

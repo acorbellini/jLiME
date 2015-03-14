@@ -1,60 +1,123 @@
 package edu.jlime.pregel.graph.rpc;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
+import edu.jlime.core.cluster.BroadcastException;import edu.jlime.pregel.graph.rpc.Graph;
+import edu.jlime.core.rpc.RPCDispatcher;
+import edu.jlime.core.rpc.RPCClient;
 import edu.jlime.core.cluster.Peer;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Map;
+import edu.jlime.core.rpc.Transferible;
+import java.lang.Long;
+import java.lang.String;
+import java.lang.Object;
+import java.lang.Exception;
+import java.lang.String;
+import java.lang.Exception;
+import java.lang.String;
+import java.lang.Exception;
+import java.lang.String;
+import java.lang.Object;
+import java.lang.Exception;
+import java.lang.Long;
+import java.lang.String;
+import java.lang.Object;
+import java.lang.Exception;
+import java.lang.Long;
+import java.lang.Exception;
+import java.lang.Long;
+import java.lang.Long;
+import java.lang.Exception;
+import java.lang.Long;
+import java.lang.Long;
+import java.lang.Exception;
+import java.lang.Long;
+import java.lang.Long;
+import java.lang.Exception;
+import java.lang.Long;
+import java.lang.Exception;
+import java.lang.Exception;
+import java.lang.Long;
+import java.lang.Long;
+import java.lang.Exception;
+import java.util.Collection;
+import java.lang.Exception;
+import java.util.List;
+import java.lang.Exception;
+import java.lang.Long;
+import java.lang.Long;
+import java.lang.Exception;
+import java.lang.Long;
+import java.lang.Exception;
+import java.lang.Long;
+import java.lang.Long;
+import java.lang.Exception;
+import java.lang.String;
+import java.lang.Object;
+import java.lang.Exception;
+import java.lang.Long;
+import java.util.Collection;
+import java.lang.Exception;
+import java.lang.Long;
+import java.util.Collection;
+import java.lang.Exception;
+import java.lang.Long;
+import java.lang.Exception;
+import java.lang.Exception;
+import java.lang.Long;
+import java.lang.Long;
+import java.lang.Exception;
+import java.util.Set;
+import java.lang.Exception;
 
 public interface GraphBroadcast { 
 
-  public Map<Peer,Object>  get(Long arg0, String arg1) throws Exception; 
+  public Map<Peer,Object>  get(final Long arg0, final String arg1) throws Exception; 
 
   public Map<Peer,String>  getName() throws Exception; 
 
   public Map<Peer,String>  print() throws Exception; 
 
-  public Map<Peer,Object>  getDefaultValue(String arg0) throws Exception; 
+  public Map<Peer,Object>  getDefaultValue(final String arg0) throws Exception; 
 
-  public void setVal(Long arg0, String arg1, Object arg2) throws Exception; 
+  public void setVal(final Long arg0, final String arg1, final Object arg2) throws Exception; 
 
-  public void disable(Long arg0) throws Exception; 
+  public void disable(final Long arg0) throws Exception; 
 
-  public void createVertices(Set<java.lang.Long> arg0) throws Exception; 
+  public void putIncoming(final Long arg0, final Long arg1) throws Exception; 
 
-  public void putOutgoing(List<java.lang.Long[]> arg0) throws Exception; 
+  public void disableIncoming(final Long arg0, final Long arg1) throws Exception; 
 
-  public void putOutgoing(Long arg0, Long arg1) throws Exception; 
+  public void disableLink(final Long arg0, final Long arg1) throws Exception; 
 
-  public Map<Peer,Integer>  getAdyacencySize(Long arg0) throws Exception; 
-
-  public void putLink(Long arg0, Long arg1) throws Exception; 
-
-  public Map<Peer,Integer>  getOutgoingSize(Long arg0) throws Exception; 
-
-  public void disableIncoming(Long arg0, Long arg1) throws Exception; 
-
-  public void disableLink(Long arg0, Long arg1) throws Exception; 
-
-  public void disableOutgoing(Long arg0, Long arg1) throws Exception; 
-
-  public Map<Peer,Integer>  vertexSize() throws Exception; 
-
-  public void setDefaultValue(String arg0, Object arg1) throws Exception; 
-
-  public Map<Peer,Collection>  getOutgoing(Long arg0) throws Exception; 
-
-  public Map<Peer,Boolean>  createVertex(Long arg0) throws Exception; 
-
-  public Map<Peer,Collection>  getIncoming(Long arg0) throws Exception; 
-
-  public void putIncoming(Long arg0, Long arg1) throws Exception; 
+  public Map<Peer,Integer>  getAdyacencySize(final Long arg0) throws Exception; 
 
   public void enableAll() throws Exception; 
 
-  public void removeOutgoing(Long arg0, Long arg1) throws Exception; 
+  public void removeOutgoing(final Long arg0, final Long arg1) throws Exception; 
 
   public Map<Peer,Collection>  vertices() throws Exception; 
+
+  public void putOutgoing(final List<java.lang.Long[]> arg0) throws Exception; 
+
+  public void putOutgoing(final Long arg0, final Long arg1) throws Exception; 
+
+  public Map<Peer,Integer>  getOutgoingSize(final Long arg0) throws Exception; 
+
+  public void disableOutgoing(final Long arg0, final Long arg1) throws Exception; 
+
+  public void setDefaultValue(final String arg0, final Object arg1) throws Exception; 
+
+  public Map<Peer,Collection>  getOutgoing(final Long arg0) throws Exception; 
+
+  public Map<Peer,Collection>  getIncoming(final Long arg0) throws Exception; 
+
+  public Map<Peer,Boolean>  createVertex(final Long arg0) throws Exception; 
+
+  public Map<Peer,Integer>  vertexSize() throws Exception; 
+
+  public void putLink(final Long arg0, final Long arg1) throws Exception; 
+
+  public void createVertices(final Set<java.lang.Long> arg0) throws Exception; 
 
 }

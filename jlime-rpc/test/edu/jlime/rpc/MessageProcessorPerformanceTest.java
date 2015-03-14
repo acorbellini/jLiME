@@ -57,7 +57,7 @@ public class MessageProcessorPerformanceTest {
 				int iter = ITERMAX / 2;
 				while (iter < ITERMAX) {
 					try {
-						mp.queue(Message.newOutDataMessage(
+						mp.send(Message.newOutDataMessage(
 								DataTypeUtils.intToByteArray(iter),
 								MessageType.ACK, null));
 					} catch (Exception e) {
@@ -73,7 +73,7 @@ public class MessageProcessorPerformanceTest {
 		t.start();
 		int iter = 0;
 		while (iter < ITERMAX / 2) {
-			mp.queue(Message.newOutDataMessage(
+			mp.send(Message.newOutDataMessage(
 					DataTypeUtils.intToByteArray(iter), MessageType.ACK, null));
 			iter++;
 		}

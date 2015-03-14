@@ -56,7 +56,7 @@ public class FlowControl extends SimpleMessageProcessor {
 	public void send(Message msg) throws Exception {
 		Address to = msg.getTo();
 		FlowControlPerNode fc = getFC(to);
-		fc.queue(msg);
+		fc.send(msg);
 	}
 
 	private FlowControlPerNode getFC(Address to) throws Exception {

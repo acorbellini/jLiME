@@ -170,7 +170,7 @@ public class UDPResender extends SimpleMessageProcessor {
 	}
 
 	@Override
-	protected void send(Message msg) throws Exception {
+	public void send(Message msg) throws Exception {
 		UUID id = UUID.randomUUID();
 		sent.put(id, new SendMsg(msg, id, System.currentTimeMillis()));
 		send0(msg, id);

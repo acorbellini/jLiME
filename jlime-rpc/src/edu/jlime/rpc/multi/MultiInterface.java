@@ -139,7 +139,7 @@ public class MultiInterface extends MessageProcessor implements
 				if (log.isDebugEnabled())
 					log.debug("Sending Message of type " + msg.getType()
 							+ " to " + to + " using processor " + proc);
-				proc.queue(msg);
+				proc.send(msg);
 				return;
 			}
 		}
@@ -154,7 +154,7 @@ public class MultiInterface extends MessageProcessor implements
 	private void sendToAllProcs(Message msg) {
 		for (MessageProcessor mp : super.getProcessors())
 			try {
-				mp.queue(msg);
+				mp.send(msg);
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

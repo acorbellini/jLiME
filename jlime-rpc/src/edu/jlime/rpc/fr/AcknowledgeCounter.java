@@ -1,26 +1,39 @@
 package edu.jlime.rpc.fr;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.log4j.Logger;
+import org.apache.mina.util.ConcurrentHashSet;
 
 import edu.jlime.core.transport.Address;
 import edu.jlime.rpc.Configuration;
 import edu.jlime.rpc.message.Message;
 import edu.jlime.rpc.message.MessageType;
+import edu.jlime.util.ByteBuffer;
+import edu.jlime.util.RingQueue;
+import gnu.trove.list.array.TIntArrayList;
 
 class AcknowledgeCounter {
+
+	public static class ConfirmData {
+		volatile boolean confirmed = false;
+		volatile int seq = -1;
+		public boolean ackSent = false;
+	}
 
 	private Logger log = Logger.getLogger(AcknowledgeCounter.class);
 
 	Address to;
 
-	boolean[] rcvd;
+	ConfirmData[] rcvd;
 
 	private volatile int nextExpectedNumber = 0;
 
@@ -32,15 +45,17 @@ class AcknowledgeCounter {
 
 	private volatile AtomicInteger confirmed = new AtomicInteger(-1);
 
-	private ConcurrentLinkedDeque<Message> toSend = new ConcurrentLinkedDeque<>();
+	private RingQueue toSend = new RingQueue();
 
 	private Configuration config;
 
-	private volatile long current_ack_time;
+	// private volatile long current_ack_time;
+	//
+	// private float alpha = 0.5f;
 
-	private float alpha = 0.5f;
+	// private LinkedList<Integer> acks = new LinkedList<>();
 
-	private HashSet<Integer> acks = new HashSet<>();
+	private Acknowledge ack;
 
 	public static class ResendData {
 
@@ -68,56 +83,70 @@ class AcknowledgeCounter {
 		}
 	}
 
-	public AcknowledgeCounter(Address to, int max_nack_size, int nack_delay,
-			int ack_delay, Configuration config) {
+	public AcknowledgeCounter(Acknowledge ack, Address to, int max_nack_size,
+			int nack_delay, int ack_delay, Configuration config) {
+		this.ack = ack;
 		this.max_resend_size = config.ack_max_resend_size;
 		resendArray = new ResendData[max_resend_size];
 		for (int i = 0; i < resendArray.length; i++) {
 			resendArray[i] = new ResendData();
 		}
 		this.to = to;
-		rcvd = new boolean[max_resend_size];
-		Arrays.fill(rcvd, false);
+		rcvd = new ConfirmData[max_resend_size];
+		for (int i = 0; i < rcvd.length; i++) {
+			rcvd[i] = new ConfirmData();
+		}
+		// Arrays.fill(rcvd, false);
 		this.config = config;
-		this.current_ack_time = config.ack_delay;
+		// this.current_ack_time = config.ack_delay;
 	}
 
 	public void send(Message msg) throws Exception {
-		toSend.add(msg);
+		// toSend.put(msg);
+		int seqN = this.seqN.getAndIncrement();
+		while (Math.abs(seqN - confirmed.get()) > max_resend_size) {
+			synchronized (this.seqN) {
+				this.seqN.wait(0, 500);
+			}
+		}
+		// if (ret == null)
+		// ret = new ArrayList<>();
+
+		// Message msg = (Message) toSend.tryTakeOne();
+		// if (msg == null)
+		// return null;
+
+		resendArray[pos(seqN)].setData(msg.toByteArray(),
+				System.currentTimeMillis(), seqN);
+
+		Message ackMsg = Message.encapsulateOut(msg, MessageType.ACK_SEQ, to);
+		ackMsg.getHeaderBuffer().putInt(seqN);
+		ack.sendNext(ackMsg);
+		// ret.add(ackMsg);
+		// return ackMsg;
 	}
 
-	public synchronized boolean seqNumberArrived(int seq) throws Exception {
-		// sendAck(seq);
+	public boolean seqNumberArrived(int seq) throws Exception {
 		if (seq < nextExpectedNumber) {
-			// if (log.isDebugEnabled())
-			// log.debug("Seq " + seq + " is less than " + nextExpectedNumber
-			// + ", not updating (RESEND?).");
+			rcvd[pos(seq)].ackSent = false;
 			return false;
 		}
-		rcvd[pos(seq)] = true;
+
+		rcvd[pos(seq)].confirmed = true;
+		rcvd[pos(seq)].ackSent = false;
+		rcvd[pos(seq)].seq = seq;
+
 		if (seq == nextExpectedNumber) {
-			// (this) {
-			// if (seq == nextExpectedNumber) {
-			// if (log.isDebugEnabled())
-			// log.debug("Consecutive " + seq + " arrived, with respect to "
-			// + nextExpectedNumber);
-
-			while (rcvd[pos(nextExpectedNumber)]) {
-				rcvd[pos(nextExpectedNumber)] = false;
-				nextExpectedNumber++;
+			synchronized (rcvd) {
+				if (seq == nextExpectedNumber) {
+					while (rcvd[pos(nextExpectedNumber)].confirmed) {
+						rcvd[pos(nextExpectedNumber)].confirmed = false;
+						nextExpectedNumber++;
+					}
+				}
 			}
-			// if (log.isDebugEnabled())
-			// log.debug("Validated from " + seq + " to "
-			// + (nextExpectedNumber - 1) + ". Next Expected : "
-			// + nextExpectedNumber);
-			// }
-			// }
-
-		} else if (seq > nextExpectedNumber) {
-			// if (log.isDebugEnabled())
-			// log.info("Non Consecutive Seq " + seq + " with respect to "
-			// + nextExpectedNumber);
 		}
+
 		return true;
 
 	}
@@ -127,40 +156,18 @@ class AcknowledgeCounter {
 	}
 
 	public void confirm(int seq) throws Exception {
-		// log.info("ACK number for " + to + " - " + seq +
-		// " confirmed so far is "
-		// + confirmed);
-		if (seq <= confirmed.get()) {
-			// if (log.isDebugEnabled())
-			// log.debug("Ignoring ACK Minimum Consecutive Seq Number Confirmed is "
-			// + confirmed + " and ack received is " + seq);
+		if (seq <= confirmed.get())
 			return;
-		}
-		// else if (seq > confirmed.get() + 1)
-		// if (log.isDebugEnabled())
-		// log.debug("Received ACK out of order Minimum Consecutive Seq Number Confirmed is "
-		// + confirmed + " and ack received is " + seq)
-		;
 
 		ResendData curr = resendArray[pos(seq)];
-		if (curr == null) {
-			// if (log.isDebugEnabled())
-			// log.info("Received ACK for already confirmed Seq number " + seq
-			// + " confirmed so far is " + confirmed);
-		} else {
-			curr.setConfirmed();
-			current_ack_time = (long) (alpha
-					* (System.currentTimeMillis() - curr.timeSent)
-					+ (1 - alpha) * current_ack_time + 0.1f * config.ack_delay);
-		}
+		curr.setConfirmed();
+		// current_ack_time = (long) (alpha
+		// * (System.currentTimeMillis() - curr.timeSent) + (1 - alpha)
+		// * current_ack_time + 0.1f * config.ack_delay);
 
 		if (seq == confirmed.get() + 1) {
-			synchronized (this) {
+			synchronized (confirmed) {
 				if (seq == confirmed.get() + 1) {
-					// if (log.isDebugEnabled())
-					// log.debug("Updating Minimum Consecutive Seq Number Confirmed is "
-					// + confirmed + " and ack received is " + seq);
-					// resendArray.set(pos(confirmed.get() + 1), null);
 					resendArray[pos(confirmed.get() + 1)].data = null;
 					confirmed.incrementAndGet();
 
@@ -168,51 +175,89 @@ class AcknowledgeCounter {
 					while (!done) {
 						ResendData res = resendArray[pos(confirmed.get() + 1)];
 						if (res.data != null && res.isConfirmed()) {
-							// resendArray.set(pos(confirmed.get() + 1), null);
 							res.data = null;
 							confirmed.incrementAndGet();
 						} else
 							done = true;
 					}
-					synchronized (this) {
-						notifyAll();
-					}
+					// synchronized (this) {
+					// confirmed.notifyAll();
+					// }
 				}
 			}
-			// if (log.isDebugEnabled())
-			// log.debug("Updated Minimum Consecutive Seq Number Confirmed to "
-			// + confirmed + " and ack received is " + seq);
 		}
 	}
 
-	public List<Message> getSend() {
-		ArrayList<Message> ret = null;
-		while (!toSend.isEmpty()
-				&& Math.abs(seqN.get() - confirmed.get()) <= max_resend_size) {
-			if (ret == null)
-				ret = new ArrayList<>();
+	public Message nextSend() {
+		// ArrayList<Message> ret = null;
+		Message ret = null;
+		if (Math.abs(seqN.get() - confirmed.get()) <= max_resend_size) {
+			// if (ret == null)
+			// ret = new ArrayList<>();
+
+			Message msg = (Message) toSend.tryTakeOne();
+			if (msg == null)
+				return null;
+
 			int seqN = this.seqN.getAndIncrement();
-
-			Message msg = toSend.pop();
-
 			resendArray[pos(seqN)].setData(msg.toByteArray(),
 					System.currentTimeMillis(), seqN);
 
 			Message ackMsg = Message.encapsulateOut(msg, MessageType.ACK_SEQ,
 					to);
-
 			ackMsg.getHeaderBuffer().putInt(seqN);
-			ret.add(ackMsg);
+			// ret.add(ackMsg);
+			return ackMsg;
+
 		}
 		return ret;
 	}
 
-	public synchronized ArrayList<Message> getResend() {
-		ArrayList<Message> ret = null;
+	// public HashSet<Integer> getAcks() {
+	// return acks;
+	// }
+
+	// public void addAck(int seq) {
+	// synchronized (acks) {
+	// acks.add(seq);
+	// }
+	// }
+
+	public TIntArrayList getAcks(int currSize) {
+		// ByteBuffer buff = msg.getHeaderBuffer();
+		int size = currSize;
+		int diff = (ack.max_size - 4) - size;
+		int count = diff / 16;
+		if (count > 0) {
+			TIntArrayList list = new TIntArrayList();
+			for (int i = 0; i < rcvd.length && list.size() < count; i++) {
+				if (!rcvd[i].ackSent) {
+					rcvd[i].ackSent = true;
+					list.add(rcvd[i].seq);
+				}
+			}
+			return list;
+
+		}
+		return null;
+	}
+
+	public void sendAcks() {
+		TIntArrayList list = getAcks(0);
+		if (list == null || list.isEmpty())
+			return;
+		Message ack = Message.newEmptyOutDataMessage(MessageType.ACK, to);
+		appendAcks(ack, list);
+		try {
+			this.ack.sendNext(ack);
+		} catch (Exception e1) {
+			e1.printStackTrace();
+		}
+	}
+
+	public void resend() {
 		long curr = System.currentTimeMillis();
 		for (int i = 0; i < max_resend_size; i++) {
-			if (ret == null)
-				ret = new ArrayList<Message>();
 			ResendData res = resendArray[i];
 
 			boolean confirmed = res.confirmed;
@@ -224,36 +269,32 @@ class AcknowledgeCounter {
 			int seq = res.seq;
 
 			if (data != null && !confirmed
-					&& curr - time > config.retransmit_delay
-			// current_ack_time
-			) {
+					&& curr - time > config.retransmit_delay) {
 				try {
 					res.timeSent = curr;
-
-					// if (log.isDebugEnabled())
-					// log.debug("Resending Seq " + seq);
 
 					Message ackMsg = Message.newOutDataMessage(data,
 							MessageType.ACK_SEQ, to);
 					ackMsg.getHeaderBuffer().putInt(seq);
-
+					TIntArrayList list = getAcks(ackMsg.getSize());
+					if (list != null && !list.isEmpty()) {
+						appendAcks(ackMsg, list);
+					}
 					if (!confirmed)
-						ret.add(ackMsg);
+						ack.sendNext(ackMsg);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
 			}
 		}
-		return ret;
 	}
 
-	public HashSet<Integer> getAcks() {
-		return acks;
-	}
-
-	public void addAck(int seq) {
-		synchronized (acks) {
-			acks.add(seq);
+	private void appendAcks(Message ackMsg, TIntArrayList list) {
+		ByteBuffer buff = ackMsg.getHeaderBuffer();
+		buff.ensureCapacity(list.size() * 4 + 4);
+		buff.putInt(list.size());
+		for (int j = 0; j < list.size(); j++) {
+			buff.putInt(list.get(j));
 		}
 	}
 }

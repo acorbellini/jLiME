@@ -98,7 +98,7 @@ public abstract class Discovery implements DiscoveryProvider, StackElement {
 
 						Message confirm = newDiscoveryConfirmMessage();
 						confirm.setTo(m.getFrom());
-						discoveryData.queue(confirm);
+						discoveryData.send(confirm);
 
 					}
 				});
@@ -128,7 +128,7 @@ public abstract class Discovery implements DiscoveryProvider, StackElement {
 							Message response = newDiscoveryResponseMessage();
 							response.setTo(new Address(disco.getId()));
 							response.setInetSocketAddress(sock);
-							discoveryData.queue(response);
+							discoveryData.send(response);
 						}
 					}
 

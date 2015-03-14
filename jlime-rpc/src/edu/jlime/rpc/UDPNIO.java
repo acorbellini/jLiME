@@ -81,7 +81,7 @@ public class UDPNIO extends MessageProcessor implements AddressListProvider,
 	}
 
 	@Override
-	protected void send(Message msg) throws Exception {
+	public void send(Message msg) throws Exception {
 
 		InetSocketAddress to = null;
 		if (msg.getSock() != null)
@@ -97,20 +97,18 @@ public class UDPNIO extends MessageProcessor implements AddressListProvider,
 		toSend.putRawByteArray(ba);
 		ByteBuffer buff = ByteBuffer.wrap(toSend.build());
 
-		if (!channel.isOpen()) {
-			// log.warn("Channel is closed");
-			return;
-		}
+		// if (!channel.isOpen()) {
+		// // log.warn("Channel is closed");
+		// return;
+		// }
 
-		if (to == null)
-			System.out.println("Socket to is null");
 		try {
-			synchronized (channel) {
-				int write = 0;
+			// synchronized (channel) {
+			int write = 0;
 
-				while ((write += channel.send(buff, to)) != toSend.size()) {
-				}
+			while ((write += channel.send(buff, to)) != toSend.size()) {
 			}
+			// }
 		} catch (Exception e) {
 			log.info("Closed UDP NIO Channel.");
 		}
@@ -182,23 +180,14 @@ public class UDPNIO extends MessageProcessor implements AddressListProvider,
 	}
 
 	private void read(SelectableChannel channel) throws Exception {
-
 		DatagramChannel sc = (DatagramChannel) channel;
-
-		// assuming buffer is a ByteBuffer
 		readbuffer.clear();
-		java.net.SocketAddress fromSock;
 
-		while ((fromSock = sc.receive(readbuffer)) == null) {
+		while (sc.receive(readbuffer) == null) {
 		}
-
-		final InetSocketAddress addr = (InetSocketAddress) fromSock;
-
 		readbuffer.flip();
 		final byte[] b = new byte[readbuffer.remaining()];
 		readbuffer.get(b, 0, b.length);
-		// the buffer is now ready for reading the data from
-
 		final edu.jlime.util.ByteBuffer buff = new edu.jlime.util.ByteBuffer(b);
 
 		final Address from = new Address(buff.getUUID());
@@ -209,8 +198,6 @@ public class UDPNIO extends MessageProcessor implements AddressListProvider,
 				log.debug("Not for me.");
 			return;
 		}
-		addressBook.putIfAbsent(from, addr);
-		// readbuffer.clear();
 		exec.execute(new Runnable() {
 			@Override
 			public void run() {
