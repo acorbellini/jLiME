@@ -68,7 +68,7 @@ public abstract class Message {
 			Address to) {
 		ByteBuffer reader = new ByteBuffer(simple);
 		Header h = Header.fromBytes(reader);
-		ByteBuffer d = new ByteBuffer(reader.getRawByteArray());
+		ByteBuffer d = new ByteBuffer(reader, h.headerData.limit, reader.limit);
 		return new MessageSimple(h, d, from, to);
 	};
 
@@ -159,5 +159,12 @@ public abstract class Message {
 
 	public void setInetSocketAddress(SocketAddress sock) {
 		this.sock = sock;
+	}
+
+	public static Message deEncapsulate(ByteBuffer reader, Address from,
+			Address to) {
+		Header h = Header.fromBytes(reader);
+		ByteBuffer d = new ByteBuffer(reader, h.headerData.limit, reader.limit);
+		return new MessageSimple(h, d, from, to);
 	}
 }

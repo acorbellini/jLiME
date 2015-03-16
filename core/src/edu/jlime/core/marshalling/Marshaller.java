@@ -42,6 +42,12 @@ public class Marshaller {
 		return build;
 	}
 
+	public ByteBuffer toBuffer(Peer cliID, Object o) throws Exception {
+		ByteBuffer buffer = new ByteBuffer();
+		tc.objectToByteArray(o, buffer, cliID);
+		return buffer;
+	}
+
 	public TypeConverters getTc() {
 		return tc;
 	}

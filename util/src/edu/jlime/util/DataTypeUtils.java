@@ -94,4 +94,12 @@ public class DataTypeUtils {
 		byte[] b = longToByteArray(3l);
 		System.out.println(byteArrayToLong(b));
 	}
+
+	public static void longToByteArray(long l, byte[] b, int pos) {
+		for (int i = 7; i > 0; i--) {
+			b[i + pos] = (byte) l;
+			l >>>= 8;
+		}
+		b[0 + pos] = (byte) l;
+	}
 }

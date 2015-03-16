@@ -19,13 +19,13 @@ public class ByteBuffer {
 
 	protected ByteArrayOutputStream bos;
 
-	private static final int INIT_SIZE = 32;
+	private static final int INIT_SIZE = 256;
 
 	byte[] buffered;
 
-	int readPos = 0;
+	public int readPos = 0;
 
-	int writePos = 0;
+	public int limit = 0;
 
 	public ByteBuffer() {
 		this(INIT_SIZE);
@@ -37,18 +37,23 @@ public class ByteBuffer {
 
 	public ByteBuffer(byte[] data, int length) {
 		this.buffered = data;
-		this.writePos = length;
+		this.limit = length;
 		// bos = new ByteArrayOutputStream();
 	}
 
 	public ByteBuffer(int i) {
 		this(new byte[i], 0);
-		// this(ByteArrayCache.get(i), 0);
 	}
 
 	public ByteBuffer(byte[] buffered, int wrapSize, int readPos) {
 		this(buffered, wrapSize);
 		this.readPos = readPos;
+	}
+
+	public ByteBuffer(ByteBuffer buff, int from, int to) {
+		this.readPos = from;
+		this.limit = to;
+		this.buffered = buff.buffered;
 	}
 
 	public int getInt() {
@@ -89,27 +94,26 @@ public class ByteBuffer {
 	}
 
 	public boolean hasRemaining() {
-		return readPos < writePos;
+		return readPos < limit;
 	}
 
 	public byte[] getRawByteArray() {
 		// byte[] raw = ByteArrayCache.get(writePos - readPos);
-		byte[] raw = new byte[writePos - readPos];
-		System.arraycopy(buffered, readPos, raw, 0, writePos - readPos);
+		byte[] raw = new byte[limit - readPos];
+		System.arraycopy(buffered, readPos, raw, 0, limit - readPos);
 		return raw;
 	}
 
 	public int size() {
-		return writePos - readPos;
+		return limit - readPos;
 	}
 
 	public void ensureCapacity(int i) {
-		while (writePos + i > buffered.length) {
+		if (limit + i > buffered.length)
 			// byte[] copy = buffered;
 			// byte[] bufferedExtended = ByteArrayCache
 			// .get(buffered.length == 0 ? INIT_SIZE : buffered.length * 2);
-			setSize(writePos + i);
-		}
+			setSize((limit + i) * 2);
 
 	}
 
@@ -121,7 +125,7 @@ public class ByteBuffer {
 
 	public void clear() {
 		// buffered = new byte[INIT_SIZE];
-		writePos = 0;
+		limit = 0;
 		readPos = 0;
 	}
 
@@ -134,11 +138,11 @@ public class ByteBuffer {
 	}
 
 	public int getWritePos() {
-		return writePos;
+		return limit;
 	}
 
 	public void reset() {
-		writePos = 0;
+		limit = 0;
 		readPos = 0;
 	}
 
@@ -149,9 +153,9 @@ public class ByteBuffer {
 	}
 
 	public byte[] build() {
-		if (buffered.length != writePos - readPos) {
+		if (buffered.length != limit - readPos) {
 			// byte[] ret = Arrays.copyOf(buffered, writePos);
-			byte[] ret = Arrays.copyOfRange(buffered, readPos, writePos);
+			byte[] ret = Arrays.copyOfRange(buffered, readPos, limit);
 			// ByteArrayCache.put(buffered);
 			return ret;
 		} else
@@ -160,8 +164,8 @@ public class ByteBuffer {
 
 	public void put(Byte val) {
 		ensureCapacity(1);
-		buffered[writePos] = val;
-		writePos++;
+		buffered[limit] = val;
+		limit++;
 	}
 
 	public Object getObject() throws Exception {
@@ -276,10 +280,10 @@ public class ByteBuffer {
 	}
 
 	public void padTo(int maximumSize) {
-		if (maximumSize <= writePos)
+		if (maximumSize <= limit)
 			return;
-		ensureCapacity(maximumSize - writePos);
-		writePos = maximumSize;
+		ensureCapacity(maximumSize - limit);
+		limit = maximumSize;
 	}
 
 	public void putShort(short blockMagic) {
@@ -293,14 +297,14 @@ public class ByteBuffer {
 
 	public void putRawByteArray(byte[] data, int offset, int lenght) {
 		ensureCapacity(lenght);
-		System.arraycopy(data, offset, buffered, writePos, lenght);
-		writePos += lenght;
+		System.arraycopy(data, offset, buffered, limit, lenght);
+		limit += lenght;
 	}
 
 	public void putInt(int i) {
 		ensureCapacity(4);
-		DataTypeUtils.intToByteArray(i, writePos, buffered);
-		writePos += 4;
+		DataTypeUtils.intToByteArray(i, limit, buffered);
+		limit += 4;
 	}
 
 	public long getLong(int offset) {
@@ -413,7 +417,11 @@ public class ByteBuffer {
 	}
 
 	public void putLong(long l) {
-		putRawByteArray(DataTypeUtils.longToByteArray(l));
+		ensureCapacity(8);
+		DataTypeUtils.longToByteArray(l, buffered, limit);
+		limit += 8;
+
+		// putRawByteArray(DataTypeUtils.longToByteArray(l));
 	}
 
 	public void putByteArray(byte[] data) {
@@ -476,5 +484,9 @@ public class ByteBuffer {
 
 	public void putInt(int pos, int value) {
 		DataTypeUtils.intToByteArray(value, pos, buffered);
+	}
+
+	public java.nio.ByteBuffer asByteBuffer() {
+		return java.nio.ByteBuffer.wrap(buffered, 0, limit);
 	}
 }

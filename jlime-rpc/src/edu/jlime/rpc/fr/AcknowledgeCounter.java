@@ -26,7 +26,7 @@ class AcknowledgeCounter {
 	public static class ConfirmData {
 		volatile boolean confirmed = false;
 		volatile int seq = -1;
-		public boolean ackSent = false;
+		volatile boolean ackSent = false;
 	}
 
 	private Logger log = Logger.getLogger(AcknowledgeCounter.class);
@@ -59,7 +59,7 @@ class AcknowledgeCounter {
 
 	public static class ResendData {
 
-		volatile byte[] data = null;
+		volatile Message data = null;
 
 		volatile long timeSent = -1;
 
@@ -75,7 +75,7 @@ class AcknowledgeCounter {
 			return confirmed;
 		}
 
-		void setData(byte[] data, long timeSent, int seq) {
+		void setData(Message data, long timeSent, int seq) {
 			this.confirmed = false;
 			this.timeSent = timeSent;
 			this.seq = seq;
@@ -116,8 +116,7 @@ class AcknowledgeCounter {
 		// if (msg == null)
 		// return null;
 
-		resendArray[pos(seqN)].setData(msg.toByteArray(),
-				System.currentTimeMillis(), seqN);
+		resendArray[pos(seqN)].setData(msg, System.currentTimeMillis(), seqN);
 
 		Message ackMsg = Message.encapsulateOut(msg, MessageType.ACK_SEQ, to);
 		ackMsg.getHeaderBuffer().putInt(seqN);
@@ -126,7 +125,7 @@ class AcknowledgeCounter {
 		// return ackMsg;
 	}
 
-	public boolean seqNumberArrived(int seq) throws Exception {
+	public synchronized boolean seqNumberArrived(int seq) throws Exception {
 		if (seq < nextExpectedNumber) {
 			rcvd[pos(seq)].ackSent = false;
 			return false;
@@ -137,14 +136,14 @@ class AcknowledgeCounter {
 		rcvd[pos(seq)].seq = seq;
 
 		if (seq == nextExpectedNumber) {
-			synchronized (rcvd) {
-				if (seq == nextExpectedNumber) {
-					while (rcvd[pos(nextExpectedNumber)].confirmed) {
-						rcvd[pos(nextExpectedNumber)].confirmed = false;
-						nextExpectedNumber++;
-					}
-				}
+			// (rcvd) {
+			// if (seq == nextExpectedNumber) {
+			while (rcvd[pos(nextExpectedNumber)].confirmed) {
+				rcvd[pos(nextExpectedNumber)].confirmed = false;
+				nextExpectedNumber++;
 			}
+			// }
+			// }
 		}
 
 		return true;
@@ -168,7 +167,9 @@ class AcknowledgeCounter {
 		if (seq == confirmed.get() + 1) {
 			synchronized (confirmed) {
 				if (seq == confirmed.get() + 1) {
+
 					resendArray[pos(confirmed.get() + 1)].data = null;
+
 					confirmed.incrementAndGet();
 
 					boolean done = false;
@@ -200,8 +201,8 @@ class AcknowledgeCounter {
 				return null;
 
 			int seqN = this.seqN.getAndIncrement();
-			resendArray[pos(seqN)].setData(msg.toByteArray(),
-					System.currentTimeMillis(), seqN);
+			resendArray[pos(seqN)].setData(msg, System.currentTimeMillis(),
+					seqN);
 
 			Message ackMsg = Message.encapsulateOut(msg, MessageType.ACK_SEQ,
 					to);
@@ -242,10 +243,10 @@ class AcknowledgeCounter {
 		return null;
 	}
 
-	public void sendAcks() {
+	public boolean sendAcks() {
 		TIntArrayList list = getAcks(0);
 		if (list == null || list.isEmpty())
-			return;
+			return false;
 		Message ack = Message.newEmptyOutDataMessage(MessageType.ACK, to);
 		appendAcks(ack, list);
 		try {
@@ -253,6 +254,7 @@ class AcknowledgeCounter {
 		} catch (Exception e1) {
 			e1.printStackTrace();
 		}
+		return true;
 	}
 
 	public void resend() {
@@ -262,7 +264,7 @@ class AcknowledgeCounter {
 
 			boolean confirmed = res.confirmed;
 
-			byte[] data = res.data;
+			Message data = res.data;
 
 			long time = res.timeSent;
 
@@ -273,9 +275,10 @@ class AcknowledgeCounter {
 				try {
 					res.timeSent = curr;
 
-					Message ackMsg = Message.newOutDataMessage(data,
+					Message ackMsg = Message.encapsulateOut(data,
 							MessageType.ACK_SEQ, to);
 					ackMsg.getHeaderBuffer().putInt(seq);
+
 					TIntArrayList list = getAcks(ackMsg.getSize());
 					if (list != null && !list.isEmpty()) {
 						appendAcks(ackMsg, list);

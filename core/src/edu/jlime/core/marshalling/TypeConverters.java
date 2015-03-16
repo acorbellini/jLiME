@@ -100,7 +100,10 @@ public class TypeConverters {
 
 	public TypeConverter getTypeConverter(Class<?> classObj) {
 		String className = classObj.getName();
-		return convs.get(ids.get(className));
+		byte index = ids.get(className);
+		if (index == ids.getNoEntryValue())
+			return null;
+		return convs.get(index);
 	}
 
 	public byte getTypeId(Class<?> classObj) {

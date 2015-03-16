@@ -7,6 +7,7 @@ import java.net.InetSocketAddress;
 import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
+import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -88,7 +89,8 @@ public class UDPNIO extends MessageProcessor implements AddressListProvider,
 			synchronized (addressBook) {
 				to = addressBook.get(msg.getTo());
 				if (to == null) {
-					to = channel.connect(msg.getSock().getSockTo());
+					to = open();
+					to.connect(msg.getSock().getSockTo());
 					addressBook.put(msg.getTo(), to);
 
 				}
@@ -114,9 +116,11 @@ public class UDPNIO extends MessageProcessor implements AddressListProvider,
 		// ByteBuffer buff = ByteBuffer.wrap(toSend.build());
 
 		ByteBuffer[] buff = new ByteBuffer[1 + msgAsBytes.length];
-		buff[0] = ByteBuffer.wrap(toSend.build());
+		// buff[0] = ByteBuffer.wrap(toSend.build());´
+		buff[0] = toSend.asByteBuffer();
 		for (int i = 0; i < msgAsBytes.length; i++) {
-			buff[i + 1] = ByteBuffer.wrap(msgAsBytes[i].build());
+			// buff[i + 1] = ByteBuffer.wrap(msgAsBytes[i].build());
+			buff[i + 1] = msgAsBytes[i].asByteBuffer();
 		}
 
 		// if (!channel.isOpen()) {
@@ -139,24 +143,9 @@ public class UDPNIO extends MessageProcessor implements AddressListProvider,
 
 	@Override
 	public void onStart() throws Exception {
-		for (int i = 0; i < config.port_range; i++) {
-			try {
+		this.channel = open();
 
-				this.channel = DatagramChannel.open();
-
-				// Flags
-				this.channel.setOption(StandardSocketOptions.SO_RCVBUF,
-						config.rcvBuffer);
-				this.channel.setOption(StandardSocketOptions.SO_SNDBUF,
-						config.sendBuffer);
-				this.addr = new InetSocketAddress(InetAddress.getByName(iface),
-						config.port + i);
-				this.channel.bind(addr);
-				break;
-			} catch (Exception e) {
-				// e.printStackTrace();
-			}
-		}
+		this.addr = (InetSocketAddress) channel.getLocalAddress();
 
 		addressBook.put(local, channel);
 
@@ -201,6 +190,28 @@ public class UDPNIO extends MessageProcessor implements AddressListProvider,
 		t.start();
 	}
 
+	private DatagramChannel open() {
+		InetSocketAddress address;
+		DatagramChannel ret = null;
+		for (int i = 0; i < config.port_range; i++) {
+			try {
+
+				ret = DatagramChannel.open();
+
+				// Flags
+				ret.setOption(StandardSocketOptions.SO_RCVBUF, config.rcvBuffer);
+				ret.setOption(StandardSocketOptions.SO_SNDBUF,
+						config.sendBuffer);
+				address = new InetSocketAddress(InetAddress.getByName(iface),
+						config.port + i);
+				ret.bind(address);
+				break;
+			} catch (Exception e) {
+			}
+		}
+		return ret;
+	}
+
 	private void read(SelectableChannel channel) throws Exception {
 		DatagramChannel sc = (DatagramChannel) channel;
 		readbuffer.clear();
@@ -223,8 +234,7 @@ public class UDPNIO extends MessageProcessor implements AddressListProvider,
 		exec.execute(new Runnable() {
 			@Override
 			public void run() {
-				Message msg = Message.deEncapsulate(buff.getRawByteArray(),
-						from, local);
+				Message msg = Message.deEncapsulate(buff, from, local);
 				try {
 					notifyRcvd(msg);
 				} catch (Exception e) {
@@ -255,14 +265,18 @@ public class UDPNIO extends MessageProcessor implements AddressListProvider,
 	@Override
 	public void updateAddress(Address id, List<SocketAddress> addresses) {
 		for (SocketAddress socketAddress : addresses) {
-			if (!addressBook.containsKey(id))
-				try {
-					addressBook.put(id,
-							channel.connect(socketAddress.getSockTo()));
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+			synchronized (addressBook) {
+				if (!addressBook.containsKey(id))
+					try {
+						DatagramChannel to = open();
+						to.connect(socketAddress.getSockTo());
+						addressBook.put(id, to);
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+			}
+
 		}
 	}
 

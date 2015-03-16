@@ -65,48 +65,6 @@ public class Acknowledge extends SimpleMessageProcessor {
 
 	@Override
 	public void onStart() throws Exception {
-
-		// Thread send = new Thread("Ack Sender") {
-		// int cont = 0;
-		//
-		// @Override
-		// public void run() {
-		// while (!stopped) {
-		// for (AcknowledgeCounter count : counterList) {
-		// HashSet<Integer> list = count.getAcks();
-		// // acks.get(count.to);
-		// Message message = null;
-		// while ((message = count.nextSend()) != null) {
-		// try {
-		// attachAcks(message, list);
-		// sendNext(message);
-		// cont = 0;
-		// } catch (Exception e) {
-		// e.printStackTrace();
-		// }
-		// }
-		// // List<Message> send2 = count.getSend();
-		// // if (send2 != null)
-		// // for (Message message : send2) {
-		// //
-		// // }
-		// }
-		// cont++;
-		// if (cont == 1000)
-		// synchronized (counters) {
-		// cont = 0;
-		// try {
-		// counters.wait(200);
-		// } catch (InterruptedException e) {
-		// e.printStackTrace();
-		// }
-		// }
-		//
-		// }
-		// }
-		// };
-		// send.start();
-
 		this.t = new Timer("Ack Timer");
 
 		t.scheduleAtFixedRate(new TimerTask() {
@@ -114,20 +72,32 @@ public class Acknowledge extends SimpleMessageProcessor {
 			public void run() {
 				for (AcknowledgeCounter count : counterList) {
 					count.resend();
-					// HashSet<Integer> list = count.getAcks();
-					// acks.get(count.to);
 
 				}
 			}
 		}, config.retransmit_delay, config.retransmit_delay);
-
+		// Thread tAck = new Thread("Ack Sender") {
+		// @Override
+		// public void run() {
+		// while (!stopped) {
+		// for (AcknowledgeCounter count : counterList) {
+		// count.sendAcks();
+		// }
+		// try {
+		// Thread.sleep(0, config.ack_delay);
+		// } catch (InterruptedException e) {
+		// // TODO Auto-generated catch block
+		// e.printStackTrace();
+		// }
+		// }
+		// }
+		// };
+		// tAck.start();
 		t.scheduleAtFixedRate(new TimerTask() {
 
 			@Override
 			public void run() {
 				for (AcknowledgeCounter count : counterList) {
-					// for (Entry<Address, HashSet<Integer>> e :
-					// acks.entrySet()) {
 					count.sendAcks();
 				}
 			}
@@ -147,8 +117,8 @@ public class Acknowledge extends SimpleMessageProcessor {
 						AcknowledgeCounter counter = getCounter(m.getFrom());
 
 						if (counter.seqNumberArrived(seq)) {
-							notifyRcvd(Message.deEncapsulate(
-									m.getDataAsBytes(), m.getFrom(), m.getTo()));
+							notifyRcvd(Message.deEncapsulate(m.getDataBuffer(),
+									m.getFrom(), m.getTo()));
 							// Address from = m.getFrom();
 
 							// counters.get(from).addAck(seq);
