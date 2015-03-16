@@ -12,7 +12,7 @@ import edu.jlime.core.transport.Address;
 
 public abstract class MessageProcessor implements StackElement {
 
-	private ConcurrentHashMap<MessageType, List<MessageQueue>> listeners = new ConcurrentHashMap<>();
+	private ConcurrentHashMap<MessageType, List<MessageListener>> listeners = new ConcurrentHashMap<>();
 
 	private Logger log = Logger.getLogger(MessageProcessor.class);
 
@@ -20,9 +20,9 @@ public abstract class MessageProcessor implements StackElement {
 
 	// private RingQueue out = new RingQueue();
 
-	private List<MessageQueue> secondaryMessage = new CopyOnWriteArrayList<MessageQueue>();
+	private List<MessageListener> secondaryMessage = new CopyOnWriteArrayList<MessageListener>();
 
-	private List<MessageQueue> all = new CopyOnWriteArrayList<MessageQueue>();
+	private List<MessageListener> all = new CopyOnWriteArrayList<MessageListener>();
 
 	protected boolean stopped = false;
 
@@ -70,21 +70,6 @@ public abstract class MessageProcessor implements StackElement {
 			return;
 		stopped = true;
 		// out.put(new MessageSimple(null, null, null, null));
-
-		for (MessageQueue mq : secondaryMessage) {
-			mq.stop();
-		}
-
-		for (MessageQueue mq : all) {
-			mq.stop();
-		}
-
-		for (List<MessageQueue> list : listeners.values()) {
-			for (MessageQueue mq : list) {
-				mq.stop();
-			}
-		}
-
 		onStop();
 	};
 
@@ -95,22 +80,22 @@ public abstract class MessageProcessor implements StackElement {
 
 	protected void notifyRcvd(Message message) throws Exception {
 
-		for (MessageQueue l : all)
-			l.notify(message);
+		for (MessageListener l : all)
+			l.rcv(message, this);
 
 		boolean notified = false;
 		MessageType type = message.getType();
-		List<MessageQueue> list = listeners.get(type);
+		List<MessageListener> list = listeners.get(type);
 		if (list != null) {
-			for (MessageQueue l : list) {
-				l.notify(message);
+			for (MessageListener l : list) {
+				l.rcv(message, this);
 				notified = true;
 			}
 		}
 
 		if (!notified) {
-			for (MessageQueue any : secondaryMessage) {
-				any.notify(message);
+			for (MessageListener any : secondaryMessage) {
+				any.rcv(message, this);
 				notified = true;
 			}
 		}
@@ -133,21 +118,20 @@ public abstract class MessageProcessor implements StackElement {
 
 	public synchronized void addMessageListener(MessageType type,
 			MessageListener packList) {
-		List<MessageQueue> list = listeners.get(type);
+		List<MessageListener> list = listeners.get(type);
 		if (list == null) {
-			list = new CopyOnWriteArrayList<MessageQueue>();
+			list = new CopyOnWriteArrayList<MessageListener>();
 			listeners.put(type, list);
 		}
-		list.add(new MessageQueue(packList, this, type.toString()));
+		list.add(packList);
 	}
 
 	public void addSecondaryMessageListener(MessageListener listener) {
-		secondaryMessage.add(new MessageQueue(listener, this,
-				"Secondary Messages"));
+		secondaryMessage.add(listener);
 	}
 
 	public void addAllMessageListener(MessageListener listener) {
-		all.add(new MessageQueue(listener, this, "All Messages"));
+		all.add(listener);
 	}
 
 	@Override

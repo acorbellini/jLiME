@@ -7,8 +7,7 @@ public class MessageSimple extends Message {
 
 	ByteBuffer data;
 
-	public MessageSimple(Header h, ByteBuffer data, Address from,
-			Address to) {
+	public MessageSimple(Header h, ByteBuffer data, Address from, Address to) {
 		super(h, from, to);
 		this.data = data;
 	}
@@ -21,5 +20,12 @@ public class MessageSimple extends Message {
 	@Override
 	public ByteBuffer getDataBuffer() {
 		return data;
+	}
+
+	@Override
+	protected ByteBuffer[] buildBuffers() {
+		ByteBuffer[] ret = new ByteBuffer[1];
+		ret[0] = data;
+		return ret;
 	}
 }

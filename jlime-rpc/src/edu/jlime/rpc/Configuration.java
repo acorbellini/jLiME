@@ -58,6 +58,8 @@ public class Configuration {
 
 	public int ack_max_resend_size;
 
+	public String compression;
+
 	public Configuration(Properties prop) {
 
 		this.prop = prop;
@@ -66,6 +68,8 @@ public class Configuration {
 
 		this.port = getInt("port", 3550);
 		this.port_range = getInt("port_range", 1000);
+
+		this.compression = getString("compression", "none");
 
 		this.rcvBuffer = getInt("udp.rcv_buffer", 500 * 1024 * 1024);
 		this.sendBuffer = getInt("udp.send_buffer", 500 * 1024 * 1024);
@@ -85,8 +89,8 @@ public class Configuration {
 
 		this.ack_delay = getInt("ack.ack_delay", 1);
 
-		this.retransmit_delay = getInt("ack.retransmit_delay", 10);
-		this.ack_max_resend_size = getInt("ack.max_resend_size", 512);
+		this.retransmit_delay = getInt("ack.retransmit_delay", 20);
+		this.ack_max_resend_size = getInt("ack.max_resend_size", 4096);
 
 		this.interface_max_update_time = getInt("multi.max_update_time", 10000);
 		try {
@@ -114,7 +118,7 @@ public class Configuration {
 		this.fcConfig.max_rcv_initial = getInt("fc.max_rcv", 100000);
 		this.fcConfig.max_send_initial = getInt("fc.max_send", 6000);
 
-		this.tcpnio_max_msg_size = getInt("tcpnio.max_msg_size", 2 * 1024);
+		this.tcpnio_max_msg_size = getInt("tcpnio.max_msg_size", 2 * 2048);
 
 		this.tcp_config = new TCPConfig();
 		this.tcp_config.conn_limit = getInt("tcp.conn_limit", 1);

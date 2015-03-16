@@ -1,6 +1,7 @@
 package edu.jlime.rpc;
 
 import java.io.IOException;
+import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.StandardSocketOptions;
@@ -12,7 +13,6 @@ import java.nio.channels.Selector;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -55,7 +55,7 @@ public class UDPNIO extends MessageProcessor implements AddressListProvider,
 	private Selector sel;
 	private DatagramChannel channel;
 
-	private ConcurrentHashMap<Address, InetSocketAddress> addressBook = new ConcurrentHashMap<>();
+	private ConcurrentHashMap<Address, DatagramChannel> addressBook = new ConcurrentHashMap<>();
 
 	protected Logger log = Logger.getLogger(UDPNIO.class);
 
@@ -83,19 +83,41 @@ public class UDPNIO extends MessageProcessor implements AddressListProvider,
 	@Override
 	public void send(Message msg) throws Exception {
 
-		InetSocketAddress to = null;
-		if (msg.getSock() != null)
-			to = msg.getSock().getSockTo();
-		else
-			to = addressBook.get(msg.getTo());
-		byte[] ba = msg.toByteArray();
-		edu.jlime.util.ByteBuffer toSend = new edu.jlime.util.ByteBuffer(
-				ba.length + 32);
+		DatagramChannel to = addressBook.get(msg.getTo());
+		if (to == null) {
+			synchronized (addressBook) {
+				to = addressBook.get(msg.getTo());
+				if (to == null) {
+					to = channel.connect(msg.getSock().getSockTo());
+					addressBook.put(msg.getTo(), to);
+
+				}
+			}
+		}
+
+		// InetSocketAddress to = null;
+		// if (msg.getSock() != null)
+		// to = msg.getSock().getSockTo();
+		// else
+		// to = addressBook.get(msg.getTo());
+
+		int size = msg.getSize() + 32;
+		edu.jlime.util.ByteBuffer[] msgAsBytes = msg.toByteBuffers();
+		// byte[] ba = msg.toByteArray();
+
+		edu.jlime.util.ByteBuffer toSend = new edu.jlime.util.ByteBuffer(32);
 
 		toSend.putUUID(local.getId());
 		toSend.putUUID(msg.getTo().getId());
-		toSend.putRawByteArray(ba);
-		ByteBuffer buff = ByteBuffer.wrap(toSend.build());
+		// toSend.putRawByteArray(ba);
+
+		// ByteBuffer buff = ByteBuffer.wrap(toSend.build());
+
+		ByteBuffer[] buff = new ByteBuffer[1 + msgAsBytes.length];
+		buff[0] = ByteBuffer.wrap(toSend.build());
+		for (int i = 0; i < msgAsBytes.length; i++) {
+			buff[i + 1] = ByteBuffer.wrap(msgAsBytes[i].build());
+		}
 
 		// if (!channel.isOpen()) {
 		// // log.warn("Channel is closed");
@@ -106,7 +128,7 @@ public class UDPNIO extends MessageProcessor implements AddressListProvider,
 			// synchronized (channel) {
 			int write = 0;
 
-			while ((write += channel.send(buff, to)) != toSend.size()) {
+			while ((write += to.write(buff)) != size) {
 			}
 			// }
 		} catch (Exception e) {
@@ -136,7 +158,7 @@ public class UDPNIO extends MessageProcessor implements AddressListProvider,
 			}
 		}
 
-		addressBook.put(local, addr);
+		addressBook.put(local, channel);
 
 		this.channel.configureBlocking(false);
 
@@ -233,7 +255,14 @@ public class UDPNIO extends MessageProcessor implements AddressListProvider,
 	@Override
 	public void updateAddress(Address id, List<SocketAddress> addresses) {
 		for (SocketAddress socketAddress : addresses) {
-			addressBook.putIfAbsent(id, socketAddress.getSockTo());
+			if (!addressBook.containsKey(id))
+				try {
+					addressBook.put(id,
+							channel.connect(socketAddress.getSockTo()));
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 		}
 	}
 

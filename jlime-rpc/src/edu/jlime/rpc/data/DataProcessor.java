@@ -13,6 +13,7 @@ import org.apache.log4j.Logger;
 import edu.jlime.core.cache.jLiMELRUMap;
 import edu.jlime.core.transport.Address;
 import edu.jlime.metrics.metric.Metrics;
+import edu.jlime.rpc.Configuration;
 import edu.jlime.rpc.message.Message;
 import edu.jlime.rpc.message.MessageListener;
 import edu.jlime.rpc.message.MessageProcessor;
@@ -42,10 +43,15 @@ public class DataProcessor extends SimpleMessageProcessor implements
 
 	private Metrics metrics;
 
-	Compressor comp = CompressionType.SNAPPY.getComp();
+	Compressor comp;
 
-	public DataProcessor(MessageProcessor next) {
+	public DataProcessor(MessageProcessor next, Configuration config) {
 		super(next, "Data");
+		this.comp = null;
+		try {
+			this.comp = CompressionType.valueOf(config.compression).getComp();
+		} catch (Exception e) {
+		}
 	}
 
 	@Override
@@ -80,7 +86,11 @@ public class DataProcessor extends SimpleMessageProcessor implements
 	public byte[] sendData(byte[] msg, Address to, boolean waitForResponse)
 			throws Exception {
 		UUID id = UUID.randomUUID();
-		Message toSend = Message.newOutDataMessage(comp.compress(msg),
+		byte[] compressed = msg;
+		if (comp != null)
+			compressed = comp.compress(compressed);
+
+		Message toSend = Message.newOutDataMessage(compressed,
 				MessageType.DATA, to);
 		ByteBuffer headerWriter = toSend.getHeaderBuffer();
 		headerWriter.putUUID(id);
@@ -112,7 +122,10 @@ public class DataProcessor extends SimpleMessageProcessor implements
 		}
 		Message resp = r.getResponse();
 		int originalSize = resp.getHeaderBuffer().getInt();
-		return comp.uncompress(resp.getDataBuffer().build(), originalSize);
+		byte[] build = resp.getDataBuffer().build();
+		if (comp != null)
+			build = comp.uncompress(build, originalSize);
+		return build;
 	}
 
 	@Override
@@ -163,9 +176,11 @@ public class DataProcessor extends SimpleMessageProcessor implements
 					// if (log.isDebugEnabled())
 					// log.debug("Preparing RESPONSE for message id " + id
 					// + " to " + m.getFrom());
-					Message toSend = Message.newOutDataMessage(
-							comp.compress(resp), MessageType.RESPONSE,
-							m.getFrom());
+					byte[] compress = resp;
+					if (comp != null)
+						compress = comp.compress(resp);
+					Message toSend = Message.newOutDataMessage(compress,
+							MessageType.RESPONSE, m.getFrom());
 					ByteBuffer headerBuffer = toSend.getHeaderBuffer();
 					headerBuffer.putUUID(this.msgID);
 					headerBuffer.putInt(resp.length);
@@ -179,8 +194,10 @@ public class DataProcessor extends SimpleMessageProcessor implements
 		// if (log.isDebugEnabled())
 		// log.debug("Curr listeners " + listeners.size());
 		for (DataListener l : listeners) {
-			DataMessage data = new DataMessage(comp.uncompress(
-					m.getDataAsBytes(), originalSize), id, m.getTo(),
+			byte[] uncompress = m.getDataAsBytes();
+			if (comp != null)
+				uncompress = comp.uncompress(uncompress, originalSize);
+			DataMessage data = new DataMessage(uncompress, id, m.getTo(),
 					m.getFrom());
 			// if (log.isDebugEnabled())
 			// log.debug("Sending data message to listener.");

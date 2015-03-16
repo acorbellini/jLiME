@@ -473,4 +473,8 @@ public class ByteBuffer {
 			putString(e.getValue());
 		}
 	}
+
+	public void putInt(int pos, int value) {
+		DataTypeUtils.intToByteArray(value, pos, buffered);
+	}
 }

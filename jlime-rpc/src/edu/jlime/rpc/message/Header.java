@@ -11,31 +11,43 @@ public class Header {
 	ByteBuffer headerData;
 
 	public Header(MessageType type) {
-		this(type, new ByteBuffer(HEADER));
+		this.type = type;
+		this.headerData = new ByteBuffer(HEADER);
+		this.headerData.put(type.getId());
+		this.headerData.putInt(0);
 	}
 
-	public Header(MessageType type, ByteBuffer data) {
-		this.type = type;
-		this.headerData = data;
+	private Header() {
 	}
+
+	// public Header(MessageType type, ByteBuffer data) {
+	// this.type = type;
+	// this.headerData = data;
+	// headerData.put(type.getId());
+	// headerData.putInt(0);
+	// }
 
 	public MessageType getType() {
 		return type;
 	}
 
 	public byte[] toBytes() {
-
-		byte[] data = headerData.build();
-		ByteBuffer writer = new ByteBuffer(HEADER + data.length);
-		writer.put(getType().getId());
-		writer.putByteArray(data);
-		return writer.build();
+		headerData.putInt(1, headerData.size() - HEADER);
+		return headerData.build();
+		// byte[] data = headerData.build();
+		// ByteBuffer writer = new ByteBuffer(HEADER + data.length);
+		// writer.put(getType().getId());
+		// writer.putByteArray(data);
+		// return writer.build();
 	}
 
 	public static Header fromBytes(ByteBuffer reader) {
 		MessageType type = MessageType.fromID(reader.get());
 		ByteBuffer headerData = new ByteBuffer(reader.getByteArray());
-		return new Header(type, headerData);
+		Header header = new Header();
+		header.type = type;
+		header.headerData = headerData;
+		return header;
 	}
 
 	public ByteBuffer getBuffer() {
@@ -52,6 +64,11 @@ public class Header {
 	}
 
 	public int size() {
-		return HEADER + headerData.size();
+		return headerData.size();
+	}
+
+	public ByteBuffer buildBuffer() {
+		headerData.putInt(1, headerData.size() - HEADER);
+		return headerData;
 	}
 }

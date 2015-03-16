@@ -127,8 +127,8 @@ public class PingFailureDetection implements StackElement, FailureProvider {
 	}
 
 	private void pongArrived(Message m) {
-		if (log.isDebugEnabled())
-			log.debug("Received pong from " + m.getFrom() + ".");
+		// if (log.isDebugEnabled())
+		// log.debug("Received pong from " + m.getFrom() + ".");
 		AtomicInteger count = tries.get(m.getFrom());
 		if (count != null)
 			count.set(0);

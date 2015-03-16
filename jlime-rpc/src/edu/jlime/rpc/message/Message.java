@@ -83,6 +83,18 @@ public abstract class Message {
 				to);
 	};
 
+	public ByteBuffer[] toByteBuffers() {
+		ByteBuffer[] buffs = buildBuffers();
+		ByteBuffer[] ret = new ByteBuffer[1 + buffs.length];
+		ret[0] = header.buildBuffer();
+		for (int i = 0; i < buffs.length; i++) {
+			ret[i + 1] = buffs[i];
+		}
+		return ret;
+	}
+
+	protected abstract ByteBuffer[] buildBuffers();
+
 	public byte[] toByteArray() {
 		byte[] h = header.toBytes();
 		byte[] data = build();

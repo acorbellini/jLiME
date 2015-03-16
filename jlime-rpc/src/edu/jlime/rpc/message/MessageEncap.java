@@ -28,4 +28,9 @@ public class MessageEncap extends Message {
 		return getHeaderSize() + msg.getSize();
 	}
 
+	@Override
+	protected ByteBuffer[] buildBuffers() {
+		return msg.toByteBuffers();
+	}
+
 }

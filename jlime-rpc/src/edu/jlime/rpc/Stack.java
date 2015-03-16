@@ -111,7 +111,7 @@ public class Stack {
 		NetworkProtocol mcast = NetworkProtocolFactory.mcast(local, config)
 				.getProtocol(iface);
 
-		final DataProcessor data = new DataProcessor(tcp);
+		final DataProcessor data = new DataProcessor(tcp, config);
 
 		MultiCastDiscovery disco = new MultiCastDiscovery(local, name, config,
 				mcast, udp);
@@ -147,7 +147,7 @@ public class Stack {
 
 		Fragmenter frag = new Fragmenter(ack, config.max_msg_size);
 
-		DataProcessor data = new DataProcessor(frag);
+		DataProcessor data = new DataProcessor(frag, config);
 
 		MultiCastDiscovery disco = new MultiCastDiscovery(local, name, config,
 				mcast, udp);
@@ -178,7 +178,7 @@ public class Stack {
 		Fragmenter frag = new Fragmenter(tcp, config.tcpnio_max_msg_size
 				- TCPNIO.HEADER);
 
-		DataProcessor data = new DataProcessor(frag);
+		DataProcessor data = new DataProcessor(frag, config);
 
 		MultiCastDiscovery disco = new MultiCastDiscovery(local, name, config,
 				mcast, udp);
@@ -231,7 +231,7 @@ public class Stack {
 		//
 		// Fragmenter frag = new Fragmenter(ack, max_size);
 
-		DataProcessor data = new DataProcessor(frag);
+		DataProcessor data = new DataProcessor(frag, config);
 
 		MultiCastDiscovery disco = new MultiCastDiscovery(local, name, config,
 				mcast, udp);
@@ -263,7 +263,7 @@ public class Stack {
 		Fragmenter frag = new Fragmenter(tcp, config.max_msg_size
 				- TCPNIO.HEADER);
 
-		DataProcessor data = new DataProcessor(frag);
+		DataProcessor data = new DataProcessor(frag, config);
 
 		MultiCastDiscovery disco = new MultiCastDiscovery(local, name, config,
 				mcast, udp);
