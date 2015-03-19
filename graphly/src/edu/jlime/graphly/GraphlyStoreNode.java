@@ -13,9 +13,11 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableSet;
 import java.util.Properties;
+import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Semaphore;
 
 import org.apache.log4j.Logger;
 
@@ -140,6 +142,8 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 		adj.store(id, DataTypeUtils.longArrayToByteArray(list));
 	}
 
+	Random random = new Random(System.currentTimeMillis());
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -149,30 +153,17 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	@Override
 	public long[] getEdges(Dir type, int max_edges, long[] id)
 			throws ExecutionException {
-		if (log.isDebugEnabled())
-			log.debug("Obtaining edges");
 		TLongArrayList ret = new TLongArrayList();
 		for (long l : id) {
-			if (log.isDebugEnabled())
-				log.debug("Processing vid " + l);
 			long[] edges = getEdges(type, l);
-			if (log.isDebugEnabled())
-				log.debug("Got processing vid " + edges);
-
 			if (edges.length > max_edges && max_edges > 0) {
-
-				if (log.isDebugEnabled())
-					log.debug("Filtering " + edges + " getting only "
-							+ max_edges);
 				int in = 0;
+
 				for (in = 0; in < edges.length && ret.size() < max_edges; in++) {
 					int rn = edges.length - in;
 					int rm = max_edges - ret.size();
-					if (Math.random() * rn < rm)
-						/* Take it */
-						ret.add(edges[in]); /*
-											 * +1 since your range begins from 1
-											 */
+					if (random.nextDouble() * rn < rm)
+						ret.add(edges[in]);
 				}
 				if (log.isDebugEnabled())
 					log.debug("Finished filtering for " + l);
@@ -201,7 +192,6 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 
 	private long[] getEdges0(final long id) throws ExecutionException {
 		return adj_cache.get(id, new Callable<long[]>() {
-
 			@Override
 			public long[] call() throws Exception {
 				byte[] array;
@@ -231,16 +221,6 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	@Override
 	public void setProperty(long vid, String k, Object val) throws Exception {
 		props.put(vid, k, val);
-		// Iterator<Vertex> v = graph.iterators().vertexIterator(vid);
-		// Vertex v1 = null;
-		// if (!v.hasNext()) {
-		// addVertex(vid, null);
-		// v = graph.iterators().vertexIterator(vid);
-		// }
-		// if (v.hasNext())
-		// v1 = v.next();
-		// if (v1 != null)
-		// v1.property(k, val);
 	}
 
 	/*
@@ -252,95 +232,15 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	@Override
 	public Object getProperty(long vid, String k) throws Exception {
 		return props.get(vid, k);
-		// Iterator<Vertex> v = graph.iterators().vertexIterator(vid);
-		// Vertex v1 = null;
-		// if (!v.hasNext()) {
-		// addVertex(vid, null);
-		// v = graph.iterators().vertexIterator(vid);
-		// }
-		// if (v.hasNext())
-		// v1 = v.next();
-		// if (v1 != null)
-		// return v1.property(k);
-		// return null;
 	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see edu.jlime.graphly.GraphlyStoreNodeI#setEdgeProperty(java.lang.Long,
-	 * java.lang.Long, java.lang.String, java.lang.Object, java.lang.String)
-	 */
-	// @Override
-	// public void setEdgeProperty(long v1, long v2, String k, Object val,
-	// String... labels) {
-	// Edge edge = getEdge(v1, v2, labels);
-	// if (edge != null) {
-	// edge.property(k, val);
-	// }
-	// }
-
-	// private Edge getEdge(long v1, long v2, String... labels) {
-	// List<Edge> edges = getEdges(v1, Dir.OUT, labels);
-	// for (Edge edge : edges) {
-	// if (edge.outV().next().equals(v2)) {
-	// return edge;
-	// }
-	// }
-	// return null;
-	// }
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see edu.jlime.graphly.GraphlyStoreNodeI#getEdgeProperty(java.lang.Long,
-	 * java.lang.Long, java.lang.String, java.lang.String)
-	 */
-	// @Override
-	// public Object getEdgeProperty(long v1, long v2, String k, String...
-	// labels) {
-	// Edge e = getEdge(v1, v2, labels);
-	// return e.property(k);
-	// }
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see edu.jlime.graphly.GraphlyStoreNodeI#getEdge(java.lang.Long,
-	 * edu.jlime.collections.adjacencygraph.get.GetType, java.lang.String)
-	 */
-	// @Override
-	// public List<Edge> getEdges(long orig, Dir type, String... labels) {
-	// List<Edge> edges = new ArrayList<>();
-	// Vertex v1 = graph.V(orig).next();
-	// if (v1 != null) {
-	// Direction dir = Direction.IN;
-	// if (type.equals(GraphlyDirection.BOTH))
-	// dir = Direction.BOTH;
-	// else if (type.equals(GraphlyDirection.OUT))
-	// dir = Direction.OUT;
-	// for (Edge edge : v1.toE(dir, labels).toList())
-	// edges.add(edge);
-	// }
-	// return edges;
-	// return null;
-	// }
 
 	@Override
 	public boolean addVertex(long id, String label) throws Exception {
-		// if (label != null) {
-		// Vertex v = graph.addVertex(T.id, id, T.label, label);
-		// return v == null;
-		// } else {
-		// Vertex v = graph.addVertex(T.id, id);
-		// return v == null;
-		// }
 		return false;
 	}
 
 	@Override
 	public String getLabel(long id) throws Exception {
-		// return graph.V(id).next().label();
 		return null;
 	}
 
@@ -351,13 +251,11 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 
 	@Override
 	public void removeVertex(long id) throws Exception {
-		// graph.V(id).next().remove();
 	}
 
 	@Override
 	public void addInEdgePlaceholder(long id2, long id, String label)
 			throws Exception {
-		// graph.V(id2).next().addEdge(label, graph.V(id).next());
 	}
 
 	public void setJobExecutorID(Peer je) {
@@ -369,17 +267,33 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 		return je;
 	}
 
+	Semaphore sem = new Semaphore(2);
+
 	@Override
 	public GraphlyCount countEdges(Dir dir, int max_edges, long[] vids)
 			throws Exception {
+		log.info("Counting edges in dir " + dir + " with max " + max_edges
+				+ " and vertices " + vids.length + ".");
 		TLongIntHashMap map = new TLongIntHashMap();
-		for (long l : vids) {
-			long[] curr = getEdges(dir, max_edges, new long[] { l });
+		// Serializing in this spot leads to amazing performance
+		// Don't really know why, I guess has something to do with cache lines.
+		long[][] res = new long[vids.length][];
+		int cont = 0;
+		synchronized (this) {
+			for (long l : vids) {
+				long[] curr = getEdges(dir, max_edges, new long[] { l });
+				res[cont++] = curr;
+
+			}
+		}
+		for (long[] curr : res) {
 			for (long m : curr) {
 				map.adjustOrPutValue(m, 1, 1);
 			}
 		}
+
 		GraphlyCount c = new GraphlyCount(map.keys(), map.values());
+		log.info("Finished count of " + vids.length);
 		return c;
 	}
 
@@ -477,14 +391,11 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	@Override
 	public void setEdgeProperty(long v1, long v2, String k, Object val,
 			String... labels) throws Exception {
-		// TODO Auto-generated method stub
-
 	}
 
 	@Override
 	public Object getEdgeProperty(long v1, long v2, String k, String... labels)
 			throws Exception {
-		// TODO Auto-generated method stub
 		return null;
 	}
 

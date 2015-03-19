@@ -9,13 +9,14 @@ public class ExploratoryCountQC implements QueryContainer {
 
 	@Override
 	public void run(Graphly g, long[] users, Mapper mapper) throws Exception {
-		int size = 400;
+		int size = 5000;
 		if (users.length > 10)
-			size = 300;
+			size = 2500;
 		if (users.length > 30)
-			size = 200;
+			size = 1250;
 
-		g.v(users).set("mapper", mapper).as(Recommendation.class)
+		g.v(users).setPrintSteps(true).set("mapper", mapper)
+				.as(Recommendation.class)
 				.exploratoryCount(size, 10, Dir.OUT, Dir.IN, Dir.OUT)
 				.submit(g.getJobClient().getCluster().getExecutors().get(0));
 	}

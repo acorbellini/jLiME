@@ -18,6 +18,7 @@ import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.set.hash.TLongHashSet;
 
 public class SalsaRepeat implements Repeat<long[]> {
+	private static final int MAX_THREADS = 32;
 	private String authKey;
 	private String hubKey;
 	private TLongArrayList authSet;
@@ -49,25 +50,30 @@ public class SalsaRepeat implements Repeat<long[]> {
 		if (exec == null) {
 			synchronized (this) {
 				if (exec == null)
-					exec = Executors.newFixedThreadPool(Runtime.getRuntime()
-							.availableProcessors(), new ThreadFactory() {
+					exec = Executors.newFixedThreadPool(MAX_THREADS,
+							new ThreadFactory() {
 
-						@Override
-						public Thread newThread(Runnable r) {
-							Thread t = Executors.defaultThreadFactory()
-									.newThread(r);
-							t.setName("Salsa Repeat Step");
-							return t;
-						}
-					});
+								@Override
+								public Thread newThread(Runnable r) {
+									Thread t = Executors.defaultThreadFactory()
+											.newThread(r);
+									t.setName("Salsa Repeat Step");
+									return t;
+								}
+							});
 			}
 		}
+
+		final Semaphore max = new Semaphore(MAX_THREADS);
+
 		sg.loadProperties(authKey, defaultauth);
 		sg.loadProperties(hubKey, defaulthub);
 
 		final Semaphore sem = new Semaphore(-before.length + 1);
 		final Map<Long, Map<String, Object>> temps = new ConcurrentHashMap<Long, Map<String, Object>>();
 		for (final long vid : before) {
+			max.acquire();
+
 			exec.execute(new Runnable() {
 
 				@Override
@@ -80,6 +86,7 @@ public class SalsaRepeat implements Repeat<long[]> {
 						e.printStackTrace();
 					}
 					sem.release();
+					max.release();
 				}
 			});
 

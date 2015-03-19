@@ -104,7 +104,7 @@ class AcknowledgeCounter {
 	public void send(Message msg) throws Exception {
 		// toSend.put(msg);
 		int seqN = this.seqN.getAndIncrement();
-		while (Math.abs(seqN - confirmed.get()) > max_resend_size) {
+		while (Math.abs(seqN - confirmed.get()) >= max_resend_size) {
 			synchronized (this.seqN) {
 				this.seqN.wait(0, 500);
 			}
@@ -230,9 +230,13 @@ class AcknowledgeCounter {
 		int diff = (ack.max_size - 4) - size;
 		int count = diff / 16;
 		if (count > 0) {
-			TIntArrayList list = new TIntArrayList();
-			for (int i = 0; i < rcvd.length && list.size() < count; i++) {
+			TIntArrayList list = null;
+
+			for (int i = 0; i < rcvd.length
+					&& (list == null || list.size() < count); i++) {
 				if (!rcvd[i].ackSent) {
+					if (list == null)
+						list = new TIntArrayList(rcvd.length);
 					rcvd[i].ackSent = true;
 					list.add(rcvd[i].seq);
 				}

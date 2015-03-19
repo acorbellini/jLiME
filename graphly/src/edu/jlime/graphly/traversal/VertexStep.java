@@ -75,4 +75,10 @@ public class VertexStep implements Step {
 		});
 		return new VertexResult(new TLongHashSet(finalRes));
 	}
+
+	@Override
+	public String toString() {
+		return "VertexStep [dir=" + dir + ", max_edges=" + max_edges + "]";
+	}
+
 }

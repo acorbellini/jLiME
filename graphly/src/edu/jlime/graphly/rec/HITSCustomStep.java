@@ -2,6 +2,8 @@ package edu.jlime.graphly.rec;
 
 import java.util.Arrays;
 
+import org.apache.log4j.Logger;
+
 import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.rec.CustomStep.CustomFunction;
 import edu.jlime.graphly.traversal.GraphlyTraversal;
@@ -23,12 +25,21 @@ final class HITSCustomStep implements CustomFunction {
 	@Override
 	public TraversalResult execute(TraversalResult before, GraphlyTraversal tr)
 			throws Exception {
+		Logger log = Logger.getLogger(HITSCustomStep.class);
+
 		long[] subgraph = before.vertices().toArray();
+		log.info("Executing HITS on " + subgraph.length);
 		Arrays.sort(subgraph);
 		Graphly g = tr.getGraph();
 		return g.v(subgraph)
 				.set("mapper", tr.get("mapper"))
 				.repeat(steps, new HITSRepeat(auth, hub, subgraph),
 						new HITSSync(auth, hub)).exec();
+	}
+
+	@Override
+	public String toString() {
+		return "HITSCustomStep [auth=" + auth + ", hub=" + hub + ", steps="
+				+ steps + ", max_edges=" + max_edges + "]";
 	}
 }

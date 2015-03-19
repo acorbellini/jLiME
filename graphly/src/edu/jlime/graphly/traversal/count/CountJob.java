@@ -1,5 +1,7 @@
 package edu.jlime.graphly.traversal.count;
 
+import org.apache.log4j.Logger;
+
 import edu.jlime.graphly.GraphlyCount;
 import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.traversal.Dir;
@@ -21,6 +23,8 @@ public class CountJob implements Job<GraphlyCount> {
 
 	@Override
 	public GraphlyCount call(JobContext ctx, ClientNode peer) throws Exception {
+		Logger log = Logger.getLogger(CountJob.class);
+		log.info("Executing count job for " + data.length);
 		Graphly g = (Graphly) ctx.getGlobal("graphly");
 		GraphlyCount l = g.countEdges(dir, max_edges, data);
 		return l;

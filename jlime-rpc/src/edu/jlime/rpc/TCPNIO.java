@@ -157,19 +157,24 @@ public class TCPNIO extends MessageProcessor implements AddressListProvider {
 			sc = (SocketChannel) list.get((int) (Math.random() * list.size()));
 		}
 
-		byte[] ba = msg.toByteArray();
-		int buffSize = ba.length + 4 + 32;
-		edu.jlime.util.ByteBuffer toSend = new edu.jlime.util.ByteBuffer(
-				buffSize);
+		int size = msg.getSize() + 32 + 4;
+		edu.jlime.util.ByteBuffer[] msgAsBytes = msg.toByteBuffers();
+		// byte[] ba = msg.toByteArray();
 
-		int i = ba.length + 32;
-		// System.out.println(i);
-		toSend.putInt(i);
+		edu.jlime.util.ByteBuffer toSend = new edu.jlime.util.ByteBuffer(32 + 4);
+		toSend.putInt(32 + msg.getSize());
 		toSend.putUUID(local.getId());
 		toSend.putUUID(msg.getTo().getId());
-		toSend.putRawByteArray(ba);
+		// toSend.putRawByteArray(ba);
 
-		ByteBuffer buff = ByteBuffer.wrap(toSend.build());
+		// ByteBuffer buff = ByteBuffer.wrap(toSend.build());
+
+		ByteBuffer[] buff = new ByteBuffer[1 + msgAsBytes.length];
+		// buff[0] = ByteBuffer.wrap(toSend.build());´
+		buff[0] = toSend.asByteBuffer();
+		for (int i = 0; i < msgAsBytes.length; i++)
+			// buff[i + 1] = ByteBuffer.wrap(msgAsBytes[i].build());
+			buff[i + 1] = msgAsBytes[i].asByteBuffer();
 
 		// if (!sc.isConnected())
 		// return;
@@ -177,7 +182,7 @@ public class TCPNIO extends MessageProcessor implements AddressListProvider {
 		try {
 			synchronized (sc) {
 				int write = 0;
-				while ((write += sc.write(buff)) != toSend.size()) {
+				while ((write += sc.write(buff)) != size) {
 				}
 			}
 

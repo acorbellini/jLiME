@@ -9,6 +9,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.log4j.Logger;
+
 import com.google.common.collect.TreeMultimap;
 
 import edu.jlime.core.cluster.DataFilter;
@@ -50,6 +52,8 @@ public class Graphly implements Closeable {
 	private JobDispatcher jobCli;
 
 	private Map<String, SubGraph> subgraphs = new HashMap<>();
+
+	private Logger log = Logger.getLogger(Graphly.class);
 
 	private Graphly(GraphlyCoordinator coord,
 			ClientManager<GraphlyStoreNodeI, GraphlyStoreNodeIBroadcast> mgr,
@@ -249,12 +253,16 @@ public class Graphly implements Closeable {
 
 		final TLongIntHashMap ret = new TLongIntHashMap();
 
+		log.info("Hashing keys to count edges");
+
 		Map<GraphlyStoreNodeI, TLongArrayList> map = hashKeys(vids);
 
 		if (map.size() == 1) {
 			GraphlyStoreNodeI node = map.entrySet().iterator().next().getKey();
 			return node.countEdges(dir, max_edges, vids);
 		}
+
+		log.info("Sending count edge requests.");
 
 		for (final Entry<GraphlyStoreNodeI, TLongArrayList> e : map.entrySet()) {
 			svc.execute(new Runnable() {

@@ -20,8 +20,7 @@ public class CustomFilterStep implements Step {
 
 	@Override
 	public TraversalResult exec(TraversalResult before) throws Exception {
-		ExecutorService exec = Executors.newFixedThreadPool(Runtime
-				.getRuntime().availableProcessors());
+		ExecutorService exec = Executors.newFixedThreadPool(64);
 		final TLongHashSet ret = new TLongHashSet();
 		TLongIterator it = before.vertices().iterator();
 		while (it.hasNext()) {

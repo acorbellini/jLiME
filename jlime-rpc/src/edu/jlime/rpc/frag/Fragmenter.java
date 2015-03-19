@@ -14,6 +14,7 @@ import edu.jlime.rpc.message.Header;
 import edu.jlime.rpc.message.Message;
 import edu.jlime.rpc.message.MessageListener;
 import edu.jlime.rpc.message.MessageProcessor;
+import edu.jlime.rpc.message.MessageSimple;
 import edu.jlime.rpc.message.MessageType;
 import edu.jlime.rpc.message.SimpleMessageProcessor;
 import edu.jlime.util.ByteBuffer;
@@ -131,11 +132,15 @@ public class Fragmenter extends SimpleMessageProcessor {
 
 				int offset = i * maxBytes;
 
-				byte[] fragData = Arrays.copyOfRange(data, offset, offset
-						+ Math.min(maxBytes, remaining));
+				// byte[] fragData = Arrays.copyOfRange(data, offset, offset
+				// + Math.min(maxBytes, remaining));
 
-				Message toSend = Message.newOutDataMessage(fragData,
-						MessageType.FRAG, msg.getTo());
+				ByteBuffer fragData = new ByteBuffer(data, offset
+						+ Math.min(maxBytes, remaining), offset);
+
+				Message toSend = new MessageSimple(
+						new Header(MessageType.FRAG), fragData, msg.getFrom(),
+						msg.getTo());
 
 				ByteBuffer headerW = toSend.getHeaderBuffer();
 

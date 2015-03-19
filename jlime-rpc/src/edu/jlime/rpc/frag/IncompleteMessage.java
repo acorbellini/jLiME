@@ -1,18 +1,18 @@
 package edu.jlime.rpc.frag;
 
-import java.util.HashSet;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.log4j.Logger;
 
 import edu.jlime.core.transport.Address;
+import edu.jlime.util.ByteBuffer;
 
 public class IncompleteMessage {
 
 	Logger log = Logger.getLogger(IncompleteMessage.class);
 
-	private byte[] buff;
+	private ByteBuffer buff;
 
 	ConcurrentHashMap<Integer, Boolean> added = new ConcurrentHashMap<>();
 
@@ -25,7 +25,7 @@ public class IncompleteMessage {
 	private int total;
 
 	public IncompleteMessage(Address from, int total, UUID id) {
-		this.buff = new byte[total];
+		this.buff = new ByteBuffer(total);
 		this.from = from.toString();
 		this.total = total;
 		this.remaining = total;
@@ -36,7 +36,8 @@ public class IncompleteMessage {
 
 		added.put(offsetInOriginal, true);
 
-		System.arraycopy(data, 0, buff, offsetInOriginal, data.length);
+		buff.putRawByteArray(data, 0, data.length, offsetInOriginal);
+		// System.arraycopy(data, 0, buff, offsetInOriginal, data.length);
 
 		remaining -= data.length;
 
@@ -51,7 +52,7 @@ public class IncompleteMessage {
 		return remaining == 0;
 	}
 
-	public byte[] getBuff() {
+	public ByteBuffer getBuff() {
 		return buff;
 	}
 

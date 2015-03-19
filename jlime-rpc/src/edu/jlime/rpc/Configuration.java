@@ -79,18 +79,19 @@ public class Configuration {
 		this.mcastport = getInt("mcast.port", 3000);
 		this.mcast_port_range = getInt("mcast.port_range", 20);
 
-		this.disc_num_tries = getInt("disco.tries", 10);
+		this.disc_num_tries = getInt("disco.tries", 3);
 		this.disc_delay = getInt("disco.delay", 1000);
 
-		this.max_pings = getInt("fd.max_pings", 5);
+		this.max_pings = getInt("fd.max_pings", 60);
 		this.ping_delay = getInt("fd.ping_delay", 1000);
 
 		this.nack_delay = getInt("ack.nack_delay", 150);
 
 		this.ack_delay = getInt("ack.ack_delay", 1);
 
-		this.retransmit_delay = getInt("ack.retransmit_delay", 10);
-		this.ack_max_resend_size = getInt("ack.max_resend_size", 256);
+		this.retransmit_delay = getInt("ack.retransmit_delay",
+				100 * this.ack_delay);
+		this.ack_max_resend_size = getInt("ack.max_resend_size", 10000);
 
 		this.interface_max_update_time = getInt("multi.max_update_time", 10000);
 		try {

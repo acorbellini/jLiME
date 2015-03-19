@@ -27,6 +27,8 @@ public class ByteBuffer {
 
 	public int limit = 0;
 
+	// private int init = 0;
+
 	public ByteBuffer() {
 		this(INIT_SIZE);
 	}
@@ -45,9 +47,9 @@ public class ByteBuffer {
 		this(new byte[i], 0);
 	}
 
-	public ByteBuffer(byte[] buffered, int wrapSize, int readPos) {
+	public ByteBuffer(byte[] buffered, int wrapSize, int init) {
 		this(buffered, wrapSize);
-		this.readPos = readPos;
+		this.readPos = init;
 	}
 
 	public ByteBuffer(ByteBuffer buff, int from, int to) {
@@ -255,20 +257,20 @@ public class ByteBuffer {
 		return ret;
 	}
 
-	public List<ByteBuffer> getByteBufferList() {
-		int size = getInt();
-		List<ByteBuffer> ret = new ArrayList<>(size + size / 2);
-		for (int i = 0; i < size; i++) {
-			int wrapSize = getInt();
-			if (wrapSize > 5)
-				System.out.println("What");
-			ByteBuffer wrap = new ByteBuffer(buffered, readPos + wrapSize,
-					readPos);
-			ret.add(wrap);
-			readPos += wrapSize;
-		}
-		return ret;
-	}
+	// public List<ByteBuffer> getByteBufferList() {
+	// int size = getInt();
+	// List<ByteBuffer> ret = new ArrayList<>(size + size / 2);
+	// for (int i = 0; i < size; i++) {
+	// int wrapSize = getInt();
+	// if (wrapSize > 5)
+	// System.out.println("What");
+	// ByteBuffer wrap = new ByteBuffer(buffered, readPos + wrapSize,
+	// readPos);
+	// ret.add(wrap);
+	// readPos += wrapSize;
+	// }
+	// return ret;
+	// }
 
 	public List<Long> getLongList() {
 		int size = getInt();
@@ -296,8 +298,12 @@ public class ByteBuffer {
 	}
 
 	public void putRawByteArray(byte[] data, int offset, int lenght) {
+		putRawByteArray(data, offset, lenght, limit);
+	}
+
+	public void putRawByteArray(byte[] data, int offset, int lenght, int pos) {
 		ensureCapacity(lenght);
-		System.arraycopy(data, offset, buffered, limit, lenght);
+		System.arraycopy(data, offset, buffered, pos, lenght);
 		limit += lenght;
 	}
 
@@ -487,6 +493,6 @@ public class ByteBuffer {
 	}
 
 	public java.nio.ByteBuffer asByteBuffer() {
-		return java.nio.ByteBuffer.wrap(buffered, 0, limit);
+		return java.nio.ByteBuffer.wrap(buffered, readPos, limit - readPos);
 	}
 }

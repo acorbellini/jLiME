@@ -5,7 +5,7 @@
            http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.1.xsd">
 
 	<bean id="runs" class="java.lang.Integer">
-		<constructor-arg value="10" />
+		<constructor-arg value="1" />
 	</bean>
 
 	<bean id="executiontype" class="java.lang.String">

@@ -1,7 +1,8 @@
 package edu.jlime.graphly.traversal;
 
-import gnu.trove.list.array.TLongArrayList;
+import java.util.Arrays;
 
+import gnu.trove.list.array.TLongArrayList;
 
 public class VarFilterStep implements Step {
 
@@ -27,6 +28,12 @@ public class VarFilterStep implements Step {
 				res = res.retainAll(filter);
 		}
 		return res;
+	}
+
+	@Override
+	public String toString() {
+		return "VarFilterStep [kList=" + Arrays.toString(kList) + ", neg="
+				+ neg + "]";
 	}
 
 }

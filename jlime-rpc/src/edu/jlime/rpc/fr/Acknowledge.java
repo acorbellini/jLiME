@@ -76,23 +76,7 @@ public class Acknowledge extends SimpleMessageProcessor {
 				}
 			}
 		}, config.retransmit_delay, config.retransmit_delay);
-		// Thread tAck = new Thread("Ack Sender") {
-		// @Override
-		// public void run() {
-		// while (!stopped) {
-		// for (AcknowledgeCounter count : counterList) {
-		// count.sendAcks();
-		// }
-		// try {
-		// Thread.sleep(0, config.ack_delay);
-		// } catch (InterruptedException e) {
-		// // TODO Auto-generated catch block
-		// e.printStackTrace();
-		// }
-		// }
-		// }
-		// };
-		// tAck.start();
+
 		t.scheduleAtFixedRate(new TimerTask() {
 
 			@Override
@@ -119,17 +103,8 @@ public class Acknowledge extends SimpleMessageProcessor {
 						if (counter.seqNumberArrived(seq)) {
 							notifyRcvd(Message.deEncapsulate(m.getDataBuffer(),
 									m.getFrom(), m.getTo()));
-							// Address from = m.getFrom();
-
-							// counters.get(from).addAck(seq);
-
 						}
 						receivedAckBuffer(m.getFrom(), headerBuffer);
-
-						// Message ackMsg = Message.newEmptyOutDataMessage(
-						// MessageType.ACK, m.getFrom());
-						// ackMsg.getHeaderBuffer().putInt(seq);
-						// sendNext(ackMsg);
 					}
 				});
 
@@ -138,15 +113,6 @@ public class Acknowledge extends SimpleMessageProcessor {
 			public void rcv(Message m, MessageProcessor origin)
 					throws Exception {
 				receivedAckBuffer(m.getFrom(), m.getHeaderBuffer());
-				// int ackConfirm = m.getHeaderBuffer().getInt();
-				// if (log.isTraceEnabled())
-				// log.trace("Received message from " + m.getFrom()
-				// + " that confirms " + ackConfirm);
-				// AcknowledgeCounter c = getCounter(m.getFrom());
-				// c.confirm(ackConfirm);
-				// synchronized (counters) {
-				// counters.notifyAll();
-				// }
 			}
 		});
 	}
@@ -204,9 +170,6 @@ public class Acknowledge extends SimpleMessageProcessor {
 				AcknowledgeCounter c = getCounter(from);
 				c.confirm(seq);
 			}
-			// synchronized (counters) {
-			// counters.notifyAll();
-			// }
 		}
 
 	}

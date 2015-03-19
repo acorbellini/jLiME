@@ -7,6 +7,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
+
+import com.esotericsoftware.minlog.Log;
+
 import edu.jlime.core.rpc.RPCDispatcher;
 import edu.jlime.core.rpc.Transferible;
 import edu.jlime.graphly.client.Graphly;
@@ -34,9 +38,17 @@ public class GraphlyTraversal implements Serializable, Transferible {
 
 	private transient Graphly g;
 
+	private boolean printSteps = false;
+	private long lastexec = -1;
+
 	public GraphlyTraversal(long[] ids, Graphly g) {
 		this.currres = new VertexResult(new TLongHashSet(ids));
 		this.g = g;
+	}
+
+	public GraphlyTraversal setPrintSteps(boolean printSteps) {
+		this.printSteps = printSteps;
+		return this;
 	}
 
 	public TraversalResult submit(ClientNode c) throws Exception {
@@ -45,6 +57,15 @@ public class GraphlyTraversal implements Serializable, Transferible {
 
 	public TraversalResult next() throws Exception {
 		Step step = steps.get(curr++);
+		if (printSteps) {
+			Logger log = Logger.getLogger(GraphlyTraversal.class);
+			if (lastexec < 0)
+				lastexec = System.currentTimeMillis();
+
+			log.info("Executing step " + curr + "("
+					+ (System.currentTimeMillis() - lastexec) / 1000
+					+ " sec. ):" + step.toString());
+		}
 		return this.currres = step.exec(currres);
 	}
 

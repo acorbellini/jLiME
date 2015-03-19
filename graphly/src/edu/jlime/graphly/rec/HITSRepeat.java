@@ -8,11 +8,14 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadFactory;
 
+import org.apache.log4j.Logger;
+
 import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.client.SubGraph;
 import edu.jlime.graphly.traversal.Dir;
 
 class HITSRepeat implements Repeat<long[]> {
+	private static final int MAX_THREADS = 64;
 	private String authKey;
 	private String hubKey;
 	private long[] current;
@@ -29,25 +32,31 @@ class HITSRepeat implements Repeat<long[]> {
 		if (exec == null) {
 			synchronized (this) {
 				if (exec == null)
-					exec = Executors.newFixedThreadPool(Runtime.getRuntime()
-							.availableProcessors(), new ThreadFactory() {
+					exec = Executors.newFixedThreadPool(MAX_THREADS,
+							new ThreadFactory() {
 
-						@Override
-						public Thread newThread(Runnable r) {
-							Thread t = Executors.defaultThreadFactory()
-									.newThread(r);
-							t.setName("Salsa Repeat Step");
-							return t;
-						}
-					});
+								@Override
+								public Thread newThread(Runnable r) {
+									Thread t = Executors.defaultThreadFactory()
+											.newThread(r);
+									t.setName("Salsa Repeat Step");
+									return t;
+								}
+							});
 			}
 		}
+		final Semaphore max = new Semaphore(MAX_THREADS * 2);
+
+		Logger log = Logger.getLogger(HITSRepeat.class);
 
 		final SubGraph sg = g.getSubGraph("hits-sub", current);
 
 		final Map<Long, Map<String, Object>> temps = new ConcurrentHashMap<>();
 		final Semaphore sem = new Semaphore(-before.length + 1);
+
+		log.info("Executing HITS function on " + before.length);
 		for (final long vid : before) {
+			max.acquire();
 			exec.execute(new Runnable() {
 
 				@Override
@@ -59,11 +68,12 @@ class HITSRepeat implements Repeat<long[]> {
 						e.printStackTrace();
 					}
 					sem.release();
+					max.release();
 				}
 			});
 		}
 		sem.acquire();
-
+		log.info("Setting temp properties for " + before.length);
 		g.setTempProperties(before, temps);
 
 		return before;

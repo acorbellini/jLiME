@@ -77,9 +77,9 @@ public class CountStep implements Step {
 					@Override
 					public void onSuccess(GraphlyCount subres) {
 						synchronized (temp) {
-							if (log.isDebugEnabled())
-								log.debug("Received result, remaining "
-										+ jobCount.decrementAndGet());
+							// if (log.isDebugEnabled())
+							log.info("Received result, remaining "
+									+ jobCount.decrementAndGet());
 							TLongIntIterator it = subres.iterator();
 							while (it.hasNext()) {
 								it.advance();
@@ -141,4 +141,11 @@ public class CountStep implements Step {
 		// db.close();
 		return new CountResult(finalRes);
 	}
+
+	@Override
+	public String toString() {
+		return "CountStep [dir=" + dir + ", top=" + top + ", max_edges="
+				+ max_edges + "]";
+	}
+
 }

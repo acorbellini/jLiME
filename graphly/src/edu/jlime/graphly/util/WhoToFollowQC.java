@@ -16,9 +16,11 @@ public class WhoToFollowQC implements QueryContainer {
 			steps = 50;
 
 		g.v(users)
+				.setPrintSteps(true)
 				.set("mapper", mapper)
 				.as(Recommendation.class)
-				.whotofollow("wtf-auth", "wtf-hub", steps, 5, 200, steps, 5, 20)
+				.whotofollow("wtf-auth", "wtf-hub", steps, 5, 2000, steps, 5,
+						20)
 				.submit(g.getJobClient().getCluster().getExecutors().get(0));
 	}
 

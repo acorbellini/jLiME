@@ -14,6 +14,7 @@ import java.nio.channels.Selector;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -35,8 +36,8 @@ public class UDPNIO extends MessageProcessor implements AddressListProvider,
 
 	public static final int HEADER = 32;
 
-	private ExecutorService exec = Executors.newFixedThreadPool(64,
-			new ThreadFactory() {
+	private ExecutorService exec = Executors
+			.newFixedThreadPool(64, new ThreadFactory() {
 
 				@Override
 				public Thread newThread(Runnable r) {
@@ -136,7 +137,7 @@ public class UDPNIO extends MessageProcessor implements AddressListProvider,
 			}
 			// }
 		} catch (Exception e) {
-			log.info("Closed UDP NIO Channel.");
+			// log.info("Closed UDP NIO Channel.");
 		}
 
 	}
@@ -195,7 +196,6 @@ public class UDPNIO extends MessageProcessor implements AddressListProvider,
 		DatagramChannel ret = null;
 		for (int i = 0; i < config.port_range; i++) {
 			try {
-
 				ret = DatagramChannel.open();
 
 				// Flags
@@ -272,7 +272,6 @@ public class UDPNIO extends MessageProcessor implements AddressListProvider,
 						to.connect(socketAddress.getSockTo());
 						addressBook.put(id, to);
 					} catch (IOException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 			}
@@ -285,12 +284,20 @@ public class UDPNIO extends MessageProcessor implements AddressListProvider,
 		sel.close();
 		exec.shutdown();
 		channel.close();
+		for (Entry<Address, DatagramChannel> e : addressBook.entrySet()) {
+			e.getValue().close();
+		}
 	}
 
 	@Override
 	public void nodeFailed(Address node) {
-		// TODO Auto-generated method stub
-
+		DatagramChannel dc = addressBook.get(node);
+		if (dc != null)
+			try {
+				dc.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 	}
 
 }

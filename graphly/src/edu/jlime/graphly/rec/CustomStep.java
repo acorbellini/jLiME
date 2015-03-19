@@ -27,4 +27,10 @@ public class CustomStep implements Step {
 	public TraversalResult exec(TraversalResult before) throws Exception {
 		return func.execute(before, tr);
 	}
+
+	@Override
+	public String toString() {
+		return "CustomStep [func=" + func + "]";
+	}
+
 }
