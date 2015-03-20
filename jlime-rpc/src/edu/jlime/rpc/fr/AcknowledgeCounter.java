@@ -1,17 +1,11 @@
 package edu.jlime.rpc.fr;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicIntegerArray;
 
 import org.apache.log4j.Logger;
-import org.apache.mina.util.ConcurrentHashSet;
 
 import edu.jlime.core.transport.Address;
 import edu.jlime.rpc.Configuration;
@@ -19,15 +13,20 @@ import edu.jlime.rpc.message.Message;
 import edu.jlime.rpc.message.MessageType;
 import edu.jlime.util.ByteBuffer;
 import edu.jlime.util.RingQueue;
-import gnu.trove.list.array.TIntArrayList;
 
 class AcknowledgeCounter {
+
+	private static final int MAX_ACK_ITERATIONS = 1000;
+
+	private static final int MAX_RESEND_ITERATIONS = 1000;
 
 	public static class ConfirmData {
 		volatile boolean confirmed = false;
 		volatile int seq = -1;
-		volatile boolean ackSent = false;
+		// volatile AtomicBoolean ackSent = new AtomicBoolean(false);
 	}
+
+	AtomicIntegerArray ackSent;
 
 	private Logger log = Logger.getLogger(AcknowledgeCounter.class);
 
@@ -41,21 +40,21 @@ class AcknowledgeCounter {
 
 	private volatile AtomicInteger seqN = new AtomicInteger(0);
 
-	private int max_resend_size = 16;
+	private int max_resend_size;
 
 	private volatile AtomicInteger confirmed = new AtomicInteger(-1);
+
+	private volatile AtomicInteger ackSenderCursor = new AtomicInteger(0);
+
+	private volatile AtomicInteger resendCursor = new AtomicInteger(0);
 
 	private RingQueue toSend = new RingQueue();
 
 	private Configuration config;
 
-	// private volatile long current_ack_time;
-	//
-	// private float alpha = 0.5f;
-
-	// private LinkedList<Integer> acks = new LinkedList<>();
-
 	private Acknowledge ack;
+
+	private LinkedBlockingDeque<Integer> acks = new LinkedBlockingDeque<Integer>();
 
 	public static class ResendData {
 
@@ -83,6 +82,8 @@ class AcknowledgeCounter {
 		}
 	}
 
+	Message ackMsg;
+
 	public AcknowledgeCounter(Acknowledge ack, Address to, int max_nack_size,
 			int nack_delay, int ack_delay, Configuration config) {
 		this.ack = ack;
@@ -96,54 +97,49 @@ class AcknowledgeCounter {
 		for (int i = 0; i < rcvd.length; i++) {
 			rcvd[i] = new ConfirmData();
 		}
-		// Arrays.fill(rcvd, false);
+		this.ackSent = new AtomicIntegerArray(max_resend_size);
+		for (int i = 0; i < ackSent.length(); i++) {
+			ackSent.set(i, 0);
+		}
+
 		this.config = config;
-		// this.current_ack_time = config.ack_delay;
+		this.ackMsg = Message.newEmptyOutDataMessage(MessageType.ACK, to);
+
 	}
 
 	public void send(Message msg) throws Exception {
-		// toSend.put(msg);
 		int seqN = this.seqN.getAndIncrement();
 		while (Math.abs(seqN - confirmed.get()) >= max_resend_size) {
 			synchronized (this.seqN) {
 				this.seqN.wait(0, 500);
 			}
 		}
-		// if (ret == null)
-		// ret = new ArrayList<>();
-
-		// Message msg = (Message) toSend.tryTakeOne();
-		// if (msg == null)
-		// return null;
-
 		resendArray[pos(seqN)].setData(msg, System.currentTimeMillis(), seqN);
 
-		Message ackMsg = Message.encapsulateOut(msg, MessageType.ACK_SEQ, to);
-		ackMsg.getHeaderBuffer().putInt(seqN);
-		ack.sendNext(ackMsg);
-		// ret.add(ackMsg);
-		// return ackMsg;
+		Message ackSeqMsg = Message
+				.encapsulateOut(msg, MessageType.ACK_SEQ, to);
+		ackSeqMsg.getHeaderBuffer().putInt(seqN);
+		// appendAcks(ackSeqMsg, 50, 50);
+		ack.sendNext(ackSeqMsg);
 	}
 
 	public synchronized boolean seqNumberArrived(int seq) throws Exception {
 		if (seq < nextExpectedNumber) {
-			rcvd[pos(seq)].ackSent = false;
+			ackSent.set(pos(seq), 0);
+			acks.add(seq);
 			return false;
 		}
 
 		rcvd[pos(seq)].confirmed = true;
-		rcvd[pos(seq)].ackSent = false;
+		ackSent.set(pos(seq), 0);
+		acks.add(seq);
 		rcvd[pos(seq)].seq = seq;
 
 		if (seq == nextExpectedNumber) {
-			// (rcvd) {
-			// if (seq == nextExpectedNumber) {
 			while (rcvd[pos(nextExpectedNumber)].confirmed) {
 				rcvd[pos(nextExpectedNumber)].confirmed = false;
 				nextExpectedNumber++;
 			}
-			// }
-			// }
 		}
 
 		return true;
@@ -160,10 +156,6 @@ class AcknowledgeCounter {
 
 		ResendData curr = resendArray[pos(seq)];
 		curr.setConfirmed();
-		// current_ack_time = (long) (alpha
-		// * (System.currentTimeMillis() - curr.timeSent) + (1 - alpha)
-		// * current_ack_time + 0.1f * config.ack_delay);
-
 		if (seq == confirmed.get() + 1) {
 			synchronized (confirmed) {
 				if (seq == confirmed.get() + 1) {
@@ -181,21 +173,14 @@ class AcknowledgeCounter {
 						} else
 							done = true;
 					}
-					// synchronized (this) {
-					// confirmed.notifyAll();
-					// }
 				}
 			}
 		}
 	}
 
 	public Message nextSend() {
-		// ArrayList<Message> ret = null;
 		Message ret = null;
 		if (Math.abs(seqN.get() - confirmed.get()) <= max_resend_size) {
-			// if (ret == null)
-			// ret = new ArrayList<>();
-
 			Message msg = (Message) toSend.tryTakeOne();
 			if (msg == null)
 				return null;
@@ -214,56 +199,28 @@ class AcknowledgeCounter {
 		return ret;
 	}
 
-	// public HashSet<Integer> getAcks() {
-	// return acks;
-	// }
+	public boolean sendAcks() throws Exception {
+		ackMsg.getHeader().clear();
 
-	// public void addAck(int seq) {
-	// synchronized (acks) {
-	// acks.add(seq);
-	// }
-	// }
+		int currSize = ackMsg.getSize();
 
-	public TIntArrayList getAcks(int currSize) {
-		// ByteBuffer buff = msg.getHeaderBuffer();
-		int size = currSize;
-		int diff = (ack.max_size - 4) - size;
-		int count = diff / 16;
-		if (count > 0) {
-			TIntArrayList list = null;
+		appendAcks(ackMsg, 1000, rcvd.length);
 
-			for (int i = 0; i < rcvd.length
-					&& (list == null || list.size() < count); i++) {
-				if (!rcvd[i].ackSent) {
-					if (list == null)
-						list = new TIntArrayList(rcvd.length);
-					rcvd[i].ackSent = true;
-					list.add(rcvd[i].seq);
-				}
-			}
-			return list;
-
-		}
-		return null;
-	}
-
-	public boolean sendAcks() {
-		TIntArrayList list = getAcks(0);
-		if (list == null || list.isEmpty())
+		if (ackMsg.getSize() == currSize)
 			return false;
-		Message ack = Message.newEmptyOutDataMessage(MessageType.ACK, to);
-		appendAcks(ack, list);
-		try {
-			this.ack.sendNext(ack);
-		} catch (Exception e1) {
-			e1.printStackTrace();
-		}
+		this.ack.sendNext(ackMsg);
 		return true;
 	}
 
 	public void resend() {
 		long curr = System.currentTimeMillis();
-		for (int i = 0; i < max_resend_size; i++) {
+		int count = 0;
+		while (count < resendArray.length) {
+
+			count++;
+
+			int i = resendCursor.getAndIncrement() % resendArray.length;
+
 			ResendData res = resendArray[i];
 
 			boolean confirmed = res.confirmed;
@@ -283,10 +240,8 @@ class AcknowledgeCounter {
 							MessageType.ACK_SEQ, to);
 					ackMsg.getHeaderBuffer().putInt(seq);
 
-					TIntArrayList list = getAcks(ackMsg.getSize());
-					if (list != null && !list.isEmpty()) {
-						appendAcks(ackMsg, list);
-					}
+					// appendAcks(ackMsg, 50, 50);
+
 					if (!confirmed)
 						ack.sendNext(ackMsg);
 				} catch (Exception e) {
@@ -296,12 +251,81 @@ class AcknowledgeCounter {
 		}
 	}
 
-	private void appendAcks(Message ackMsg, TIntArrayList list) {
-		ByteBuffer buff = ackMsg.getHeaderBuffer();
-		buff.ensureCapacity(list.size() * 4 + 4);
-		buff.putInt(list.size());
-		for (int j = 0; j < list.size(); j++) {
-			buff.putInt(list.get(j));
+	final boolean RANGE = true;
+	final boolean SINGLE = false;
+
+	private void appendAcks(Message msg, int max_obtained, int max_total) {
+		ByteBuffer buff = msg.getHeaderBuffer();
+
+		int diff = ack.max_size - msg.getSize();
+		if (diff > 1 + 4 + 4) {
+			int appended = 0;
+
+			int from = -1;
+			int to = -1;
+
+			int count = 0;
+			int gathered = 0;
+			Integer seq = null;
+			while ((seq = acks.poll()) != null && appended < diff
+					&& gathered < max_obtained && count < max_total
+					&& count < ackSent.length()) {
+				// while (appended < diff && gathered < max_obtained
+				// && count < max_total && count < ackSent.length()) {
+				// int i = ackSenderCursor.getAndIncrement() % ackSent.length();
+				// count++;
+				// if (ackSent.get(i) == 0) {
+				// ConfirmData confirmData = rcvd[i];
+				// gathered++;
+				if (from == -1) {
+					from = seq;
+					to = seq;
+				} else if (to != seq - 1) {
+					if (to != from) {
+						buff.putBoolean(RANGE);
+						buff.putInt(from);
+						buff.putInt(to);
+						appended += 1 + 4 + 4;
+					} else {
+						buff.putBoolean(SINGLE);
+						buff.putInt(from);
+						appended += 1 + 4;
+					}
+					from = seq;
+					to = seq;
+				} else
+					to++;
+
+				// ackSent.compareAndSet(i, 0, 1);
+			}
+			// }
+			if (from != -1) {
+				if (to != from) {
+					buff.putBoolean(RANGE);
+					buff.putInt(from);
+					buff.putInt(to);
+				} else {
+					buff.putBoolean(SINGLE);
+					buff.putInt(from);
+				}
+			}
 		}
+	}
+
+	public void receivedAckBuffer(ByteBuffer headerBuffer) throws Exception {
+		while (headerBuffer.hasRemaining()) {
+			boolean type = headerBuffer.getBoolean();
+			if (type == RANGE) {
+				int from = headerBuffer.getInt();
+				int to = headerBuffer.getInt();
+				for (int i = from; i <= to; i++) {
+					confirm(i);
+				}
+			} else {
+				int from = headerBuffer.getInt();
+				confirm(from);
+			}
+		}
+
 	}
 }

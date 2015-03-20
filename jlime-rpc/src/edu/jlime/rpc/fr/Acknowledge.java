@@ -1,10 +1,5 @@
 package edu.jlime.rpc.fr;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map.Entry;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
@@ -82,7 +77,11 @@ public class Acknowledge extends SimpleMessageProcessor {
 			@Override
 			public void run() {
 				for (AcknowledgeCounter count : counterList) {
-					count.sendAcks();
+					try {
+						count.sendAcks();
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
 				}
 			}
 		}, config.ack_delay, config.ack_delay);
@@ -99,12 +98,14 @@ public class Acknowledge extends SimpleMessageProcessor {
 									+ " from " + m.getFrom());
 
 						AcknowledgeCounter counter = getCounter(m.getFrom());
-
-						if (counter.seqNumberArrived(seq)) {
-							notifyRcvd(Message.deEncapsulate(m.getDataBuffer(),
-									m.getFrom(), m.getTo()));
+						if (counter != null) {
+							if (counter.seqNumberArrived(seq)) {
+								notifyRcvd(Message.deEncapsulate(
+										m.getDataBuffer(), m.getFrom(),
+										m.getTo()));
+							}
+							counter.receivedAckBuffer(headerBuffer);
 						}
-						receivedAckBuffer(m.getFrom(), headerBuffer);
 					}
 				});
 
@@ -112,7 +113,9 @@ public class Acknowledge extends SimpleMessageProcessor {
 			@Override
 			public void rcv(Message m, MessageProcessor origin)
 					throws Exception {
-				receivedAckBuffer(m.getFrom(), m.getHeaderBuffer());
+				AcknowledgeCounter counter = getCounter(m.getFrom());
+				if (counter != null)
+					counter.receivedAckBuffer(m.getHeaderBuffer());
 			}
 		});
 	}
@@ -158,19 +161,6 @@ public class Acknowledge extends SimpleMessageProcessor {
 
 	@Override
 	public void setMetrics(Metrics metrics) {
-
-	}
-
-	private void receivedAckBuffer(Address from, ByteBuffer headerBuffer)
-			throws Exception {
-		if (headerBuffer.hasRemaining()) {
-			int acksCount = headerBuffer.getInt();
-			for (int i = 0; i < acksCount; i++) {
-				int seq = headerBuffer.getInt();
-				AcknowledgeCounter c = getCounter(from);
-				c.confirm(seq);
-			}
-		}
 
 	}
 

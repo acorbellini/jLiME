@@ -37,12 +37,10 @@ public class IncompleteMessage {
 		added.put(offsetInOriginal, true);
 
 		buff.putRawByteArray(data, 0, data.length, offsetInOriginal);
-		// System.arraycopy(data, 0, buff, offsetInOriginal, data.length);
 
 		remaining -= data.length;
 
 		if (log.isDebugEnabled())
-			// if (remaining < 0)
 			log.debug("Remaining of incomplete message " + id + " :"
 					+ remaining + " offset: " + offsetInOriginal);
 

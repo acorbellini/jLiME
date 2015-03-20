@@ -18,8 +18,6 @@ public abstract class MessageProcessor implements StackElement {
 
 	private HashMap<String, MessageProcessor> processors = new HashMap<>();
 
-	// private RingQueue out = new RingQueue();
-
 	private List<MessageListener> secondaryMessage = new CopyOnWriteArrayList<MessageListener>();
 
 	private List<MessageListener> all = new CopyOnWriteArrayList<MessageListener>();
@@ -41,24 +39,6 @@ public abstract class MessageProcessor implements StackElement {
 	}
 
 	public final void start() throws Exception {
-		// Thread t = new Thread("Outcoming Timer for " + name) {
-		// public void run() {
-		// while (!stopped)
-		// try {
-		// final Object[] m = out.take();
-		// if (stopped)
-		// return;
-		// for (Object e : m) {
-		// send((Message) e);
-		// }
-		//
-		// } catch (Exception e1) {
-		// e1.printStackTrace();
-		// }
-		// };
-		// };
-		// t.start();
-
 		onStart();
 	};
 
@@ -69,7 +49,6 @@ public abstract class MessageProcessor implements StackElement {
 		if (stopped)
 			return;
 		stopped = true;
-		// out.put(new MessageSimple(null, null, null, null));
 		onStop();
 	};
 

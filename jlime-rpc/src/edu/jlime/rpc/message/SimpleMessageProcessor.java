@@ -7,16 +7,13 @@ public abstract class SimpleMessageProcessor extends MessageProcessor {
 	public SimpleMessageProcessor(MessageProcessor next, String name) {
 		super(name);
 		this.next = next;
-		// super.registerProcessor("next", next);
 	}
 
 	protected MessageProcessor getNext() {
-		// return getProc("next");
 		return next;
 	}
 
 	public void sendNext(Message msg) throws Exception {
-		// sendToProc("next", msg);
 		next.send(msg);
 	}
 }

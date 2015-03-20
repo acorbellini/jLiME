@@ -9,7 +9,7 @@ import edu.jlime.core.rpc.RPCDispatcher;
 
 public class SyncPerfClient {
 
-	private static final int ITERS = 10000000;
+	private static final int ITERS = 1000000;
 
 	public static void main(String[] args) throws Exception {
 

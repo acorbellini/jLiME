@@ -77,8 +77,6 @@ public class Fragmenter extends SimpleMessageProcessor {
 					synchronized (parts) {
 						incomplete = parts.get(fragID);
 						if (incomplete == null) {
-							incomplete = new IncompleteMessage(from,
-									messageLength, fragID);
 
 							HashSet<UUID> sentIDs = receivedFragments.get(from);
 							if (sentIDs == null) {
@@ -90,7 +88,15 @@ public class Fragmenter extends SimpleMessageProcessor {
 									}
 								}
 							}
+							if (sentIDs.contains(fragID)) {
+								if (log.isDebugEnabled())
+									log.info("Repeated fragment received");
+								return;
+							}
 							sentIDs.add(fragID);
+
+							incomplete = new IncompleteMessage(from,
+									messageLength, fragID);
 
 							parts.put(fragID, incomplete);
 						}

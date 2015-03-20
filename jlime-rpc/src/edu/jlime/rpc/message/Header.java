@@ -73,4 +73,10 @@ public class Header {
 		headerData.putInt(1, headerData.size() - HEADER);
 		return headerData;
 	}
+
+	public void clear() {
+		this.headerData.clear();
+		this.headerData.put(type.getId());
+		this.headerData.putInt(0);
+	}
 }
