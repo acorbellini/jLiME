@@ -8,6 +8,7 @@ import java.util.UUID;
 import edu.jlime.core.cluster.Peer;
 import edu.jlime.core.rpc.RPCDispatcher;
 import edu.jlime.pregel.client.PregelConfig;
+import edu.jlime.pregel.client.SplitFunction;
 import edu.jlime.pregel.graph.VertexFunction;
 import edu.jlime.pregel.graph.rpc.Graph;
 import edu.jlime.pregel.worker.rpc.Worker;
@@ -45,15 +46,16 @@ public class WorkerImpl implements Worker {
 	}
 
 	@Override
-	public void nextSuperstep(Integer superstep, UUID taskID) throws Exception {
-		contexts.get(taskID).nextStep(superstep);
+	public void nextSuperstep(int superstep, UUID taskID, SplitFunction func)
+			throws Exception {
+		contexts.get(taskID).nextStep(superstep, func);
 	}
 
 	@Override
 	public void createTask(UUID taskID, Peer cli, VertexFunction func,
-			PregelConfig config, Set<Long> init) throws Exception {
+			PregelConfig config) throws Exception {
 		contexts.put(taskID, new WorkerTask(this, rpc, cli, func, taskID,
-				config, init));
+				config));
 	}
 
 	// @Override

@@ -64,7 +64,7 @@ public class PregelGraphLocal implements Serializable, Graph {
 		this.defaultValue.put(k, defaultValue);
 	}
 
-	private VertexData getOrCreateVData(Long id) {
+	private VertexData getOrCreateVData(long id) {
 		VertexData data = getVertexData(id);
 		if (data == null) {
 			synchronized (vertices) {
@@ -84,7 +84,7 @@ public class PregelGraphLocal implements Serializable, Graph {
 	 * @see edu.jlime.pregel.graph.PregelGraphAbstract#putLink(Long, Long)
 	 */
 	@Override
-	public void putOutgoing(Long o, Long dest) {
+	public void putOutgoing(long o, long dest) {
 		// System.out.println("Putting " + o + "->" + dest + " on graph "
 		// + graphid);
 
@@ -109,7 +109,7 @@ public class PregelGraphLocal implements Serializable, Graph {
 	// .iterator();
 	// while (it.hasNext()) {
 	// it.advance();
-	// Long v = it.key();
+	// long v = it.key();
 	// VertexData data = it.value();
 	// VertexData vData = null;
 	// TLongSet outgoing = data.outgoing();
@@ -135,7 +135,7 @@ public class PregelGraphLocal implements Serializable, Graph {
 	 * @see edu.jlime.pregel.graph.PregelGraphAbstract#getOutgoing(Long)
 	 */
 	@Override
-	public Set<Long> getOutgoing(Long vertex) {
+	public Set<Long> getOutgoing(long vertex) {
 		VertexData data = getVertexData(vertex);
 		if (data == null)
 			return new HashSet<Long>();
@@ -156,7 +156,7 @@ public class PregelGraphLocal implements Serializable, Graph {
 	 * java.lang.String, java.lang.Object)
 	 */
 	@Override
-	public void setVal(Long v, String k, Object val) {
+	public void setVal(long v, String k, Object val) {
 		getOrCreateVData(v).put(k, val);
 	}
 
@@ -167,7 +167,7 @@ public class PregelGraphLocal implements Serializable, Graph {
 	 * java.lang.String)
 	 */
 	// @Override
-	// public Boolean isTrue(Long v, String string) {
+	// public Boolean isTrue(long v, String string) {
 	// VertexData vertexData = getVertexData(v);
 	// if (vertexData == null)
 	// return false;
@@ -182,7 +182,7 @@ public class PregelGraphLocal implements Serializable, Graph {
 	 * edu.jlime.pregel.worker.VertexData)
 	 */
 	// @Override
-	// public void setVal(Long v, VertexData value) {
+	// public void setVal(long v, VertexData value) {
 	// HashMap<String, Object> data = value.getData();
 	// if (data != null)
 	// for (Entry<String, Object> e : data.entrySet())
@@ -196,7 +196,7 @@ public class PregelGraphLocal implements Serializable, Graph {
 	 * java.lang.String)
 	 */
 	// @Override
-	// public void setTrue(Long v, String string) {
+	// public void setTrue(long v, String string) {
 	// setVal(v, string, new Boolean(true));
 	// }
 
@@ -206,7 +206,7 @@ public class PregelGraphLocal implements Serializable, Graph {
 	 * @see edu.jlime.pregel.graph.PregelGraphAbstract#removeLink(Long, Long)
 	 */
 	@Override
-	public void removeOutgoing(Long from, Long to) {
+	public void removeOutgoing(long from, long to) {
 		VertexData data = getVertexData(from);
 		if (data == null)
 			return;
@@ -261,7 +261,7 @@ public class PregelGraphLocal implements Serializable, Graph {
 	 * java.lang.String)
 	 */
 	@Override
-	public Object get(Long v, String k) {
+	public Object get(long v, String k) {
 		VertexData vData = getVertexData(v);
 		Object data = null;
 		if (vData != null)
@@ -271,7 +271,7 @@ public class PregelGraphLocal implements Serializable, Graph {
 		return data;
 	}
 
-	private VertexData getVertexData(Long v) {
+	private VertexData getVertexData(long v) {
 		synchronized (vertices) {
 			return this.vertices.get(v);
 		}
@@ -305,7 +305,7 @@ public class PregelGraphLocal implements Serializable, Graph {
 	 * @see edu.jlime.pregel.graph.PregelGraphAbstract#getAdyacencySize(Long)
 	 */
 	@Override
-	public int getAdyacencySize(Long v) {
+	public int getAdyacencySize(long v) {
 		VertexData data = getVertexData(v);
 		if (data != null)
 			return data.outgoingSize();
@@ -318,7 +318,7 @@ public class PregelGraphLocal implements Serializable, Graph {
 	 * @see edu.jlime.pregel.graph.PregelGraphAbstract#getData(Long)
 	 */
 	// @Override
-	// public VertexData getData(Long vertex) {
+	// public VertexData getData(long vertex) {
 	// return getVertexData(vertex);
 	// }
 
@@ -328,7 +328,7 @@ public class PregelGraphLocal implements Serializable, Graph {
 	 * @see edu.jlime.pregel.graph.PregelGraphAbstract#addVertex(Long)
 	 */
 	// @Override
-	// public void addVertex(Long vertex) {
+	// public void addVertex(long vertex) {
 	// getOrCreateVData(vertex);
 	// }
 
@@ -338,7 +338,7 @@ public class PregelGraphLocal implements Serializable, Graph {
 	 * @see edu.jlime.pregel.graph.PregelGraphAbstract#getIncoming(Long)
 	 */
 	@Override
-	public Set<Long> getIncoming(Long v) {
+	public Set<Long> getIncoming(long v) {
 
 		VertexData data = getVertexData(v);
 		if (data == null)
@@ -365,7 +365,7 @@ public class PregelGraphLocal implements Serializable, Graph {
 		// HashSet<Long> ret = new HashSet<>();
 		// while (it.hasNext()) {
 		// ByteBuffer buff = new ByteBuffer(it.next());
-		// Long currV = buff.getLong();
+		// long currV = buff.getLong();
 		// if (currV != v)
 		// return ret;
 		// ret.add(buff.getLong());
@@ -385,17 +385,17 @@ public class PregelGraphLocal implements Serializable, Graph {
 	}
 
 	@Override
-	public int getOutgoingSize(Long v) throws Exception {
+	public int getOutgoingSize(long v) throws Exception {
 		return getOutgoing(v).size();
 	}
 
 	@Override
-	public void putIncoming(Long o, Long dest) throws Exception {
+	public void putIncoming(long o, long dest) throws Exception {
 		getOrCreateVData(o).incoming(dest);
 	}
 
 	@Override
-	public void disable(Long v) throws Exception {
+	public void disable(long v) throws Exception {
 		disabled.put(v, vertices.remove(v));
 	}
 
@@ -416,19 +416,19 @@ public class PregelGraphLocal implements Serializable, Graph {
 	}
 
 	@Override
-	public void putLink(Long o, Long dest) throws Exception {
+	public void putLink(long o, long dest) throws Exception {
 		putOutgoing(o, dest);
 		putIncoming(dest, o);
 	}
 
 	@Override
-	public void disableLink(Long v, Long from) throws Exception {
+	public void disableLink(long v, long from) throws Exception {
 		disableOutgoing(v, from);
 		disableIncoming(from, v);
 	}
 
 	@Override
-	public void disableOutgoing(Long v, Long from) throws Exception {
+	public void disableOutgoing(long v, long from) throws Exception {
 		VertexData data = getVertexData(v);
 		if (data == null) {
 			data = disabled.get(v);
@@ -441,7 +441,7 @@ public class PregelGraphLocal implements Serializable, Graph {
 	}
 
 	@Override
-	public void disableIncoming(Long to, Long from) throws Exception {
+	public void disableIncoming(long to, long from) throws Exception {
 		VertexData data = getVertexData(to);
 		if (data == null) {
 			data = disabled.get(to);
@@ -459,21 +459,21 @@ public class PregelGraphLocal implements Serializable, Graph {
 	}
 
 	@Override
-	public boolean createVertex(Long from) {
+	public boolean createVertex(long from) {
 		getOrCreateVData(from);
 		return true;
 	}
 
 	@Override
-	public void putOutgoing(List<Long[]> value) throws Exception {
-		for (Long[] longs : value) {
+	public void putOutgoing(List<long[]> value) throws Exception {
+		for (long[] longs : value) {
 			putOutgoing(longs[0], longs[1]);
 		}
 	}
 
 	@Override
 	public void createVertices(Set<Long> value) {
-		for (Long l : value) {
+		for (long l : value) {
 			createVertex(l);
 		}
 	}

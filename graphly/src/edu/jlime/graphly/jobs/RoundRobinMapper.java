@@ -17,6 +17,7 @@ import gnu.trove.list.array.TLongArrayList;
 public class RoundRobinMapper implements Mapper {
 
 	private static final long serialVersionUID = -2914997038447380314L;
+	private ArrayList<ClientNode> peers;
 
 	// public static void main(String[] args) {
 	// HashMap<ClientNode, TIntArrayList> div = new HashMap<ClientNode,
@@ -78,5 +79,15 @@ public class RoundRobinMapper implements Mapper {
 	@Override
 	public boolean isDynamic() {
 		return false;
+	}
+
+	@Override
+	public void update(JobContext ctx) throws Exception {
+		peers = ctx.getCluster().getExecutors();
+	}
+
+	@Override
+	public ClientNode getPeer(long v, JobContext ctx) {
+		return peers.get((int) (v % peers.size()));
 	}
 }

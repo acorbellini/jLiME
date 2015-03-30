@@ -2,13 +2,16 @@ package edu.jlime.graphly.client;
 
 import java.io.Closeable;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableSet;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.log4j.Logger;
 
 import com.google.common.collect.TreeMultimap;
@@ -31,6 +34,7 @@ import edu.jlime.graphly.traversal.GraphlyTraversal;
 import edu.jlime.graphly.util.GraphlyUtil;
 import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.JobDispatcher;
+import edu.jlime.pregel.client.PregelClient;
 import edu.jlime.rpc.JLiMEFactory;
 import edu.jlime.util.ByteBuffer;
 import gnu.trove.iterator.TLongIntIterator;
@@ -55,16 +59,25 @@ public class Graphly implements Closeable {
 
 	private Logger log = Logger.getLogger(Graphly.class);
 
-	private Graphly(GraphlyCoordinator coord,
+	private PregelClient pregel_client;
+
+	private Integer cachedSize;
+
+	private Graphly(GraphlyCoordinator coord, PregelClient pregel_client,
 			ClientManager<GraphlyStoreNodeI, GraphlyStoreNodeIBroadcast> mgr,
 			JobDispatcher jd) throws Exception {
+		this.pregel_client = pregel_client;
 		this.mgr = mgr;
 		this.rpc = mgr.getRpc();
 		this.jobCli = jd;
 		this.consistenthash = coord.getHash();
 	}
 
-	private GraphlyStoreNodeI getClientFor(final Long vertex) {
+	public PregelClient getPregeClient() {
+		return pregel_client;
+	}
+
+	private GraphlyStoreNodeI getClientFor(final long vertex) {
 		Peer node = consistenthash.getNode(vertex);
 		GraphlyStoreNodeI graphlyStoreNodeI = mgr.get(node);
 		return graphlyStoreNodeI;
@@ -75,10 +88,8 @@ public class Graphly implements Closeable {
 	}
 
 	public GraphlyVertex addVertex(long id, String label) throws Exception {
-		if (getClientFor(id).addVertex(id, label)) {
-			return getVertex(id);
-		}
-		return null;
+		getClientFor(id).addVertex(id, label);
+		return getVertex(id);
 	}
 
 	public GraphlyVertex getVertex(long id) {
@@ -102,7 +113,7 @@ public class Graphly implements Closeable {
 		getClientFor(id).removeVertex(id);
 	}
 
-	public GraphlyEdge addEdge(Long id, Long id2, String label,
+	public GraphlyEdge addEdge(long id, long id2, String label,
 			Object... keyValues) throws Exception {
 		long where = id;
 		long other = id2;
@@ -128,7 +139,11 @@ public class Graphly implements Closeable {
 
 		jd.start();
 
-		Graphly build = build(rpc, jd, min);
+		PregelClient pregel_client = new PregelClient(rpc, min);
+
+		jd.setGlobal("pregel", pregel_client);
+
+		Graphly build = build(rpc, pregel_client, jd, min);
 
 		jd.setGlobal("graphly", build);
 
@@ -136,8 +151,8 @@ public class Graphly implements Closeable {
 
 	}
 
-	public static Graphly build(RPCDispatcher rpc, JobDispatcher jd, int min)
-			throws Exception {
+	public static Graphly build(RPCDispatcher rpc, PregelClient pregel_client,
+			JobDispatcher jd, int min) throws Exception {
 
 		TypeConverters tc = rpc.getMarshaller().getTc();
 		tc.registerTypeConverter(Dir.class, new TypeConverter() {
@@ -167,7 +182,7 @@ public class Graphly implements Closeable {
 
 		mgr.waitForClient(min);
 		coordMgr.waitFirst();
-		return new Graphly(coordMgr.getFirst(), mgr, jd);
+		return new Graphly(coordMgr.getFirst(), pregel_client, mgr, jd);
 	}
 
 	public JobDispatcher getJobClient() {
@@ -243,10 +258,6 @@ public class Graphly implements Closeable {
 		return consistenthash;
 	}
 
-	public ClientNode getClientJobFor(GraphlyStoreNodeI node) throws Exception {
-		return jobCli.getCluster().getClientFor(node.getJobAddress());
-	}
-
 	public GraphlyCount countEdges(final Dir dir, final int max_edges,
 			long[] vids) throws Exception {
 		ExecutorService svc = Executors.newCachedThreadPool();
@@ -306,23 +317,23 @@ public class Graphly implements Closeable {
 		return ret;
 	}
 
-	public Long getRandomEdge(Long before, long[] subset, Dir d)
+	public long getRandomEdge(long before, long[] subset, Dir d)
 			throws Exception {
 		return getClientFor(before).getRandomEdge(before, subset, d);
 	}
 
-	public Object getProperty(String string, Long vid) throws Exception {
+	public Object getProperty(String string, long vid) throws Exception {
 		return getClientFor(vid).getProperty(vid, string);
 	}
 
-	public void setProperties(Long vid, Map<String, Object> value)
+	public void setProperties(long vid, Map<String, Object> value)
 			throws Exception {
 		for (Entry<String, Object> m : value.entrySet()) {
 			setProperty(vid, m.getKey(), m.getValue());
 		}
 	}
 
-	public void setProperty(Long vid, String k, Object v) throws Exception {
+	public void setProperty(long vid, String k, Object v) throws Exception {
 		getClientFor(vid).setProperty(vid, k, v);
 	}
 
@@ -458,8 +469,12 @@ public class Graphly implements Closeable {
 	public long[] getEdges(Dir in, long vid, long[] all) {
 		try {
 			long[] edges = getEdges(in, vid);
+
 			if (edges != null)
-				return GraphlyUtil.filter(edges, all);
+				if (all == null || all.length == 0)
+					return edges;
+				else
+					return GraphlyUtil.filter(edges, all);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -476,4 +491,41 @@ public class Graphly implements Closeable {
 		return props;
 	}
 
+	public RPCDispatcher getRpc() {
+		return rpc;
+	}
+
+	public int getVertexCount() throws Exception {
+		if (cachedSize == null) {
+			synchronized (this) {
+				if (cachedSize == null) {
+					int count = 0;
+					for (GraphlyStoreNodeI sn : mgr.getAll()) {
+						count += sn.getVertexCount();
+					}
+					cachedSize = count;
+				}
+			}
+		}
+		return cachedSize;
+	}
+
+	public VertexList vertices() throws Exception {
+		return new VertexList(this, 10000);
+	}
+
+	public void setDefaultValue(String k, Object v) throws Exception {
+		for (GraphlyStoreNodeI gsn : mgr.getAll()) {
+			gsn.setDefault(k, v);
+		}
+	}
+
+	public Object getDefaultValue(String k) throws Exception {
+		GraphlyStoreNodeI graphlyStoreNodeI = mgr.get(mgr.getRpc().getCluster()
+				.getLocalPeer());
+		if (graphlyStoreNodeI != null) {
+			return graphlyStoreNodeI.getDefault(k);
+		}
+		return mgr.getFirst().getDefault(k);
+	}
 }

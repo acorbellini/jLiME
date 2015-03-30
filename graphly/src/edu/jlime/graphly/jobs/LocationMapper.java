@@ -21,12 +21,12 @@ public class LocationMapper implements Mapper {
 
 	@Override
 	public List<Pair<ClientNode, TLongArrayList>> map(int max, long[] data,
-			JobContext cluster) throws Exception {
+			JobContext ctx) throws Exception {
 		Logger log = Logger.getLogger(LocationMapper.class);
 		if (log.isDebugEnabled())
 			log.debug("Mapping " + data.length + " keys by location.");
 
-		Graphly g = (Graphly) cluster.getGlobal("graphly");
+		Graphly g = (Graphly) ctx.getGlobal("graphly");
 
 		Map<Peer, TLongArrayList> map = g.getHash().hashKeys(data);
 		
@@ -46,5 +46,18 @@ public class LocationMapper implements Mapper {
 	@Override
 	public boolean isDynamic() {
 		return false;
+	}
+
+	@Override
+	public void update(JobContext ctx) throws Exception {
+	}
+
+	@Override
+	public ClientNode getPeer(long v, JobContext ctx) {
+		Graphly g = (Graphly) ctx.getGlobal("graphly");
+
+		Peer p = g.getHash().getNode(v);
+		
+		return g.getJobClient().getCluster().getClientFor(p);
 	}
 }

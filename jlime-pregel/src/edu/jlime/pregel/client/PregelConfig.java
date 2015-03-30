@@ -11,13 +11,13 @@ import edu.jlime.pregel.worker.MessageMerger;
 public class PregelConfig implements Serializable {
 	SplitFunction split;
 	int maxSteps = 0;
-	
+
 	HashMap<String, Aggregator> aggregators = new HashMap<>();
 	boolean executeOnAll = false;
-	
+
 	Set<Long> vList = null;
 	Graph graph;
-	
+
 	private MessageMerger merger;
 	private Integer threads;
 
@@ -38,12 +38,14 @@ public class PregelConfig implements Serializable {
 		this.aggregators = aggregators;
 	}
 
-	public void setExecuteOnAll(boolean executeOnAll) {
+	public PregelConfig executeOnAll(boolean executeOnAll) {
 		this.executeOnAll = executeOnAll;
+		return this;
 	}
 
-	public void setvList(Set<Long> vList) {
+	public PregelConfig setvList(Set<Long> vList) {
 		this.vList = vList;
+		return this;
 	}
 
 	public HashMap<String, Aggregator> getAggregators() {
@@ -64,11 +66,6 @@ public class PregelConfig implements Serializable {
 
 	public PregelConfig steps(int i) {
 		setMaxSteps(i);
-		return this;
-	}
-
-	public PregelConfig executeOnAll() {
-		setExecuteOnAll(true);
 		return this;
 	}
 

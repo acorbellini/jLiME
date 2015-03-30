@@ -173,7 +173,7 @@ public class RPCDispatcher implements TransportListener {
 					targetsMethods.get(mc.getObjectKey()));
 			return m.invoke(target, mc.getObjects());
 		} catch (Exception e) {
-			throw new Exception("Error calling " + mc + " ", e.getCause());
+			throw new Exception("Error calling " + mc + " ", e);
 		}
 	}
 

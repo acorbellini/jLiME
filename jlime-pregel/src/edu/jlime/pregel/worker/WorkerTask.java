@@ -5,7 +5,9 @@ import edu.jlime.core.rpc.ClientManager;
 import edu.jlime.core.rpc.RPCDispatcher;
 import edu.jlime.pregel.client.CoordinatorFilter;
 import edu.jlime.pregel.client.PregelConfig;
+import edu.jlime.pregel.client.SplitFunction;
 import edu.jlime.pregel.client.WorkerContext;
+import edu.jlime.pregel.coordinator.CoordinatorServer;
 import edu.jlime.pregel.coordinator.rpc.Coordinator;
 import edu.jlime.pregel.coordinator.rpc.CoordinatorBroadcast;
 import edu.jlime.pregel.coordinator.rpc.CoordinatorFactory;
@@ -81,9 +83,9 @@ public class WorkerTask {
 
 	private TLongObjectHashMap<List<PregelMessage>> current;
 
-	private volatile List<PregelMessage> broadcast = new ArrayList<>();
+	// private volatile List<PregelMessage> broadcast = new ArrayList<>();
 
-	private List<PregelMessage> currentBroadcast;
+	// private List<PregelMessage> currentBroadcast;
 
 	private PregelConfig config;
 
@@ -91,23 +93,21 @@ public class WorkerTask {
 
 	private ClientManager<Worker, WorkerBroadcast> workerMgr;
 
+	private SplitFunction split;
+
 	public WorkerTask(WorkerImpl w, RPCDispatcher rpc, Peer client,
-			VertexFunction func, UUID taskID, PregelConfig config,
-			Set<Long> init) {
+			VertexFunction func, UUID taskID, PregelConfig config) {
 		this.graph = config.getGraph();
 		this.worker = w;
-		this.coordMgr = rpc.manage(new CoordinatorFactory(rpc, "coordinator"),
-				new CoordinatorFilter(), client);
-		this.workerMgr = rpc.manage(new WorkerFactory(rpc, "worker"),
-				new WorkerFilter(), client);
+		this.coordMgr = rpc.manage(new CoordinatorFactory(rpc,
+				CoordinatorServer.COORDINATOR_KEY), new CoordinatorFilter(),
+				client);
+		this.workerMgr = rpc.manage(new WorkerFactory(rpc,
+				WorkerServer.WORKER_KEY), new WorkerFilter(), client);
 		this.taskid = taskID;
 		this.config = config;
 		this.threads = config.getThreads();
 		this.f = func;
-		for (Long e : init) {
-			putIntoQueue(new PregelMessage(0, e, null));
-
-		}
 	}
 
 	private void putIntoQueue(PregelMessage pregelMessage) {
@@ -142,49 +142,53 @@ public class WorkerTask {
 		if (halted.contains(msg.getTo()))
 			return;
 
-		if (msg.getTo() == -1)
-			putIntoBroadcast(msg);
-		else
-			putIntoQueue(msg);
+		// if (msg.getTo() == -1)
+		// putIntoBroadcast(msg);
+		// else
+		putIntoQueue(msg);
 	}
 
-	private void putIntoBroadcast(PregelMessage msg) {
-		synchronized (broadcast) {
-			if (config.getMerger() != null) {
-				if (broadcast.isEmpty())
-					broadcast.add(new PregelMessage(msg.getFrom(), -1, msg
-							.getV()));
-				else {
-					PregelMessage pregelMessage = broadcast.get(0);
-					pregelMessage.setV(config.getMerger().merge(
-							pregelMessage.getV(), msg.getV()));
-				}
-			} else
-				broadcast.add(msg);
+	// private void putIntoBroadcast(PregelMessage msg) {
+	// synchronized (broadcast) {
+	// if (config.getMerger() != null) {
+	// if (broadcast.isEmpty())
+	// broadcast.add(new PregelMessage(msg.getFrom(), -1, msg
+	// .getV()));
+	// else {
+	// PregelMessage pregelMessage = broadcast.get(0);
+	// pregelMessage.setV(config.getMerger().merge(
+	// pregelMessage.getV(), msg.getV()));
+	// }
+	// } else
+	// broadcast.add(msg);
+	//
+	// }
+	// }
 
-		}
-	}
-
-	public void nextStep(int superstep) throws Exception {
+	public void nextStep(int superstep, SplitFunction func) throws Exception {
 		if (log.isDebugEnabled())
 			log.debug("Executing step " + superstep + " on Worker "
 					+ worker.getID());
 
 		this.pool = new ForkJoinPool();
 
+		this.split = func;
+
 		this.currentStep = superstep;
 
 		this.current = queue;
 
-		this.currentBroadcast = broadcast;
+		// this.currentBroadcast = broadcast;
 
 		this.queue = new TLongObjectHashMap<>(QUEUE_SIZE, QUEUE_FACTOR);
 
-		this.broadcast = new ArrayList<>(broadcast.size());
+		// this.broadcast = new ArrayList<>(broadcast.size());
 	}
 
 	public void execute() throws Exception {
-		if (current.isEmpty() && currentBroadcast.isEmpty()) {
+		if (current.isEmpty()
+		// && currentBroadcast.isEmpty()
+		) {
 			if (log.isDebugEnabled())
 				log.debug("Queue was empty, finished step " + currentStep
 						+ " on Worker " + worker.getID());
@@ -210,35 +214,30 @@ public class WorkerTask {
 
 		Semaphore execCount = new Semaphore(threads * 2);
 
-		Graph localGraph = worker.getLocalGraph(graph.getName());
-
-		int total = current.size();
-
-		if (!currentBroadcast.isEmpty())
-			total = localGraph.vertexSize();
-
 		int count = 0;
 		TLongHashSet executed = new TLongHashSet();
-
+		int size = queue.size();
 		TLongObjectIterator<List<PregelMessage>> it = current.iterator();
 		while (it.hasNext()) {
 			it.advance();
 			double currentCount = count++;
-			printCompleted(total, currentCount);
+
+			printCompleted(size, currentCount);
 			executed.add(it.key());
-			execVertex(exec, execCount, it.key(),
-					ListUtils.concat(it.value(), currentBroadcast));
+			execVertex(exec, execCount, it.key(), it.value());
+			// ListUtils.concat(it.value()
+			// , currentBroadcast));
 		}
 
-		if (!currentBroadcast.isEmpty()) {
-			for (Long v : localGraph.vertices()) {
-				if (!executed.contains(v)) {
-					double currentCount = count++;
-					printCompleted(total, currentCount);
-					execVertex(exec, execCount, v, currentBroadcast);
-				}
-			}
-		}
+		// if (!currentBroadcast.isEmpty()) {
+		// for (Long v : localGraph.vertices()) {
+		// if (!executed.contains(v)) {
+		// double currentCount = count++;
+		// printCompleted(total, currentCount);
+		// execVertex(exec, execCount, v, currentBroadcast);
+		// }
+		// }
+		// }
 
 		exec.shutdown();
 		exec.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
@@ -303,25 +302,6 @@ public class WorkerTask {
 		});
 	}
 
-	public Graph getResultGraph() {
-		// PregelGraphLocal ret = new PregelGraphLocal();
-		// TLongIterator it = modified.iterator();
-		// while (it.hasNext()) {
-		// long vertex = it.next();
-		// Set<Long> adyacency = graph.getOutgoing(vertex);
-		// if (adyacency != null)
-		// for (Long edge : adyacency) {
-		// ret.putLink(vertex, edge);
-		// }
-		// VertexData data = graph.getData(vertex);
-		// if (data != null)
-		// ret.setVal(vertex, data);
-		//
-		// ret.addVertex(vertex);
-		// }
-		return graph;
-	}
-
 	public Graph getGraph() {
 		return graph;
 	}
@@ -332,74 +312,26 @@ public class WorkerTask {
 				flushCache();
 			cache.add(msg);
 		}
-
-		// if (cached.size() > LIMIT_CACHE)
-		// synchronized (cached) {
-		// if (cached.size() > LIMIT_CACHE) {
-		// flushCache();
-		// }
-		// }
-		//
-		// Worker w = workerMgr.get(this.config.getSplit().getPeer(msg.getTo(),
-		// workerMgr.getPeers()));
-		// HashMap<Long, List<PregelMessage>> perUser = cached.get(w);
-		// if (perUser == null) {
-		// synchronized (cached) {
-		// perUser = cached.get(w);
-		// if (perUser == null) {
-		// perUser = new HashMap<>();
-		// cached.put(w, perUser);
-		// }
-		// }
-		// }
-		// synchronized (perUser) {
-		// List<PregelMessage> msgs = perUser.get(msg.getTo());
-		// if (msgs == null) {
-		// msgs = new ArrayList<PregelMessage>();
-		// perUser.put(msg.getTo(), msgs);
-		// }
-		// if (config.getMerger() != null) {
-		// if (msgs.isEmpty())
-		// msgs.add(new PregelMessage(msg.getFrom(), msg.getTo(), msg
-		// .getV()));
-		// else {
-		// PregelMessage curr = msgs.get(0);
-		// curr.setV(config.getMerger().merge(curr.getV(), msg.getV()));
-		// }
-		// } else
-		// msgs.add(msg);
-		// }
-
-		// .sendMessage(msg, taskid);
 	}
 
 	private void flushCache() {
-		HashMap<Worker, List<PregelMessage>> div = new HashMap<Worker, List<PregelMessage>>();
-		for (PregelMessage pregelMessage : cache) {
-			Worker w = workerMgr.get(config.getSplit().getPeer(
-					pregelMessage.getTo(), workerMgr.getPeers()));
-			List<PregelMessage> list = div.get(w);
-			if (list == null) {
-				list = new ArrayList<>();
-				div.put(w, list);
-			}
-			list.add(pregelMessage);
-		}
+		final ArrayList<PregelMessage> copy = new ArrayList<>(cache);
+		pool.execute(new Runnable() {
+			@Override
+			public void run() {
 
-		for (final Entry<Worker, List<PregelMessage>> e : div.entrySet()) {
-			pool.execute(new Runnable() {
-
-				@Override
-				public void run() {
+				for (PregelMessage pregelMessage : copy) {
+					Peer peer = split.getPeer(pregelMessage.getTo(),
+							workerMgr.getPeers());
+					Worker w = workerMgr.get(peer);
 					try {
-						e.getKey().sendMessages(e.getValue(), taskid);
+						w.sendMessage(pregelMessage, taskid);
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
 				}
-			});
-		}
-
+			}
+		});
 		cache.clear();
 	}
 
@@ -428,55 +360,31 @@ public class WorkerTask {
 				flushBroadcast();
 			cacheBroadcast.add(pregelMessage);
 		}
-		// synchronized (cachedBroadcast) {
-		// if (cachedBroadcast.size() > LIMIT_CACHE) {
-		// flushBroadcast();
-		// }
-		// }
-		//
-		// List<PregelMessage> toBroadcast = cachedBroadcast.get(pregelMessage
-		// .getFrom());
-		// if (toBroadcast == null) {
-		// synchronized (cachedBroadcast) {
-		// toBroadcast = cachedBroadcast.get(pregelMessage.getFrom());
-		// if (toBroadcast == null) {
-		// toBroadcast = new ArrayList<PregelMessage>();
-		// cachedBroadcast.put(pregelMessage.getFrom(), toBroadcast);
-		// }
-		// }
-		// }
-		// synchronized (toBroadcast) {
-		// if (config.getMerger() != null) {
-		// if (toBroadcast.isEmpty())
-		// toBroadcast.add(new PregelMessage(pregelMessage.getFrom(),
-		// -1, pregelMessage.getV()));
-		// else {
-		// PregelMessage pregelMessage2 = toBroadcast.get(0);
-		// pregelMessage2.setV(config.getMerger().merge(
-		// pregelMessage2.getV(), pregelMessage.getV()));
-		// }
-		// } else
-		// toBroadcast.add(pregelMessage);
-		// }
 	}
 
 	private void flushBroadcast() throws Exception {
-		// ArrayList<PregelMessage> toSend = new ArrayList<>();
-		// for (Entry<Long, List<PregelMessage>> perUser : cacheBroadcast
-		// .entrySet()) {
-		// toSend.addAll(perUser.getValue());
-		// }
-
-		final ArrayList<PregelMessage> copy = new ArrayList<>(cacheBroadcast);
+		final ArrayList<PregelMessage> arrayList = new ArrayList<>(
+				cacheBroadcast);
 		pool.execute(new Runnable() {
-
 			@Override
 			public void run() {
 				try {
-					workerMgr.broadcast().sendMessages(copy, taskid);
+					for (Long vid : getGraph().vertices()) {
+						for (PregelMessage b : arrayList) {
+							PregelMessage send = new PregelMessage(b.getFrom(),
+									vid, b.v);
+							Peer peer = split.getPeer(vid, workerMgr.getPeers());
+							try {
+								workerMgr.get(peer).sendMessage(send, taskid);
+							} catch (Exception e) {
+								e.printStackTrace();
+							}
+						}
+					}
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
+
 			}
 		});
 

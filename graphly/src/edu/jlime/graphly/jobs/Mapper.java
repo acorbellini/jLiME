@@ -3,6 +3,7 @@ package edu.jlime.graphly.jobs;
 import java.io.Serializable;
 import java.util.List;
 
+import edu.jlime.core.cluster.Peer;
 import edu.jlime.graphly.util.Pair;
 import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.client.JobContext;
@@ -16,5 +17,9 @@ public interface Mapper extends Serializable {
 	public String getName();
 
 	public boolean isDynamic();
+
+	public void update(JobContext ctx) throws Exception;
+
+	public ClientNode getPeer(long v, JobContext ctx);
 
 }

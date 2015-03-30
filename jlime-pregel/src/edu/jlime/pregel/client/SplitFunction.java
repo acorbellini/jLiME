@@ -7,6 +7,8 @@ import edu.jlime.core.cluster.Peer;
 
 public interface SplitFunction extends Serializable {
 
-	public Peer getPeer(Long o, List<Peer> peers);
+	public Peer getPeer(long v, List<Peer> peers);
+
+	public void update() throws Exception;
 
 }

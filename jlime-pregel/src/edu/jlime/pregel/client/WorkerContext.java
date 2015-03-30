@@ -39,7 +39,7 @@ public class WorkerContext {
 		task.setAggregatedValue(v, string, currentVal);
 	}
 
-	public void send(Long to, Object val) throws Exception {
+	public void send(long to, Object val) throws Exception {
 		task.send(new PregelMessage(this.v, to, val));
 	}
 

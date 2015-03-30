@@ -1,7 +1,6 @@
 package edu.jlime.rpc.fr;
 
 import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 
@@ -12,19 +11,8 @@ import edu.jlime.rpc.Configuration;
 import edu.jlime.rpc.message.Message;
 import edu.jlime.rpc.message.MessageType;
 import edu.jlime.util.ByteBuffer;
-import edu.jlime.util.RingQueue;
 
 class AcknowledgeCounter {
-
-	private static final int MAX_ACK_ITERATIONS = 1000;
-
-	private static final int MAX_RESEND_ITERATIONS = 1000;
-
-	public static class ConfirmData {
-		volatile boolean confirmed = false;
-		volatile int seq = -1;
-		// volatile AtomicBoolean ackSent = new AtomicBoolean(false);
-	}
 
 	AtomicIntegerArray ackSent;
 
@@ -44,43 +32,13 @@ class AcknowledgeCounter {
 
 	private volatile AtomicInteger confirmed = new AtomicInteger(-1);
 
-	private volatile AtomicInteger ackSenderCursor = new AtomicInteger(0);
-
 	private volatile AtomicInteger resendCursor = new AtomicInteger(0);
-
-	private RingQueue toSend = new RingQueue();
 
 	private Configuration config;
 
 	private Acknowledge ack;
 
 	private LinkedBlockingDeque<Integer> acks = new LinkedBlockingDeque<Integer>();
-
-	public static class ResendData {
-
-		volatile Message data = null;
-
-		volatile long timeSent = -1;
-
-		volatile int seq = -1;
-
-		volatile boolean confirmed = false;
-
-		public void setConfirmed() {
-			this.confirmed = true;
-		}
-
-		public boolean isConfirmed() {
-			return confirmed;
-		}
-
-		void setData(Message data, long timeSent, int seq) {
-			this.confirmed = false;
-			this.timeSent = timeSent;
-			this.seq = seq;
-			this.data = data;
-		}
-	}
 
 	Message ackMsg;
 
@@ -119,7 +77,7 @@ class AcknowledgeCounter {
 		Message ackSeqMsg = Message
 				.encapsulateOut(msg, MessageType.ACK_SEQ, to);
 		ackSeqMsg.getHeaderBuffer().putInt(seqN);
-		// appendAcks(ackSeqMsg, 50, 50);
+		appendAcks(ackSeqMsg, 10, 10);
 		ack.sendNext(ackSeqMsg);
 	}
 
@@ -138,6 +96,7 @@ class AcknowledgeCounter {
 		if (seq == nextExpectedNumber) {
 			while (rcvd[pos(nextExpectedNumber)].confirmed) {
 				rcvd[pos(nextExpectedNumber)].confirmed = false;
+				rcvd[pos(nextExpectedNumber)].seq = -1;
 				nextExpectedNumber++;
 			}
 		}
@@ -178,27 +137,6 @@ class AcknowledgeCounter {
 		}
 	}
 
-	public Message nextSend() {
-		Message ret = null;
-		if (Math.abs(seqN.get() - confirmed.get()) <= max_resend_size) {
-			Message msg = (Message) toSend.tryTakeOne();
-			if (msg == null)
-				return null;
-
-			int seqN = this.seqN.getAndIncrement();
-			resendArray[pos(seqN)].setData(msg, System.currentTimeMillis(),
-					seqN);
-
-			Message ackMsg = Message.encapsulateOut(msg, MessageType.ACK_SEQ,
-					to);
-			ackMsg.getHeaderBuffer().putInt(seqN);
-			// ret.add(ackMsg);
-			return ackMsg;
-
-		}
-		return ret;
-	}
-
 	public boolean sendAcks() throws Exception {
 		ackMsg.getHeader().clear();
 
@@ -214,11 +152,13 @@ class AcknowledgeCounter {
 
 	public void resend() {
 		long curr = System.currentTimeMillis();
-		int count = 0;
-		while (count < resendArray.length) {
+		int min = 0;// confirmed.get() + 1;
+		int max = resendArray.length - 1;// seqN.get();
 
-			count++;
-
+		int count = min;
+		while (count <= max
+		// && count < MAX_RESEND_ITERATIONS
+		) {
 			int i = resendCursor.getAndIncrement() % resendArray.length;
 
 			ResendData res = resendArray[i];
@@ -238,9 +178,10 @@ class AcknowledgeCounter {
 
 					Message ackMsg = Message.encapsulateOut(data,
 							MessageType.ACK_SEQ, to);
+
 					ackMsg.getHeaderBuffer().putInt(seq);
 
-					// appendAcks(ackMsg, 50, 50);
+					// appendAcks(ackMsg, 100, 100);
 
 					if (!confirmed)
 						ack.sendNext(ackMsg);
@@ -248,6 +189,7 @@ class AcknowledgeCounter {
 					e.printStackTrace();
 				}
 			}
+			count++;
 		}
 	}
 

@@ -15,57 +15,38 @@ import edu.jlime.rpc.Configuration;
 import edu.jlime.rpc.JLiMEFactory;
 
 public class WorkerServer {
+	public static final String WORKER_KEY = "pregel_worker";
 	private RPCDispatcher disp;
+
 	private ClientManager<Coordinator, CoordinatorBroadcast> coord;
 	private ClientManager<Worker, WorkerBroadcast> workers;
+
 	private Logger log = Logger.getLogger(WorkerServer.class);
 
-	public WorkerServer() throws Exception {
+	public WorkerServer(RPCDispatcher disp) throws Exception {
+		this.disp = disp;
+		disp.registerTarget(WORKER_KEY, new WorkerImpl(disp), true);
+	}
+
+	public static WorkerServer main(String[] args) throws Exception {
 		Configuration config = new Configuration();
 		config.port = 6060;
 		config.mcastport = 5050;
 
 		HashMap<String, String> data = new HashMap<>();
 		data.put("app", "graphly");
-		data.put("type", "worker");
+		data.put("type", WORKER_KEY);
 
 		JLiMEFactory fact = new JLiMEFactory(config, data, new DataFilter(
 				"app", "graphly", true));
-		disp = fact.build();
+		RPCDispatcher disp = fact.build();
 
-		// coord = disp.manage(new CoordinatorFactory(disp, "coordinator"),
-		// new PeerFilter() {
-		//
-		// @Override
-		// public boolean verify(Peer p) {
-		// return p.getData("type").equals("coordinator");
-		// }
-		// }, disp.getCluster().getLocalPeer());
-		//
-		// workers = disp.manage(new WorkerFactory(disp, "worker"),
-		// new PeerFilter() {
-		//
-		// @Override
-		// public boolean verify(Peer p) {
-		// return p.getData("type").equals("worker");
-		// }
-		// }, disp.getCluster().getLocalPeer());
-
-	}
-
-	public static void main(String[] args) throws Exception {
-		new WorkerServer().start();
-	}
-
-	public void start() throws Exception {
+		WorkerServer ws = new WorkerServer(disp);
 		disp.start();
-
-		disp.registerTarget("worker", new WorkerImpl(disp), true);
-
-		log.info("jLiME Worker Started");
+		return ws;
 	}
 
-	public void stop() throws Exception {
-		disp.stop();
+	public void stop() {
+
 	}
 }

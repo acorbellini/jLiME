@@ -8,17 +8,17 @@ import edu.jlime.core.transport.DiscoveryProvider;
 import edu.jlime.core.transport.FailureProvider;
 import edu.jlime.core.transport.Streamer;
 import edu.jlime.metrics.metric.Metrics;
-import edu.jlime.rpc.bundler.Bundler;
-import edu.jlime.rpc.bundler.MessageBundler;
 import edu.jlime.rpc.data.DataProcessor;
 import edu.jlime.rpc.data.DataProvider;
 import edu.jlime.rpc.discovery.MultiCastDiscovery;
 import edu.jlime.rpc.fd.PingFailureDetection;
 import edu.jlime.rpc.fr.Acknowledge;
-import edu.jlime.rpc.fr.NACKAcknowledge;
+import edu.jlime.rpc.fr.NACK;
 import edu.jlime.rpc.frag.Fragmenter;
 import edu.jlime.rpc.message.StackElement;
 import edu.jlime.rpc.np.NetworkProtocol;
+import edu.jlime.rpc.rabbit.RabbitProcessor;
+import edu.jlime.rpc.zeromq.ZeroMQProcessor;
 import edu.jlime.util.NetworkUtils;
 
 public class Stack {
@@ -140,12 +140,20 @@ public class Stack {
 		NetworkProtocol mcast = NetworkProtocolFactory.mcast(local, config)
 				.getProtocol(iface);
 
-		int max_size = config.max_msg_size - UDPNIO.HEADER - Acknowledge.HEADER;
+		int max_size = config.max_msg_size - UDPNIO.HEADER - NACK.HEADER;
 
-		Acknowledge ack = new Acknowledge(udp, config.max_msg_size,
-				config.nack_delay, config.ack_delay, max_size, config);
+		NACK ack = new NACK(udp, config.max_msg_size, config.nack_delay,
+				config.ack_delay, max_size, config);
 
-		Fragmenter frag = new Fragmenter(ack, config.max_msg_size);
+		Fragmenter frag = new Fragmenter(ack, max_size);
+
+		// int max_size = config.max_msg_size - UDPNIO.HEADER -
+		// Acknowledge.HEADER;
+		//
+		// Acknowledge ack = new Acknowledge(udp, config.max_msg_size,
+		// config.nack_delay, config.ack_delay, max_size, config);
+		//
+		// Fragmenter frag = new Fragmenter(ack, config.max_msg_size);
 
 		DataProcessor data = new DataProcessor(frag, config);
 
@@ -207,22 +215,22 @@ public class Stack {
 		NetworkProtocol mcast = NetworkProtocolFactory.mcast(local, config)
 				.getProtocol(iface);
 
-		// int max_size = config.max_msg_size - UDPNIO.HEADER
-		// - NACKAcknowledge.HEADER;
+		int max_size = config.max_msg_size - UDPNIO.HEADER - NACK.HEADER;
+
+		NACK ack = new NACK(udp, config.max_msg_size, config.nack_delay,
+				config.ack_delay, max_size, config);
+
+		Fragmenter frag = new Fragmenter(ack, max_size);
+
+		// int max_size = config.max_msg_size - UDPNIO.HEADER -
+		// Acknowledge.HEADER;
 		//
-		// NACKAcknowledge ack = new NACKAcknowledge(udp, config.max_msg_size,
+		// Acknowledge ack = new Acknowledge(udp, config.max_msg_size,
 		// config.nack_delay, config.ack_delay, max_size, config);
-		//
-		// Fragmenter frag = new Fragmenter(ack, max_size);
-
-		int max_size = config.max_msg_size - UDPNIO.HEADER - Acknowledge.HEADER;
-
-		Acknowledge ack = new Acknowledge(udp, config.max_msg_size,
-				config.nack_delay, config.ack_delay, max_size, config);
 
 		// MessageBundler bundler = new MessageBundler(ack, max_size);
 
-		Fragmenter frag = new Fragmenter(ack, max_size);
+		// Fragmenter frag = new Fragmenter(ack, max_size);
 
 		// int max_size = config.max_msg_size - UDPNIO.HEADER -
 		// UDPResender.HEADER;
@@ -241,6 +249,31 @@ public class Stack {
 
 		Stack tcpStack = Stack.newStack(udp, ack, frag, mcast, data, disco,
 				fail);
+		tcpStack.setFD(fail);
+		tcpStack.setDisco(disco);
+		tcpStack.setData(data);
+		return tcpStack;
+	}
+
+	public static Stack zeroMqStack(Configuration config, Address local,
+			String name) {
+
+		String iface = NetworkUtils.getFirstHostAddress(true);
+
+		ZeroMQProcessor zmq = new ZeroMQProcessor(config, iface, local);
+
+		NetworkProtocol mcast = NetworkProtocolFactory.mcast(local, config)
+				.getProtocol(iface);
+
+		DataProcessor data = new DataProcessor(zmq, config);
+
+		MultiCastDiscovery disco = new MultiCastDiscovery(local, name, config,
+				mcast, zmq);
+		disco.addAddressListProvider(zmq);
+
+		PingFailureDetection fail = new PingFailureDetection(zmq, config);
+
+		Stack tcpStack = Stack.newStack(zmq, mcast, data, disco, fail);
 		tcpStack.setFD(fail);
 		tcpStack.setDisco(disco);
 		tcpStack.setData(data);
@@ -286,5 +319,29 @@ public class Stack {
 		for (StackElement se : stackElements) {
 			se.setMetrics(metrics);
 		}
+	}
+
+	public static Stack rabbitStack(Configuration config, Address local,
+			String name) {
+		String iface = NetworkUtils.getFirstHostAddress(true);
+
+		RabbitProcessor zmq = new RabbitProcessor(config, iface, local);
+
+		NetworkProtocol mcast = NetworkProtocolFactory.mcast(local, config)
+				.getProtocol(iface);
+
+		DataProcessor data = new DataProcessor(zmq, config);
+
+		MultiCastDiscovery disco = new MultiCastDiscovery(local, name, config,
+				mcast, zmq);
+		disco.addAddressListProvider(zmq);
+
+		PingFailureDetection fail = new PingFailureDetection(zmq, config);
+
+		Stack tcpStack = Stack.newStack(zmq, mcast, data, disco, fail);
+		tcpStack.setFD(fail);
+		tcpStack.setDisco(disco);
+		tcpStack.setData(data);
+		return tcpStack;
 	}
 }

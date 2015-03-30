@@ -38,7 +38,7 @@ import edu.jlime.util.ByteBuffer;
 
 public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 
-	private static final String JOB_DISPATCHER = "JD";
+	public static final String JOB_DISPATCHER = "JD";
 
 	public static final String ISEXEC = "ISEXEC";
 
@@ -519,7 +519,7 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 
 	public void stop() throws Exception {
 		DispatcherManager.unregisterJD(this);
-		rpc.stop();
+		// rpc.stop();
 		// exec.shutdown();
 		for (CloseListener cl : closeListeners) {
 			cl.onStop();

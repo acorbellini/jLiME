@@ -9,7 +9,7 @@ import edu.jlime.core.rpc.RPCDispatcher;
 
 public class SyncPerfClient {
 
-	private static final int ITERS = 1000000;
+	private static final int ITERS = 50000;
 
 	public static void main(String[] args) throws Exception {
 
@@ -45,7 +45,7 @@ public class SyncPerfClient {
 
 			cont++;
 
-			rpc.callAsync(p, cl.getLocalPeer(), new MethodCall("remote",
+			rpc.callSync(p, cl.getLocalPeer(), new MethodCall("remote",
 					 "getString", new Object[] { 15d }));
 
 			// PerfMeasure.takeTime("read", false);

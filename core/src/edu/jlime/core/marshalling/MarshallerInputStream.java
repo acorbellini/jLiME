@@ -55,7 +55,11 @@ public class MarshallerInputStream extends ObjectInputStream {
 	@Override
 	protected Object resolveObject(Object obj) throws IOException {
 		if (Transferible.class.isAssignableFrom(obj.getClass()))
-			((Transferible) obj).setRPC(disp);
+			try {
+				((Transferible) obj).setRPC(disp);
+			} catch (Exception e) {
+				log.error("Error transfering object " + obj, e);
+			}
 		return obj;
 	}
 

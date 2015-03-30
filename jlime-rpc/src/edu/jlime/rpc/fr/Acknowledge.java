@@ -38,9 +38,6 @@ public class Acknowledge extends SimpleMessageProcessor {
 
 	private Configuration config;
 
-	// protected ConcurrentHashMap<Address, HashSet<Integer>> acks = new
-	// ConcurrentHashMap<>();
-
 	int max_size;
 
 	private Timer t;
@@ -62,7 +59,7 @@ public class Acknowledge extends SimpleMessageProcessor {
 	public void onStart() throws Exception {
 		this.t = new Timer("Ack Timer");
 
-		t.scheduleAtFixedRate(new TimerTask() {
+		t.schedule(new TimerTask() {
 			@Override
 			public void run() {
 				for (AcknowledgeCounter count : counterList) {
@@ -72,7 +69,7 @@ public class Acknowledge extends SimpleMessageProcessor {
 			}
 		}, config.retransmit_delay, config.retransmit_delay);
 
-		t.scheduleAtFixedRate(new TimerTask() {
+		t.schedule(new TimerTask() {
 
 			@Override
 			public void run() {

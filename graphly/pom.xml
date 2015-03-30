@@ -71,5 +71,25 @@
 			<artifactId>mapdb</artifactId>
 			<version>1.0.6</version>
 		</dependency>
+		<dependency>
+			<groupId>edu.jlime</groupId>
+			<artifactId>jlime-pregel</artifactId>
+			<version>1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.deephacks.lmdbjni</groupId>
+			<artifactId>lmdbjni</artifactId>
+			<version>0.3.2</version>
+		</dependency>
+		<dependency>
+			<groupId>org.deephacks.lmdbjni</groupId>
+			<artifactId>lmdbjni-win64</artifactId>
+			<version>0.3.2</version>
+		</dependency>
+		<dependency>
+			<groupId>org.deephacks.lmdbjni</groupId>
+			<artifactId>lmdbjni-linux64</artifactId>
+			<version>0.3.2</version>
+		</dependency>
 	</dependencies>
 </project>

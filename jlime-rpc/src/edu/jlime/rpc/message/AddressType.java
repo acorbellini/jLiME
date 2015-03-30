@@ -10,7 +10,8 @@ public enum AddressType {
 
 	ANY((byte) 3),
 
-	MINA((byte) 4), TCPNIO((byte) 5), UDPNIO((byte) 6), JNET((byte) 7);
+	MINA((byte) 4), TCPNIO((byte) 5), UDPNIO((byte) 6), JNET((byte) 7), ZMQ(
+			(byte) 8), RABBIT((byte) 9);
 
 	private byte id;
 

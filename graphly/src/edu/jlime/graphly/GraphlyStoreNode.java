@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -21,6 +22,7 @@ import java.util.concurrent.Semaphore;
 
 import org.apache.log4j.Logger;
 
+import com.google.common.base.Defaults;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.TreeMultimap;
@@ -30,6 +32,7 @@ import edu.jlime.core.rpc.RPCDispatcher;
 import edu.jlime.graphly.store.LocalStore;
 import edu.jlime.graphly.traversal.Dir;
 import edu.jlime.graphly.util.GraphlyUtil;
+import edu.jlime.util.ByteBuffer;
 import edu.jlime.util.DataTypeUtils;
 import gnu.trove.iterator.TLongIterator;
 import gnu.trove.iterator.TLongObjectIterator;
@@ -39,6 +42,11 @@ import gnu.trove.map.hash.TLongObjectHashMap;
 import gnu.trove.set.hash.TLongHashSet;
 
 public class GraphlyStoreNode implements GraphlyStoreNodeI {
+
+	private static byte VERTEX = 0x0;
+	private static byte ADJACENCY = 0x1;
+	private static byte VERTEX_PROP = 0x2;
+	private static byte EDGE_PROP = 0x3;
 
 	Logger log = Logger.getLogger(GraphlyStoreNode.class);
 
@@ -74,10 +82,13 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	}
 
 	// private Graph graph;
-	private LocalStore adj;
+	private LocalStore store;
 
 	Cache<Long, long[]> adj_cache = CacheBuilder.newBuilder().maximumSize(5000)
 			.build();
+
+	Cache<Long, Boolean> vertex_cache = CacheBuilder.newBuilder()
+			.maximumSize(5000).build();
 
 	private File localRanges;
 	private List<Integer> ranges = new ArrayList<>();
@@ -111,7 +122,7 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 			}
 		}
 		// this.graph = Neo4jGraph.open(localpath + "/neo4j");
-		this.adj = new LocalStore(name, localpath);
+		this.store = new LocalStore(name, localpath);
 	}
 
 	@Override
@@ -136,10 +147,42 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	 * adjacencygraph.get.GetType, java.lang.Long, long[])
 	 */
 	@Override
-	public void addEdges(long id, Dir type, long[] list) throws Exception {
+	public void addEdges(long k, Dir type, long[] list) throws Exception {
+		long id = k;
+
 		if (type.equals(Dir.IN))
 			id = -id - 1;
-		adj.store(id, DataTypeUtils.longArrayToByteArray(list));
+
+		store.store(buildAdjacencyKey(id),
+				DataTypeUtils.longArrayToByteArray(list));
+
+		addVertex(k, "");
+		// for (long l : list) {
+		// addVertex(l, "");
+		// }
+	}
+
+	private byte[] buildAdjacencyKey(long id) {
+		ByteBuffer buff = new ByteBuffer(1 + 8);
+		buff.put(ADJACENCY);
+		buff.putRawByteArray(DataTypeUtils.longToByteArrayOrdered(id));
+		return buff.build();
+	}
+
+	private byte[] buildVertexKey(long id) {
+		ByteBuffer buff = new ByteBuffer(1 + 8);
+		buff.put(VERTEX);
+		buff.putRawByteArray(DataTypeUtils.longToByteArrayOrdered(id));
+		return buff.build();
+	}
+
+	private byte[] buildVertexPropertyKey(long id, String key) {
+		byte[] b = key.getBytes();
+		ByteBuffer buff = new ByteBuffer(1 + 8 + b.length);
+		buff.put(VERTEX_PROP);
+		buff.putRawByteArray(DataTypeUtils.longToByteArrayOrdered(id));
+		buff.putRawByteArray(b);
+		return buff.build();
 	}
 
 	Random random = new Random(System.currentTimeMillis());
@@ -196,7 +239,7 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 			public long[] call() throws Exception {
 				byte[] array;
 				try {
-					array = adj.load(id);
+					array = store.load(buildAdjacencyKey(id));
 					if (array != null) {
 						long[] byteArrayToLongArray = DataTypeUtils
 								.byteArrayToLongArray(array);
@@ -235,8 +278,16 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	}
 
 	@Override
-	public boolean addVertex(long id, String label) throws Exception {
-		return false;
+	public void addVertex(final long id, String label) throws Exception {
+		vertex_cache.get(id, new Callable<Boolean>() {
+			@Override
+			public Boolean call() throws Exception {
+				byte[] vk = buildVertexKey(id);
+				if (store.load(vk) == null)
+					store.store(vk, DataTypeUtils.longToByteArray(id));
+				return true;
+			}
+		});
 	}
 
 	@Override
@@ -258,16 +309,8 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 			throws Exception {
 	}
 
-	public void setJobExecutorID(Peer je) {
-		this.je = je;
-	}
-
-	@Override
-	public Peer getJobAddress() throws Exception {
-		return je;
-	}
-
 	Semaphore sem = new Semaphore(2);
+	private Map<String, Object> defaults = new ConcurrentHashMap<>();
 
 	@Override
 	public GraphlyCount countEdges(Dir dir, int max_edges, long[] vids)
@@ -434,5 +477,31 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 			}
 		}
 		return ret;
+	}
+
+	@Override
+	public int getVertexCount() throws Exception {
+		return store.count(buildVertexKey(0), buildVertexKey(Long.MAX_VALUE));
+	}
+
+	@Override
+	public TLongArrayList getVertices(long from, int lenght,
+			boolean includeFirst) throws Exception {
+		List<byte[]> list = store.getRangeOfLength(includeFirst,
+				buildVertexKey(from), buildVertexKey(Long.MAX_VALUE), lenght);
+		TLongArrayList ret = new TLongArrayList(lenght);
+		for (byte[] bs : list)
+			ret.add(DataTypeUtils.byteArrayToLong(bs));
+		return ret;
+	}
+
+	@Override
+	public Object getDefault(String k) throws Exception {
+		return defaults.get(k);
+	}
+
+	@Override
+	public void setDefault(String k, Object v) throws Exception {
+		defaults.put(k, v);
 	}
 }

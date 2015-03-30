@@ -66,7 +66,6 @@ public class GraphlyLoader {
 
 		final Semaphore sem = new Semaphore(10);
 		int last = -1;
-
 		while (adj.hasNext()) {
 			final Pair<java.lang.Long, long[]> pair = adj.next();
 			final long[] value = pair.getValue();
@@ -102,7 +101,10 @@ public class GraphlyLoader {
 		exec.shutdown();
 		exec.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
 
+		System.out.println(contProm.get());
+
 		System.out.println(sum.get() / contProm.get());
+
 		g.close();
 	}
 }

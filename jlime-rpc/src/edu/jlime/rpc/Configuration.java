@@ -87,7 +87,7 @@ public class Configuration {
 
 		this.nack_delay = getInt("ack.nack_delay", 150);
 
-		this.ack_delay = getInt("ack.ack_delay", 1);
+		this.ack_delay = getInt("ack.ack_delay", 100);
 		this.retransmit_delay = getInt("ack.retransmit_delay", 100);
 
 		this.ack_max_resend_size = getInt("ack.max_resend_size", 2048);

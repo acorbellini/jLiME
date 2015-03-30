@@ -3,10 +3,12 @@ package edu.jlime.graphly.jobs;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
 
+import edu.jlime.core.cluster.Peer;
 import edu.jlime.graphly.util.GraphlyUtil;
 import edu.jlime.graphly.util.Pair;
 import edu.jlime.jd.ClientNode;
@@ -19,13 +21,22 @@ public class CriteriaMapper implements Mapper {
 
 	private static final long serialVersionUID = -821812463957389816L;
 
+	private static final int SLOTS = 20001;
+
+	private static final int VNODES = 2048;
+
 	private SysInfoFilter<ClientNode> filter;
 
 	private boolean dynamic;
 
+	private Map<Integer, ClientNode> division = new HashMap<>();
+
+	private int range;
+
 	public CriteriaMapper(SysInfoFilter<ClientNode> ext, boolean dynamic) {
 		this.filter = ext;
 		this.dynamic = dynamic;
+		this.range = SLOTS / VNODES;
 	}
 
 	@Override
@@ -79,5 +90,41 @@ public class CriteriaMapper implements Mapper {
 	@Override
 	public boolean isDynamic() {
 		return dynamic;
+	}
+
+	@Override
+	public void update(JobContext ctx) throws Exception {
+		Logger log = Logger.getLogger(CriteriaMapper.class);
+
+		CompositeMetrics<ClientNode> info = ctx.getCluster().getInfo();
+
+		HashMap<ClientNode, Float> infoValues = filter.extract(info);
+		if (log.isDebugEnabled())
+			log.debug("Obtained Info for Criteria Mapper  : " + this
+					+ " - values " + infoValues);
+
+		// Normalize sum to [0,1)
+		float sum = 0;
+		for (Entry<ClientNode, Float> val : infoValues.entrySet()) {
+			sum += val.getValue();
+		}
+		for (Entry<ClientNode, Float> entry : infoValues.entrySet()) {
+			entry.setValue(entry.getValue() / sum);
+		}
+		int i = 0;
+		for (Entry<ClientNode, Float> entry : infoValues.entrySet()) {
+			for (; i < VNODES * entry.getValue(); i++) {
+				division.put(i, entry.getKey());
+			}
+		}
+	}
+
+	@Override
+	public ClientNode getPeer(long v, JobContext ctx) {
+		long hash = v % VNODES;
+		ClientNode ret = division.get(hash);
+		if (ret == null)
+			return division.get(0);
+		return ret;
 	}
 }

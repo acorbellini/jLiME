@@ -66,6 +66,13 @@
 			<systemPath>${project.basedir}/lib/jnetrobust-core-0.0.2.jar</systemPath>
 		</dependency>
 		<dependency>
+			<groupId>com.zeromq</groupId>
+			<artifactId>zmq</artifactId>
+			<version>4.0.4</version>
+			<scope>system</scope>
+			<systemPath>${project.basedir}/lib/zmq/zmq.jar</systemPath>
+		</dependency>
+		<dependency>
 			<groupId>com.esotericsoftware</groupId>
 			<artifactId>kryo</artifactId>
 			<version>3.0.0</version>
@@ -74,6 +81,11 @@
 			<groupId>net.sf.trove4j</groupId>
 			<artifactId>trove4j</artifactId>
 			<version>3.0.3</version>
+		</dependency>
+		<dependency>
+			<groupId>com.rabbitmq</groupId>
+			<artifactId>amqp-client</artifactId>
+			<version>3.5.0</version>
 		</dependency>
 	</dependencies>
 	<parent>

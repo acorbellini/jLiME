@@ -34,7 +34,7 @@ public interface GraphlyStoreNodeI {
 	@Sync
 	public abstract void addRange(int range) throws Exception;
 
-	public abstract boolean addVertex(long id, String label) throws Exception;
+	public abstract void addVertex(long id, String label) throws Exception;
 
 	public abstract String getLabel(long id) throws Exception;
 
@@ -51,9 +51,6 @@ public interface GraphlyStoreNodeI {
 
 	public abstract long[] getEdges(Dir dir, int max_edges, long[] vids)
 			throws Exception;
-
-	@Cache
-	public abstract Peer getJobAddress() throws Exception;
 
 	public abstract GraphlyCount countEdges(Dir dir, int max_edges, long[] vids)
 			throws Exception;
@@ -80,5 +77,15 @@ public interface GraphlyStoreNodeI {
 
 	public Map<Long, Map<String, Object>> getProperties(long[] array,
 			String... hubKey) throws Exception;
+
+	public abstract int getVertexCount() throws Exception;
+
+	public abstract TLongArrayList getVertices(long from, int lenght,
+			boolean includeFirst) throws Exception;
+
+	public abstract Object getDefault(String k) throws Exception;
+
+	@Sync
+	public abstract void setDefault(String k, Object v) throws Exception;
 
 }

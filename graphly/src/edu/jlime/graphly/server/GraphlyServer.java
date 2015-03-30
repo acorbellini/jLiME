@@ -18,6 +18,9 @@ import edu.jlime.metrics.jmx.MetricsJMX;
 import edu.jlime.metrics.metric.Metrics;
 import edu.jlime.metrics.sysinfo.InfoProvider;
 import edu.jlime.metrics.sysinfo.SysInfoProvider;
+import edu.jlime.pregel.client.PregelClient;
+import edu.jlime.pregel.coordinator.CoordinatorServer;
+import edu.jlime.pregel.worker.WorkerServer;
 import edu.jlime.rpc.JLiMEFactory;
 
 public class GraphlyServer {
@@ -29,6 +32,9 @@ public class GraphlyServer {
 	private GraphlyCoordinatorImpl coord;
 	private Integer rs;
 	protected Logger log = Logger.getLogger(GraphlyServer.class);
+
+	private CoordinatorServer pregel_coord;
+	private WorkerServer pregel_worker;
 
 	public GraphlyServer(String storeName, String storeLoc, Boolean isCoord,
 			Integer rs) {
@@ -102,8 +108,12 @@ public class GraphlyServer {
 		Map<String, String> data = new HashMap<>();
 		// data.put("app", "graphly");
 		// data.put("type", "server");
-		data.put("app", "graphly-server," + JobDispatcher.SERVER
-				+ (isCoord ? "," + GraphlyCoordinatorImpl.COORDINATOR : ""));
+		data.put("app", "graphly-server,"
+				+ WorkerServer.WORKER_KEY
+				+ ","
+				+ JobDispatcher.SERVER
+				+ (isCoord ? "," + GraphlyCoordinatorImpl.COORDINATOR + ","
+						+ CoordinatorServer.COORDINATOR_KEY : ""));
 
 		rpc = new JLiMEFactory(data, null).build();
 
@@ -113,8 +123,13 @@ public class GraphlyServer {
 					try {
 						if (log.isDebugEnabled())
 							log.debug("Initializing Coordinator");
+
 						GraphlyServer.this.coord = new GraphlyCoordinatorImpl(
 								rpc, rs);
+
+						GraphlyServer.this.pregel_coord = new CoordinatorServer(
+								rpc);
+
 						if (log.isDebugEnabled())
 							log.debug("Finished Initializing Coordinator");
 					} catch (Exception e) {
@@ -127,6 +142,8 @@ public class GraphlyServer {
 				rpc);
 
 		rpc.registerTarget("graphly", storeNode, false);
+
+		pregel_worker = new WorkerServer(rpc);
 
 		jobs = JobDispatcher.build(0, rpc);
 
@@ -147,21 +164,30 @@ public class GraphlyServer {
 
 		jobs.setMetrics(mgr);
 
-		storeNode.setJobExecutorID(jobs.getLocalPeer());
+		PregelClient pregelClient = new PregelClient(rpc, rs);
+		jobs.setGlobal("pregel", pregelClient);
 
-		jobs.setGlobal("graphly", Graphly.build(rpc, jobs, rs));
+		jobs.setGlobal("graphly", Graphly.build(rpc, pregelClient, jobs, rs));
 
 		if (log.isDebugEnabled())
 			log.debug("Starting metrics");
 
-		log.info("Graphly Server Fully Started on peer"
+		log.info("Graphly Server Fully Started on peer "
 				+ rpc.getCluster().getLocalPeer());
 	}
 
 	public void stop() throws Exception {
-		rpc.stop();
+
 		jobs.stop();
+
+		rpc.stop();
+		
+		pregel_worker.stop();
+
 		if (coord != null)
 			coord.stop();
+
+		if (pregel_coord != null)
+			pregel_coord.stop();
 	}
 }

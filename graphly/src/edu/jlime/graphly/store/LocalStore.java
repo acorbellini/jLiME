@@ -1,13 +1,17 @@
 package edu.jlime.graphly.store;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
 import org.fusesource.leveldbjni.JniDBFactory;
 import org.iq80.leveldb.DB;
+import org.iq80.leveldb.DBIterator;
 import org.iq80.leveldb.Options;
 
-import edu.jlime.util.DataTypeUtils;
+import com.google.common.primitives.UnsignedBytes;
 
 public class LocalStore {
 
@@ -67,19 +71,21 @@ public class LocalStore {
 		return db;
 	}
 
-	public byte[] load(long key) throws Exception {
-		byte[] res = getDb().get(DataTypeUtils.longToByteArray(key));
-		return res;
+	public byte[] load(byte[] key) throws Exception {
+		// DataTypeUtils.longToByteArray(key)
+		return getDb().get(key);
+		// return res;
 	}
 
-	public void store(long k, byte[] bs) throws Exception {
-		getDb().put(DataTypeUtils.longToByteArray(k), bs);
+	public void store(byte[] k, byte[] bs) throws Exception {
+		getDb().put(k, bs);
 	}
 
 	public synchronized void close() {
 		if (isClosed || db == null)
 			return;
 		try {
+			// Test for being open
 			db.get(new byte[] { 'a' });
 			db.close();
 			isClosed = true;
@@ -89,4 +95,53 @@ public class LocalStore {
 
 	}
 
+	public int count(byte[] from, byte[] to) throws Exception {
+		int cont = 0;
+		DBIterator iterator = getDb().iterator();
+		Entry<byte[], byte[]> e = null;
+		try {
+			for (iterator.seek(from); iterator.hasNext();) {
+				e = iterator.next();
+				if (UnsignedBytes.lexicographicalComparator().compare(to,
+						e.getKey()) > 0)
+					cont++;
+
+			}
+
+		} finally {
+			// Make sure you close the iterator to avoid resource leaks.
+			iterator.close();
+		}
+		return cont;
+	}
+
+	public List<byte[]> getRangeOfLength(boolean includeFirst, byte[] from,
+			byte[] to, int max) throws Exception {
+		List<byte[]> ret = new ArrayList<byte[]>();
+		int cont = 0;
+		DBIterator iterator = getDb().iterator();
+		Entry<byte[], byte[]> e = null;
+		boolean first = true;
+		try {
+			for (iterator.seek(from); iterator.hasNext();) {
+				e = iterator.next();
+				if (UnsignedBytes.lexicographicalComparator().compare(to,
+						e.getKey()) > 0) {
+					if (!first || (first && includeFirst)) {
+						ret.add(e.getValue());
+					}
+					first = false;
+					cont++;
+					if (cont >= max)
+						return ret;
+				} else
+					return ret;
+			}
+
+		} finally {
+			// Make sure you close the iterator to avoid resource leaks.
+			iterator.close();
+		}
+		return ret;
+	}
 }
