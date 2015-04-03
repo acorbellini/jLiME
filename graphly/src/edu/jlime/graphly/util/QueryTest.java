@@ -4,18 +4,47 @@ import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.jobs.MapperFactory;
 import edu.jlime.graphly.traversal.Pregel;
 import edu.jlime.pregel.functions.PageRank;
+import edu.jlime.pregel.mergers.MessageMergers;
+import edu.jlime.pregel.worker.MessageMerger;
+import edu.jlime.util.DataTypeUtils;
 
 public class QueryTest {
+	public static class PageRankMerger implements MessageMerger {
+
+		@Override
+		public Object merge(Object v, Object v2) {
+			double d = Double.longBitsToDouble(DataTypeUtils
+					.byteArrayToLong((byte[]) v))
+					+ Double.longBitsToDouble(DataTypeUtils
+							.byteArrayToLong((byte[]) v2));
+			return DataTypeUtils.longToByteArray(Double.doubleToLongBits(d));
+		}
+
+	}
+
 	public static void main(String[] args) throws Exception {
 		Graphly g = Graphly.build(4);
 
 		int vertexCount = g.getVertexCount();
+		long init = System.currentTimeMillis();
+		g.setDefaultDouble("pagerank", 1d / vertexCount);
+		g.setDefaultDouble("ranksource", .85d);
 
-		g.setDefaultValue("pagerank", 1d / vertexCount);
-		g.setDefaultValue("ranksource", .85d);
+		g.v()
+				.set("mapper", MapperFactory.location())
+				.as(Pregel.class)
+				.vertexFunction(new PageRank(vertexCount),
+						new PageRankMerger(), 60, true).exec();
+		System.out.println(System.currentTimeMillis() - init);
+		double sum = 0;
 
-		g.v().set("mapper", MapperFactory.rr()).as(Pregel.class)
-				.vertexFunction(new PageRank(vertexCount), 30, true).exec();
+		// If everything's alright, the sum should be 1 (Or near)
+		for (Long v : g.vertices()) {
+			sum += g.getDouble(v, "pagerank");
+		}
+
+		System.out.println(sum);
+
 		// long[][] adj = new long[][] { { 0, 1 }, { 0, 2 }, { 0, 3 }, { 0, 4 },
 		// { 0, 5 }, { 3, 6 }, { 3, 7 }, { 1, 6 }, { 6, 1 }, { 7, 1 },
 		// { 8, 1 }, { 9, 1 }, { 6, 11 }, { 6, 12 }, { 6, 13 }, { 7, 13 } };

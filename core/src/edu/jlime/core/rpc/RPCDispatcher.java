@@ -396,6 +396,10 @@ public class RPCDispatcher implements TransportListener {
 		targetsStatuses.put(key, status);
 		Method[] methods = target.getClass().getMethods();
 		targetsMethods.put(key, methods);
+
+		synchronized (targetsStatuses) {
+			targetsStatuses.notifyAll();
+		}
 		// for (Method method : methods)
 		// targetsMethodsTypes.put(method, method.getParameterTypes());
 
@@ -490,16 +494,22 @@ public class RPCDispatcher implements TransportListener {
 	}
 
 	public Object getTarget(String name) {
-		synchronized (targetsStatuses) {
-			while (!targetsStatuses.get(name).equals(RPCStatus.STARTED))
-				try {
-					if (log.isDebugEnabled())
-						log.debug("Waiting for target " + name + " to start.");
-					targetsStatuses.wait();
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-		}
+		RPCStatus rpcStatus = targetsStatuses.get(name);
+		if (rpcStatus == null || !rpcStatus.equals(RPCStatus.STARTED))
+			synchronized (targetsStatuses) {
+				rpcStatus = targetsStatuses.get(name);
+				while (rpcStatus == null
+						|| !rpcStatus.equals(RPCStatus.STARTED))
+					try {
+						if (log.isDebugEnabled())
+							log.debug("Waiting for target " + name
+									+ " to start.");
+						targetsStatuses.wait(1000);
+						rpcStatus = targetsStatuses.get(name);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+			}
 
 		return targets.get(name);
 	}

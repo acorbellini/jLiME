@@ -4,8 +4,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import edu.jlime.core.cluster.Peer;
-import edu.jlime.core.rpc.Cache;
 import edu.jlime.core.rpc.Sync;
 import edu.jlime.graphly.traversal.Dir;
 import gnu.trove.list.array.TLongArrayList;
@@ -87,5 +85,14 @@ public interface GraphlyStoreNodeI {
 
 	@Sync
 	public abstract void setDefault(String k, Object v) throws Exception;
+
+	public abstract double getDouble(long v, String k) throws Exception;
+
+	public abstract void setDouble(long v, String k, double currentVal)
+			throws Exception;
+
+	public abstract void setDefaultDouble(String k, double v) throws Exception;
+
+	public abstract double getDefaultDouble(String k) throws Exception;
 
 }

@@ -17,18 +17,18 @@ import java.lang.Exception;
 
 public class JobExecutorServerImpl extends RPCClient implements JobExecutor, Transferible {
 
-   transient RPCDispatcher local = null;
+   transient JobExecutor local = null;
   public JobExecutorServerImpl(RPCDispatcher disp, Peer dest, Peer client, String targetID) {
  super(disp, dest, client, targetID);
- local = RPCDispatcher.getLocalDispatcher(dest);
+ RPCDispatcher localRPC = RPCDispatcher.getLocalDispatcher(dest); if(localRPC!=null) 	this.local = (JobExecutor) localRPC.getTarget(targetID);
 }
 
-  public void execute(final JobContainer arg0)  throws Exception {
+   public void execute(final JobContainer arg0)  throws Exception {
 if(local!=null) {
 async.execute(new Runnable(){
 public void run(){
 try{
-          ((JobExecutor) local.getTarget(targetID) ).execute(arg0);
+          local.execute(arg0);
 } catch (Exception e) {e.printStackTrace();}}
 });
 ;
@@ -36,12 +36,12 @@ try{
     disp.callAsync(dest, client, targetID, "execute",new Object[] { arg0 });
   }
 
-  public void result(final Object arg0, final UUID arg1, final ClientNode arg2)  throws Exception {
+   public void result(final Object arg0, final UUID arg1, final ClientNode arg2)  throws Exception {
 if(local!=null) {
 async.execute(new Runnable(){
 public void run(){
 try{
-          ((JobExecutor) local.getTarget(targetID) ).result(arg0,arg1,arg2);
+          local.result(arg0,arg1,arg2);
 } catch (Exception e) {e.printStackTrace();}}
 });
 ;

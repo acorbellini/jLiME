@@ -1,13 +1,8 @@
 package edu.jlime.graphly.traversal;
 
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.commons.collections.iterators.ArrayIterator;
 import org.apache.commons.lang3.NotImplementedException;
 
 import edu.jlime.core.rpc.RPCDispatcher;
@@ -15,7 +10,6 @@ import edu.jlime.core.rpc.Transferible;
 import edu.jlime.graphly.client.Graphly;
 import edu.jlime.jd.JobDispatcher;
 import edu.jlime.pregel.graph.rpc.Graph;
-import gnu.trove.decorator.TLongListDecorator;
 import gnu.trove.list.array.TLongArrayList;
 
 public class GraphlyPregelAdapter implements Graph, Transferible {
@@ -71,25 +65,13 @@ public class GraphlyPregelAdapter implements Graph, Transferible {
 	}
 
 	@Override
-	public Iterable<Long> getOutgoing(final long vertex) throws Exception {
-		return new Iterable<Long>() {
-
-			@Override
-			public Iterator<Long> iterator() {
-				return new ArrayIterator(g.getEdges(Dir.OUT, vertex, null));
-			}
-		};
+	public TLongArrayList getOutgoing(final long vertex) throws Exception {
+		return TLongArrayList.wrap(g.getEdges(Dir.OUT, vertex, null));
 	}
 
 	@Override
-	public Iterable<Long> getIncoming(final long vertex) throws Exception {
-		return new Iterable<Long>() {
-
-			@Override
-			public Iterator<Long> iterator() {
-				return new ArrayIterator(g.getEdges(Dir.IN, vertex, null));
-			}
-		};
+	public TLongArrayList getIncoming(final long vertex) throws Exception {
+		return TLongArrayList.wrap(g.getEdges(Dir.IN, vertex, null));
 	}
 
 	@Override
@@ -167,4 +149,15 @@ public class GraphlyPregelAdapter implements Graph, Transferible {
 		this.g = (Graphly) ((JobDispatcher) rpc
 				.getTarget(JobDispatcher.JOB_DISPATCHER)).getGlobal("graphly");
 	}
+
+	@Override
+	public double getDouble(long v, String k) throws Exception {
+		return g.getDouble(v, k);
+	}
+
+	@Override
+	public void setDouble(long v, String k, double currentVal) throws Exception {
+		g.setDouble(v, k, currentVal);
+	}
+
 }

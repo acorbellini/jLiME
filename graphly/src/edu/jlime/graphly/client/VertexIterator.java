@@ -1,13 +1,13 @@
 package edu.jlime.graphly.client;
 
-import edu.jlime.graphly.GraphlyStoreNodeI;
-import gnu.trove.list.array.TLongArrayList;
-
 import java.util.Iterator;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+
+import edu.jlime.graphly.GraphlyStoreNodeI;
+import gnu.trove.list.array.TLongArrayList;
 
 public class VertexIterator implements Iterator<Long> {
 	ExecutorService exec = Executors.newFixedThreadPool(1);

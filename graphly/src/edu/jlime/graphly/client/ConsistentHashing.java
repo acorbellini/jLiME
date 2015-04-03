@@ -13,7 +13,7 @@ public class ConsistentHashing implements Serializable {
 
 	int keySpace = 50021;
 
-	HashMap<Integer, Peer> circle = new HashMap<>();
+	Peer[] circle;
 
 	Peer firstPeer;
 
@@ -25,19 +25,22 @@ public class ConsistentHashing implements Serializable {
 			throws Exception {
 		this.vnodes = vNodes;
 		this.range = keySpace / vNodes;
-		initCircle(nodes);
-		if (circle.isEmpty()) {
+		circle = new Peer[vnodes];
+		if (!initCircle(nodes)) {
 			createCircle(nodes);
 		}
 	}
 
-	private void initCircle(Map<Peer, GraphlyStoreNodeI> nodes)
+	private boolean initCircle(Map<Peer, GraphlyStoreNodeI> nodes)
 			throws Exception {
+		boolean mod = false;
 		for (Peer gn : nodes.keySet()) {
 			for (Integer range : nodes.get(gn).getRanges()) {
-				circle.put(range, gn);
+				circle[range] = gn;
+				mod = true;
 			}
 		}
+		return mod;
 	}
 
 	private void createCircle(Map<Peer, GraphlyStoreNodeI> map)
@@ -45,19 +48,17 @@ public class ConsistentHashing implements Serializable {
 		ArrayList<Peer> nodes = new ArrayList<>(map.keySet());
 		for (int i = 0; i < vnodes; i++) {
 			Peer gs = nodes.get(i % nodes.size());
-			int j = range * i;
-			circle.put(j, gs);
-			map.get(gs).addRange(j);
+			// int j = range * i;
+			circle[i] = gs;
+			map.get(gs).addRange(i);
 		}
 	}
 
 	public Peer getNode(long k) {
 		int hashed = Math.abs(((int) k * 31) % vnodes);
-		int vNode = (hashed + 1) * range;
-		Peer ceilingEntry = circle.get(vNode);
-		if (ceilingEntry == null)
-			return circle.get(0);
-		return ceilingEntry;
+		if (hashed + 1 >= circle.length)
+			return circle[0];
+		return circle[hashed + 1];
 	}
 
 	public Map<Peer, TLongArrayList> hashKeys(long[] data) {

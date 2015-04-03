@@ -4,14 +4,14 @@ import java.io.Serializable;
 
 public class PregelMessage implements Comparable<PregelMessage>, Serializable {
 
-	long from;
+	private long from;
 
 	long to;
 
 	Object v;
 
 	public PregelMessage(long from, long to, Object val) {
-		this.from = from;
+		this.setFrom(from);
 		this.to = to;
 		this.v = val;
 	}
@@ -30,14 +30,14 @@ public class PregelMessage implements Comparable<PregelMessage>, Serializable {
 
 	@Override
 	public String toString() {
-		return "PregelMessage [from=" + from + ", to=" + to + ", v=" + v + "]";
+		return "PregelMessage [from=" + getFrom() + ", to=" + to + ", v=" + v + "]";
 	}
 
 	@Override
 	public int compareTo(PregelMessage o) {
 		int compare = Long.compare(to, o.to);
 		if (compare == 0)
-			compare = Long.compare(from, o.from);
+			compare = Long.compare(getFrom(), o.getFrom());
 
 		return compare;
 	}
@@ -46,7 +46,7 @@ public class PregelMessage implements Comparable<PregelMessage>, Serializable {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + (int) (from ^ (from >>> 32));
+		result = prime * result + (int) (getFrom() ^ (getFrom() >>> 32));
 		result = prime * result + (int) (to ^ (to >>> 32));
 		result = prime * result + ((v == null) ? 0 : v.hashCode());
 		return result;
@@ -61,7 +61,7 @@ public class PregelMessage implements Comparable<PregelMessage>, Serializable {
 		if (getClass() != obj.getClass())
 			return false;
 		PregelMessage other = (PregelMessage) obj;
-		if (from != other.from)
+		if (getFrom() != other.getFrom())
 			return false;
 		if (to != other.to)
 			return false;
@@ -75,6 +75,10 @@ public class PregelMessage implements Comparable<PregelMessage>, Serializable {
 
 	public void setV(Object v) {
 		this.v = v;
+	}
+
+	public void setFrom(long from) {
+		this.from = from;
 	}
 
 }

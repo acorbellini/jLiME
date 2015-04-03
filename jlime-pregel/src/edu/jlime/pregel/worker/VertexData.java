@@ -67,7 +67,7 @@ public class VertexData implements Serializable {
 			incoming.add(from);
 	}
 
-	public TLongList outgoing() {
+	public TLongArrayList outgoing() {
 		if (outgoing == null)
 			return new TLongArrayList();
 		return outgoing;
@@ -92,7 +92,7 @@ public class VertexData implements Serializable {
 		return 0;
 	}
 
-	public TLongList incoming() {
+	public TLongArrayList incoming() {
 		if (incoming == null)
 			return new TLongArrayList();
 		return incoming;

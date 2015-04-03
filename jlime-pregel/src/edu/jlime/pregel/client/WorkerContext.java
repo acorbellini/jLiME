@@ -22,9 +22,9 @@ public class WorkerContext {
 		return task.getGraph();
 	};
 
-	public void setHalted() {
-		task.setHalted(v);
-	};
+	// public void setHalted() {
+	// task.setHalted(v);
+	// };
 
 	public Integer getSuperStep() {
 		return task.getSuperStep();

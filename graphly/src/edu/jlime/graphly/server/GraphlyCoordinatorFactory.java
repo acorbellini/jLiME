@@ -2,11 +2,11 @@ package edu.jlime.graphly.server;
 
 
 		
-import edu.jlime.core.cluster.Peer;
-import edu.jlime.core.rpc.RPCDispatcher;
-import edu.jlime.core.rpc.ClientFactory;
-
 import java.util.List;
+
+import edu.jlime.core.cluster.Peer;
+import edu.jlime.core.rpc.ClientFactory;
+import edu.jlime.core.rpc.RPCDispatcher;
 
 public class GraphlyCoordinatorFactory implements ClientFactory<GraphlyCoordinator,GraphlyCoordinatorBroadcast>{
 	private RPCDispatcher rpc;

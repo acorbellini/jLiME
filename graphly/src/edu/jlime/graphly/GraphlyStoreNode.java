@@ -8,7 +8,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -22,12 +21,10 @@ import java.util.concurrent.Semaphore;
 
 import org.apache.log4j.Logger;
 
-import com.google.common.base.Defaults;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.TreeMultimap;
 
-import edu.jlime.core.cluster.Peer;
 import edu.jlime.core.rpc.RPCDispatcher;
 import edu.jlime.graphly.store.LocalStore;
 import edu.jlime.graphly.traversal.Dir;
@@ -39,6 +36,7 @@ import gnu.trove.iterator.TLongObjectIterator;
 import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.map.hash.TLongIntHashMap;
 import gnu.trove.map.hash.TLongObjectHashMap;
+import gnu.trove.map.hash.TObjectDoubleHashMap;
 import gnu.trove.set.hash.TLongHashSet;
 
 public class GraphlyStoreNode implements GraphlyStoreNodeI {
@@ -92,7 +90,6 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 
 	private File localRanges;
 	private List<Integer> ranges = new ArrayList<>();
-	private Peer je;
 	private InMemoryGraphProperties props = new InMemoryGraphProperties();
 
 	private Map<Long, Map<String, Object>> temps = new ConcurrentHashMap<>();
@@ -196,6 +193,10 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	@Override
 	public long[] getEdges(Dir type, int max_edges, long[] id)
 			throws ExecutionException {
+		if (id.length == 1) {
+			return getEdges(type, id[0]);
+		}
+
 		TLongArrayList ret = new TLongArrayList();
 		for (long l : id) {
 			long[] edges = getEdges(type, l);
@@ -311,6 +312,8 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 
 	Semaphore sem = new Semaphore(2);
 	private Map<String, Object> defaults = new ConcurrentHashMap<>();
+	private TLongObjectHashMap<TObjectDoubleHashMap<String>> doubleMap = new TLongObjectHashMap<>();
+	private TObjectDoubleHashMap<String> defaultDoubleMap = new TObjectDoubleHashMap<>();
 
 	@Override
 	public GraphlyCount countEdges(Dir dir, int max_edges, long[] vids)
@@ -504,4 +507,35 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	public void setDefault(String k, Object v) throws Exception {
 		defaults.put(k, v);
 	}
+
+	@Override
+	public synchronized double getDouble(long v, String k) throws Exception {
+		TObjectDoubleHashMap<String> tObjectDoubleHashMap = doubleMap.get(v);
+		if (tObjectDoubleHashMap == null)
+			return getDefaultDouble(k);
+		return tObjectDoubleHashMap.get(k);
+	}
+
+	@Override
+	public synchronized void setDouble(long v, String k, double currentVal)
+			throws Exception {
+		TObjectDoubleHashMap<String> map = doubleMap.get(v);
+		if (map == null) {
+			map = new TObjectDoubleHashMap<String>();
+			doubleMap.put(v, map);
+		}
+		map.put(k, currentVal);
+	}
+
+	@Override
+	public void setDefaultDouble(String k, double v) throws Exception {
+		defaultDoubleMap.put(k, v);
+
+	}
+
+	@Override
+	public double getDefaultDouble(String k) throws Exception {
+		return defaultDoubleMap.get(k);
+	}
+
 }

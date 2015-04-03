@@ -27,6 +27,7 @@ import edu.jlime.pregel.graph.PregelGraphLocal;
 import edu.jlime.pregel.graph.rpc.Graph;
 import edu.jlime.pregel.graph.rpc.GraphBroadcast;
 import edu.jlime.pregel.graph.rpc.GraphFactory;
+import gnu.trove.list.array.TLongArrayList;
 
 public class InMemoryGraph implements Graph, Transferible {
 
@@ -185,12 +186,12 @@ public class InMemoryGraph implements Graph, Transferible {
 	}
 
 	@Override
-	public Iterable<Long> getOutgoing(long vertex) throws Exception {
+	public TLongArrayList getOutgoing(long vertex) throws Exception {
 		return getGraph(vertex).getOutgoing(vertex);
 	}
 
 	@Override
-	public Iterable<Long> getIncoming(long v) throws Exception {
+	public TLongArrayList getIncoming(long v) throws Exception {
 		return getGraph(v).getIncoming(v);
 	}
 
@@ -385,4 +386,16 @@ public class InMemoryGraph implements Graph, Transferible {
 
 		pool = new ForkJoinPool();
 	}
+
+	@Override
+	public double getDouble(long v, String string) throws Exception {
+		return getGraph(v).getDouble(v, string);
+	}
+
+	@Override
+	public void setDouble(long v, String string, double currentVal)
+			throws Exception {
+		getGraph(v).setDouble(v, string, currentVal);
+	}
+
 }

@@ -37,7 +37,7 @@ public class UDPNIO extends MessageProcessor implements AddressListProvider,
 	public static final int HEADER = 32;
 
 	private ExecutorService exec = Executors
-			.newFixedThreadPool(64, new ThreadFactory() {
+			.newCachedThreadPool(new ThreadFactory() {
 
 				@Override
 				public Thread newThread(Runnable r) {

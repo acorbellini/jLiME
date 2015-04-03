@@ -11,6 +11,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -180,9 +181,10 @@ public class RPCCreator {
 		writer.write("public class " + name + " extends RPCClient implements "
 				+ serverInterface.getSimpleName() + ", Transferible {\n\n");
 
-		writer.write(getFields(serverInterface.getMethods()));
+		writer.write(getFields(serverInterface.getSimpleName(),
+				serverInterface.getMethods()));
 
-		writer.write(getConstructor(name));
+		writer.write(getConstructor(name, serverInterface.getSimpleName()));
 
 		for (Method method : serverInterface.getMethods()) {
 			MethodSignature methodSignature = getMethodSignature(
@@ -199,7 +201,7 @@ public class RPCCreator {
 		writer.close();
 	}
 
-	private String getFields(Method[] methods) {
+	private String getFields(String iface, Method[] methods) {
 		StringBuilder builder = new StringBuilder();
 		for (Method method : methods)
 			if (method.getAnnotation(Cache.class) != null
@@ -207,7 +209,7 @@ public class RPCCreator {
 				builder.append("   " + method.getReturnType().getSimpleName()
 						+ " " + method.getName() + "Cached = null;\n");
 
-		builder.append("   transient RPCDispatcher local = null;\n");
+		builder.append("   transient " + iface + " local = null;\n");
 
 		return builder.toString();
 	}
@@ -226,7 +228,7 @@ public class RPCCreator {
 		return field.toString();
 	}
 
-	private String getConstructor(String name) {
+	private String getConstructor(String name, String iface) {
 		StringBuilder constructor = new StringBuilder();
 
 		constructor
@@ -235,7 +237,10 @@ public class RPCCreator {
 						+ "(RPCDispatcher disp, Peer dest, Peer client, String targetID) {\n");
 		constructor.append(" super(disp, dest, client, targetID);\n");
 		constructor
-				.append(" local = RPCDispatcher.getLocalDispatcher(dest);\n");
+				.append(" RPCDispatcher localRPC = RPCDispatcher.getLocalDispatcher(dest);");
+		constructor.append(" if(localRPC!=null)");
+		constructor.append(" 	this.local = (" + iface
+				+ ") localRPC.getTarget(targetID);\n");
 		constructor.append("}\n\n");
 		return constructor.toString();
 	}
@@ -256,9 +261,13 @@ public class RPCCreator {
 
 	private MethodSignature getMethodSignature(String name, Method method)
 			throws Exception {
+		String types = getTypes(method.getGenericParameterTypes());
 		StringBuilder ret = new StringBuilder();
-		ret.append("  public " + method.getReturnType().getSimpleName() + " "
-				+ name + "(");
+		String retType = method.getReturnType().getSimpleName();
+		if (method.getGenericReturnType() instanceof TypeVariable)
+			retType = method.getGenericReturnType().getTypeName();
+		ret.append("   public " + (types.isEmpty() ? "" : "<" + types + "> ")
+				+ retType + " " + name + "(");
 		MethodParams parameters = getParameters(method);
 		ret.append(parameters.code);
 		ret.append(") ");
@@ -266,8 +275,28 @@ public class RPCCreator {
 		return new MethodSignature(ret.toString(), parameters);
 	}
 
+	private String getTypes(Type[] tp) {
+		StringBuilder types = new StringBuilder();
+		boolean first = true;
+		for (Type typeVariable : tp) {
+			if (typeVariable instanceof ParameterizedType) {
+				Type[] actualTypeArguments = ((ParameterizedType) typeVariable)
+						.getActualTypeArguments();
+				types.append(getTypes(actualTypeArguments));
+			} else if (typeVariable instanceof TypeVariable) {
+				if (first)
+					first = false;
+				else
+					types.append(",");
+				types.append(typeVariable);
+			}
+		}
+		return types.toString();
+	}
+
 	private MethodSignature getBroadcastMethodSignature(String name,
 			Method method) throws Exception {
+		String types = getTypes(method.getGenericParameterTypes());
 		StringBuilder ret = new StringBuilder();
 		String returnType = "void";
 		if (!method.getReturnType().getSimpleName().equals("void")) {
@@ -275,9 +304,13 @@ public class RPCCreator {
 			Class wrapper = Wrappers.get(method.getReturnType());
 			if (wrapper != null)
 				simpleName = wrapper.getSimpleName();
+			if (method.getGenericReturnType() instanceof TypeVariable)
+				simpleName = method.getGenericReturnType().getTypeName();
+
 			returnType = "Map<Peer," + simpleName + "> ";
 		}
-		ret.append("  public " + returnType + " " + name + "(");
+		ret.append("   public " + (types.isEmpty() ? "" : "<" + types + "> ")
+				+ returnType + " " + name + "(");
 		MethodParams parameters = getParameters(method);
 		ret.append(parameters.code);
 		ret.append(") throws Exception");
@@ -419,6 +452,8 @@ public class RPCCreator {
 			cached = true;
 
 		String retType = method.getReturnType().getSimpleName();
+		if (method.getGenericReturnType() instanceof TypeVariable)
+			retType = method.getGenericReturnType().getTypeName();
 
 		String singleCall = sync ? "callSync" : "callAsync";
 
@@ -427,8 +462,7 @@ public class RPCCreator {
 
 		builder.append("if(local!=null) {\n");
 
-		String simpleCall = "((" + iface + ") local.getTarget(targetID) )."
-				+ rpcmethod + "(" + args + ")";
+		String simpleCall = "local." + rpcmethod + "(" + args + ")";
 
 		if (!sync)
 			simpleCall = "async.execute(new Runnable(){\n"

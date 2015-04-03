@@ -1,8 +1,8 @@
 package edu.jlime.graphly.traversal;
 
-import java.util.Arrays;
-
 import gnu.trove.list.array.TLongArrayList;
+
+import java.util.Arrays;
 
 public class VarFilterStep implements Step {
 

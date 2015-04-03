@@ -15,13 +15,26 @@ import edu.jlime.graphly.traversal.Dir;
 
 public class GraphlyLoader {
 
+	private static final String OUT = "out";
+	private static final String IN = "in";
+
 	public static void main(String[] args) throws Exception {
-		if (args[0].equals("validate"))
-			new GraphlyLoader().validate(Integer.valueOf(args[1]), args[2],
-					args[3], args[4]);
-		else
-			new GraphlyLoader().load(Integer.valueOf(args[1]), args[2],
-					args[3], args[4]);
+		String action = args[0];
+		String servers = args[1];
+		String sep = args[2];
+		String fileIn = args[3];
+		String fileOut = args[4];
+		if (action.equals("validate")) {
+			new GraphlyLoader().validate(Integer.valueOf(servers), fileIn, sep,
+					IN);
+			new GraphlyLoader().validate(Integer.valueOf(servers), fileOut,
+					sep, OUT);
+		} else {
+			new GraphlyLoader().load(Integer.valueOf(servers), fileIn, sep, IN);
+			new GraphlyLoader().load(Integer.valueOf(servers), fileOut, sep,
+					OUT);
+
+		}
 	}
 
 	private void validate(Integer servers, String file, String sep, String dir)
@@ -43,7 +56,7 @@ public class GraphlyLoader {
 				}
 
 				Dir edgeDir = Dir.OUT;
-				if (dir.equals("in"))
+				if (dir.equals(IN))
 					edgeDir = Dir.IN;
 				long[] dbList = g.getEdges(edgeDir, pair.getKey());
 				if (!Arrays.equals(dbList, pair.getValue()))
@@ -83,7 +96,7 @@ public class GraphlyLoader {
 					public void run() {
 						try {
 							Dir edgeDir = Dir.OUT;
-							if (dir.equals("in"))
+							if (dir.equals(IN))
 								edgeDir = Dir.IN;
 							long init = System.nanoTime();
 							g.addEdges(pair.getKey(), edgeDir, value);

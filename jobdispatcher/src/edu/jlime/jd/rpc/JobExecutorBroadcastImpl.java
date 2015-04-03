@@ -31,11 +31,11 @@ public class JobExecutorBroadcastImpl implements JobExecutorBroadcast {
     this.targetID = targetID;
   }
 
-  public void execute(final JobContainer arg0) throws Exception {
+   public void execute(final JobContainer arg0) throws Exception {
     disp.multiCallAsync( dest, client, targetID, "execute",new Object[] { arg0 });
   }
 
-  public void result(final Object arg0, final UUID arg1, final ClientNode arg2) throws Exception {
+   public void result(final Object arg0, final UUID arg1, final ClientNode arg2) throws Exception {
     disp.multiCallAsync( dest, client, targetID, "result",new Object[] { arg0,arg1,arg2 });
   }
 

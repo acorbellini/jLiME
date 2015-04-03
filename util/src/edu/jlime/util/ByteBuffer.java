@@ -186,11 +186,11 @@ public class ByteBuffer {
 
 	}
 
-	public void putDouble(Double o) {
+	public void putDouble(double o) {
 		putLong(Double.doubleToLongBits(o));
 	}
 
-	public Object getDouble() {
+	public double getDouble() {
 		return Double.longBitsToDouble(getLong());
 	}
 

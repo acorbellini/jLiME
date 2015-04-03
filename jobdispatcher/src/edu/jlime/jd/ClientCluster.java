@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import edu.jlime.core.cluster.BroadcastOutputStream;
 import edu.jlime.core.cluster.MCastStreamResult;
@@ -29,6 +30,8 @@ public class ClientCluster implements Iterable<ClientNode> {
 
 	private ClientNode localPeer;
 
+	private Map<Peer, ClientNode> clis = new ConcurrentHashMap<Peer, ClientNode>();
+
 	public ClientCluster(JobDispatcher jobDispatcher, Peer clientID) {
 		this.disp = jobDispatcher;
 		this.client = clientID;
@@ -38,7 +41,7 @@ public class ClientCluster implements Iterable<ClientNode> {
 
 	public ArrayList<ClientNode> getExecutors() {
 		ArrayList<Peer> execs = new ArrayList<Peer>(disp.getExecutors());
-		ArrayList<ClientNode> execCli = new ArrayList<>();
+		ArrayList<ClientNode> execCli = new ArrayList<>(execs.size());
 		for (Peer jobNode : execs) {
 			execCli.add(getClientFor(jobNode));
 		}
@@ -46,7 +49,16 @@ public class ClientCluster implements Iterable<ClientNode> {
 	}
 
 	public ClientNode getClientFor(Peer jobNode) {
-		return new ClientNode(jobNode, client, disp);
+		ClientNode ret = clis.get(jobNode);
+		if (ret == null)
+			synchronized (jobNode) {
+				ret = clis.get(jobNode);
+				if (ret == null) {
+					ret = new ClientNode(jobNode, client, disp);
+					clis.put(jobNode, ret);
+				}
+			}
+		return ret;
 	}
 
 	public Metrics getMetrics() {
@@ -91,8 +103,6 @@ public class ClientCluster implements Iterable<ClientNode> {
 		return disp.executorsSize();
 	}
 
-	private Random rand = new Random();
-
 	public <R> Map<ClientNode, R> broadcast(Job<R> j) throws Exception {
 		return mcast(getExecutors(), j);
 	}
@@ -109,7 +119,7 @@ public class ClientCluster implements Iterable<ClientNode> {
 		ArrayList<ClientNode> copy = new ArrayList<>(getExecutors());
 		if (copy.isEmpty())
 			throw new Exception("Empty Server List");
-		return copy.get(rand.nextInt(copy.size()));
+		return copy.get((int) (Math.random() * copy.size()));
 
 	}
 

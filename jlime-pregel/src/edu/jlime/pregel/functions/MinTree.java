@@ -6,6 +6,8 @@ import edu.jlime.pregel.client.WorkerContext;
 import edu.jlime.pregel.graph.VertexFunction;
 import edu.jlime.pregel.graph.rpc.Graph;
 import edu.jlime.pregel.worker.PregelMessage;
+import gnu.trove.iterator.TLongIterator;
+import gnu.trove.list.array.TLongArrayList;
 
 class MinTree implements VertexFunction {
 
@@ -43,8 +45,10 @@ class MinTree implements VertexFunction {
 		System.out.println("Visiting: " + v);
 
 		graph.setVal(v, VISITED, Boolean.TRUE);
-		for (Long dest : graph.getOutgoing(v)) {
-			ctx.send(dest, NORMAL);
+		TLongArrayList out = graph.getOutgoing(v);
+		TLongIterator it = out.iterator();
+		while (it.hasNext()) {
+			ctx.send(it.next(), NORMAL);
 		}
 
 		boolean first = true;

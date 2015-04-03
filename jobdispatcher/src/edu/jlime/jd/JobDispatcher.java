@@ -89,6 +89,8 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 
 	private Map<String, Object> globals = new ConcurrentHashMap<>();
 
+	private ClientCluster cliCluster;
+
 	public Map<UUID, ResultManager<?>> getJobMap() {
 		return jobMap;
 	}
@@ -99,6 +101,8 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 		this.rpc = rpc;
 		this.cluster = rpc.getCluster();
 		this.cluster.addChangeListener(this);
+
+		this.cliCluster = new ClientCluster(this, getLocalPeer());
 
 		rpc.registerTarget(JOB_DISPATCHER, this, true);
 
@@ -410,7 +414,7 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 	}
 
 	public ClientCluster getCluster() {
-		return new ClientCluster(this, getLocalPeer());
+		return cliCluster;
 	}
 
 	public ExecEnvironment getEnv() {

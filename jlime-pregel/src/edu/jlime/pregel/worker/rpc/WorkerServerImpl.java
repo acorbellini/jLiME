@@ -30,18 +30,18 @@ import java.lang.Exception;
 public class WorkerServerImpl extends RPCClient implements Worker, Transferible {
 
    UUID getIDCached = null;
-   transient RPCDispatcher local = null;
+   transient Worker local = null;
   public WorkerServerImpl(RPCDispatcher disp, Peer dest, Peer client, String targetID) {
  super(disp, dest, client, targetID);
- local = RPCDispatcher.getLocalDispatcher(dest);
+ RPCDispatcher localRPC = RPCDispatcher.getLocalDispatcher(dest); if(localRPC!=null) 	this.local = (Worker) localRPC.getTarget(targetID);
 }
 
-  public void execute(final UUID arg0)  throws Exception {
+   public void execute(final UUID arg0)  throws Exception {
 if(local!=null) {
 async.execute(new Runnable(){
 public void run(){
 try{
-          ((Worker) local.getTarget(targetID) ).execute(arg0);
+          local.execute(arg0);
 } catch (Exception e) {e.printStackTrace();}}
 });
 ;
@@ -49,9 +49,9 @@ try{
     disp.callAsync(dest, client, targetID, "execute",new Object[] { arg0 });
   }
 
-  public UUID getID()  throws Exception {
+   public UUID getID()  throws Exception {
 if(local!=null) {
-		return ((Worker) local.getTarget(targetID) ).getID();
+		return local.getID();
 }
     if (getIDCached==null){
     	synchronized(this){
@@ -63,30 +63,30 @@ if(local!=null) {
 	return getIDCached;
   }
 
-  public void nextSuperstep(final int arg0, final UUID arg1, final SplitFunction arg2)  throws Exception {
+   public void nextSuperstep(final int arg0, final UUID arg1, final SplitFunction arg2)  throws Exception {
 if(local!=null) {
-((Worker) local.getTarget(targetID) ).nextSuperstep(arg0,arg1,arg2);
+local.nextSuperstep(arg0,arg1,arg2);
 		return;}
     disp.callSync(dest, client, targetID, "nextSuperstep",new Object[] { arg0,arg1,arg2 });
   }
 
-  public void sendMessage(final PregelMessage arg0, final UUID arg1)  throws Exception {
+   public void sendMessage(final PregelMessage arg0, final UUID arg1)  throws Exception {
 if(local!=null) {
-((Worker) local.getTarget(targetID) ).sendMessage(arg0,arg1);
+local.sendMessage(arg0,arg1);
 		return;}
     disp.callSync(dest, client, targetID, "sendMessage",new Object[] { arg0,arg1 });
   }
 
-  public void sendMessages(final List<edu.jlime.pregel.worker.PregelMessage> arg0, final UUID arg1)  throws Exception {
+   public void sendMessages(final List<edu.jlime.pregel.worker.PregelMessage> arg0, final UUID arg1)  throws Exception {
 if(local!=null) {
-((Worker) local.getTarget(targetID) ).sendMessages(arg0,arg1);
+local.sendMessages(arg0,arg1);
 		return;}
     disp.callSync(dest, client, targetID, "sendMessages",new Object[] { arg0,arg1 });
   }
 
-  public void createTask(final UUID arg0, final Peer arg1, final VertexFunction arg2, final PregelConfig arg3)  throws Exception {
+   public void createTask(final UUID arg0, final Peer arg1, final VertexFunction arg2, final PregelConfig arg3)  throws Exception {
 if(local!=null) {
-((Worker) local.getTarget(targetID) ).createTask(arg0,arg1,arg2,arg3);
+local.createTask(arg0,arg1,arg2,arg3);
 		return;}
     disp.callSync(dest, client, targetID, "createTask",new Object[] { arg0,arg1,arg2,arg3 });
   }

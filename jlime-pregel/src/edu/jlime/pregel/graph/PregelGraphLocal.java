@@ -13,6 +13,7 @@ import gnu.trove.decorator.TLongSetDecorator;
 import gnu.trove.iterator.TLongIterator;
 import gnu.trove.iterator.TLongObjectIterator;
 import gnu.trove.list.TLongList;
+import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.map.hash.TLongObjectHashMap;
 
 public class PregelGraphLocal implements Serializable, Graph {
@@ -135,18 +136,11 @@ public class PregelGraphLocal implements Serializable, Graph {
 	 * @see edu.jlime.pregel.graph.PregelGraphAbstract#getOutgoing(Long)
 	 */
 	@Override
-	public Set<Long> getOutgoing(long vertex) {
+	public TLongArrayList getOutgoing(long vertex) {
 		VertexData data = getVertexData(vertex);
 		if (data == null)
-			return new HashSet<Long>();
-
-		HashSet<Long> ret = new HashSet<Long>();
-		TLongList outgoing = data.outgoing();
-		TLongIterator it = outgoing.iterator();
-		while (it.hasNext()) {
-			ret.add(it.next());
-		}
-		return ret;
+			return new TLongArrayList();
+		return data.outgoing();
 	}
 
 	/*
@@ -338,19 +332,13 @@ public class PregelGraphLocal implements Serializable, Graph {
 	 * @see edu.jlime.pregel.graph.PregelGraphAbstract#getIncoming(Long)
 	 */
 	@Override
-	public Set<Long> getIncoming(long v) {
+	public TLongArrayList getIncoming(long v) {
 
 		VertexData data = getVertexData(v);
 		if (data == null)
-			return new HashSet<Long>();
+			return new TLongArrayList();
 
-		HashSet<Long> ret = new HashSet<Long>();
-		TLongList outgoing = data.incoming();
-		TLongIterator it = outgoing.iterator();
-		while (it.hasNext()) {
-			ret.add(it.next());
-		}
-		return ret;
+		return data.incoming();
 		// ByteBuffer from = new ByteBuffer(16);
 		// from.putLong(v);
 		// from.putLong(0);
@@ -476,5 +464,18 @@ public class PregelGraphLocal implements Serializable, Graph {
 		for (long l : value) {
 			createVertex(l);
 		}
+	}
+
+	@Override
+	public double getDouble(long v, String string) throws Exception {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public void setDouble(long v, String string, double currentVal)
+			throws Exception {
+		// TODO Auto-generated method stub
+		
 	}
 }

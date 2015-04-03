@@ -8,7 +8,6 @@ import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
 
-import edu.jlime.core.cluster.Peer;
 import edu.jlime.graphly.util.GraphlyUtil;
 import edu.jlime.graphly.util.Pair;
 import edu.jlime.jd.ClientNode;

@@ -6,6 +6,8 @@ import edu.jlime.pregel.client.WorkerContext;
 import edu.jlime.pregel.graph.VertexFunction;
 import edu.jlime.pregel.graph.rpc.Graph;
 import edu.jlime.pregel.worker.PregelMessage;
+import gnu.trove.iterator.TLongIterator;
+import gnu.trove.list.array.TLongArrayList;
 
 public class DisableDangling implements VertexFunction {
 
@@ -20,8 +22,10 @@ public class DisableDangling implements VertexFunction {
 		}
 
 		if (graph.getOutgoingSize(v) == 0) {
-			for (Long incoming : graph.getIncoming(v)) {
-				ctx.send(incoming, "DELETED");
+			TLongArrayList incoming = graph.getIncoming(v);
+			TLongIterator it = incoming.iterator();
+			while (it.hasNext()) {
+				ctx.send(it.next(), "DELETED");
 			}
 			graph.disable(v);
 		}

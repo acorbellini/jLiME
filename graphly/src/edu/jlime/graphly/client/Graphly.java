@@ -2,16 +2,13 @@ package edu.jlime.graphly.client;
 
 import java.io.Closeable;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableSet;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.log4j.Logger;
 
 import com.google.common.collect.TreeMultimap;
@@ -32,7 +29,6 @@ import edu.jlime.graphly.server.GraphlyCoordinatorFactory;
 import edu.jlime.graphly.traversal.Dir;
 import edu.jlime.graphly.traversal.GraphlyTraversal;
 import edu.jlime.graphly.util.GraphlyUtil;
-import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.JobDispatcher;
 import edu.jlime.pregel.client.PregelClient;
 import edu.jlime.rpc.JLiMEFactory;
@@ -81,6 +77,10 @@ public class Graphly implements Closeable {
 		Peer node = consistenthash.getNode(vertex);
 		GraphlyStoreNodeI graphlyStoreNodeI = mgr.get(node);
 		return graphlyStoreNodeI;
+	}
+
+	public GraphlyGraph getGraph(String graphName) {
+		return new GraphlyGraph(graphName);
 	}
 
 	public GraphlyTraversal v(long... id) {
@@ -195,6 +195,10 @@ public class Graphly implements Closeable {
 
 	public long[] getEdges(final Dir dir, final int max_edges, long... vids)
 			throws Exception {
+
+		if (vids.length == 1) {
+			return getClientFor(vids[0]).getEdges(dir, max_edges, vids);
+		}
 
 		ExecutorService svc = Executors.newCachedThreadPool();
 
@@ -458,10 +462,6 @@ public class Graphly implements Closeable {
 		// svc.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
 	}
 
-	public TLongObjectHashMap<Object> get(String hubKey) {
-		return null;
-	}
-
 	public SubGraph getSubGraph(String string) {
 		return getSubGraph(string, null);
 	}
@@ -528,4 +528,19 @@ public class Graphly implements Closeable {
 		}
 		return mgr.getFirst().getDefault(k);
 	}
+
+	public double getDouble(long v, String k) throws Exception {
+		return getClientFor(v).getDouble(v, k);
+	}
+
+	public void setDefaultDouble(String k, double v) throws Exception {
+		for (GraphlyStoreNodeI gsn : mgr.getAll()) {
+			gsn.setDefaultDouble(k, v);
+		}
+	}
+
+	public void setDouble(long v, String k, double currentVal) throws Exception {
+		getClientFor(v).setDouble(v, k, currentVal);
+	}
+
 }
