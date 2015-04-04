@@ -45,8 +45,8 @@ public class EachStep<T> implements Step {
 		ForkJoinTask<Boolean> fj = new ForkJoinTask<>();
 
 		for (Pair<ClientNode, TLongArrayList> e : mapped) {
-			fj.putJob(new EachJob<T>(s, key, e.getValue().toArray(), forEach),
-					e.getKey());
+			fj.putJob(new EachJob<T>(tr.getGraph(), s, key, e.getValue()
+					.toArray(), forEach), e.getKey());
 		}
 
 		fj.execute(new ResultListener<Boolean, Void>() {

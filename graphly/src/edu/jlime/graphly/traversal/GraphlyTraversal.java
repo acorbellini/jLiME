@@ -12,6 +12,7 @@ import org.apache.log4j.Logger;
 import edu.jlime.core.rpc.RPCDispatcher;
 import edu.jlime.core.rpc.Transferible;
 import edu.jlime.graphly.client.Graphly;
+import edu.jlime.graphly.client.GraphlyGraph;
 import edu.jlime.graphly.rec.CustomStep;
 import edu.jlime.graphly.rec.CustomStep.CustomFunction;
 import edu.jlime.graphly.rec.Repeat;
@@ -24,7 +25,7 @@ import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.JobDispatcher;
 import gnu.trove.set.hash.TLongHashSet;
 
-public class GraphlyTraversal implements Serializable, Transferible {
+public class GraphlyTraversal implements Serializable {
 
 	Map<String, Object> vars = new HashMap<>();
 
@@ -34,12 +35,14 @@ public class GraphlyTraversal implements Serializable, Transferible {
 
 	private TraversalResult currres;
 
-	private transient Graphly g;
+	private GraphlyGraph g;
 
 	private boolean printSteps = false;
 	private long lastexec = -1;
 
-	public GraphlyTraversal(long[] ids, Graphly g) {
+	private String graphID;
+
+	public GraphlyTraversal(long[] ids, GraphlyGraph g) {
 		this.currres = new VertexResult(new TLongHashSet(ids));
 		this.g = g;
 	}
@@ -100,13 +103,7 @@ public class GraphlyTraversal implements Serializable, Transferible {
 		return to(Dir.IN);
 	}
 
-	@Override
-	public void setRPC(RPCDispatcher rpc) {
-		JobDispatcher jd = (JobDispatcher) rpc.getTarget("JD");
-		this.g = (Graphly) jd.getGlobal("graphly");
-	}
-
-	public Graphly getGraph() {
+	public GraphlyGraph getGraph() {
 		return g;
 	}
 

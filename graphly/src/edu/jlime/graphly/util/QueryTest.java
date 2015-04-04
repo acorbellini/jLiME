@@ -1,6 +1,7 @@
 package edu.jlime.graphly.util;
 
 import edu.jlime.graphly.client.Graphly;
+import edu.jlime.graphly.client.GraphlyGraph;
 import edu.jlime.graphly.jobs.MapperFactory;
 import edu.jlime.graphly.traversal.Pregel;
 import edu.jlime.pregel.functions.PageRank;
@@ -23,7 +24,11 @@ public class QueryTest {
 	}
 
 	public static void main(String[] args) throws Exception {
-		Graphly g = Graphly.build(4);
+		Graphly graphly = Graphly.build(4);
+
+		System.out.println(graphly.listGraphs());
+
+		GraphlyGraph g = graphly.getGraph(args[0]);
 
 		int vertexCount = g.getVertexCount();
 		long init = System.currentTimeMillis();
@@ -151,6 +156,6 @@ public class QueryTest {
 		// g.v().as(Pregel.class).execute(new
 		// PageRank(g.getVertexCount())).exec();
 		//
-		g.close();
+		graphly.close();
 	}
 }

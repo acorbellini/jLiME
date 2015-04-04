@@ -11,6 +11,7 @@ import java.util.concurrent.ThreadFactory;
 import org.apache.log4j.Logger;
 
 import edu.jlime.graphly.client.Graphly;
+import edu.jlime.graphly.client.GraphlyGraph;
 import edu.jlime.graphly.client.SubGraph;
 import edu.jlime.graphly.traversal.Dir;
 
@@ -28,7 +29,7 @@ class HITSRepeat implements Repeat<long[]> {
 	}
 
 	@Override
-	public Object exec(long[] before, Graphly g) throws Exception {
+	public Object exec(long[] before, GraphlyGraph g) throws Exception {
 		if (exec == null) {
 			synchronized (this) {
 				if (exec == null)

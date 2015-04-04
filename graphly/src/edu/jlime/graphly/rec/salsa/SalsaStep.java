@@ -5,6 +5,7 @@ import java.util.Arrays;
 import org.apache.log4j.Logger;
 
 import edu.jlime.graphly.client.Graphly;
+import edu.jlime.graphly.client.GraphlyGraph;
 import edu.jlime.graphly.rec.CustomStep.CustomFunction;
 import edu.jlime.graphly.rec.MinEdgeFilter;
 import edu.jlime.graphly.traversal.Dir;
@@ -32,7 +33,7 @@ public class SalsaStep implements CustomFunction {
 		Arrays.sort(subgraph);
 		log.info("Executing Salsa Step on " + subgraph.length);
 
-		Graphly g = tr.getGraph();
+		GraphlyGraph g = tr.getGraph();
 
 		log.info("Filtering authority side");
 		TLongArrayList authSet = g.v(subgraph)

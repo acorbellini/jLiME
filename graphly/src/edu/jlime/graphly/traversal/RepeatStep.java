@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.log4j.Logger;
 
 import edu.jlime.graphly.client.Graphly;
+import edu.jlime.graphly.client.GraphlyGraph;
 import edu.jlime.graphly.jobs.Mapper;
 import edu.jlime.graphly.rec.Repeat;
 import edu.jlime.graphly.util.Pair;
@@ -23,10 +24,12 @@ public class RepeatStep implements Step {
 
 		private Repeat<long[]> func;
 		private long[] value;
+		private GraphlyGraph g;
 
-		public RepeatJob(Repeat<long[]> rfunc, long[] ls) {
+		public RepeatJob(GraphlyGraph g, Repeat<long[]> rfunc, long[] ls) {
 			this.func = rfunc;
 			this.value = ls;
+			this.g = g;
 		}
 
 		@Override
@@ -34,12 +37,12 @@ public class RepeatStep implements Step {
 			// Logger log = Logger.getLogger(RepeatJob.class);
 			// if (log.isDebugEnabled())
 			// log.debug("Executing Repeat job");
-			func.exec(value, (Graphly) env.getGlobal("graphly"));
+			func.exec(value, g);
 		}
 	}
 
 	public interface RepeatSync<T> {
-		public void exec(T before, Graphly g) throws Exception;
+		public void exec(T before, GraphlyGraph g) throws Exception;
 	}
 
 	private int steps;
@@ -78,8 +81,8 @@ public class RepeatStep implements Step {
 						+ ". Executing " + div.size() + " jobs.");
 				ForkJoinTask<Boolean> fj = new ForkJoinTask<>();
 				for (Pair<ClientNode, TLongArrayList> e : div) {
-					fj.putJob(new RepeatJob(rfunc, e.getValue().toArray()),
-							e.getKey());
+					fj.putJob(new RepeatJob(tr.getGraph(), rfunc, e.getValue()
+							.toArray()), e.getKey());
 				}
 
 				fj.execute(new ResultListener<Boolean, Boolean>() {

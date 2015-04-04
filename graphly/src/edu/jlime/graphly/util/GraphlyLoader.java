@@ -11,6 +11,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import edu.jlime.graphly.client.Graphly;
+import edu.jlime.graphly.client.GraphlyGraph;
 import edu.jlime.graphly.traversal.Dir;
 
 public class GraphlyLoader {
@@ -21,25 +22,29 @@ public class GraphlyLoader {
 	public static void main(String[] args) throws Exception {
 		String action = args[0];
 		String servers = args[1];
-		String sep = args[2];
-		String fileIn = args[3];
-		String fileOut = args[4];
+		String graph = args[2];
+		String sep = args[3];
+		String fileIn = args[4];
+		String fileOut = args[5];
+		
 		if (action.equals("validate")) {
-			new GraphlyLoader().validate(Integer.valueOf(servers), fileIn, sep,
-					IN);
-			new GraphlyLoader().validate(Integer.valueOf(servers), fileOut,
-					sep, OUT);
+			new GraphlyLoader().validate(Integer.valueOf(servers), graph,
+					fileIn, sep, IN);
+			new GraphlyLoader().validate(Integer.valueOf(servers), graph,
+					fileOut, sep, OUT);
 		} else {
-			new GraphlyLoader().load(Integer.valueOf(servers), fileIn, sep, IN);
-			new GraphlyLoader().load(Integer.valueOf(servers), fileOut, sep,
-					OUT);
+			new GraphlyLoader().load(Integer.valueOf(servers), graph, fileIn,
+					sep, IN);
+			new GraphlyLoader().load(Integer.valueOf(servers), graph, fileOut,
+					sep, OUT);
 
 		}
 	}
 
-	private void validate(Integer servers, String file, String sep, String dir)
-			throws Exception, IOException {
-		Graphly g = Graphly.build(servers);
+	private void validate(Integer servers, String graph, String file,
+			String sep, String dir) throws Exception, IOException {
+		Graphly graphly = Graphly.build(servers);
+		GraphlyGraph g = graphly.getGraph(graph);
 		Iterator<Pair<Long, long[]>> adj = GraphlySintetic.read(file, sep);
 		int cont = 0;
 		int last = -1;
@@ -63,12 +68,15 @@ public class GraphlyLoader {
 					throw new Exception(edgeDir + " edges badly loaded.");
 			}
 		}
-		g.close();
+		graphly.close();
 	}
 
-	private void load(Integer min, String fname, String sep, final String dir)
-			throws Exception, IOException, InterruptedException {
-		final Graphly g = Graphly.build(min);
+	private void load(Integer min, String graph, String fname, String sep,
+			final String dir) throws Exception, IOException,
+			InterruptedException {
+		final Graphly graphly = Graphly.build(min);
+
+		final GraphlyGraph g = graphly.getGraph(graph);
 
 		int cont = 0;
 		final AtomicInteger contProm = new AtomicInteger(0);
@@ -118,6 +126,6 @@ public class GraphlyLoader {
 
 		System.out.println(sum.get() / contProm.get());
 
-		g.close();
+		graphly.close();
 	}
 }

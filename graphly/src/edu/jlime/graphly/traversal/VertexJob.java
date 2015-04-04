@@ -3,6 +3,7 @@ package edu.jlime.graphly.traversal;
 import org.apache.log4j.Logger;
 
 import edu.jlime.graphly.client.Graphly;
+import edu.jlime.graphly.client.GraphlyGraph;
 import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.Job;
@@ -17,15 +18,17 @@ public class VertexJob implements Job<long[]> {
 
 	private int max_edges;
 
-	public VertexJob(Dir dir, int max_edges, long[] data) {
+	private GraphlyGraph g;
+
+	public VertexJob(GraphlyGraph g, Dir dir, int max_edges, long[] data) {
 		this.dir = dir;
 		this.data = data;
 		this.max_edges = max_edges;
+		this.g = g;
 	}
 
 	@Override
 	public long[] call(JobContext ctx, ClientNode peer) throws Exception {
-		Graphly g = (Graphly) ctx.getGlobal("graphly");
 		Logger log = Logger.getLogger(VertexJob.class);
 		if (log.isDebugEnabled())
 			log.debug("Vertex Job obtaining " + data.length + ".");

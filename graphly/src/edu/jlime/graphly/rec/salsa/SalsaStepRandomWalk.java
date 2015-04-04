@@ -1,6 +1,7 @@
 package edu.jlime.graphly.rec.salsa;
 
 import edu.jlime.graphly.client.Graphly;
+import edu.jlime.graphly.client.GraphlyGraph;
 import edu.jlime.graphly.rec.CustomStep.CustomFunction;
 import edu.jlime.graphly.rec.MinEdgeFilter;
 import edu.jlime.graphly.rec.Recommendation;
@@ -27,7 +28,7 @@ public class SalsaStepRandomWalk implements CustomFunction {
 			throws Exception {
 		long[] res = before.vertices().toArray();
 
-		Graphly g = tr.getGraph();
+		GraphlyGraph g = tr.getGraph();
 
 		long[] authSet = g.v(res).filter(new MinEdgeFilter(Dir.IN, 1, res))
 				.exec().vertices().toArray();

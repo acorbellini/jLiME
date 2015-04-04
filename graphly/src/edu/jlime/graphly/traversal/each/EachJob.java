@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.jlime.graphly.client.Graphly;
+import edu.jlime.graphly.client.GraphlyGraph;
 import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.RunJob;
@@ -15,19 +16,21 @@ public class EachJob<T> extends RunJob {
 	private int steps;
 	private String k;
 	private long[] vids;
+	private GraphlyGraph g;
 
-	public EachJob(int steps, String key, long[] vids, ForEach<T> fe) {
+	public EachJob(GraphlyGraph g, int steps, String key, long[] vids,
+			ForEach<T> fe) {
 		this.vids = vids;
 		this.fe = fe;
 		this.steps = steps;
 		this.k = key;
+		this.g = g;
 	}
 
 	@Override
 	public void run(JobContext env, ClientNode origin) throws Exception {
 		for (long vid : vids) {
 			List<T> subres = new ArrayList<>();
-			Graphly g = (Graphly) env.getGlobal("graphly");
 			for (int i = 0; i < steps; i++) {
 				T feRes = fe.exec(vid, g);
 				if (feRes != null)

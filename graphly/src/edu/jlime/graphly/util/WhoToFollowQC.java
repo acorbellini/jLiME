@@ -1,13 +1,15 @@
 package edu.jlime.graphly.util;
 
 import edu.jlime.graphly.client.Graphly;
+import edu.jlime.graphly.client.GraphlyGraph;
 import edu.jlime.graphly.jobs.Mapper;
 import edu.jlime.graphly.rec.Recommendation;
 
 public class WhoToFollowQC implements QueryContainer {
 
 	@Override
-	public void run(Graphly g, long[] users, Mapper mapper) throws Exception {
+	public void run(GraphlyGraph g, long[] users, Mapper mapper)
+			throws Exception {
 
 		int steps = 200;
 		if (users.length > 10)

@@ -5,6 +5,7 @@ import java.util.Arrays;
 import org.apache.log4j.Logger;
 
 import edu.jlime.graphly.client.Graphly;
+import edu.jlime.graphly.client.GraphlyGraph;
 import edu.jlime.graphly.rec.CustomStep.CustomFunction;
 import edu.jlime.graphly.traversal.GraphlyTraversal;
 import edu.jlime.graphly.traversal.TraversalResult;
@@ -30,7 +31,7 @@ final class HITSCustomStep implements CustomFunction {
 		long[] subgraph = before.vertices().toArray();
 		log.info("Executing HITS on " + subgraph.length);
 		Arrays.sort(subgraph);
-		Graphly g = tr.getGraph();
+		GraphlyGraph g = tr.getGraph();
 		return g.v(subgraph)
 				.set("mapper", tr.get("mapper"))
 				.repeat(steps, new HITSRepeat(auth, hub, subgraph),

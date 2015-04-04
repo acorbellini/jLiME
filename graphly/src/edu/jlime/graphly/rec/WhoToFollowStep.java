@@ -1,6 +1,7 @@
 package edu.jlime.graphly.rec;
 
 import edu.jlime.graphly.client.Graphly;
+import edu.jlime.graphly.client.GraphlyGraph;
 import edu.jlime.graphly.rec.CustomStep.CustomFunction;
 import edu.jlime.graphly.traversal.CountResult;
 import edu.jlime.graphly.traversal.GraphlyTraversal;
@@ -27,7 +28,7 @@ public class WhoToFollowStep implements CustomFunction {
 	public TraversalResult execute(TraversalResult before, GraphlyTraversal tr)
 			throws Exception {
 		long[] target = before.vertices().toArray();
-		Graphly g = tr.getGraph();
+		GraphlyGraph g = tr.getGraph();
 		g.v(target).set("mapper", tr.get("mapper")).as(Recommendation.class)
 				.salsa(auth, hub, steps).exec();
 		TLongObjectHashMap<Object> res = g.collect(auth, 100, target);

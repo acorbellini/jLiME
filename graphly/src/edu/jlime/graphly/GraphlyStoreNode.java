@@ -8,12 +8,14 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableSet;
 import java.util.Properties;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
@@ -45,28 +47,29 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	private static byte ADJACENCY = 0x1;
 	private static byte VERTEX_PROP = 0x2;
 	private static byte EDGE_PROP = 0x3;
+	private static byte GRAPH = 0x3;
 
 	Logger log = Logger.getLogger(GraphlyStoreNode.class);
 
 	private static class InMemoryGraphProperties {
-		ConcurrentHashMap<Long, Map<String, Object>> props = new ConcurrentHashMap<>();
+		ConcurrentHashMap<String, Map<String, Object>> props = new ConcurrentHashMap<>();
 
-		public void put(long vid, String k, Object val) {
+		public void put(String graph, long vid, String k, Object val) {
 			Map<String, Object> map = props.get(vid);
 			if (map == null) {
 				synchronized (props) {
 					map = props.get(vid);
 					if (map == null) {
 						map = new ConcurrentHashMap<String, Object>();
-						props.put(vid, map);
+						props.put(graph + "." + vid, map);
 					}
 				}
 			}
 			map.put(k, val);
 		}
 
-		public Object get(long vid, String k) {
-			Map<String, Object> map = props.get(vid);
+		public Object get(String graph, long vid, String k) {
+			Map<String, Object> map = props.get(graph + "." + vid);
 			if (map != null) {
 				return map.get(k);
 			}
@@ -82,6 +85,9 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	// private Graph graph;
 	private LocalStore store;
 
+	Cache<String, Boolean> graph_cache = CacheBuilder.newBuilder()
+			.maximumSize(5000).build();
+
 	Cache<Long, long[]> adj_cache = CacheBuilder.newBuilder().maximumSize(5000)
 			.build();
 
@@ -92,7 +98,7 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	private List<Integer> ranges = new ArrayList<>();
 	private InMemoryGraphProperties props = new InMemoryGraphProperties();
 
-	private Map<Long, Map<String, Object>> temps = new ConcurrentHashMap<>();
+	private Map<String, Map<Long, Map<String, Object>>> temps = new ConcurrentHashMap<>();
 
 	// Store store;
 
@@ -144,39 +150,66 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	 * adjacencygraph.get.GetType, java.lang.Long, long[])
 	 */
 	@Override
-	public void addEdges(long k, Dir type, long[] list) throws Exception {
+	public void addEdges(String graph, long k, Dir type, long[] list)
+			throws Exception {
 		long id = k;
 
 		if (type.equals(Dir.IN))
 			id = -id - 1;
 
-		store.store(buildAdjacencyKey(id),
+		store.store(buildAdjacencyKey(graph, id),
 				DataTypeUtils.longArrayToByteArray(list));
 
-		addVertex(k, "");
+		addVertex(graph, k, "");
+
+		addGraph(graph);
 		// for (long l : list) {
 		// addVertex(l, "");
 		// }
 	}
 
-	private byte[] buildAdjacencyKey(long id) {
+	private void addGraph(final String graph2) throws ExecutionException {
+		graph_cache.get(graph2, new Callable<Boolean>() {
+			@Override
+			public Boolean call() throws Exception {
+				byte[] id = buildGraphKey(graph2);
+				byte[] res = store.load(id);
+				if (res == null)
+					store.store(id, graph2.getBytes());
+				return true;
+			}
+		});
+	}
+
+	private static byte[] buildGraphKey(String graph) {
+		ByteBuffer buff = new ByteBuffer(1 + 8);
+		buff.put(GRAPH);
+		buff.putString(graph);
+		return buff.build();
+	}
+
+	private static byte[] buildAdjacencyKey(String graph, long id) {
 		ByteBuffer buff = new ByteBuffer(1 + 8);
 		buff.put(ADJACENCY);
+		buff.putString(graph);
 		buff.putRawByteArray(DataTypeUtils.longToByteArrayOrdered(id));
 		return buff.build();
 	}
 
-	private byte[] buildVertexKey(long id) {
+	private static byte[] buildVertexKey(String graph, long id) {
 		ByteBuffer buff = new ByteBuffer(1 + 8);
 		buff.put(VERTEX);
+		buff.putString(graph);
 		buff.putRawByteArray(DataTypeUtils.longToByteArrayOrdered(id));
 		return buff.build();
 	}
 
-	private byte[] buildVertexPropertyKey(long id, String key) {
+	private static byte[] buildVertexPropertyKey(String graph, long id,
+			String key) {
 		byte[] b = key.getBytes();
 		ByteBuffer buff = new ByteBuffer(1 + 8 + b.length);
 		buff.put(VERTEX_PROP);
+		buff.putString(graph);
 		buff.putRawByteArray(DataTypeUtils.longToByteArrayOrdered(id));
 		buff.putRawByteArray(b);
 		return buff.build();
@@ -191,15 +224,15 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	 * adjacencygraph.get.GetType, java.lang.Long)
 	 */
 	@Override
-	public long[] getEdges(Dir type, int max_edges, long[] id)
+	public long[] getEdges(String graph, Dir type, int max_edges, long[] id)
 			throws ExecutionException {
 		if (id.length == 1) {
-			return getEdges(type, id[0]);
+			return getEdges(graph, type, id[0]);
 		}
 
 		TLongArrayList ret = new TLongArrayList();
 		for (long l : id) {
-			long[] edges = getEdges(type, l);
+			long[] edges = getEdges(graph, type, l);
 			if (edges.length > max_edges && max_edges > 0) {
 				int in = 0;
 
@@ -220,27 +253,29 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 
 	}
 
-	private long[] getEdges(Dir type, long id) throws ExecutionException {
+	private long[] getEdges(String graph, Dir type, long id)
+			throws ExecutionException {
 		if (type.equals(Dir.BOTH)) {
 			TLongHashSet list = new TLongHashSet();
-			list.addAll(getEdges0(id));
-			list.addAll(getEdges0(-id - 1));
+			list.addAll(getEdges0(graph, id));
+			list.addAll(getEdges0(graph, -id - 1));
 			return list.toArray();
 		}
 
 		if (type.equals(Dir.IN))
 			id = -id - 1;
 
-		return getEdges0(id);
+		return getEdges0(graph, id);
 	}
 
-	private long[] getEdges0(final long id) throws ExecutionException {
+	private long[] getEdges0(final String graph, final long id)
+			throws ExecutionException {
 		return adj_cache.get(id, new Callable<long[]>() {
 			@Override
 			public long[] call() throws Exception {
 				byte[] array;
 				try {
-					array = store.load(buildAdjacencyKey(id));
+					array = store.load(buildAdjacencyKey(graph, id));
 					if (array != null) {
 						long[] byteArrayToLongArray = DataTypeUtils
 								.byteArrayToLongArray(array);
@@ -263,8 +298,9 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	 * java.lang.String, java.lang.Object)
 	 */
 	@Override
-	public void setProperty(long vid, String k, Object val) throws Exception {
-		props.put(vid, k, val);
+	public void setProperty(String graph, long vid, String k, Object val)
+			throws Exception {
+		props.put(graph, vid, k, val);
 	}
 
 	/*
@@ -274,16 +310,18 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	 * java.lang.String)
 	 */
 	@Override
-	public Object getProperty(long vid, String k) throws Exception {
-		return props.get(vid, k);
+	public Object getProperty(String graph, long vid, String k)
+			throws Exception {
+		return props.get(graph, vid, k);
 	}
 
 	@Override
-	public void addVertex(final long id, String label) throws Exception {
+	public void addVertex(final String graph, final long id, String label)
+			throws Exception {
 		vertex_cache.get(id, new Callable<Boolean>() {
 			@Override
 			public Boolean call() throws Exception {
-				byte[] vk = buildVertexKey(id);
+				byte[] vk = buildVertexKey(graph, id);
 				if (store.load(vk) == null)
 					store.store(vk, DataTypeUtils.longToByteArray(id));
 				return true;
@@ -292,32 +330,32 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	}
 
 	@Override
-	public String getLabel(long id) throws Exception {
+	public String getLabel(String graph, long id) throws Exception {
 		return null;
 	}
 
 	@Override
-	public void addEdge(long orig, long dest, String label, Object[] keyValues)
-			throws Exception {
+	public void addEdge(String graph, long orig, long dest, String label,
+			Object[] keyValues) throws Exception {
 	}
 
 	@Override
-	public void removeVertex(long id) throws Exception {
+	public void removeVertex(String graph, long id) throws Exception {
 	}
 
 	@Override
-	public void addInEdgePlaceholder(long id2, long id, String label)
-			throws Exception {
+	public void addInEdgePlaceholder(String graph, long id2, long id,
+			String label) throws Exception {
 	}
 
 	Semaphore sem = new Semaphore(2);
 	private Map<String, Object> defaults = new ConcurrentHashMap<>();
-	private TLongObjectHashMap<TObjectDoubleHashMap<String>> doubleMap = new TLongObjectHashMap<>();
+	private Map<String, TObjectDoubleHashMap<String>> doubleMap = new ConcurrentHashMap<>();
 	private TObjectDoubleHashMap<String> defaultDoubleMap = new TObjectDoubleHashMap<>();
 
 	@Override
-	public GraphlyCount countEdges(Dir dir, int max_edges, long[] vids)
-			throws Exception {
+	public GraphlyCount countEdges(String graph, Dir dir, int max_edges,
+			long[] vids) throws Exception {
 		log.info("Counting edges in dir " + dir + " with max " + max_edges
 				+ " and vertices " + vids.length + ".");
 		TLongIntHashMap map = new TLongIntHashMap();
@@ -327,7 +365,7 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 		int cont = 0;
 		synchronized (this) {
 			for (long l : vids) {
-				long[] curr = getEdges(dir, max_edges, new long[] { l });
+				long[] curr = getEdges(graph, dir, max_edges, new long[] { l });
 				res[cont++] = curr;
 
 			}
@@ -344,8 +382,9 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	}
 
 	@Override
-	public long getRandomEdge(long v, long[] subset, Dir d) throws Exception {
-		long[] edges = getEdges(d, v);
+	public long getRandomEdge(String graph, long v, long[] subset, Dir d)
+			throws Exception {
+		long[] edges = getEdges(graph, d, v);
 		if (edges == null || edges.length == 0)
 			return -1;
 
@@ -362,24 +401,24 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	}
 
 	@Override
-	public void setProperties(String to, TLongObjectHashMap<Object> m)
-			throws Exception {
+	public void setProperties(String graph, String to,
+			TLongObjectHashMap<Object> m) throws Exception {
 		TLongObjectIterator<Object> it = m.iterator();
 		while (it.hasNext()) {
 			it.advance();
-			setProperty(it.key(), to, it.value());
+			setProperty(graph, it.key(), to, it.value());
 		}
 	}
 
 	@Override
-	public TLongObjectHashMap<Object> getProperties(String k, int top,
-			TLongArrayList list) throws Exception {
+	public TLongObjectHashMap<Object> getProperties(String graph, String k,
+			int top, TLongArrayList list) throws Exception {
 		if (top <= 0) {
 			TLongObjectHashMap<Object> res = new TLongObjectHashMap<>();
 			TLongIterator it = list.iterator();
 			while (it.hasNext()) {
 				long vid = it.next();
-				res.put(vid, getProperty(vid, k));
+				res.put(vid, getProperty(graph, vid, k));
 			}
 			return res;
 		}
@@ -389,7 +428,7 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 		TLongIterator it = list.iterator();
 		while (it.hasNext()) {
 			long vid = it.next();
-			Comparable value = (Comparable) getProperty(vid, k);
+			Comparable value = (Comparable) getProperty(graph, vid, k);
 			if (value != null) {
 				if (sorted.size() < top) {
 					sorted.put(value, vid);
@@ -413,14 +452,15 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	}
 
 	@Override
-	public int getEdgeCount(long vid, Dir dir, long[] among) throws Exception {
+	public int getEdgeCount(String graph, long vid, Dir dir, long[] among)
+			throws Exception {
 		if (log.isDebugEnabled())
 			log.debug("Getting edge count of vid among " + among.length);
 
 		if (among == null || among.length == 0)
-			return getEdges(dir, vid).length;
+			return getEdges(graph, dir, vid).length;
 
-		long[] curr = getEdges(dir, vid);
+		long[] curr = getEdges(graph, dir, vid);
 
 		if (log.isDebugEnabled())
 			log.debug("Intersecting " + among.length + " curr " + curr.length);
@@ -435,39 +475,52 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	}
 
 	@Override
-	public void setEdgeProperty(long v1, long v2, String k, Object val,
-			String... labels) throws Exception {
+	public void setEdgeProperty(String graph, long v1, long v2, String k,
+			Object val, String... labels) throws Exception {
 	}
 
 	@Override
-	public Object getEdgeProperty(long v1, long v2, String k, String... labels)
-			throws Exception {
+	public Object getEdgeProperty(String graph, long v1, long v2, String k,
+			String... labels) throws Exception {
 		return null;
 	}
 
 	@Override
-	public void setTempProperties(HashMap<Long, Map<String, Object>> temps)
-			throws Exception {
-		this.temps.putAll(temps);
-	}
-
-	@Override
-	public void commitUpdates(String[] k) throws Exception {
-		for (Entry<Long, Map<String, Object>> e : temps.entrySet()) {
-			long vid = e.getKey();
-			Map<String, Object> map = e.getValue();
-			for (String temp : k) {
-				Object val = map.get(temp);
-				if (val != null)
-					setProperty(vid, temp, val);
+	public void setTempProperties(String graph,
+			HashMap<Long, Map<String, Object>> temps) throws Exception {
+		Map<Long, Map<String, Object>> map = this.temps.get(graph);
+		if (map == null) {
+			synchronized (temps) {
+				map = this.temps.get(graph);
+				if (map == null) {
+					map = new ConcurrentHashMap<Long, Map<String, Object>>();
+					this.temps.put(graph, map);
+				}
 			}
 		}
-		temps.clear();
+		map.putAll(temps);
 	}
 
 	@Override
-	public Map<Long, Map<String, Object>> getProperties(long[] array,
-			String... k) throws Exception {
+	public void commitUpdates(String graph, String[] k) throws Exception {
+		Map<Long, Map<String, Object>> map = this.temps.get(graph);
+		if (map != null) {
+			for (Entry<Long, Map<String, Object>> e : map.entrySet()) {
+				long vid = e.getKey();
+				Map<String, Object> submap = e.getValue();
+				for (String temp : k) {
+					Object val = submap.get(temp);
+					if (val != null)
+						setProperty(graph, vid, temp, val);
+				}
+			}
+			map.clear();
+		}
+	}
+
+	@Override
+	public Map<Long, Map<String, Object>> getProperties(String graph,
+			long[] array, String... k) throws Exception {
 		Map<Long, Map<String, Object>> ret = new HashMap<>();
 		for (long l : array) {
 			for (String propKey : k) {
@@ -476,22 +529,24 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 					map = new HashMap<>();
 					ret.put(l, map);
 				}
-				map.put(propKey, props.get(l, propKey));
+				map.put(propKey, props.get(graph, l, propKey));
 			}
 		}
 		return ret;
 	}
 
 	@Override
-	public int getVertexCount() throws Exception {
-		return store.count(buildVertexKey(0), buildVertexKey(Long.MAX_VALUE));
+	public int getVertexCount(String graph) throws Exception {
+		return store.count(buildVertexKey(graph, 0),
+				buildVertexKey(graph, Long.MAX_VALUE));
 	}
 
 	@Override
-	public TLongArrayList getVertices(long from, int lenght,
+	public TLongArrayList getVertices(String graph, long from, int lenght,
 			boolean includeFirst) throws Exception {
 		List<byte[]> list = store.getRangeOfLength(includeFirst,
-				buildVertexKey(from), buildVertexKey(Long.MAX_VALUE), lenght);
+				buildVertexKey(graph, from),
+				buildVertexKey(graph, Long.MAX_VALUE), lenght);
 		TLongArrayList ret = new TLongArrayList(lenght);
 		for (byte[] bs : list)
 			ret.add(DataTypeUtils.byteArrayToLong(bs));
@@ -499,43 +554,73 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	}
 
 	@Override
-	public Object getDefault(String k) throws Exception {
-		return defaults.get(k);
+	public Object getDefault(String graph, String k) throws Exception {
+		return defaults.get(graph + "." + k);
 	}
 
 	@Override
-	public void setDefault(String k, Object v) throws Exception {
-		defaults.put(k, v);
+	public void setDefault(String graph, String k, Object v) throws Exception {
+		defaults.put(graph + "." + k, v);
 	}
 
 	@Override
-	public synchronized double getDouble(long v, String k) throws Exception {
-		TObjectDoubleHashMap<String> tObjectDoubleHashMap = doubleMap.get(v);
+	public synchronized double getDouble(String graph, long v, String k)
+			throws Exception {
+		TObjectDoubleHashMap<String> tObjectDoubleHashMap = doubleMap.get(graph
+				+ "." + v);
 		if (tObjectDoubleHashMap == null)
-			return getDefaultDouble(k);
+			return getDefaultDouble(graph, k);
 		return tObjectDoubleHashMap.get(k);
 	}
 
 	@Override
-	public synchronized void setDouble(long v, String k, double currentVal)
+	public void setDouble(String graph, long v, String k, double currentVal)
 			throws Exception {
-		TObjectDoubleHashMap<String> map = doubleMap.get(v);
+		TObjectDoubleHashMap<String> map = doubleMap.get(graph + "." + v);
 		if (map == null) {
-			map = new TObjectDoubleHashMap<String>();
-			doubleMap.put(v, map);
+			synchronized (doubleMap) {
+				map = doubleMap.get(graph + "." + v);
+				if (map == null) {
+					map = new TObjectDoubleHashMap<String>();
+					doubleMap.put(graph + "." + v, map);
+				}
+			}
+
 		}
 		map.put(k, currentVal);
 	}
 
 	@Override
-	public void setDefaultDouble(String k, double v) throws Exception {
-		defaultDoubleMap.put(k, v);
-
+	public void setDefaultDouble(String graph, String k, double v)
+			throws Exception {
+		defaultDoubleMap.put(graph + "." + k, v);
 	}
 
 	@Override
-	public double getDefaultDouble(String k) throws Exception {
-		return defaultDoubleMap.get(k);
+	public double getDefaultDouble(String graph, String k) throws Exception {
+		return defaultDoubleMap.get(graph + "." + k);
+	}
+
+	@Override
+	public Set<String> getGraphs() throws Exception {
+		HashSet<String> ret = new HashSet<>();
+
+		ByteBuffer from = new ByteBuffer(2);
+		from.put(GRAPH);
+		from.put((byte) 0);
+
+		ByteBuffer to = new ByteBuffer(2);
+		to.put(GRAPH);
+		to.put((byte) 0xF);
+
+		List<byte[]> res = store.getRangeOfLength(true, from.build(),
+				to.build(), Integer.MAX_VALUE);
+
+		for (byte[] bs : res) {
+			ret.add(new String(bs));
+		}
+
+		return ret;
 	}
 
 }
