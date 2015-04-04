@@ -1,27 +1,26 @@
 package edu.jlime.jd.rpc;
 
-
-		
-import edu.jlime.core.cluster.Peer;
-import edu.jlime.core.rpc.RPCDispatcher;
-import edu.jlime.core.rpc.ClientFactory;
-
 import java.util.List;
 
-public class JobExecutorFactory implements ClientFactory<JobExecutor,JobExecutorBroadcast>{
+import edu.jlime.core.cluster.Peer;
+import edu.jlime.core.rpc.ClientFactory;
+import edu.jlime.core.rpc.RPCDispatcher;
+
+public class JobExecutorFactory implements
+		ClientFactory<JobExecutor, JobExecutorBroadcast> {
 	private RPCDispatcher rpc;
 	private String target;
 
-	public JobExecutorFactory(RPCDispatcher rpc, String target){
+	public JobExecutorFactory(RPCDispatcher rpc, String target) {
 		this.rpc = rpc;
 		this.target = target;
 	}
 
-	public JobExecutorBroadcast getBroadcast(List<Peer> to, Peer client){
+	public JobExecutorBroadcast getBroadcast(List<Peer> to, Peer client) {
 		return new JobExecutorBroadcastImpl(rpc, to, client, target);
 	}
 
-	public JobExecutor get(Peer to, Peer client){
+	public JobExecutor get(Peer to, Peer client) {
 		return new JobExecutorServerImpl(rpc, to, client, target);
 	}
 }

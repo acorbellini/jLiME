@@ -8,7 +8,6 @@ import edu.jlime.pregel.client.WorkerContext;
 import edu.jlime.pregel.graph.VertexFunction;
 import edu.jlime.pregel.graph.rpc.Graph;
 import edu.jlime.pregel.worker.PregelMessage;
-import edu.jlime.util.ByteBuffer;
 import edu.jlime.util.DataTypeUtils;
 import gnu.trove.iterator.TLongIterator;
 

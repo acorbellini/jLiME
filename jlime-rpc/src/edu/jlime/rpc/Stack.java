@@ -12,7 +12,6 @@ import edu.jlime.rpc.data.DataProcessor;
 import edu.jlime.rpc.data.DataProvider;
 import edu.jlime.rpc.discovery.MultiCastDiscovery;
 import edu.jlime.rpc.fd.PingFailureDetection;
-import edu.jlime.rpc.fr.Acknowledge;
 import edu.jlime.rpc.fr.NACK;
 import edu.jlime.rpc.frag.Fragmenter;
 import edu.jlime.rpc.message.StackElement;

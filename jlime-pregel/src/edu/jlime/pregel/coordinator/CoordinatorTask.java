@@ -25,8 +25,6 @@ import edu.jlime.pregel.worker.WorkerServer;
 import edu.jlime.pregel.worker.rpc.Worker;
 import edu.jlime.pregel.worker.rpc.WorkerBroadcast;
 import edu.jlime.pregel.worker.rpc.WorkerFactory;
-import gnu.trove.decorator.TLongSetDecorator;
-import gnu.trove.set.hash.TLongHashSet;
 
 public class CoordinatorTask {
 	UUID taskID = UUID.randomUUID();

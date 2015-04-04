@@ -181,7 +181,7 @@ public class GraphlyServer {
 		jobs.stop();
 
 		rpc.stop();
-		
+
 		pregel_worker.stop();
 
 		if (coord != null)

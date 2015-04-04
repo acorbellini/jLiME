@@ -3,7 +3,6 @@ package edu.jlime.graphly.traversal.each;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.client.GraphlyGraph;
 import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.client.JobContext;

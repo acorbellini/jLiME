@@ -45,11 +45,9 @@ public class MultiGetQuery extends
 		TIntObjectHashMap<int[]> ret = new TIntObjectHashMap<>();
 		for (int i : data) {
 			TIntHashSet toadd = new TIntHashSet();
-			if (type.equals(Dir.IN)
-					|| type.equals(Dir.BOTH))
+			if (type.equals(Dir.IN) || type.equals(Dir.BOTH))
 				toadd.addAll(getRes.get(-i));
-			if (type.equals(Dir.OUT)
-					|| type.equals(Dir.BOTH))
+			if (type.equals(Dir.OUT) || type.equals(Dir.BOTH))
 				toadd.addAll(getRes.get(i));
 			ret.put(i, toadd.toArray());
 		}

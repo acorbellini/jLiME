@@ -1,6 +1,5 @@
 package edu.jlime.graphly.traversal;
 
-import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.client.GraphlyGraph;
 import gnu.trove.map.hash.TLongObjectHashMap;
 

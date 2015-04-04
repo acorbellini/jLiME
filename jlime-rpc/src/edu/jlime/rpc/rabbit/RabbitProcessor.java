@@ -3,7 +3,6 @@ package edu.jlime.rpc.rabbit;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,9 +13,7 @@ import org.apache.log4j.Logger;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
-import com.rabbitmq.client.ConsumerCancelledException;
 import com.rabbitmq.client.QueueingConsumer;
-import com.rabbitmq.client.ShutdownSignalException;
 
 import edu.jlime.core.transport.Address;
 import edu.jlime.metrics.metric.Metrics;
@@ -83,7 +80,7 @@ public class RabbitProcessor extends MessageProcessor implements
 			throws IOException {
 		ConnectionFactory factory = new ConnectionFactory();
 		factory.setHost(sockTo.getHostName());
-		//This should be part of the config.
+		// This should be part of the config.
 		factory.setUsername("admin");
 		factory.setPassword("admin");
 		Connection connection = factory.newConnection();

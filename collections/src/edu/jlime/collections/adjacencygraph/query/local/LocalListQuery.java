@@ -89,8 +89,7 @@ public abstract class LocalListQuery extends LocalQuery<int[]> implements
 		return getMap(this, Dir.OUT);
 	}
 
-	private MultiGetQuery getMap(LocalListQuery localListQuery,
-			Dir followees) {
+	private MultiGetQuery getMap(LocalListQuery localListQuery, Dir followees) {
 		return null;
 	}
 

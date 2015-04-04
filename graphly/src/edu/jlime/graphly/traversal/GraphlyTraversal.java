@@ -9,9 +9,6 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
-import edu.jlime.core.rpc.RPCDispatcher;
-import edu.jlime.core.rpc.Transferible;
-import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.client.GraphlyGraph;
 import edu.jlime.graphly.rec.CustomStep;
 import edu.jlime.graphly.rec.CustomStep.CustomFunction;
@@ -22,7 +19,6 @@ import edu.jlime.graphly.traversal.count.CountStep;
 import edu.jlime.graphly.traversal.each.EachStep;
 import edu.jlime.graphly.traversal.each.ForEach;
 import edu.jlime.jd.ClientNode;
-import edu.jlime.jd.JobDispatcher;
 import gnu.trove.set.hash.TLongHashSet;
 
 public class GraphlyTraversal implements Serializable {

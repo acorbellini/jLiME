@@ -11,8 +11,8 @@ public class BundlerClient extends PersistentIntIntArrayMap {
 
 	private int bundle;
 
-	public BundlerClient(StoreConfig config, int bundleSize, ClientCluster cluster)
-			throws Exception {
+	public BundlerClient(StoreConfig config, int bundleSize,
+			ClientCluster cluster) throws Exception {
 		super(config, cluster);
 		this.bundle = bundleSize;
 		timer.schedule(new TimerTask() {

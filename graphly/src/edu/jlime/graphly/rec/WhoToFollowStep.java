@@ -1,6 +1,5 @@
 package edu.jlime.graphly.rec;
 
-import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.client.GraphlyGraph;
 import edu.jlime.graphly.rec.CustomStep.CustomFunction;
 import edu.jlime.graphly.traversal.CountResult;

@@ -50,10 +50,10 @@ public class JLiMEFactory implements RPCFactory {
 		switch (config.getProtocol()) {
 		case "rabbit":
 			commStack = Stack.rabbitStack(config, p.getAddress(), config.name);
-			break;		
+			break;
 		case "zmq":
 			commStack = Stack.zeroMqStack(config, p.getAddress(), config.name);
-			break;		
+			break;
 		case "tcp":
 			commStack = Stack.tcpStack(config, p.getAddress(), config.name);
 			break;

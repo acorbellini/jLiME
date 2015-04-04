@@ -10,7 +10,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadFactory;
 
-import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.client.GraphlyGraph;
 import edu.jlime.graphly.client.SubGraph;
 import edu.jlime.graphly.rec.Repeat;

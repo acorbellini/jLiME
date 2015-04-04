@@ -4,7 +4,6 @@ import java.util.Iterator;
 
 public class VertexList implements Iterable<Long> {
 
-
 	private Graphly g;
 	private int max;
 	private String graph;

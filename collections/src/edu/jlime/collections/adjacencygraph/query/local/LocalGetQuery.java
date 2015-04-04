@@ -40,14 +40,12 @@ public class LocalGetQuery extends LocalListQuery {
 		int[] users = q.query();
 		TIntHashSet list = new TIntHashSet(50000);
 		for (int i : users) {
-			if (type.equals(Dir.OUT)
-					|| type.equals(Dir.BOTH)) {
+			if (type.equals(Dir.OUT) || type.equals(Dir.BOTH)) {
 				byte[] load = getStore().load(i);
 				if (load != null)
 					list.addAll(DataTypeUtils.byteArrayToIntArray(load));
 			}
-			if (type.equals(Dir.IN)
-					|| type.equals(Dir.BOTH)) {
+			if (type.equals(Dir.IN) || type.equals(Dir.BOTH)) {
 				byte[] load = getStore().load(-i);
 				if (load != null)
 					list.addAll(DataTypeUtils.byteArrayToIntArray(load));

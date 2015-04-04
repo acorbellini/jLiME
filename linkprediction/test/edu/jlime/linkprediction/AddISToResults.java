@@ -41,7 +41,7 @@ public class AddISToResults {
 		BufferedWriter writer = new BufferedWriter(new FileWriter(new File(
 				"ahoraTienenIS.txt")));
 		// ESTO AGREGA A LOS RESULTADOS
-		
+
 		// ESTE AGREGA A USERIS
 		for (int u : usersIds) {
 			System.out.println("Calulating IS for user " + u);

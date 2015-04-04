@@ -10,9 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import edu.jlime.pregel.graph.rpc.Graph;
 import edu.jlime.pregel.worker.VertexData;
 import gnu.trove.decorator.TLongSetDecorator;
-import gnu.trove.iterator.TLongIterator;
 import gnu.trove.iterator.TLongObjectIterator;
-import gnu.trove.list.TLongList;
 import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.map.hash.TLongObjectHashMap;
 
@@ -476,6 +474,6 @@ public class PregelGraphLocal implements Serializable, Graph {
 	public void setDouble(long v, String string, double currentVal)
 			throws Exception {
 		// TODO Auto-generated method stub
-		
+
 	}
 }

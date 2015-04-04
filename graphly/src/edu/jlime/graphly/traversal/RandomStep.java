@@ -3,7 +3,6 @@ package edu.jlime.graphly.traversal;
 import gnu.trove.iterator.TLongIterator;
 import gnu.trove.set.hash.TLongHashSet;
 
-
 public class RandomStep implements Step {
 
 	private GraphlyTraversal tr;

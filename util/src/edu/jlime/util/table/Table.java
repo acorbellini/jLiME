@@ -470,7 +470,7 @@ public class Table {
 				+ ".temp"));
 		writer.write(toString());
 		writer.close();
-		
+
 		Files.move(new File(file + ".temp"), new File(file));
 	}
 }

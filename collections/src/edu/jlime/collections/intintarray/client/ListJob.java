@@ -19,7 +19,7 @@ public class ListJob implements Job<Boolean> {
 	public Boolean call(JobContext env, ClientNode peer) throws Exception {
 		Logger log = Logger.getLogger(ListJob.class);
 		Store store = (Store) env.get(storename);
-//		log.info(store.list());
+		// log.info(store.list());
 		log.info(store.size());
 		return true;
 	}

@@ -21,7 +21,7 @@ public class TopUsersExtractor {
 	public static void main(String[] args) throws Exception {
 
 		final Graphly graphly = Graphly.build(8);
-		
+
 		final GraphlyGraph g = graphly.getGraph(args[0]);
 
 		// Thread.sleep(2000);

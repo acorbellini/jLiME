@@ -16,7 +16,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.apache.commons.lang3.reflect.MethodUtils;
 import org.apache.log4j.Logger;
 
 import edu.jlime.core.cluster.BroadcastException;

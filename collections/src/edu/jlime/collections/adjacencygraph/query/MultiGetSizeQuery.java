@@ -44,11 +44,9 @@ public class MultiGetSizeQuery extends CompositeQuery<int[], TIntIntHashMap> {
 		TIntIntHashMap ret = new TIntIntHashMap();
 		for (int i : data) {
 			int size = 0;
-			if (type.equals(Dir.IN)
-					|| type.equals(Dir.BOTH))
+			if (type.equals(Dir.IN) || type.equals(Dir.BOTH))
 				size += getRes.get(-i).length;
-			if (type.equals(Dir.OUT)
-					|| type.equals(Dir.BOTH)) {
+			if (type.equals(Dir.OUT) || type.equals(Dir.BOTH)) {
 				size += getRes.get(i).length;
 			}
 			ret.put(i, size);

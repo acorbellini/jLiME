@@ -7,8 +7,7 @@ public class MessageEncap extends Message {
 
 	Message msg;
 
-	public MessageEncap(Header h, Address from, Address to,
-			Message msg) {
+	public MessageEncap(Header h, Address from, Address to, Message msg) {
 		super(h, from, to);
 		this.msg = msg;
 	}

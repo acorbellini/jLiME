@@ -25,10 +25,10 @@ public class BroadcastException extends Exception {
 		// Arrays.asList(getStackTrace()));
 		// currentStack.addAll(eStack);
 		// setStackTrace(currentStack.toArray(new StackTraceElement[] {}));
-		
-		if(listOfExcep.containsKey(p))
+
+		if (listOfExcep.containsKey(p))
 			System.out.println("Exception from  " + p + " already existed.");
-		
+
 		listOfExcep.put(p, e);
 	}
 

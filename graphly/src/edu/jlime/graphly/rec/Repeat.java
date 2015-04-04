@@ -2,7 +2,6 @@ package edu.jlime.graphly.rec;
 
 import java.io.Serializable;
 
-import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.client.GraphlyGraph;
 
 public interface Repeat<T> extends Serializable {

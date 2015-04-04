@@ -1,7 +1,6 @@
 package edu.jlime.rpc.zeromq;
 
 import java.net.InetSocketAddress;
-import java.nio.channels.DatagramChannel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -20,7 +19,6 @@ import edu.jlime.rpc.Configuration;
 import edu.jlime.rpc.message.AddressType;
 import edu.jlime.rpc.message.Message;
 import edu.jlime.rpc.message.MessageProcessor;
-import edu.jlime.rpc.message.SimpleMessageProcessor;
 import edu.jlime.rpc.message.SocketAddress;
 import edu.jlime.util.ByteBuffer;
 

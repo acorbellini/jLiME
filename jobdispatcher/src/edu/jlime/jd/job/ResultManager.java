@@ -45,8 +45,8 @@ public abstract class ResultManager<R> {
 				log.error("Unexpected exception from job " + jobID
 						+ " from server " + req, (Throwable) res);
 			else if (log.isDebugEnabled())
-				log.debug("Received result, but remaining result count is 0 for " + jobID
-						+ " from server " + req);
+				log.debug("Received result, but remaining result count is 0 for "
+						+ jobID + " from server " + req);
 			return;
 		} else if (current_remaining == 0) {
 			if (log.isDebugEnabled())

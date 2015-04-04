@@ -29,7 +29,7 @@ public class LocationMapper implements Mapper {
 		Graphly g = (Graphly) ctx.getGlobal("graphly");
 
 		Map<Peer, TLongArrayList> map = g.getHash().hashKeys(data);
-		
+
 		Map<ClientNode, TLongArrayList> ret = new HashMap<>();
 		for (Entry<Peer, TLongArrayList> e : map.entrySet()) {
 			ret.put(g.getJobClient().getCluster().getClientFor(e.getKey()),
@@ -57,7 +57,7 @@ public class LocationMapper implements Mapper {
 		Graphly g = (Graphly) ctx.getGlobal("graphly");
 
 		Peer p = g.getHash().getNode(v);
-		
+
 		return g.getJobClient().getCluster().getClientFor(p);
 	}
 }

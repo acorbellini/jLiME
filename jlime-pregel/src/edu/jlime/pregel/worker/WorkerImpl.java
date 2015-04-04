@@ -2,7 +2,6 @@ package edu.jlime.pregel.worker;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 import edu.jlime.core.cluster.Peer;

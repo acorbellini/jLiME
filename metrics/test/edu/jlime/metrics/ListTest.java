@@ -14,6 +14,7 @@ public class ListTest {
 		m.simple("sysinfo.net.wlan.signal", "0");
 		m.simple("sysinfo.net.z.what", "0");
 
-		System.out.println(m.list("sysinfo.net").findFirst("eth").get("sent_total"));
+		System.out.println(m.list("sysinfo.net").findFirst("eth")
+				.get("sent_total"));
 	}
 }

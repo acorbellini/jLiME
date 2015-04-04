@@ -14,7 +14,7 @@ public class StdDev extends Function {
 		double sum2 = 0d;
 		int count = 0;
 		for (Cell c : r) {
-			if(c==null)
+			if (c == null)
 				return "CELL IS NOT DEFINED";
 			Double v = Double.valueOf(c.value());
 			sum += v;

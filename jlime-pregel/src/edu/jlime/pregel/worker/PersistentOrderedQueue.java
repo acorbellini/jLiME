@@ -7,14 +7,11 @@ import gnu.trove.map.hash.TLongObjectHashMap;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.mapdb.BTreeMap;
 import org.mapdb.DBMaker;
@@ -125,9 +122,9 @@ public class PersistentOrderedQueue {
 			// }
 
 			synchronized (list) {
-				if(list.size()>=2)
+				if (list.size() >= 2)
 					System.out.println("Not right");
-				
+
 				if (merger == null || list.isEmpty()) {
 					pregelMessage.setFrom(-1);
 					list.add(pregelMessage);

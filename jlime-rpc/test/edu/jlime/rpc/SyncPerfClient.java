@@ -46,7 +46,7 @@ public class SyncPerfClient {
 			cont++;
 
 			rpc.callSync(p, cl.getLocalPeer(), new MethodCall("remote",
-					 "getString", new Object[] { 15d }));
+					"getString", new Object[] { 15d }));
 
 			// PerfMeasure.takeTime("read", false);
 

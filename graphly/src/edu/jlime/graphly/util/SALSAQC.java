@@ -1,6 +1,5 @@
 package edu.jlime.graphly.util;
 
-import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.client.GraphlyGraph;
 import edu.jlime.graphly.jobs.Mapper;
 import edu.jlime.graphly.rec.Recommendation;

@@ -5,7 +5,6 @@ import edu.jlime.graphly.client.GraphlyGraph;
 import edu.jlime.graphly.jobs.MapperFactory;
 import edu.jlime.graphly.traversal.Pregel;
 import edu.jlime.pregel.functions.PageRank;
-import edu.jlime.pregel.mergers.MessageMergers;
 import edu.jlime.pregel.worker.MessageMerger;
 import edu.jlime.util.DataTypeUtils;
 

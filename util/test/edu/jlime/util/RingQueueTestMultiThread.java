@@ -25,7 +25,7 @@ public class RingQueueTestMultiThread {
 						e1.printStackTrace();
 					}
 					for (Object e : list) {
-						if(e==null)
+						if (e == null)
 							try {
 								System.in.read();
 							} catch (IOException e1) {

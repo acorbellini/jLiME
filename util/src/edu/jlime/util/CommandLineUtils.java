@@ -52,7 +52,7 @@ public class CommandLineUtils {
 		if (!error.isEmpty())
 			throw new Exception("Error executing command '" + cmd + "' : \n "
 					+ error);
-		
+
 		return outputBuilder.toString();
 
 	}

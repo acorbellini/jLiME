@@ -1,13 +1,11 @@
 package edu.jlime.graphly.traversal;
 
-import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.client.GraphlyGraph;
 import edu.jlime.graphly.jobs.Mapper;
 import edu.jlime.graphly.rec.CustomStep.CustomFunction;
 import edu.jlime.pregel.client.PregelClient;
 import edu.jlime.pregel.client.PregelConfig;
 import edu.jlime.pregel.graph.VertexFunction;
-import edu.jlime.pregel.mergers.MessageMergers;
 import edu.jlime.pregel.worker.MessageMerger;
 import gnu.trove.decorator.TLongSetDecorator;
 import gnu.trove.list.array.TLongArrayList;

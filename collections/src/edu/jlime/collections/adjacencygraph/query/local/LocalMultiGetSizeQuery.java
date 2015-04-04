@@ -38,12 +38,10 @@ public class LocalMultiGetSizeQuery implements Query<TIntIntHashMap> {
 		TIntIntHashMap ret = new TIntIntHashMap();
 		for (int i : toSearch.toArray()) {
 			int size = 0;
-			if (type.equals(Dir.IN)
-					|| type.equals(Dir.BOTH))
+			if (type.equals(Dir.IN) || type.equals(Dir.BOTH))
 				size += DataTypeUtils
 						.byteArrayToIntArray(q.getStore().load(-i)).length;
-			if (type.equals(Dir.OUT)
-					|| type.equals(Dir.BOTH)) {
+			if (type.equals(Dir.OUT) || type.equals(Dir.BOTH)) {
 				size += DataTypeUtils.byteArrayToIntArray(q.getStore().load(i)).length;
 			}
 			ret.put(i, size);

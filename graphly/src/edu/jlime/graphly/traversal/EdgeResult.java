@@ -5,7 +5,6 @@ import gnu.trove.map.hash.TLongLongHashMap;
 import gnu.trove.procedure.TLongLongProcedure;
 import gnu.trove.set.hash.TLongHashSet;
 
-
 public class EdgeResult extends TraversalResult {
 	TLongLongHashMap edges = new TLongLongHashMap();
 

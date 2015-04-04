@@ -1,7 +1,6 @@
 package edu.jlime.pregel.worker.rpc;
 
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 import edu.jlime.core.cluster.Peer;
@@ -17,7 +16,8 @@ public interface Worker {
 	public void sendMessage(PregelMessage msg, UUID taskID) throws Exception;
 
 	@Sync
-	public void nextSuperstep(int superstep, UUID taskID, SplitFunction currentSplit) throws Exception;
+	public void nextSuperstep(int superstep, UUID taskID,
+			SplitFunction currentSplit) throws Exception;
 
 	@Cache
 	public UUID getID() throws Exception;

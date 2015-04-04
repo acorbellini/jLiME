@@ -1,13 +1,5 @@
 package edu.jlime.core.marshalling;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.UUID;
-
-import javax.lang.model.type.NullType;
-
-import org.apache.log4j.Logger;
-
 import edu.jlime.core.cluster.Peer;
 import edu.jlime.core.marshalling.converters.AddressConverter;
 import edu.jlime.core.marshalling.converters.BooleanConverter;
@@ -28,6 +20,13 @@ import edu.jlime.core.transport.Address;
 import edu.jlime.metrics.metric.Metrics;
 import edu.jlime.util.ByteBuffer;
 import gnu.trove.map.hash.TObjectByteHashMap;
+
+import java.util.ArrayList;
+import java.util.UUID;
+
+import javax.lang.model.type.NullType;
+
+import org.apache.log4j.Logger;
 
 public class TypeConverters {
 

@@ -4,7 +4,6 @@ import java.util.Arrays;
 
 import org.apache.log4j.Logger;
 
-import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.client.GraphlyGraph;
 import edu.jlime.graphly.rec.CustomStep.CustomFunction;
 import edu.jlime.graphly.rec.MinEdgeFilter;

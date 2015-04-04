@@ -53,14 +53,14 @@ public class ExceptionTest {
 			e.printStackTrace();
 		}
 
-//		try {
-//			System.out.println("Broadcast Async Exception");
-//			cli.getCluster().broadcastAsync(new ExceptionJob());
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//		}
-//		Thread.sleep(4000);
-		
+		// try {
+		// System.out.println("Broadcast Async Exception");
+		// cli.getCluster().broadcastAsync(new ExceptionJob());
+		// } catch (Exception e) {
+		// e.printStackTrace();
+		// }
+		// Thread.sleep(4000);
+
 		cli.close();
 		server.stop();
 		server2.stop();

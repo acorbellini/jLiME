@@ -48,12 +48,10 @@ public class LocalCountQuery extends LocalQuery<TIntIntHashMap> implements
 		int[] u = q.query();
 		TIntIntHashMap count = new TIntIntHashMap();
 		for (int i : u) {
-			if (type.equals(Dir.OUT)
-					|| type.equals(Dir.BOTH))
+			if (type.equals(Dir.OUT) || type.equals(Dir.BOTH))
 				addToCount(count,
 						DataTypeUtils.byteArrayToIntArray(q.getStore().load(i)));
-			if (type.equals(Dir.IN)
-					|| type.equals(Dir.BOTH))
+			if (type.equals(Dir.IN) || type.equals(Dir.BOTH))
 				addToCount(count, DataTypeUtils.byteArrayToIntArray(q
 						.getStore().load(-i)));
 		}

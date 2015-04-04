@@ -26,7 +26,7 @@ public class GraphlyLoader {
 		String sep = args[3];
 		String fileIn = args[4];
 		String fileOut = args[5];
-		
+
 		if (action.equals("validate")) {
 			new GraphlyLoader().validate(Integer.valueOf(servers), graph,
 					fileIn, sep, IN);

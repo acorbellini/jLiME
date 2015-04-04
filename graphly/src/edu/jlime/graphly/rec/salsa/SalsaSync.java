@@ -1,6 +1,5 @@
 package edu.jlime.graphly.rec.salsa;
 
-import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.client.GraphlyGraph;
 import edu.jlime.graphly.traversal.RepeatStep.RepeatSync;
 

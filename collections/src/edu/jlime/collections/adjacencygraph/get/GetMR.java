@@ -33,13 +33,11 @@ public class GetMR extends GraphMR<TIntHashSet, int[]> {
 	public Map<Job<int[]>, ClientNode> map(int[] data, JobContext env)
 			throws Exception {
 		TIntHashSet toSearch = new TIntHashSet();
-		if (type.equals(Dir.OUT)
-				|| type.equals(Dir.BOTH))
+		if (type.equals(Dir.OUT) || type.equals(Dir.BOTH))
 			for (int i = 0; i < data.length; i++) {
 				toSearch.add(-1 * data[i]);
 			}
-		if (type.equals(Dir.IN)
-				|| type.equals(Dir.BOTH))
+		if (type.equals(Dir.IN) || type.equals(Dir.BOTH))
 			toSearch.addAll(data);
 
 		HashMap<Job<int[]>, ClientNode> res = new HashMap<>();

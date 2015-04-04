@@ -38,8 +38,8 @@ public class ChainJob<R> implements Job<Map<ClientNode, R>> {
 			final Semaphore sem = new Semaphore(-1);
 			new Thread() {
 				public void run() {
-					ArrayList<ClientNode> middle = new ArrayList<>(rem.subList(0,
-							(int) Math.ceil(rem.size() / (double) 2)));
+					ArrayList<ClientNode> middle = new ArrayList<>(rem.subList(
+							0, (int) Math.ceil(rem.size() / (double) 2)));
 					try {
 						ret.putAll(env.getCluster().chain(middle, j));
 					} catch (Exception e) {

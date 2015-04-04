@@ -6,10 +6,8 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
 
 import edu.jlime.core.transport.Address;
 import edu.jlime.metrics.metric.Metrics;
@@ -20,7 +18,6 @@ import edu.jlime.rpc.message.MessageProcessor;
 import edu.jlime.rpc.message.MessageType;
 import edu.jlime.rpc.message.SimpleMessageProcessor;
 import edu.jlime.util.ByteBuffer;
-import edu.jlime.util.DataTypeUtils;
 
 public class UDPResender extends SimpleMessageProcessor {
 

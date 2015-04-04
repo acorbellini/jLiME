@@ -20,7 +20,6 @@ import edu.jlime.rpc.message.MessageProcessor;
 import edu.jlime.rpc.message.MessageType;
 import edu.jlime.rpc.message.SimpleMessageProcessor;
 import edu.jlime.util.ByteBuffer;
-import edu.jlime.util.PerfMeasure;
 import edu.jlime.util.compression.CompressionType;
 import edu.jlime.util.compression.Compressor;
 

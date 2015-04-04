@@ -30,7 +30,8 @@ public class PregelMessage implements Comparable<PregelMessage>, Serializable {
 
 	@Override
 	public String toString() {
-		return "PregelMessage [from=" + getFrom() + ", to=" + to + ", v=" + v + "]";
+		return "PregelMessage [from=" + getFrom() + ", to=" + to + ", v=" + v
+				+ "]";
 	}
 
 	@Override

@@ -8,7 +8,7 @@ public class DoubleConverter implements TypeConverter {
 	@Override
 	public void toArray(Object o, ByteBuffer buffer, Peer cliID)
 			throws Exception {
-		buffer.putDouble((Double)o);
+		buffer.putDouble((Double) o);
 	}
 
 	@Override
