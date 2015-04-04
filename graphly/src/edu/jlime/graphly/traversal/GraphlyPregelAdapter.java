@@ -8,14 +8,15 @@ import org.apache.commons.lang3.NotImplementedException;
 import edu.jlime.core.rpc.RPCDispatcher;
 import edu.jlime.core.rpc.Transferible;
 import edu.jlime.graphly.client.Graphly;
+import edu.jlime.graphly.client.GraphlyGraph;
 import edu.jlime.jd.JobDispatcher;
 import edu.jlime.pregel.graph.rpc.Graph;
 import gnu.trove.list.array.TLongArrayList;
 
-public class GraphlyPregelAdapter implements Graph, Transferible {
-	private transient Graphly g;
+public class GraphlyPregelAdapter implements Graph {
+	private GraphlyGraph g;
 
-	public GraphlyPregelAdapter(Graphly g) {
+	public GraphlyPregelAdapter(GraphlyGraph g) {
 		this.g = g;
 	}
 
@@ -142,12 +143,6 @@ public class GraphlyPregelAdapter implements Graph, Transferible {
 	@Override
 	public void createVertices(Set<Long> set) throws Exception {
 		throw new NotImplementedException("");
-	}
-
-	@Override
-	public void setRPC(RPCDispatcher rpc) throws Exception {
-		this.g = (Graphly) ((JobDispatcher) rpc
-				.getTarget(JobDispatcher.JOB_DISPATCHER)).getGlobal("graphly");
 	}
 
 	@Override

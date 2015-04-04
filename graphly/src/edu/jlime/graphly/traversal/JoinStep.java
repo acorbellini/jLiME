@@ -1,6 +1,7 @@
 package edu.jlime.graphly.traversal;
 
 import edu.jlime.graphly.client.Graphly;
+import edu.jlime.graphly.client.GraphlyGraph;
 import gnu.trove.map.hash.TLongObjectHashMap;
 
 public class JoinStep<T, O> implements Step {
@@ -19,7 +20,7 @@ public class JoinStep<T, O> implements Step {
 
 	@Override
 	public TraversalResult exec(TraversalResult before) throws Exception {
-		Graphly graph = tr.getGraph();
+		GraphlyGraph graph = tr.getGraph();
 		TLongObjectHashMap<T> collected = (TLongObjectHashMap<T>) graph
 				.collect(from, -1, before.vertices().toArray());
 		TLongObjectHashMap<O> map = j.join(collected);

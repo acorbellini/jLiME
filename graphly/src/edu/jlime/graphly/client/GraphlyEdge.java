@@ -4,9 +4,9 @@ public class GraphlyEdge {
 
 	private Long from;
 	private Long to;
-	private Graphly g;
+	private GraphlyGraph g;
 
-	public GraphlyEdge(Long id, Long id2, Graphly graphly) {
+	public GraphlyEdge(Long id, Long id2, GraphlyGraph graphly) {
 		this.from = id;
 		this.to = id2;
 		this.g = graphly;

@@ -13,7 +13,7 @@ import edu.jlime.graphly.util.GraphlyUtil;
 public class SubGraph {
 
 	private static final int LOCKS = 1021;
-	private Graphly g;
+	private GraphlyGraph g;
 	private long[] vertices;
 
 	private ConcurrentHashMap<Long, Map<String, Object>> props = new ConcurrentHashMap<>(
@@ -32,7 +32,7 @@ public class SubGraph {
 			1000, 0.9f, 8);
 	private Object[] countsLocks = new Object[LOCKS];
 
-	public SubGraph(Graphly graphly, long[] all) {
+	public SubGraph(GraphlyGraph graphly, long[] all) {
 		for (int i = 0; i < LOCKS; i++) {
 			propLocks[i] = new Object();
 			tempsLocks[i] = new Object();

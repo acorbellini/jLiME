@@ -4,9 +4,9 @@ public class GraphlyVertex {
 
 	protected long id;
 
-	protected Graphly g;
+	protected GraphlyGraph g;
 
-	public GraphlyVertex(long id, Graphly graphly) {
+	public GraphlyVertex(long id, GraphlyGraph graphly) {
 		this.id = id;
 		this.g = graphly;
 	}

@@ -1,6 +1,7 @@
 package edu.jlime.graphly.rec.salsa;
 
 import edu.jlime.graphly.client.Graphly;
+import edu.jlime.graphly.client.GraphlyGraph;
 import edu.jlime.graphly.traversal.RepeatStep.RepeatSync;
 
 public class SalsaSync implements RepeatSync<long[]> {
@@ -14,8 +15,9 @@ public class SalsaSync implements RepeatSync<long[]> {
 	}
 
 	@Override
-	public void exec(long[] before, Graphly g) throws Exception {
-		g.getJobClient().getCluster().broadcast(new SubGraphClean("salsa-sub"));
+	public void exec(long[] before, GraphlyGraph g) throws Exception {
+		g.getJobClient().getCluster()
+				.broadcast(new SubGraphClean(g, "salsa-sub"));
 		g.commitUpdates(auth, hub);
 	}
 

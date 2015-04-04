@@ -45,8 +45,8 @@ public class VertexStep implements Step {
 
 		ForkJoinTask<long[]> fj = new ForkJoinTask<>();
 		for (Pair<ClientNode, TLongArrayList> e : div) {
-			fj.putJob(new VertexJob(dir, max_edges, e.getValue().toArray()),
-					e.getKey());
+			fj.putJob(new VertexJob(tr.getGraph(), dir, max_edges, e.getValue()
+					.toArray()), e.getKey());
 		}
 
 		if (log.isDebugEnabled())

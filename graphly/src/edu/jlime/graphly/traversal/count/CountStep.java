@@ -57,8 +57,8 @@ public class CountStep implements Step {
 		ForkJoinTask<GraphlyCount> fj = new ForkJoinTask<>();
 
 		for (Pair<ClientNode, TLongArrayList> e : mapped) {
-			fj.putJob(new CountJob(dir, max_edges, e.getValue().toArray()),
-					e.getKey());
+			fj.putJob(new CountJob(tr.getGraph(), dir, max_edges, e.getValue()
+					.toArray()), e.getKey());
 		}
 		// DB db = DBMaker.newTempFileDB().mmapFileEnable().cacheLRUEnable()
 		// .cacheSize(100 * 1024 * 1024).make();

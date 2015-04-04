@@ -22,8 +22,11 @@ public class VertexIterator implements Iterator<Long> {
 	int current = 0;
 	private int max;
 
-	public VertexIterator(Graphly graphly, int cached) {
+	private String gID;
+
+	public VertexIterator(String graph, Graphly graphly, int cached) {
 		this.g = graphly;
+		this.gID = graph;
 		this.nodes = g.mgr.getAll().iterator();
 		this.max = cached;
 	}
@@ -36,15 +39,15 @@ public class VertexIterator implements Iterator<Long> {
 					if (!nodes.hasNext())
 						return false;
 					curr = nodes.next();
-					TLongArrayList obt = curr.getVertices(Long.MIN_VALUE, max,
-							true);
+					TLongArrayList obt = curr.getVertices(gID, Long.MIN_VALUE,
+							max, true);
 					if (obt != null && !obt.isEmpty())
 						cached = obt;
 				} else {
 					if (fut != null) {
 						cached = fut.get();
 					} else {
-						cached = curr.getVertices(
+						cached = curr.getVertices(gID,
 								cached.get(cached.size() - 1), max, false);
 					}
 					if (cached.isEmpty()) {
@@ -55,7 +58,7 @@ public class VertexIterator implements Iterator<Long> {
 
 							@Override
 							public TLongArrayList call() throws Exception {
-								return curr.getVertices(
+								return curr.getVertices(gID,
 										cached.get(cached.size() - 1), max,
 										false);
 							}

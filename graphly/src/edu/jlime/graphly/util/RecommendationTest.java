@@ -12,6 +12,7 @@ import java.util.TreeMap;
 import org.springframework.context.support.FileSystemXmlApplicationContext;
 
 import edu.jlime.graphly.client.Graphly;
+import edu.jlime.graphly.client.GraphlyGraph;
 import edu.jlime.graphly.jobs.Mapper;
 import edu.jlime.graphly.server.GraphlyServer;
 import edu.jlime.jd.ClientNode;
@@ -48,11 +49,15 @@ public class RecommendationTest {
 
 	private List<GraphlyServer> localServers;
 
+	private String graphID;
+
 	public RecommendationTest(String results, String config) {
 		this.resultsDir = results;
 		this.xmlconf = config;
 
 		this.ctxt = new FileSystemXmlApplicationContext(xmlconf);
+
+		this.graphID = ctxt.getBean("graphID", String.class);
 
 		this.mappers = ctxt.getBean("mappers", ArrayList.class);
 
@@ -138,12 +143,12 @@ public class RecommendationTest {
 				+ " execution nodes.");
 
 		Graphly graph = Graphly.build(servers);
-
+		GraphlyGraph g = graph.getGraph(graphID);
 		ClusterProfiler profiler = new ClusterProfiler(graph.getJobClient()
 				.getCluster(), 2000);
 		profiler.start();
 		long init = System.currentTimeMillis();
-		queryContainer.run(graph, users, mapper);
+		queryContainer.run(g, users, mapper);
 		long total = System.currentTimeMillis() - init;
 
 		System.out.println("Query Time:  " + StringUtils.readableTime(total));

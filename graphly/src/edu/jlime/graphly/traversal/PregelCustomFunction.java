@@ -1,6 +1,7 @@
 package edu.jlime.graphly.traversal;
 
 import edu.jlime.graphly.client.Graphly;
+import edu.jlime.graphly.client.GraphlyGraph;
 import edu.jlime.graphly.jobs.Mapper;
 import edu.jlime.graphly.rec.CustomStep.CustomFunction;
 import edu.jlime.pregel.client.PregelClient;
@@ -34,7 +35,7 @@ public class PregelCustomFunction implements CustomFunction {
 
 		Mapper mapper = (Mapper) tr.get("mapper");
 
-		Graphly g = tr.getGraph();
+		GraphlyGraph g = tr.getGraph();
 
 		TLongSetDecorator dec = new TLongSetDecorator(new TLongHashSet(list));
 

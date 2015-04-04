@@ -13,13 +13,16 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import edu.jlime.graphly.client.Graphly;
+import edu.jlime.graphly.client.GraphlyGraph;
 import edu.jlime.graphly.traversal.Dir;
 
 public class TopUsersExtractor {
 
 	public static void main(String[] args) throws Exception {
 
-		final Graphly g = Graphly.build(8);
+		final Graphly graphly = Graphly.build(8);
+		
+		final GraphlyGraph g = graphly.getGraph(args[0]);
 
 		// Thread.sleep(2000);
 

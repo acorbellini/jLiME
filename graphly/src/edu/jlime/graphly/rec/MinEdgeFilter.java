@@ -1,6 +1,6 @@
 package edu.jlime.graphly.rec;
 
-import edu.jlime.graphly.client.Graphly;
+import edu.jlime.graphly.client.GraphlyGraph;
 import edu.jlime.graphly.traversal.Dir;
 
 public class MinEdgeFilter implements VertexFilter {
@@ -17,7 +17,7 @@ public class MinEdgeFilter implements VertexFilter {
 	}
 
 	@Override
-	public boolean filter(long vid, Graphly g) throws Exception {
+	public boolean filter(long vid, GraphlyGraph g) throws Exception {
 		return g.getEdgesCount(dir, vid, at) >= min;
 	}
 

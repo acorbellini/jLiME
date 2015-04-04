@@ -6,6 +6,7 @@ import java.util.NavigableSet;
 import com.google.common.collect.TreeMultimap;
 
 import edu.jlime.graphly.client.Graphly;
+import edu.jlime.graphly.client.GraphlyGraph;
 import edu.jlime.graphly.rec.CustomStep.CustomFunction;
 import edu.jlime.graphly.traversal.CountResult;
 import edu.jlime.graphly.traversal.Dir;
@@ -31,7 +32,7 @@ public class CircleOfTrust implements CustomFunction {
 	@Override
 	public TraversalResult execute(TraversalResult before, GraphlyTraversal tr)
 			throws Exception {
-		Graphly g = tr.getGraph();
+		GraphlyGraph g = tr.getGraph();
 
 		TraversalResult cot = g.v(before.vertices().toArray())
 				.set("mapper", tr.get("mapper")).as(Recommendation.class)

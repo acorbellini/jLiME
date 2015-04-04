@@ -1,6 +1,7 @@
 package edu.jlime.graphly.rec.randomwalk;
 
 import edu.jlime.graphly.client.Graphly;
+import edu.jlime.graphly.client.GraphlyGraph;
 import edu.jlime.graphly.client.SubGraph;
 import edu.jlime.graphly.traversal.Dir;
 import edu.jlime.graphly.traversal.GraphlyTraversal;
@@ -22,7 +23,7 @@ public class RandomWalkForeach implements ForEach<long[]> {
 	}
 
 	@Override
-	public long[] exec(long vid, Graphly g) throws Exception {
+	public long[] exec(long vid, GraphlyGraph g) throws Exception {
 		if (subset != null && subset.length > 0) {
 			SubGraph sg = g.getSubGraph("random-walk", subset);
 			TLongArrayList ret = new TLongArrayList();
