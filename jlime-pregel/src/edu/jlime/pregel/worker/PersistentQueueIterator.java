@@ -1,28 +1,30 @@
 package edu.jlime.pregel.worker;
 
+import gnu.trove.list.array.TLongArrayList;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 
-import edu.jlime.pregel.worker.PersistentOrderedQueue.MessageID;
-import gnu.trove.iterator.TLongIterator;
-import gnu.trove.list.array.TLongArrayList;
-import gnu.trove.map.hash.TLongObjectHashMap;
+import org.mapdb.BTreeMap;
+import org.mapdb.Fun;
+import org.mapdb.Fun.Tuple2;
 
 final class PersistentQueueIterator implements Iterator<List<PregelMessage>> {
-	private final Iterator<Entry<MessageID, PregelMessage>> backIt;
-	private final TLongIterator cacheIt;
+	private final Iterator<Entry<Fun.Tuple2<Long, Long>, PregelMessage>> backIt;
+	private final Iterator<Entry<Tuple2<Long, Long>, PregelMessage>> cacheIt;
 
-	Entry<MessageID, PregelMessage> currBack = null;
-	List<PregelMessage> currCache = null;
-	private TLongObjectHashMap<List<PregelMessage>> cache;
+	Entry<Fun.Tuple2<Long, Long>, PregelMessage> currBack = null;
+	Entry<Tuple2<Long, Long>, PregelMessage> currCache = null;
+	private BTreeMap<Tuple2<Long, Long>, PregelMessage> cache;
 
-	PersistentQueueIterator(Iterator<Entry<MessageID, PregelMessage>> backIt,
-			TLongArrayList list, TLongObjectHashMap<List<PregelMessage>> cache2) {
+	PersistentQueueIterator(
+			Iterator<Entry<Fun.Tuple2<Long, Long>, PregelMessage>> backIt,
+			TLongArrayList list,
+			BTreeMap<Tuple2<Long, Long>, PregelMessage> cache2) {
 		this.backIt = backIt;
-		this.cacheIt = list.iterator();
-		this.cache = cache2;
+		this.cacheIt = cache2.entrySet().iterator();
 
 	}
 
@@ -31,41 +33,47 @@ final class PersistentQueueIterator implements Iterator<List<PregelMessage>> {
 		if (currBack == null && backIt != null && backIt.hasNext())
 			currBack = backIt.next();
 		if (currCache == null && cacheIt != null && cacheIt.hasNext()) {
-			currCache = cache.get(cacheIt.next());
+			currCache = cacheIt.next();
 		}
 
-		List<PregelMessage> ret = null;
+		List<PregelMessage> ret = new ArrayList<>();
 		if (currCache != null) {
 			if (currBack != null) {
-				int compare = Long.compare(currBack.getKey().vid, currCache
-						.get(0).getTo());
+				// Comparing using "To"
+				int compare = Long.compare(currBack.getKey().b,
+						currBack.getKey().b);
 				if (compare == 0) {
-					ret = currCache;
-					currCache = null;
-					addBacked(backIt, ret);
+					addCache(ret);
+					addBacked(ret);
 				} else if (compare > 0) {
-					ret = currCache;
-					currCache = null;
+					addCache(ret);
 				} else if (compare < 0) {
-					ret = new ArrayList<>();
-					addBacked(backIt, ret);
+					addBacked(ret);
 				}
 			} else {
-				ret = currCache;
-				currCache = null;
+				addCache(ret);
 			}
 		} else {
-			ret = new ArrayList<>();
-			addBacked(backIt, ret);
+			addBacked(ret);
 		}
 		return ret;
 	}
 
-	private void addBacked(
-			final Iterator<Entry<MessageID, PregelMessage>> backIt,
-			List<PregelMessage> ret) {
-		long vertex = currBack.getKey().vid;
-		while (vertex == currBack.getKey().vid) {
+	private void addCache(List<PregelMessage> ret) {
+		long vertex = currCache.getKey().b;
+		while (vertex == currCache.getKey().b) {
+			ret.add(currCache.getValue());
+			if (!cacheIt.hasNext()) {
+				currCache = null;
+				break;
+			}
+			currCache = cacheIt.next();
+		}
+	}
+
+	private void addBacked(List<PregelMessage> ret) {
+		long vertex = currBack.getKey().b;
+		while (vertex == currBack.getKey().b) {
 			ret.add(currBack.getValue());
 			if (!backIt.hasNext()) {
 				currBack = null;

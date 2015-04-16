@@ -19,6 +19,7 @@ import edu.jlime.pregel.coordinator.rpc.Coordinator;
 import edu.jlime.pregel.coordinator.rpc.CoordinatorBroadcast;
 import edu.jlime.pregel.coordinator.rpc.CoordinatorFactory;
 import edu.jlime.pregel.graph.VertexFunction;
+import edu.jlime.pregel.worker.GenericPregelMessage;
 import edu.jlime.pregel.worker.PregelMessage;
 import edu.jlime.pregel.worker.WorkerFilter;
 import edu.jlime.pregel.worker.WorkerServer;
@@ -27,7 +28,7 @@ import edu.jlime.pregel.worker.rpc.WorkerBroadcast;
 import edu.jlime.pregel.worker.rpc.WorkerFactory;
 
 public class CoordinatorTask {
-	UUID taskID = UUID.randomUUID();
+	int taskID;
 
 	private volatile boolean finished = true;
 
@@ -43,8 +44,9 @@ public class CoordinatorTask {
 
 	private ClientManager<Worker, WorkerBroadcast> workerMgr;
 
-	public CoordinatorTask(RPCDispatcher rpc, HashMap<String, Aggregator> aggs,
-			Peer cli) {
+	public CoordinatorTask(int taskId, RPCDispatcher rpc,
+			HashMap<String, Aggregator> aggs, Peer cli) {
+		this.taskID = taskId;
 		this.coordMgr = rpc.manage(new CoordinatorFactory(rpc,
 				CoordinatorServer.COORDINATOR_KEY), new CoordinatorFilter(),
 				this.cli);
@@ -68,40 +70,32 @@ public class CoordinatorTask {
 			log.debug("Remaining in step: " + currentStep.size());
 	}
 
-	public PregelExecution execute(VertexFunction func, PregelConfig config)
-			throws Exception {
-		SplitFunction split = config.getSplit();
+	public PregelExecution execute(final VertexFunction func, long[] vList,
+			final PregelConfig config) throws Exception {
+		final SplitFunction split = config.getSplit();
 
-		split.update();
+		split.update(workerMgr.getPeers());
+		long[] list = vList;
 
-		// Init workers
-		for (Worker w : workerMgr.getAll()) {
-			currentStep.add(w.getID());
-			w.createTask(taskID, cli, func, config);
-		}
-		Iterable<Long> vertex = config.getvList();
-		if (config.isExecuteOnAll()) {
-			vertex = config.getGraph().vertices();
+		log.info("Creating tasks");
+		workerMgr.broadcast().createTask(taskID, cli, func, list, config);
 
-		}
-		for (Long vid : vertex) {
-			Worker worker = workerMgr.get(split.getPeer(vid,
-					workerMgr.getPeers()));
-			worker.sendMessage(new PregelMessage(-1, vid, null), taskID);
-		}
+		log.info("Initial Superstep");
+		workerMgr.broadcast().nextSuperstep(-1, taskID, split);
+
+		log.info("Broadcasting initial message");
+		workerMgr.broadcast().sendBroadcastMessage(-1l, null, taskID);
+
+		log.info("Setup of Superstep 0");
+		workerMgr.broadcast().nextSuperstep(0, taskID, split);
 
 		int step = 0;
 		for (; step < config.getMaxSteps(); step++) {
-			log.info("Step: " + step);
 			finished = true;
 
-			if (log.isDebugEnabled())
-				log.debug("Running superstep " + step + " Remaining "
-						+ currentStep.size());
-
-			split.update();
-
-			workerMgr.broadcast().nextSuperstep(step, taskID, split);
+			// if (log.isDebugEnabled())
+			log.info("Running superstep " + step + " Remaining "
+					+ currentStep.size());
 
 			workerMgr.broadcast().execute(taskID);
 
@@ -110,8 +104,8 @@ public class CoordinatorTask {
 					wait();
 			}
 
-			if (log.isDebugEnabled())
-				log.debug("Finished superstep " + step);
+			// if (log.isDebugEnabled())
+			log.info("Finished superstep " + step);
 
 			if (finished)
 				break;
@@ -123,8 +117,15 @@ public class CoordinatorTask {
 				e.getValue().superstep(step);
 			}
 
+			split.update(workerMgr.getPeers());
+
+			workerMgr.broadcast().nextSuperstep(step + 1, taskID, split);
+
 		}
 		log.info("Finished");
+
+		workerMgr.broadcast().cleanup(taskID);
+
 		return new PregelExecution(step, taskID);
 	}
 
@@ -147,7 +148,6 @@ public class CoordinatorTask {
 		log.info("Obtaining aggregated value from " + k + " for " + v);
 		Aggregator a = aggregators.get(k);
 		if (a != null) {
-
 			Double val = a.getVal(v);
 			log.info("Obtained " + k + " for " + v + ": " + val);
 			return val;

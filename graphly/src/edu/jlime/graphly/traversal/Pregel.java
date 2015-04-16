@@ -1,7 +1,7 @@
 package edu.jlime.graphly.traversal;
 
+import edu.jlime.pregel.client.PregelConfig;
 import edu.jlime.pregel.graph.VertexFunction;
-import edu.jlime.pregel.worker.MessageMerger;
 
 public class Pregel extends CustomTraversal {
 
@@ -9,10 +9,8 @@ public class Pregel extends CustomTraversal {
 		super(tr);
 	}
 
-	public Pregel vertexFunction(VertexFunction func, MessageMerger merger,
-			int steps, boolean execOnWholeGraph) {
-		tr.customStep(new PregelCustomFunction(func, merger, steps,
-				execOnWholeGraph));
+	public Pregel vertexFunction(VertexFunction func, PregelConfig config) {
+		tr.customStep(new PregelCustomFunction(func, config));
 		return this;
 	}
 }

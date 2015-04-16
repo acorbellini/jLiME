@@ -42,7 +42,7 @@ function start(){
 	stop $cluster $user
 	
 	for i in $(cat cluster); do
-		nohup ssh $user@$i "cd /home/$user/jlime/extra/graphly;. run.sh" &
+		nohup ssh $user@$i "cd /home/$user/jlime/extra/graphly;. run.sh" > /dev/null 2>&1 &
 	done
 }
 

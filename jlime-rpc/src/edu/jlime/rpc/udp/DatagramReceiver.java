@@ -24,8 +24,7 @@ public class DatagramReceiver {
 
 	private Logger log = Logger.getLogger(DatagramReceiver.class);
 
-	ExecutorService exec = Executors.newFixedThreadPool(Runtime.getRuntime()
-			.availableProcessors(), new ThreadFactory() {
+	ExecutorService exec = Executors.newCachedThreadPool(new ThreadFactory() {
 
 		@Override
 		public Thread newThread(Runnable r) {

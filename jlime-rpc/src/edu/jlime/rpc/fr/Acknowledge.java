@@ -22,19 +22,11 @@ public class Acknowledge extends SimpleMessageProcessor {
 
 	public static final int HEADER = Header.HEADER + 4;
 
-	Object[] locks = new Object[1021];
-
 	Logger log = Logger.getLogger(Acknowledge.class);
 
 	ConcurrentHashMap<Address, AcknowledgeCounter> counters = new ConcurrentHashMap<>();
 
 	CopyOnWriteArrayList<AcknowledgeCounter> counterList = new CopyOnWriteArrayList<>();
-
-	private int max_size_nack;
-
-	private int nack_delay;
-
-	private int ack_delay;
 
 	private Configuration config;
 
@@ -42,15 +34,8 @@ public class Acknowledge extends SimpleMessageProcessor {
 
 	private Timer t;
 
-	public Acknowledge(MessageProcessor next, int max_size_nack,
-			int nack_delay, int ack_delay, int max_size, Configuration config) {
+	public Acknowledge(MessageProcessor next, int max_size, Configuration config) {
 		super(next, "Acknowledge");
-		this.max_size_nack = max_size_nack;
-		this.nack_delay = nack_delay;
-		this.ack_delay = ack_delay;
-		for (int i = 0; i < locks.length; i++) {
-			locks[i] = new Object();
-		}
 		this.config = config;
 		this.max_size = max_size;
 	}
@@ -64,7 +49,6 @@ public class Acknowledge extends SimpleMessageProcessor {
 			public void run() {
 				for (AcknowledgeCounter count : counterList) {
 					count.resend();
-
 				}
 			}
 		}, config.retransmit_delay, config.retransmit_delay);
@@ -133,8 +117,7 @@ public class Acknowledge extends SimpleMessageProcessor {
 			synchronized (counters) {
 				counter = counters.get(to);
 				if (counter == null) {
-					counter = new AcknowledgeCounter(this, to, max_size_nack,
-							nack_delay, ack_delay, config);
+					counter = new AcknowledgeCounter(this, to, config);
 					counters.put(to, counter);
 					counterList.add(counter);
 				}

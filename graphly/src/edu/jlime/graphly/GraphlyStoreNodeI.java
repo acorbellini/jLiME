@@ -7,6 +7,7 @@ import java.util.Set;
 
 import edu.jlime.core.rpc.Sync;
 import edu.jlime.graphly.traversal.Dir;
+import edu.jlime.graphly.util.Gather;
 import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.map.hash.TLongObjectHashMap;
 
@@ -93,9 +94,11 @@ public interface GraphlyStoreNodeI {
 	public abstract double getDouble(String graph, long v, String k)
 			throws Exception;
 
+	@Sync
 	public abstract void setDouble(String graph, long v, String k,
 			double currentVal) throws Exception;
 
+	@Sync
 	public abstract void setDefaultDouble(String graph, String k, double v)
 			throws Exception;
 
@@ -103,5 +106,19 @@ public interface GraphlyStoreNodeI {
 			throws Exception;
 
 	public abstract Set<String> getGraphs() throws Exception;
+
+	public abstract float getFloat(String graph, long v, String k)
+			throws Exception;
+
+	@Sync
+	public abstract void setFloat(String graph, long v, String k,
+			float currentVal) throws Exception;
+
+	@Sync
+	void setDefaultFloat(String graph, String k, float v) throws Exception;
+
+	float getDefaultFloat(String graph, String k) throws Exception;
+
+	public Object gather(String graph, Gather<?> g) throws Exception;
 
 }

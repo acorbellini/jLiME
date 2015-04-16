@@ -6,7 +6,6 @@ import edu.jlime.graphly.rec.CustomStep.CustomFunction;
 import edu.jlime.pregel.client.PregelClient;
 import edu.jlime.pregel.client.PregelConfig;
 import edu.jlime.pregel.graph.VertexFunction;
-import edu.jlime.pregel.worker.MessageMerger;
 import gnu.trove.decorator.TLongSetDecorator;
 import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.set.hash.TLongHashSet;
@@ -14,16 +13,11 @@ import gnu.trove.set.hash.TLongHashSet;
 public class PregelCustomFunction implements CustomFunction {
 
 	private VertexFunction func;
-	private int steps;
-	private boolean execOnAll;
-	private MessageMerger merger;
+	private PregelConfig config;
 
-	public PregelCustomFunction(VertexFunction func, MessageMerger merger,
-			int steps, boolean execOnAll) {
+	public PregelCustomFunction(VertexFunction func, PregelConfig config) {
 		this.func = func;
-		this.steps = steps;
-		this.execOnAll = execOnAll;
-		this.merger = merger;
+		this.config = config;
 	}
 
 	@Override
@@ -35,14 +29,10 @@ public class PregelCustomFunction implements CustomFunction {
 
 		GraphlyGraph g = tr.getGraph();
 
-		TLongSetDecorator dec = new TLongSetDecorator(new TLongHashSet(list));
-
-		PregelConfig conf = new PregelConfig().executeOnAll(execOnAll)
-				.setvList(dec).steps(steps).threads(8).merger(merger)
-				.graph(new GraphlyPregelAdapter(g))
-				.split(new MapperPregelAdapter(mapper, tr.getGraph().getRpc()));
+		PregelConfig conf = config.graph(new GraphlyPregelAdapter(g)).split(
+				new MapperPregelAdapter(mapper, tr.getGraph().getRpc()));
 		PregelClient cli = tr.getGraph().getPregeClient();
-		cli.execute(func, conf);
+		cli.execute(func, list.toArray(), conf);
 		return before;
 
 	}

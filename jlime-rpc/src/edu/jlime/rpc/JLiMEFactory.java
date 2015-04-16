@@ -51,6 +51,9 @@ public class JLiMEFactory implements RPCFactory {
 		case "rabbit":
 			commStack = Stack.rabbitStack(config, p.getAddress(), config.name);
 			break;
+		case "local":
+			commStack = Stack.localStack(config, p.getAddress(), config.name);
+			break;
 		case "zmq":
 			commStack = Stack.zeroMqStack(config, p.getAddress(), config.name);
 			break;
@@ -63,10 +66,10 @@ public class JLiMEFactory implements RPCFactory {
 		case "udp":
 			commStack = Stack.udpStack(config, p.getAddress(), config.name);
 			break;
-		case "niotcp":
+		case "tcpnio":
 			commStack = Stack.tcpNioStack(config, p.getAddress(), config.name);
 			break;
-		case "nioudp":
+		case "udpnio":
 			commStack = Stack.udpNioStack(config, p.getAddress(), config.name);
 			break;
 		default:

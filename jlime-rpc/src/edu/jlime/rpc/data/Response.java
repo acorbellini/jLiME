@@ -1,12 +1,10 @@
 package edu.jlime.rpc.data;
 
-import java.util.UUID;
-
 public abstract class Response {
 
-	UUID msgID;
+	int msgID;
 
-	public Response(UUID msgID) {
+	public Response(int msgID) {
 		this.msgID = msgID;
 	}
 

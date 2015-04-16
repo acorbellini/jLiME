@@ -476,4 +476,17 @@ public class PregelGraphLocal implements Serializable, Graph {
 		// TODO Auto-generated method stub
 
 	}
+
+	@Override
+	public float getFloat(long v, String string) throws Exception {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public void setFloat(long v, String string, float currentVal)
+			throws Exception {
+		// TODO Auto-generated method stub
+
+	}
 }

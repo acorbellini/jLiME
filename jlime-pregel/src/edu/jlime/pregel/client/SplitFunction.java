@@ -9,6 +9,10 @@ public interface SplitFunction extends Serializable {
 
 	public Peer getPeer(long v, List<Peer> peers);
 
-	public void update() throws Exception;
+	public void update(List<Peer> peers) throws Exception;
+
+	public Peer[] getPeers();
+
+	public int hash(long to);
 
 }

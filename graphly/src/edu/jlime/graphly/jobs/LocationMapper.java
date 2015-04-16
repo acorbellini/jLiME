@@ -19,21 +19,26 @@ public class LocationMapper implements Mapper {
 
 	private static final long serialVersionUID = 1634522852310272015L;
 
+	private transient volatile Graphly g;
+	private ClientNode[] nodes;
+
+	private transient volatile Logger log;
+
+	private Peer[] peers;
+
 	@Override
 	public List<Pair<ClientNode, TLongArrayList>> map(int max, long[] data,
 			JobContext ctx) throws Exception {
-		Logger log = Logger.getLogger(LocationMapper.class);
+
 		if (log.isDebugEnabled())
 			log.debug("Mapping " + data.length + " keys by location.");
 
-		Graphly g = (Graphly) ctx.getGlobal("graphly");
-
-		Map<Peer, TLongArrayList> map = g.getHash().hashKeys(data);
+		Map<Peer, TLongArrayList> map = getGraph(ctx).getHash().hashKeys(data);
 
 		Map<ClientNode, TLongArrayList> ret = new HashMap<>();
 		for (Entry<Peer, TLongArrayList> e : map.entrySet()) {
-			ret.put(g.getJobClient().getCluster().getClientFor(e.getKey()),
-					e.getValue());
+			ret.put(getGraph(ctx).getJobClient().getCluster()
+					.getClientFor(e.getKey()), e.getValue());
 		}
 		return GraphlyUtil.divide(ret, max);
 	}
@@ -49,15 +54,47 @@ public class LocationMapper implements Mapper {
 	}
 
 	@Override
-	public void update(JobContext ctx) throws Exception {
+	public synchronized void update(JobContext ctx) throws Exception {
+		if (nodes != null)
+			return;
+
+		this.peers = getGraph(ctx).getHash().getCircle();
+		this.nodes = new ClientNode[peers.length];
+		for (int i = 0; i < this.nodes.length; i++) {
+			this.nodes[i] = ctx.getCluster().getClientFor(this.peers[i]);
+		}
 	}
 
 	@Override
-	public ClientNode getPeer(long v, JobContext ctx) {
-		Graphly g = (Graphly) ctx.getGlobal("graphly");
+	public ClientNode getNode(long v, JobContext ctx) {
+		return nodes[getGraph(ctx).getHash().hash(v)];
+	}
 
-		Peer p = g.getHash().getNode(v);
+	private Graphly getGraph(JobContext ctx) {
+		if (g == null) {
+			synchronized (this) {
+				if (g == null) {
+					this.log = Logger.getLogger(LocationMapper.class);
+					this.g = (Graphly) ctx.getGlobal("graphly");
+				}
+			}
+		}
+		return g;
+	}
 
-		return g.getJobClient().getCluster().getClientFor(p);
+	@Override
+	public Peer[] getPeers() {
+		// Peer[] peers = new Peer[nodes.length];
+		// for (int i = 0; i < nodes.length; i++) {
+		// peers[i] = nodes[i].getPeer();
+		// }
+		// return peers;
+
+		return peers;
+	}
+
+	@Override
+	public int hash(long v) {
+		return g.getHash().hash(v);
 	}
 }

@@ -134,9 +134,8 @@ public class RecommendationTest {
 			CommandLineUtils
 					.execCommand("bash graphly.sh start eight.txt acorbellini");
 		else {
-			String store = ctxt.getBean("storename", String.class);
 			String localdir = ctxt.getBean("localdir", String.class);
-			this.localServers = GraphlyServer.createServers(store, localdir,
+			this.localServers = GraphlyServer.createServers(localdir,
 					this.servers, true, this.servers);
 		}
 		System.out.println("Creating client, waiting for " + servers

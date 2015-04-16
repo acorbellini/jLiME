@@ -12,17 +12,19 @@ public class Meter implements Metric<Float>, MeterMBean {
 
 	Gauge g = new Gauge();
 
-	Float meterValue = 0f;
+	float meterValue = 0f;
 
 	Long lastTime = -1l;
 
-	Double perf;
+	float perf = 0f;
 
-	private double TIME = 5;
+	// private float TIME = 5;
+
+	private float alpha = 0.8f;
 
 	@Override
 	public void update(Float val) {
-		long currentTime = System.currentTimeMillis();
+		long currentTime = System.nanoTime();
 		if (lastTime == -1l) {
 			lastTime = currentTime;
 			meterValue = val;
@@ -30,10 +32,17 @@ public class Meter implements Metric<Float>, MeterMBean {
 		}
 
 		// http://en.wikipedia.org/wiki/Moving_average
-		long timeDiff = (currentTime - lastTime) / 1000;
-		double alpha = 1 - Math.exp(-timeDiff / TIME);
-		perf = alpha * val + (1 - alpha) * meterValue;
+		float timeDiff = (currentTime - lastTime) / 1000000000f;
+		// double alpha = 1 - Math.exp(-timeDiff / TIME);
+
+		lastTime = currentTime;
+
+		float avg = val / timeDiff;
+
+		perf = alpha * avg + (1 - alpha) * perf;
+
 		meterValue = val;
+
 		g.update(val);
 
 	}
@@ -50,7 +59,7 @@ public class Meter implements Metric<Float>, MeterMBean {
 
 	@Override
 	public String get() {
-		return meterValue.toString();
+		return meterValue + "";
 	}
 
 	@Override

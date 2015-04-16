@@ -36,11 +36,9 @@ public class PregelTest {
 		g.setDefaultValue("pagerank", 1d / g.vertexSize());
 		g.setDefaultValue("ranksource", .85d);
 
-		cli.execute(
-				new PageRank(g.vertexSize()),
-				new PregelConfig().split(SplitFunctions.rr())
-						.merger(MessageMergers.sum()).graph(g).steps(30)
-						.threads(10).executeOnAll(true));
+		cli.execute(new PageRank(g.vertexSize()), null, new PregelConfig()
+				.split(SplitFunctions.rr()).merger(MessageMergers.FLOAT_SUM)
+				.graph(g).steps(30).threads(10).executeOnAll(true));
 
 		System.out.println("Finished PageRank Test.");
 

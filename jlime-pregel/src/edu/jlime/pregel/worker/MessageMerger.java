@@ -4,6 +4,9 @@ import java.io.Serializable;
 
 public interface MessageMerger extends Serializable {
 
-	public Object merge(Object v, Object v2);
+	// public void merge(PregelMessage msg1, PregelMessage msg2, PregelMessage
+	// into);
+
+	MessageQueueFactory getFactory();
 
 }

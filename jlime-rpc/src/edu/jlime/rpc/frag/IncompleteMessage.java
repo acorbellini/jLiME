@@ -18,13 +18,13 @@ public class IncompleteMessage {
 
 	int remaining;
 
-	UUID id;
+	int id;
 
 	private String from;
 
 	private int total;
 
-	public IncompleteMessage(Address from, int total, UUID id) {
+	public IncompleteMessage(Address from, int total, int id) {
 		this.buff = new ByteBuffer(total);
 		this.from = from.toString();
 		this.total = total;

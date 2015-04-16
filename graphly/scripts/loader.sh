@@ -2,12 +2,14 @@
 JVM_OPTS="-Xmx4g"
 CP="../../lib/*:./*"
 
-echo "Loading edges"
-java $JVM_OPTS -cp "$CP" edu.jlime.graphly.util.GraphlyLoader load 8 $1 " " out
-echo "Loading IN edges"
-java $JVM_OPTS -cp "$CP" edu.jlime.graphly.util.GraphlyLoader load 8 $2 " " in
+NUMNODES=8
 
-echo "Validating OUT edges"
-java $JVM_OPTS -cp "$CP" edu.jlime.graphly.util.GraphlyLoader validate 8 $1 " " out
-echo "Validating IN edges"
-java $JVM_OPTS -cp "$CP" edu.jlime.graphly.util.GraphlyLoader validate 8 $2 " " in
+IN=$1
+OUT=$2
+GRAPHNAME=$3
+
+echo "Loading edge"
+java $JVM_OPTS -cp "$CP" edu.jlime.graphly.util.GraphlyLoader load $NUMNODES $GRAPHNAME " " $IN $OUT
+
+echo "Validating edges"
+java $JVM_OPTS -cp "$CP" edu.jlime.graphly.util.GraphlyLoader validate $NUMNODES $GRAPHNAME " " $IN $OUT

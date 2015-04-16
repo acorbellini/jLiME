@@ -1,13 +1,12 @@
 package edu.jlime.pregel;
 
 import java.io.Serializable;
-import java.util.UUID;
 
 public class PregelExecution implements Serializable {
 	int steps;
-	UUID taskID;
+	int taskID;
 
-	public PregelExecution(int steps, UUID taskID) {
+	public PregelExecution(int steps, int taskID) {
 		super();
 		this.steps = steps;
 		this.taskID = taskID;
@@ -17,7 +16,7 @@ public class PregelExecution implements Serializable {
 		return steps;
 	}
 
-	public UUID getTaskID() {
+	public int getTaskID() {
 		return taskID;
 	}
 }

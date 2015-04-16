@@ -1,6 +1,6 @@
 package edu.jlime.pregel.worker;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -14,29 +14,14 @@ import edu.jlime.pregel.worker.rpc.Worker;
 
 public class WorkerImpl implements Worker {
 
-	HashMap<UUID, WorkerTask> contexts = new HashMap<>();
+	ArrayList<WorkerTask> contexts = new ArrayList<>();
 
 	private UUID id = UUID.randomUUID();
 
-	// private ClientManager<Coordinator, CoordinatorBroadcast> coordCli;
-
-	// private ClientManager<Worker, WorkerBroadcast> workerCli;
-
 	private RPCDispatcher rpc;
-
-	// private List<Worker> workers;
-
-	// private WorkerBroadcast workerBroadcast;
 
 	public WorkerImpl(RPCDispatcher rpc) {
 		this.rpc = rpc;
-		// this.workers = workerCli.getAll();
-		// this.workerBroadcast = workerCli.broadcast();
-	}
-
-	@Override
-	public void sendMessage(PregelMessage msg, UUID taskID) throws Exception {
-		contexts.get(taskID).queueVertexData(msg);
 	}
 
 	@Override
@@ -45,50 +30,60 @@ public class WorkerImpl implements Worker {
 	}
 
 	@Override
-	public void nextSuperstep(int superstep, UUID taskID, SplitFunction func)
+	public void nextSuperstep(int superstep, int taskID, SplitFunction func)
 			throws Exception {
 		contexts.get(taskID).nextStep(superstep, func);
 	}
 
 	@Override
-	public void createTask(UUID taskID, Peer cli, VertexFunction func,
-			PregelConfig config) throws Exception {
-		contexts.put(taskID, new WorkerTask(this, rpc, cli, func, taskID,
-				config));
+	public void createTask(int taskID, Peer cli, VertexFunction func,
+			long[] vList, PregelConfig config) throws Exception {
+		synchronized (contexts) {
+			while (contexts.size() <= taskID)
+				contexts.add(null);
+			contexts.set(taskID, new WorkerTask(this, rpc, cli, func, vList,
+					taskID, config));
+		}
 	}
-
-	// @Override
-	// public Graph getResult(UUID taskID) throws Exception {
-	// return contexts.get(taskID).getResultGraph();
-	// }
-
-	// public Worker getWorker(Long v) {
-	// return workers.get((int) (v % workers.size()));
-	//
-	// }
 
 	@Override
-	public void execute(UUID taskID) throws Exception {
+	public void execute(int taskID) throws Exception {
 		contexts.get(taskID).execute();
 	}
-
-	// public void sendAll(UUID taskid, PregelMessage pregelMessage)
-	// throws Exception {
-	// workerCli.broadcast().sendMessage(pregelMessage, taskid);
-	//
-	// }
 
 	public Graph getLocalGraph(String name) {
 		return (Graph) this.rpc.getTarget(name);
 	}
 
 	@Override
-	public void sendMessages(List<PregelMessage> value, UUID taskid) {
-		contexts.get(taskid).sendMessages(value);
+	public void cleanup(int taskID) throws Exception {
+		WorkerTask task = contexts.get(taskID);
+		if (task != null)
+			task.cleanup();
+		contexts.set(taskID, null);
 	}
 
-	// public Worker getWorker(long to, SplitFunction splitFunc) {
-	// return workerCli.get(splitFunc.getPeer(to, workerCli.getPeers()));
-	// }
+	@Override
+	public void sendMessage(long from, long to, Object val, int taskID)
+			throws Exception {
+		contexts.get(taskID).queueVertexData(from, to, val);
+	}
 
+	@Override
+	public void sendFloatMessage(long from, long to, float msg, int taskID)
+			throws Exception {
+		contexts.get(taskID).queueFloatVertexData(from, to, msg);
+	}
+
+	@Override
+	public void sendBroadcastMessage(long from, Object val, int taskID)
+			throws Exception {
+		contexts.get(taskID).queueBroadcastVertexData(from, val);
+	}
+
+	@Override
+	public void sendFloatBroadcastMessage(long from, float val, int taskID)
+			throws Exception {
+		contexts.get(taskID).queueBroadcastFloatVertexData(from, val);
+	}
 }

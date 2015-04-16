@@ -29,6 +29,8 @@ public class ClientManager<T, B> implements ClusterChangeListener {
 
 	ConcurrentHashMap<Peer, T> clients = new ConcurrentHashMap<>();
 
+	ConcurrentHashMap<T, Peer> peers = new ConcurrentHashMap<>();
+
 	private PeerFilter filter;
 
 	B broadcast = null;
@@ -73,7 +75,9 @@ public class ClientManager<T, B> implements ClusterChangeListener {
 								+ " already exists on client manager.");
 					return;
 				}
-				clients.put(peer, factory.get(peer, client));
+				T value = factory.get(peer, client);
+				clients.put(peer, value);
+				peers.put(value, peer);
 				notify();
 				cachedPeers = buildCachedPeers();
 				cachedClients = buildClientList();
@@ -161,5 +165,13 @@ public class ClientManager<T, B> implements ClusterChangeListener {
 
 	public Map<Peer, T> getMap() {
 		return clients;
+	}
+
+	public Peer getLocalPeer() {
+		return rpc.getCluster().getLocalPeer();
+	}
+
+	public Peer getPeer(T worker) {
+		return peers.get(worker);
 	}
 }

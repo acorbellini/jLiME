@@ -1,7 +1,5 @@
 package edu.jlime.rpc.data;
 
-import java.util.UUID;
-
 import edu.jlime.core.transport.Address;
 import edu.jlime.rpc.message.Message;
 
@@ -10,10 +8,10 @@ public class DataResponse {
 	private DataProcessor dp;
 	// private Semaphore wait = new Semaphore(0);
 	private volatile Message msg = null;
-	private UUID id;
+	private int id;
 	private Address addr;
 
-	public DataResponse(DataProcessor dataProcessor, Address addr, UUID msgID) {
+	public DataResponse(DataProcessor dataProcessor, Address addr, int msgID) {
 		this.dp = dataProcessor;
 		this.id = msgID;
 		this.addr = addr;

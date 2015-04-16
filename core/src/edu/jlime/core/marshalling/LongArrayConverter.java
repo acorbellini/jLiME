@@ -17,5 +17,4 @@ public class LongArrayConverter implements TypeConverter {
 	public Object fromArray(ByteBuffer buff) throws Exception {
 		return buff.getLongArray();
 	}
-
 }

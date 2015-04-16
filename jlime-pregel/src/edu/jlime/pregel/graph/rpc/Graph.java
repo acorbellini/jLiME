@@ -72,7 +72,14 @@ public interface Graph extends Serializable {
 
 	public abstract double getDouble(long v, String string) throws Exception;
 
+	@Sync
 	public abstract void setDouble(long v, String string, double currentVal)
+			throws Exception;
+
+	public abstract float getFloat(long v, String string) throws Exception;
+
+	@Sync
+	public abstract void setFloat(long v, String string, float currentVal)
 			throws Exception;
 
 }

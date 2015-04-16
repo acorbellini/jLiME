@@ -1,6 +1,6 @@
 package edu.jlime.pregel.coordinator;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.UUID;
 
 import edu.jlime.core.cluster.Peer;
@@ -15,7 +15,9 @@ import edu.jlime.pregel.worker.rpc.WorkerBroadcast;
 
 public class CoordinatorImpl implements Coordinator {
 
-	private HashMap<UUID, CoordinatorTask> tasks = new HashMap<>();
+	// AtomicInteger taskCount = new AtomicInteger(0);
+
+	private ArrayList<CoordinatorTask> tasks = new ArrayList<>();
 
 	private RPCDispatcher rpc;
 
@@ -30,30 +32,42 @@ public class CoordinatorImpl implements Coordinator {
 	}
 
 	@Override
-	public void finished(UUID taskID, UUID workerID, Boolean didWork)
+	public void finished(int taskID, UUID workerID, Boolean didWork)
 			throws Exception {
 		tasks.get(taskID).finished(workerID, didWork);
 	}
 
 	@Override
-	public PregelExecution execute(VertexFunction func, PregelConfig config,
-			Peer client) throws Exception {
-		CoordinatorTask task = new CoordinatorTask(rpc,
-				config.getAggregators(), client);
-		tasks.put(task.taskID, task);
-		return task.execute(func, config);
+	public PregelExecution execute(VertexFunction func, long[] vList,
+			PregelConfig config, Peer client) throws Exception {
+		// int taskID = taskCount.getAndIncrement();
+
+		int taskID = 0;
+		CoordinatorTask task = null;
+		synchronized (tasks) {
+			taskID = tasks.size();
+			task = new CoordinatorTask(taskID, rpc, config.getAggregators(),
+					client);
+			tasks.add(task);
+
+		}
+		PregelExecution ret = task.execute(func, vList, config);
+
+		tasks.set(taskID, null);
+
+		return ret;
 
 	}
 
 	@Override
-	public Double getAggregatedValue(UUID taskID, Long v, String k)
+	public Double getAggregatedValue(int taskID, Long v, String k)
 			throws Exception {
 		return tasks.get(taskID).getAggregatedValue(v, k);
 
 	}
 
 	@Override
-	public void setAggregatedValue(UUID taskID, Long v, String name, Double val)
+	public void setAggregatedValue(int taskID, Long v, String name, Double val)
 			throws Exception {
 		tasks.get(taskID).setAggregatedValue(v, name, val);
 

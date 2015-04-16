@@ -63,12 +63,12 @@ public class GraphlyPregelAdapter implements Graph {
 
 	@Override
 	public TLongArrayList getOutgoing(final long vertex) throws Exception {
-		return TLongArrayList.wrap(g.getEdges(Dir.OUT, vertex, null));
+		return TLongArrayList.wrap(g.getEdgesFiltered(Dir.OUT, vertex, null));
 	}
 
 	@Override
 	public TLongArrayList getIncoming(final long vertex) throws Exception {
-		return TLongArrayList.wrap(g.getEdges(Dir.IN, vertex, null));
+		return TLongArrayList.wrap(g.getEdgesFiltered(Dir.IN, vertex, null));
 	}
 
 	@Override
@@ -149,6 +149,17 @@ public class GraphlyPregelAdapter implements Graph {
 	@Override
 	public void setDouble(long v, String k, double currentVal) throws Exception {
 		g.setDouble(v, k, currentVal);
+	}
+
+	@Override
+	public float getFloat(long v, String k) throws Exception {
+		return g.getFloat(v, k);
+	}
+
+	@Override
+	public void setFloat(long v, String k, float currentVal) throws Exception {
+		g.setFloat(v, k, currentVal);
+
 	}
 
 }

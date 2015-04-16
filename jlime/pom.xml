@@ -120,6 +120,7 @@
 
 		<module>../util</module>
 		<module>../graphly</module>
+		<module>../jlime-pregel</module>
 	</modules>
 	<repositories>
 		<repository>

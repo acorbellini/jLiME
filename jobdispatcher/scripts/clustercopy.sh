@@ -1,14 +1,24 @@
 #!/bin/bash
-cluster="$(cat $1)"
+# El cluster separado por ",": grid1,grid2 ... o 192.168.240.1,192.168.240.2 ...
+cluster=$(echo $1 | tr ',' ' ')
+# El usuario para logearse
 user=$2
-if [ -z $2 ]; then
-	echo "Must indicate username"
-	return 1
-fi
+# Carpeta origen
+orig=$3
+# Carpeta destino (va a ser la misma en cada cluster)
+dest=$4
+
 PID_List=""
 for i in $cluster
 do
-	rsync --delete -tr ../ $user@$i:/home/$user/jlime &
+	echo Executing rsync on $i
+	# --delete borra archivos que no esten en el origen y si en el destino
+	# --checksum calcula diferencias por checksum para no copiar repetidos
+	# --progress muestra el progreso
+	# -z comprime los datos
+	# -t mantiene los tiempos de modificación locales
+	# -r recursivo
+	rsync --delete --checksum -z --progress -tr $orig $user@$i:$dest &
 	PID_List="$PID_List $!"
 done
 

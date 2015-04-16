@@ -35,12 +35,21 @@ public class MapperPregelAdapter implements SplitFunction, Transferible {
 
 	@Override
 	public Peer getPeer(long v, List<Peer> peers) {
-		return mapper.getPeer(v, this.ctx).getPeer();
+		return mapper.getNode(v, this.ctx).getPeer();
 	}
 
 	@Override
-	public void update() throws Exception {
+	public void update(List<Peer> peers) throws Exception {
 		mapper.update(ctx);
+	}
 
+	@Override
+	public Peer[] getPeers() {
+		return mapper.getPeers();
+	}
+
+	@Override
+	public int hash(long to) {
+		return mapper.hash(to);
 	}
 }

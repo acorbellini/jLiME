@@ -20,10 +20,16 @@ public class ResendData {
 		return confirmed;
 	}
 
-	void setData(Message data, long timeSent, int seq) {
+	synchronized void setData(Message data, long timeSent, int seq) {
 		this.confirmed = false;
 		this.timeSent = timeSent;
 		this.seq = seq;
 		this.data = data;
+	}
+
+	synchronized public Message getData(int seq2) {
+		if (seq2 == seq)
+			return data;
+		return null;
 	}
 }

@@ -16,9 +16,6 @@ import edu.jlime.graphly.traversal.Dir;
 
 public class GraphlyLoader {
 
-	private static final String OUT = "out";
-	private static final String IN = "in";
-
 	public static void main(String[] args) throws Exception {
 		String action = args[0];
 		String servers = args[1];
@@ -27,24 +24,31 @@ public class GraphlyLoader {
 		String fileIn = args[4];
 		String fileOut = args[5];
 
+		Integer serverInt = Integer.valueOf(servers);
+
+		Graphly graphly = Graphly.build(serverInt);
+
+		GraphlyGraph g = graphly.getGraph(graph);
+
 		if (action.equals("validate")) {
-			new GraphlyLoader().validate(Integer.valueOf(servers), graph,
-					fileIn, sep, IN);
-			new GraphlyLoader().validate(Integer.valueOf(servers), graph,
-					fileOut, sep, OUT);
+			new GraphlyLoader(g).validate(fileIn, sep, Dir.IN);
+			new GraphlyLoader(g).validate(fileOut, sep, Dir.OUT);
 		} else {
-			new GraphlyLoader().load(Integer.valueOf(servers), graph, fileIn,
-					sep, IN);
-			new GraphlyLoader().load(Integer.valueOf(servers), graph, fileOut,
-					sep, OUT);
+			new GraphlyLoader(g).load(fileIn, sep, Dir.IN);
+			new GraphlyLoader(g).load(fileOut, sep, Dir.OUT);
 
 		}
+		graphly.close();
 	}
 
-	private void validate(Integer servers, String graph, String file,
-			String sep, String dir) throws Exception, IOException {
-		Graphly graphly = Graphly.build(servers);
-		GraphlyGraph g = graphly.getGraph(graph);
+	private GraphlyGraph g;
+
+	public GraphlyLoader(GraphlyGraph graphly) {
+		this.g = graphly;
+	}
+
+	public void validate(String file, String sep, final Dir dir)
+			throws Exception, IOException {
 		Iterator<Pair<Long, long[]>> adj = GraphlySintetic.read(file, sep);
 		int cont = 0;
 		int last = -1;
@@ -60,32 +64,23 @@ public class GraphlyLoader {
 					last = (int) Math.floor(cont / 10000);
 				}
 
-				Dir edgeDir = Dir.OUT;
-				if (dir.equals(IN))
-					edgeDir = Dir.IN;
-				long[] dbList = g.getEdges(edgeDir, pair.getKey());
+				long[] dbList = g.getEdges(dir, pair.getKey());
 				if (!Arrays.equals(dbList, pair.getValue()))
-					throw new Exception(edgeDir + " edges badly loaded.");
+					throw new Exception(dir + " edges badly loaded.");
 			}
 		}
-		graphly.close();
 	}
 
-	private void load(Integer min, String graph, String fname, String sep,
-			final String dir) throws Exception, IOException,
-			InterruptedException {
-		final Graphly graphly = Graphly.build(min);
-
-		final GraphlyGraph g = graphly.getGraph(graph);
-
+	public void load(String fname, String sep, final Dir dir) throws Exception,
+			IOException, InterruptedException {
 		int cont = 0;
 		final AtomicInteger contProm = new AtomicInteger(0);
 		final AtomicLong sum = new AtomicLong(0);
 		Iterator<Pair<Long, long[]>> adj = GraphlySintetic.read(fname, sep);
 
-		ExecutorService exec = Executors.newFixedThreadPool(4);
+		ExecutorService exec = Executors.newFixedThreadPool(64);
 
-		final Semaphore sem = new Semaphore(10);
+		final Semaphore sem = new Semaphore(64);
 		int last = -1;
 		while (adj.hasNext()) {
 			final Pair<java.lang.Long, long[]> pair = adj.next();
@@ -103,11 +98,8 @@ public class GraphlyLoader {
 					@Override
 					public void run() {
 						try {
-							Dir edgeDir = Dir.OUT;
-							if (dir.equals(IN))
-								edgeDir = Dir.IN;
 							long init = System.nanoTime();
-							g.addEdges(pair.getKey(), edgeDir, value);
+							g.addEdges(pair.getKey(), dir, value);
 							sum.addAndGet(System.nanoTime() - init);
 							contProm.incrementAndGet();
 						} catch (Exception e) {
@@ -126,6 +118,5 @@ public class GraphlyLoader {
 
 		System.out.println(sum.get() / contProm.get());
 
-		graphly.close();
 	}
 }

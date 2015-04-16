@@ -102,7 +102,10 @@ public class UDPNIO extends MessageProcessor implements AddressListProvider,
 		// else
 		// to = addressBook.get(msg.getTo());
 
-		int size = msg.getSize() + 32;
+		int size = msg.getSize() + HEADER;
+		if (size > config.max_msg_size)
+			log.warn("Surpasing max message size " + config.max_msg_size
+					+ " current size " + size);
 		edu.jlime.util.ByteBuffer[] msgAsBytes = msg.toByteBuffers();
 		// byte[] ba = msg.toByteArray();
 
@@ -115,7 +118,7 @@ public class UDPNIO extends MessageProcessor implements AddressListProvider,
 		// ByteBuffer buff = ByteBuffer.wrap(toSend.build());
 
 		ByteBuffer[] buff = new ByteBuffer[1 + msgAsBytes.length];
-		// buff[0] = ByteBuffer.wrap(toSend.build());´
+		// buff[0] = ByteBuffer.wrap(toSend.build());
 		buff[0] = toSend.asByteBuffer();
 		for (int i = 0; i < msgAsBytes.length; i++) {
 			// buff[i + 1] = ByteBuffer.wrap(msgAsBytes[i].build());

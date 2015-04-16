@@ -178,12 +178,14 @@ public class RPCDispatcher implements TransportListener {
 
 	private boolean checkParams(MethodCall mc, Method m) throws Exception {
 		// Class<?>[] types = targetsMethodsTypes.get(m) m.gett;
+		Object[] objects = mc.getObjects();
 		Class<?>[] types = m.getParameterTypes();
 		Class<?>[] searchedTypes = mc.getArgTypes();
 		if (m.getName().equals(mc.getName())
 				&& types.length == searchedTypes.length) {
 			for (int i = 0; i < types.length; i++) {
-				if (!types[i].isAssignableFrom(searchedTypes[i]))
+				if (!types[i].isAssignableFrom(searchedTypes[i])
+						&& objects[i] != null)
 					if (Wrappers.get(types[i]) != null
 							&& Wrappers.get(types[i]).isAssignableFrom(
 									searchedTypes[i]))
@@ -230,6 +232,8 @@ public class RPCDispatcher implements TransportListener {
 
 	private <T> Map<Peer, T> multiCall(List<Peer> peers, final Peer client,
 			final MethodCall call) throws Exception {
+		// Because I want to marshall this when needed (if this array were a
+		// byte[] and final, I wouldn't be able to create it on demand)
 		final byte[][] marshalled = new byte[1][];
 
 		final ReentrantLock marshalledLock = new ReentrantLock();
@@ -525,5 +529,9 @@ public class RPCDispatcher implements TransportListener {
 
 	public Object getRealAddress() {
 		return tr.getRealAddress();
+	}
+
+	public Transport getTransport() {
+		return tr;
 	}
 }

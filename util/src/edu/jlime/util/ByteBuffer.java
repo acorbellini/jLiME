@@ -322,6 +322,7 @@ public class ByteBuffer {
 	}
 
 	public void putIntArray(int[] array) {
+		ensureCapacity(4 + array.length * 4);
 		putInt(array.length);
 		for (int i : array) {
 			putInt(i);
@@ -358,6 +359,7 @@ public class ByteBuffer {
 	}
 
 	public void putLongArray(long[] array) {
+		ensureCapacity(4 + array.length * 8);
 		putInt(array.length);
 		for (long i : array) {
 			putLong(i);

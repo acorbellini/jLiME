@@ -106,4 +106,8 @@ public class jLiMETransport extends Transport implements DataListener {
 	public Object getRealAddress() {
 		return commStack.getDiscovery().getAddresses();
 	}
+
+	public Stack getCommStack() {
+		return commStack;
+	}
 }

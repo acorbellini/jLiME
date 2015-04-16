@@ -196,7 +196,17 @@ public class RPCCreator {
 
 		writer.write("@Override\n"
 				+ "public void setRPC(RPCDispatcher rpc) {\n"
-				+ "this.disp=rpc;\n" + "}\n");
+				+ "this.disp=rpc;\n"
+				+ "this.localRPC = RPCDispatcher.getLocalDispatcher(super.dest);\n"
+				+ "}\n");
+
+		writer.write("public " + serverInterface.getSimpleName()
+				+ " getLocal() {" + "	if(local==null){"
+				+ "		synchronized(this){" + "			if(local==null){"
+				+ "				this.local = (" + serverInterface.getSimpleName()
+				+ "							  ) localRPC.getTarget(targetID);\n" + "			}" + "		}"
+				+ "}" + "" + "" + "\n" + "return this.local;\n" + "}\n");
+
 		writer.write("}");
 		writer.close();
 	}
@@ -208,8 +218,9 @@ public class RPCCreator {
 					&& !method.getReturnType().getSimpleName().equals("void"))
 				builder.append("   " + method.getReturnType().getSimpleName()
 						+ " " + method.getName() + "Cached = null;\n");
+		builder.append("   transient RPCDispatcher localRPC;\n");
 
-		builder.append("   transient " + iface + " local = null;\n");
+		builder.append("   transient volatile " + iface + " local = null;\n");
 
 		return builder.toString();
 	}
@@ -236,12 +247,15 @@ public class RPCCreator {
 						+ name
 						+ "(RPCDispatcher disp, Peer dest, Peer client, String targetID) {\n");
 		constructor.append(" super(disp, dest, client, targetID);\n");
+
+		// constructor
 		constructor
-				.append(" RPCDispatcher localRPC = RPCDispatcher.getLocalDispatcher(dest);");
-		constructor.append(" if(localRPC!=null)");
-		constructor.append(" 	this.local = (" + iface
-				+ ") localRPC.getTarget(targetID);\n");
+				.append(" this.localRPC = RPCDispatcher.getLocalDispatcher(dest);");
+		// constructor.append(" if(localRPC!=null)");
+		// constructor.append(" 	this.local = (" + iface
+		// + ") localRPC.getTarget(targetID);\n");
 		constructor.append("}\n\n");
+
 		return constructor.toString();
 	}
 
@@ -460,9 +474,9 @@ public class RPCCreator {
 		String callCode = "disp." + singleCall + "(dest, client, targetID, \""
 				+ method.getName() + "\",new Object[] { " + args + " });\n";
 
-		builder.append("if(local!=null) {\n");
+		builder.append("if(localRPC!=null) {\n");
 
-		String simpleCall = "local." + rpcmethod + "(" + args + ")";
+		String simpleCall = "getLocal()." + rpcmethod + "(" + args + ")";
 
 		if (!sync)
 			simpleCall = "async.execute(new Runnable(){\n"

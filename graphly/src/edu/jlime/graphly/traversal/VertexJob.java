@@ -31,6 +31,6 @@ public class VertexJob implements Job<long[]> {
 		Logger log = Logger.getLogger(VertexJob.class);
 		if (log.isDebugEnabled())
 			log.debug("Vertex Job obtaining " + data.length + ".");
-		return g.getEdges(dir, max_edges, data);
+		return g.getEdgesMax(dir, max_edges, data);
 	}
 }

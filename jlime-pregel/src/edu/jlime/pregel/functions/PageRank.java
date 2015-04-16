@@ -7,8 +7,8 @@ import org.apache.log4j.Logger;
 import edu.jlime.pregel.client.WorkerContext;
 import edu.jlime.pregel.graph.VertexFunction;
 import edu.jlime.pregel.graph.rpc.Graph;
+import edu.jlime.pregel.worker.FloatPregelMessage;
 import edu.jlime.pregel.worker.PregelMessage;
-import edu.jlime.util.DataTypeUtils;
 import gnu.trove.iterator.TLongIterator;
 
 public class PageRank implements VertexFunction {
@@ -29,27 +29,28 @@ public class PageRank implements VertexFunction {
 
 		Graph graph = ctx.getGraph();
 
-		double oldval = graph.getDouble(v, "pagerank");
+		float oldval = graph.getFloat(v, "pagerank");
 
 		// Jacobi iterative method: (1-d) + d * function
 		// Example :
 		// http://mathscinotes.wordpress.com/2012/01/02/worked-pagerank-example/
-		double currentVal = oldval;
+		float currentVal = oldval;
 		if (ctx.getSuperStep() >= 1) {
-			double sum = 0d;
+			float sum = 0f;
 			for (PregelMessage pm : in) {
-				sum += Double.longBitsToDouble(DataTypeUtils
-						.byteArrayToLong((byte[]) pm.getV()));
+				// sum += Float.intBitsToFloat(DataTypeUtils
+				// .byteArrayToInt((byte[]) pm.getV()));
+				sum += ((FloatPregelMessage) pm).getFloat();
 			}
 
-			double d = graph.getDouble(v, "ranksource");
+			float d = graph.getFloat(v, "ranksource");
 			currentVal = (1 - d) / vertexSize + d * (sum);
 			if (log.isDebugEnabled())
 				log.debug("Saving pagerank " + currentVal + " into " + v
 						+ " ( 1 - " + d + "/" + graph.vertexSize() + " + " + d
 						+ "*" + sum + " )");
 
-			graph.setDouble(v, "pagerank", currentVal);
+			graph.setFloat(v, "pagerank", currentVal);
 
 			// If converged, set as halted for the next superstep. The value of
 			// the current pagerank was saved in
@@ -61,19 +62,20 @@ public class PageRank implements VertexFunction {
 		int outgoingSize = graph.getOutgoingSize(v);
 
 		// Dangling nodes distribute pagerank across the whole graph.
-		double val = currentVal / outgoingSize;
-		byte[] data = DataTypeUtils.longToByteArray(Double
-				.doubleToLongBits(val));
+
+		// byte[] data =
+		// DataTypeUtils.intToByteArray(Float.floatToIntBits(val));
 		if (outgoingSize == 0) {
-			outgoingSize = vertexSize;
-			ctx.sendAll(data);
+			// float val = currentVal / vertexSize;
+			// ctx.sendAllFloat(val);
 		} else {
+			float val = currentVal / outgoingSize;
 			TLongIterator outgoing = graph.getOutgoing(v).iterator();
 			while (outgoing.hasNext()) {
 				long vertex = outgoing.next();
 				if (log.isDebugEnabled())
 					log.debug("Sending message to " + vertex + " from " + v);
-				ctx.send(vertex, data);
+				ctx.sendFloat(vertex, val);
 			}
 		}
 	}

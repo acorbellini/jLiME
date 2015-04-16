@@ -1,5 +1,6 @@
 package edu.jlime.graphly.client;
 
+import java.util.List;
 import java.util.Map;
 
 import edu.jlime.core.rpc.RPCDispatcher;
@@ -7,6 +8,7 @@ import edu.jlime.core.rpc.Transferible;
 import edu.jlime.graphly.GraphlyCount;
 import edu.jlime.graphly.traversal.Dir;
 import edu.jlime.graphly.traversal.GraphlyTraversal;
+import edu.jlime.graphly.util.Gather;
 import edu.jlime.jd.JobDispatcher;
 import edu.jlime.pregel.client.PregelClient;
 import gnu.trove.map.hash.TLongObjectHashMap;
@@ -44,12 +46,12 @@ public class GraphlyGraph implements Transferible {
 	}
 
 	public long[] getEdges(Dir dir, long... vids) throws Exception {
-		return graphly.getEdges(graph, dir, -1, vids);
+		return graphly.getEdges(graph, dir, vids);
 	}
 
-	public long[] getEdges(final Dir dir, final int max_edges, long... vids)
+	public long[] getEdgesMax(final Dir dir, final int max_edges, long... vids)
 			throws Exception {
-		return graphly.getEdges(graph, dir, max_edges, vids);
+		return graphly.getEdgesMax(graph, dir, max_edges, vids);
 	}
 
 	public void addEdges(long vid, Dir dir, long[] dests) throws Exception {
@@ -104,8 +106,8 @@ public class GraphlyGraph implements Transferible {
 		return graphly.getSubGraph(graph, k, all);
 	}
 
-	public long[] getEdges(Dir in, long vid, long[] all) {
-		return graphly.getEdges(graph, in, vid, all);
+	public long[] getEdgesFiltered(Dir in, long vid, long[] all) {
+		return graphly.getEdgesFiltered(graph, in, vid, all);
 	}
 
 	public Map<Long, Map<String, Object>> getProperties(long[] array,
@@ -180,5 +182,21 @@ public class GraphlyGraph implements Transferible {
 
 	public ConsistentHashing getHash() {
 		return this.graphly.getHash();
+	}
+
+	public float getFloat(long v, String k) throws Exception {
+		return this.graphly.getFloat(graph, v, k);
+	}
+
+	public void setFloat(long v, String k, float currentVal) throws Exception {
+		this.graphly.setFloat(graph, v, k, currentVal);
+	}
+
+	public void setDefaultFloat(String string, float f) throws Exception {
+		this.graphly.setDefaultFloat(graph, string, f);
+	}
+
+	public <T> List<T> gather(Gather<T> g) throws Exception {
+		return this.graphly.gather(graph, g);
 	}
 }

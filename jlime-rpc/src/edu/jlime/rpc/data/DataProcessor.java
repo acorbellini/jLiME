@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.log4j.Logger;
 
@@ -26,23 +27,25 @@ import edu.jlime.util.compression.Compressor;
 public class DataProcessor extends SimpleMessageProcessor implements
 		DataProvider {
 
-	private jLiMELRUMap<UUID, Boolean> map = new jLiMELRUMap<>(100);
+	// private jLiMELRUMap<Integer, Boolean> map = new jLiMELRUMap<>(100);
 
 	private Logger log = Logger.getLogger(DataProcessor.class);
 
 	private UUID localID;
 
-	private HashMap<Address, Set<UUID>> waiting = new HashMap<>();
+	private HashMap<Address, Set<Integer>> waiting = new HashMap<>();
 
 	private List<DataListener> listeners = new ArrayList<>();
 
 	// private HashMap<UUID, Message> responses = new HashMap<>();
 
-	private ConcurrentHashMap<UUID, DataResponse> responses = new ConcurrentHashMap<>();
+	private ConcurrentHashMap<Integer, DataResponse> responses = new ConcurrentHashMap<>();
 
 	private Metrics metrics;
 
 	Compressor comp;
+
+	private AtomicInteger idCount = new AtomicInteger(0);
 
 	public DataProcessor(MessageProcessor next, Configuration config) {
 		super(next, "Data");
@@ -84,7 +87,8 @@ public class DataProcessor extends SimpleMessageProcessor implements
 	@Override
 	public byte[] sendData(byte[] msg, Address to, boolean waitForResponse)
 			throws Exception {
-		UUID id = UUID.randomUUID();
+		// UUID id = UUID.randomUUID();
+		int id = idCount.getAndIncrement();
 		byte[] compressed = msg;
 		if (comp != null)
 			compressed = comp.compress(compressed);
@@ -92,22 +96,24 @@ public class DataProcessor extends SimpleMessageProcessor implements
 		Message toSend = Message.newOutDataMessage(compressed,
 				MessageType.DATA, to);
 		ByteBuffer headerWriter = toSend.getHeaderBuffer();
-		headerWriter.putUUID(id);
-		headerWriter.putInt(msg.length);
+		headerWriter.putInt(id);
 		headerWriter.putBoolean(waitForResponse);
+		if (comp != null)
+			headerWriter.putInt(msg.length);
 
 		DataResponse r = null;
 		if (waitForResponse) {
+			// log.info("Setting DataReponse object for message id " + id);
 			r = new DataResponse(this, to, id);
 			responses.put(id, r);
 
-			Set<UUID> list = waiting.get(to);
+			Set<Integer> list = waiting.get(to);
 			if (list == null)
 				synchronized (waiting) {
 					list = waiting.get(to);
 					if (list == null) {
 						list = Collections
-								.newSetFromMap(new ConcurrentHashMap<UUID, Boolean>());
+								.newSetFromMap(new ConcurrentHashMap<Integer, Boolean>());
 						waiting.put(to, list);
 					}
 				}
@@ -120,21 +126,22 @@ public class DataProcessor extends SimpleMessageProcessor implements
 			return null;
 		}
 		Message resp = r.getResponse();
-		int originalSize = resp.getHeaderBuffer().getInt();
 		byte[] build = resp.getDataBuffer().build();
-		if (comp != null)
+		if (comp != null) {
+			int originalSize = resp.getHeaderBuffer().getInt();
 			build = comp.uncompress(build, originalSize);
+		}
 		return build;
 	}
 
 	@Override
 	public void cleanupOnFailedPeer(Address addr) {
 		synchronized (waiting) {
-			Set<UUID> list = waiting.get(addr);
+			Set<Integer> list = waiting.get(addr);
 			if (list == null)
 				return;
 			synchronized (responses) {
-				for (UUID uuid : list)
+				for (Integer uuid : list)
 					responses.get(uuid).setMsg(null);
 			}
 			waiting.remove(addr);
@@ -142,28 +149,30 @@ public class DataProcessor extends SimpleMessageProcessor implements
 	}
 
 	private void processResponse(Message message) {
-		UUID id = message.getHeaderBuffer().getUUID();
+		int id = message.getHeaderBuffer().getInt();
 		// if (log.isDebugEnabled())
-		// log.debug("Received RESPONSE for DATA message with id " + id
-		// + " from " + message.getFrom());
+		// log.info("Received RESPONSE for DATA message with id " + id +
+		// " from "
+		// + message.getFrom());
 		DataResponse resp = responses.get(id);
 		if (resp != null)
 			resp.setMsg(message);
+		// else {
+		// log.info("DataReponse object is null for message id " + id);
+		// }
 	}
 
 	private void processData(final Message m) {
 		ByteBuffer head = m.getHeaderBuffer();
-		final UUID id = head.getUUID();
-		if (map.get(id) != null) {
-			return;
-		}
-
-		map.put(id, true);
+		final int id = head.getInt();
+		// if (map.get(id) != null) {
+		// return;
+		// }
+		//
+		// map.put(id, true);
 		// if (log.isDebugEnabled())
 		// log.debug("Received DATA message with id " + id + " from "
 		// + m.getFrom());
-
-		int originalSize = head.getInt();
 
 		boolean requiresResponse = head.getBoolean();
 		Response resp = null;
@@ -173,19 +182,21 @@ public class DataProcessor extends SimpleMessageProcessor implements
 				public void sendResponse(byte[] resp) throws Exception {
 					//
 					// if (log.isDebugEnabled())
-					// log.debug("Preparing RESPONSE for message id " + id
-					// + " to " + m.getFrom());
+					// log.info("Preparing RESPONSE for message id " + id +
+					// " to "
+					// + m.getFrom());
 					byte[] compress = resp;
 					if (comp != null)
 						compress = comp.compress(resp);
 					Message toSend = Message.newOutDataMessage(compress,
 							MessageType.RESPONSE, m.getFrom());
 					ByteBuffer headerBuffer = toSend.getHeaderBuffer();
-					headerBuffer.putUUID(this.msgID);
-					headerBuffer.putInt(resp.length);
+					headerBuffer.putInt(this.msgID);
+					if (comp != null)
+						headerBuffer.putInt(resp.length);
 					// if (log.isDebugEnabled())
-					// log.debug("Sending RESPONSE for message id " + id
-					// + " to " + m.getFrom());
+					// log.info("Sending RESPONSE for message id " + id + " to "
+					// + m.getFrom());
 					sendNext(toSend);
 				}
 			};
@@ -194,8 +205,12 @@ public class DataProcessor extends SimpleMessageProcessor implements
 		// log.debug("Curr listeners " + listeners.size());
 		for (DataListener l : listeners) {
 			byte[] uncompress = m.getDataAsBytes();
-			if (comp != null)
+
+			if (comp != null) {
+				int originalSize = head.getInt();
 				uncompress = comp.uncompress(uncompress, originalSize);
+			}
+
 			DataMessage data = new DataMessage(uncompress, id, m.getTo(),
 					m.getFrom());
 			// if (log.isDebugEnabled())
@@ -209,8 +224,8 @@ public class DataProcessor extends SimpleMessageProcessor implements
 		this.metrics = metrics;
 	}
 
-	public void removeResponse(Address addr, UUID id) {
-		Set<UUID> list = waiting.get(addr);
+	public void removeResponse(Address addr, int id) {
+		Set<Integer> list = waiting.get(addr);
 
 		if (list != null)
 			list.remove(id);

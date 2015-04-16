@@ -1,8 +1,10 @@
 package edu.jlime.graphly.client;
 
 import java.io.Closeable;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableSet;
@@ -28,11 +30,14 @@ import edu.jlime.graphly.GraphlyStoreNodeIFactory;
 import edu.jlime.graphly.server.GraphlyCoordinator;
 import edu.jlime.graphly.server.GraphlyCoordinatorBroadcast;
 import edu.jlime.graphly.server.GraphlyCoordinatorFactory;
+import edu.jlime.graphly.server.GraphlyServer;
 import edu.jlime.graphly.traversal.Dir;
 import edu.jlime.graphly.traversal.GraphlyTraversal;
+import edu.jlime.graphly.util.Gather;
 import edu.jlime.graphly.util.GraphlyUtil;
 import edu.jlime.jd.JobDispatcher;
 import edu.jlime.pregel.client.PregelClient;
+import edu.jlime.rpc.Configuration;
 import edu.jlime.rpc.JLiMEFactory;
 import edu.jlime.util.ByteBuffer;
 import gnu.trove.iterator.TLongIntIterator;
@@ -43,7 +48,8 @@ import gnu.trove.map.hash.TLongObjectHashMap;
 import gnu.trove.set.hash.TLongHashSet;
 
 public class Graphly implements Closeable {
-	private static final int MAX_VERTEX_ITERATOR = 10000;
+
+	private static final int MAX_VERTEX_ITERATOR = 1000000;
 
 	public static final int NUM_JOBS = 1;
 
@@ -60,8 +66,6 @@ public class Graphly implements Closeable {
 	private Logger log = Logger.getLogger(Graphly.class);
 
 	private PregelClient pregel_client;
-
-	private Integer cachedSize;
 
 	private Graphly(GraphlyCoordinator coord, PregelClient pregel_client,
 			ClientManager<GraphlyStoreNodeI, GraphlyStoreNodeIBroadcast> mgr,
@@ -156,6 +160,14 @@ public class Graphly implements Closeable {
 
 	}
 
+	public static Graphly buildLocal(String path) throws Exception {
+		Configuration config = new Configuration();
+		config.protocol = "local";
+		GraphlyServer server = GraphlyServer.createServer(path, 0, true, 1,
+				config);
+		return server.getGraphly();
+	}
+
 	public static Graphly build(RPCDispatcher rpc, PregelClient pregel_client,
 			JobDispatcher jd, int min) throws Exception {
 
@@ -196,10 +208,10 @@ public class Graphly implements Closeable {
 
 	public long[] getEdges(String graph, Dir dir, long... vids)
 			throws Exception {
-		return getEdges(graph, dir, -1, vids);
+		return getEdgesMax(graph, dir, -1, vids);
 	}
 
-	public long[] getEdges(final String graph, final Dir dir,
+	public long[] getEdgesMax(final String graph, final Dir dir,
 			final int max_edges, long... vids) throws Exception {
 
 		if (vids.length == 1) {
@@ -479,7 +491,7 @@ public class Graphly implements Closeable {
 		return getSubGraph(graph, string, null);
 	}
 
-	public long[] getEdges(String graph, Dir in, long vid, long[] all) {
+	public long[] getEdgesFiltered(String graph, Dir in, long vid, long[] all) {
 		try {
 			long[] edges = getEdges(graph, in, vid);
 
@@ -509,18 +521,14 @@ public class Graphly implements Closeable {
 	}
 
 	public int getVertexCount(String graph) throws Exception {
-		if (cachedSize == null) {
-			synchronized (this) {
-				if (cachedSize == null) {
-					int count = 0;
-					for (GraphlyStoreNodeI sn : mgr.getAll()) {
-						count += sn.getVertexCount(graph);
-					}
-					cachedSize = count;
-				}
-			}
+
+		int count = 0;
+		Map<Peer, Integer> res = mgr.broadcast().getVertexCount(graph);
+		for (Entry<Peer, Integer> e : res.entrySet()) {
+			count += e.getValue();
 		}
-		return cachedSize;
+		return count;
+
 	}
 
 	public VertexList vertices(String graph) throws Exception {
@@ -565,6 +573,32 @@ public class Graphly implements Closeable {
 			ret.addAll(gsn.getGraphs());
 		}
 		return ret;
+	}
+
+	public float getFloat(String graph, long v, String k) throws Exception {
+		return getClientFor(v).getFloat(graph, v, k);
+	}
+
+	public void setFloat(String graph, long v, String k, float currentVal)
+			throws Exception {
+		getClientFor(v).setFloat(graph, v, k, currentVal);
+	}
+
+	public void setDefaultFloat(String graph, String k, float v)
+			throws Exception {
+		for (GraphlyStoreNodeI gsn : mgr.getAll()) {
+			gsn.setDefaultFloat(graph, k, v);
+		}
+	}
+
+	public <T> List<T> gather(String graph, Gather<T> g) throws Exception {
+		ArrayList<T> ret = new ArrayList<>();
+		Map<Peer, Object> map = mgr.broadcast().gather(graph, g);
+		for (Entry<Peer, Object> t : map.entrySet()) {
+			ret.add((T) t.getValue());
+		}
+		return ret;
+
 	}
 
 }

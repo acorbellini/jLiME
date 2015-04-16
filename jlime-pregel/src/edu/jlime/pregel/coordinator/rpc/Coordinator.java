@@ -9,18 +9,18 @@ import edu.jlime.pregel.client.PregelConfig;
 import edu.jlime.pregel.graph.VertexFunction;
 
 public interface Coordinator {
-	public void finished(UUID taskID, UUID workerID, Boolean processedWork)
+	public void finished(int taskID, UUID workerID, Boolean processedWork)
 			throws Exception;
 
-	public Double getAggregatedValue(UUID taskID, Long v, String name)
-			throws Exception;
-
-	@Sync
-	public void setAggregatedValue(UUID taskID, Long v, String name, Double val)
+	public Double getAggregatedValue(int taskID, Long v, String name)
 			throws Exception;
 
 	@Sync
-	public PregelExecution execute(VertexFunction f, PregelConfig conf,
-			Peer client) throws Exception;
+	public void setAggregatedValue(int taskID, Long v, String name, Double val)
+			throws Exception;
+
+	@Sync
+	public PregelExecution execute(VertexFunction f, long[] vList,
+			PregelConfig conf, Peer client) throws Exception;
 
 }

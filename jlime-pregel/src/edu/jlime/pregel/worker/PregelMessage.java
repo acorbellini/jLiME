@@ -2,22 +2,30 @@ package edu.jlime.pregel.worker;
 
 import java.io.Serializable;
 
-public class PregelMessage implements Comparable<PregelMessage>, Serializable {
+public abstract class PregelMessage implements Comparable<PregelMessage>,
+		Serializable {
 
-	private long from;
+	protected boolean broadcast = false;
 
-	long to;
+	protected long from;
 
-	Object v;
+	public abstract void setV(Object v);
 
-	public PregelMessage(long from, long to, Object val) {
-		this.setFrom(from);
+	public abstract Object getV();
+
+	protected long to;
+
+	public PregelMessage(long from, long to) {
+		this.from = from;
 		this.to = to;
-		this.v = val;
 	}
 
-	public Object getV() {
-		return v;
+	public void setBroadcast(boolean broadcast) {
+		this.broadcast = broadcast;
+	}
+
+	public boolean isBroadcast() {
+		return broadcast;
 	}
 
 	public long getTo() {
@@ -30,15 +38,15 @@ public class PregelMessage implements Comparable<PregelMessage>, Serializable {
 
 	@Override
 	public String toString() {
-		return "PregelMessage [from=" + getFrom() + ", to=" + to + ", v=" + v
-				+ "]";
+		return "PregelMessage [from=" + getFrom() + ", to=" + to + ", v="
+				+ getV() + "]";
 	}
 
 	@Override
 	public int compareTo(PregelMessage o) {
-		int compare = Long.compare(to, o.to);
+		int compare = Long.compare(from, o.from);
 		if (compare == 0)
-			compare = Long.compare(getFrom(), o.getFrom());
+			compare = Long.compare(to, o.to);
 
 		return compare;
 	}
@@ -49,7 +57,6 @@ public class PregelMessage implements Comparable<PregelMessage>, Serializable {
 		int result = 1;
 		result = prime * result + (int) (getFrom() ^ (getFrom() >>> 32));
 		result = prime * result + (int) (to ^ (to >>> 32));
-		result = prime * result + ((v == null) ? 0 : v.hashCode());
 		return result;
 	}
 
@@ -61,25 +68,22 @@ public class PregelMessage implements Comparable<PregelMessage>, Serializable {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		PregelMessage other = (PregelMessage) obj;
+		GenericPregelMessage other = (GenericPregelMessage) obj;
 		if (getFrom() != other.getFrom())
 			return false;
 		if (to != other.to)
 			return false;
-		if (v == null) {
-			if (other.v != null)
-				return false;
-		} else if (!v.equals(other.v))
-			return false;
 		return true;
-	}
-
-	public void setV(Object v) {
-		this.v = v;
 	}
 
 	public void setFrom(long from) {
 		this.from = from;
+	}
+
+	public abstract PregelMessage getCopy();
+
+	public void setTo(long to) {
+		this.to = to;
 	}
 
 }

@@ -32,6 +32,8 @@ import edu.jlime.util.DataTypeUtils;
 import edu.jlime.util.RingQueue;
 
 public class TCPNIO extends MessageProcessor implements AddressListProvider {
+	private static final int SIZEOFACCEPTMESSAGE = 32;
+
 	public static final int HEADER = 32;
 
 	ByteBuffer readbuffer;
@@ -65,6 +67,8 @@ public class TCPNIO extends MessageProcessor implements AddressListProvider {
 
 	private ConcurrentHashMap<Address, InetSocketAddress> addressBook = new ConcurrentHashMap<>();
 
+	private ConcurrentHashMap<SocketChannel, Address> fromHash = new ConcurrentHashMap<>();
+
 	private Map<Address, List<Channel>> channels = new ConcurrentHashMap<>();
 
 	protected Logger log = Logger.getLogger(TCPNIO.class);
@@ -76,7 +80,7 @@ public class TCPNIO extends MessageProcessor implements AddressListProvider {
 		this.local = local;
 		this.config = config;
 		this.iface = iface;
-		this.readbuffer = ByteBuffer.allocate(config.tcpnio_max_msg_size + 32);
+		this.readbuffer = ByteBuffer.allocate(config.tcpnio_max_msg_size);
 		// this.writebuffer = ByteBuffer.allocate(config.max_msg_size + 8 + 8);
 		try {
 			this.sel = Selector.open();
@@ -111,6 +115,8 @@ public class TCPNIO extends MessageProcessor implements AddressListProvider {
 				if (list == null) {
 					sc = SocketChannel.open();
 
+					fromHash.put(sc, msg.getTo());
+
 					sc.setOption(StandardSocketOptions.SO_RCVBUF,
 							config.tcp_config.tcp_rcv_buffer);
 					sc.setOption(StandardSocketOptions.SO_SNDBUF,
@@ -130,13 +136,14 @@ public class TCPNIO extends MessageProcessor implements AddressListProvider {
 					sc.configureBlocking(false);
 
 					edu.jlime.util.ByteBuffer buff = new edu.jlime.util.ByteBuffer(
-							16);
+							SIZEOFACCEPTMESSAGE);
 					buff.putUUID(local.getId());
+					buff.putUUID(msg.getTo().getId());
 					ByteBuffer wrap = ByteBuffer.wrap(buff.build());
 
 					synchronized (sc) {
 						int write = 0;
-						while ((write += sc.write(wrap)) != 16) {
+						while ((write += sc.write(wrap)) != buff.size()) {
 						}
 					}
 
@@ -157,14 +164,18 @@ public class TCPNIO extends MessageProcessor implements AddressListProvider {
 			sc = (SocketChannel) list.get((int) (Math.random() * list.size()));
 		}
 
-		int size = msg.getSize() + 32 + 4;
+		int size = msg.getSize()
+		// + 32
+		+ 4;
 		edu.jlime.util.ByteBuffer[] msgAsBytes = msg.toByteBuffers();
 		// byte[] ba = msg.toByteArray();
 
 		edu.jlime.util.ByteBuffer toSend = new edu.jlime.util.ByteBuffer(32 + 4);
-		toSend.putInt(32 + msg.getSize());
-		toSend.putUUID(local.getId());
-		toSend.putUUID(msg.getTo().getId());
+		toSend.putInt(
+		// 32 +
+		msg.getSize());
+		// toSend.putUUID(local.getId());
+		// toSend.putUUID(msg.getTo().getId());
 		// toSend.putRawByteArray(ba);
 
 		// ByteBuffer buff = ByteBuffer.wrap(toSend.build());
@@ -292,7 +303,7 @@ public class TCPNIO extends MessageProcessor implements AddressListProvider {
 
 	protected void accept(SocketChannel sock) throws IOException {
 		readbuffer.position(0);
-		readbuffer.limit(16);
+		readbuffer.limit(SIZEOFACCEPTMESSAGE);
 		while (readbuffer.hasRemaining()) {
 			int read = sock.read(readbuffer);
 			if (read < 0) {
@@ -301,11 +312,18 @@ public class TCPNIO extends MessageProcessor implements AddressListProvider {
 			}
 		}
 		readbuffer.rewind();
-		byte[] addrBytes = new byte[16];
-		readbuffer.get(addrBytes, 0, 16);
+		byte[] addrBytes = new byte[SIZEOFACCEPTMESSAGE];
+		readbuffer.get(addrBytes, 0, SIZEOFACCEPTMESSAGE);
 		edu.jlime.util.ByteBuffer buff = new edu.jlime.util.ByteBuffer(
 				addrBytes);
 		Address from = new Address(buff.getUUID());
+		Address to = new Address(buff.getUUID());
+
+		if (!to.equals(this.local)) {
+			log.error("Connection not for me.");
+			return;
+		}
+
 		List<Channel> list = channels.get(from);
 		if (list == null) {
 			synchronized (channels) {
@@ -317,10 +335,11 @@ public class TCPNIO extends MessageProcessor implements AddressListProvider {
 			}
 		}
 		list.add(sock);
+		fromHash.put(sock, from);
 	}
 
 	private void read(SocketChannel channel) throws Exception {
-
+		final Address from = fromHash.get(channel);
 		readbuffer.clear();
 
 		SocketChannel sc = (SocketChannel) channel;
@@ -375,14 +394,14 @@ public class TCPNIO extends MessageProcessor implements AddressListProvider {
 				final edu.jlime.util.ByteBuffer buff = new edu.jlime.util.ByteBuffer(
 						b);
 
-				final Address from = new Address(buff.getUUID());
-				final Address to = new Address(buff.getUUID());
+				// final Address from = new Address(buff.getUUID());
+				// final Address to = new Address(buff.getUUID());
 
-				if (!to.equals(local)) {
-					if (log.isDebugEnabled())
-						log.debug("Not for me.");
-					return;
-				}
+				// if (!to.equals(local)) {
+				// if (log.isDebugEnabled())
+				// log.debug("Not for me.");
+				// return;
+				// }
 
 				Message msg = Message.deEncapsulate(buff.getRawByteArray(),
 						from, local);

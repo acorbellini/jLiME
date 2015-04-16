@@ -1,5 +1,6 @@
 package edu.jlime.rpc;
 
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.ListIterator;
 
@@ -8,19 +9,22 @@ import edu.jlime.core.transport.DiscoveryProvider;
 import edu.jlime.core.transport.FailureProvider;
 import edu.jlime.core.transport.Streamer;
 import edu.jlime.metrics.metric.Metrics;
+import edu.jlime.rpc.bundler.MessageBundler;
 import edu.jlime.rpc.data.DataProcessor;
 import edu.jlime.rpc.data.DataProvider;
 import edu.jlime.rpc.discovery.MultiCastDiscovery;
 import edu.jlime.rpc.fd.PingFailureDetection;
+import edu.jlime.rpc.fr.Acknowledge;
 import edu.jlime.rpc.fr.NACK;
 import edu.jlime.rpc.frag.Fragmenter;
+import edu.jlime.rpc.message.MessageProcessor;
 import edu.jlime.rpc.message.StackElement;
 import edu.jlime.rpc.np.NetworkProtocol;
 import edu.jlime.rpc.rabbit.RabbitProcessor;
 import edu.jlime.rpc.zeromq.ZeroMQProcessor;
 import edu.jlime.util.NetworkUtils;
 
-public class Stack {
+public class Stack implements Iterable<StackElement> {
 
 	private LinkedList<StackElement> stackElements = new LinkedList<>();
 
@@ -139,21 +143,24 @@ public class Stack {
 		NetworkProtocol mcast = NetworkProtocolFactory.mcast(local, config)
 				.getProtocol(iface);
 
-		int max_size = config.max_msg_size - UDPNIO.HEADER - NACK.HEADER;
+		MessageProcessor ack = null;
+		Fragmenter frag = null;
+		if (config.useNACK) {
 
-		NACK ack = new NACK(udp, config.max_msg_size, config.nack_delay,
-				config.ack_delay, max_size, config);
+			int max_size = config.max_msg_size - UDPNIO.HEADER - NACK.HEADER;
 
-		Fragmenter frag = new Fragmenter(ack, max_size);
+			ack = new NACK(udp, max_size, config);
 
-		// int max_size = config.max_msg_size - UDPNIO.HEADER -
-		// Acknowledge.HEADER;
-		//
-		// Acknowledge ack = new Acknowledge(udp, config.max_msg_size,
-		// config.nack_delay, config.ack_delay, max_size, config);
-		//
-		// Fragmenter frag = new Fragmenter(ack, config.max_msg_size);
+			frag = new Fragmenter(ack, max_size);
+		} else {
 
+			int max_size = config.max_msg_size - UDPNIO.HEADER
+					- Acknowledge.HEADER;
+
+			ack = new Acknowledge(udp, max_size, config);
+
+			frag = new Fragmenter(ack, max_size);
+		}
 		DataProcessor data = new DataProcessor(frag, config);
 
 		MultiCastDiscovery disco = new MultiCastDiscovery(local, name, config,
@@ -214,22 +221,24 @@ public class Stack {
 		NetworkProtocol mcast = NetworkProtocolFactory.mcast(local, config)
 				.getProtocol(iface);
 
-		int max_size = config.max_msg_size - UDPNIO.HEADER - NACK.HEADER;
+		MessageProcessor ack = null;
+		Fragmenter frag = null;
+		if (config.useNACK) {
 
-		NACK ack = new NACK(udp, config.max_msg_size, config.nack_delay,
-				config.ack_delay, max_size, config);
+			int max_size = config.max_msg_size - UDPNIO.HEADER - NACK.HEADER;
 
-		Fragmenter frag = new Fragmenter(ack, max_size);
+			ack = new NACK(udp, max_size, config);
 
-		// int max_size = config.max_msg_size - UDPNIO.HEADER -
-		// Acknowledge.HEADER;
-		//
-		// Acknowledge ack = new Acknowledge(udp, config.max_msg_size,
-		// config.nack_delay, config.ack_delay, max_size, config);
+			frag = new Fragmenter(ack, max_size);
+		} else {
 
-		// MessageBundler bundler = new MessageBundler(ack, max_size);
+			int max_size = config.max_msg_size - UDPNIO.HEADER
+					- Acknowledge.HEADER;
 
-		// Fragmenter frag = new Fragmenter(ack, max_size);
+			ack = new Acknowledge(udp, max_size, config);
+
+			frag = new Fragmenter(ack, max_size);
+		}
 
 		// int max_size = config.max_msg_size - UDPNIO.HEADER -
 		// UDPResender.HEADER;
@@ -342,5 +351,22 @@ public class Stack {
 		tcpStack.setDisco(disco);
 		tcpStack.setData(data);
 		return tcpStack;
+	}
+
+	public static Stack localStack(Configuration config, Address address,
+			String name) {
+		LoopbackMP local = new LoopbackMP();
+		DataProcessor data = new DataProcessor(local, config);
+		MultiCastDiscovery disco = new MultiCastDiscovery(address, name,
+				config, local, local);
+		Stack tcpStack = Stack.newStack(local, disco, data);
+		tcpStack.setDisco(disco);
+		tcpStack.setData(data);
+		return tcpStack;
+	}
+
+	@Override
+	public Iterator<StackElement> iterator() {
+		return stackElements.iterator();
 	}
 }

@@ -53,9 +53,9 @@ public class PregelClient {
 	//
 	// }
 
-	public PregelExecution execute(VertexFunction f, PregelConfig conf)
-			throws Exception {
-		return coordinator.execute(f, conf, this.rpc.getCluster()
+	public PregelExecution execute(VertexFunction f, long[] vList,
+			PregelConfig conf) throws Exception {
+		return coordinator.execute(f, vList, conf, this.rpc.getCluster()
 				.getLocalPeer());
 	}
 

@@ -30,6 +30,7 @@ import com.google.common.collect.TreeMultimap;
 import edu.jlime.core.rpc.RPCDispatcher;
 import edu.jlime.graphly.store.LocalStore;
 import edu.jlime.graphly.traversal.Dir;
+import edu.jlime.graphly.util.Gather;
 import edu.jlime.graphly.util.GraphlyUtil;
 import edu.jlime.util.ByteBuffer;
 import edu.jlime.util.DataTypeUtils;
@@ -39,6 +40,7 @@ import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.map.hash.TLongIntHashMap;
 import gnu.trove.map.hash.TLongObjectHashMap;
 import gnu.trove.map.hash.TObjectDoubleHashMap;
+import gnu.trove.map.hash.TObjectFloatHashMap;
 import gnu.trove.set.hash.TLongHashSet;
 
 public class GraphlyStoreNode implements GraphlyStoreNodeI {
@@ -51,58 +53,32 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 
 	Logger log = Logger.getLogger(GraphlyStoreNode.class);
 
-	private static class InMemoryGraphProperties {
-		ConcurrentHashMap<String, Map<String, Object>> props = new ConcurrentHashMap<>();
-
-		public void put(String graph, long vid, String k, Object val) {
-			Map<String, Object> map = props.get(vid);
-			if (map == null) {
-				synchronized (props) {
-					map = props.get(vid);
-					if (map == null) {
-						map = new ConcurrentHashMap<String, Object>();
-						props.put(graph + "." + vid, map);
-					}
-				}
-			}
-			map.put(k, val);
-		}
-
-		public Object get(String graph, long vid, String k) {
-			Map<String, Object> map = props.get(graph + "." + vid);
-			if (map != null) {
-				return map.get(k);
-			}
-			return null;
-		}
-
-		@Override
-		public String toString() {
-			return props.toString();
-		}
-	}
-
 	// private Graph graph;
 	private LocalStore store;
 
 	Cache<String, Boolean> graph_cache = CacheBuilder.newBuilder()
-			.maximumSize(5000).build();
+			.maximumSize(100).build();
 
-	Cache<Long, long[]> adj_cache = CacheBuilder.newBuilder().maximumSize(5000)
+	Cache<Long, long[]> adj_cache = CacheBuilder.newBuilder().maximumSize(1000)
 			.build();
 
 	Cache<Long, Boolean> vertex_cache = CacheBuilder.newBuilder()
-			.maximumSize(5000).build();
+			.maximumSize(1000).build();
+
+	Cache<String, Integer> size_cache = CacheBuilder.newBuilder()
+			.maximumSize(1000).build();
 
 	private File localRanges;
 	private List<Integer> ranges = new ArrayList<>();
 	private InMemoryGraphProperties props = new InMemoryGraphProperties();
+	private InMemoryGraphDoubleProperties doubleProps = new InMemoryGraphDoubleProperties();
+	private InMemoryGraphFloatProperties floatProps = new InMemoryGraphFloatProperties();
 
 	private Map<String, Map<Long, Map<String, Object>>> temps = new ConcurrentHashMap<>();
 
 	// Store store;
 
-	public GraphlyStoreNode(String name, String localpath, RPCDispatcher rpc)
+	public GraphlyStoreNode(String localpath, RPCDispatcher rpc)
 			throws IOException {
 
 		try {
@@ -125,11 +101,12 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 			}
 		}
 		// this.graph = Neo4jGraph.open(localpath + "/neo4j");
-		this.store = new LocalStore(name, localpath);
+		this.store = new LocalStore(localpath);
 	}
 
 	@Override
 	public List<Integer> getRanges() {
+		log.info("Obtaning Ranges (size " + ranges.size() + ")");
 		return ranges;
 	}
 
@@ -350,8 +327,8 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 
 	Semaphore sem = new Semaphore(2);
 	private Map<String, Object> defaults = new ConcurrentHashMap<>();
-	private Map<String, TObjectDoubleHashMap<String>> doubleMap = new ConcurrentHashMap<>();
 	private TObjectDoubleHashMap<String> defaultDoubleMap = new TObjectDoubleHashMap<>();
+	private TObjectFloatHashMap<String> defaultFloatMap = new TObjectFloatHashMap<>();
 
 	@Override
 	public GraphlyCount countEdges(String graph, Dir dir, int max_edges,
@@ -536,20 +513,32 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	}
 
 	@Override
-	public int getVertexCount(String graph) throws Exception {
-		return store.count(buildVertexKey(graph, 0),
-				buildVertexKey(graph, Long.MAX_VALUE));
+	public int getVertexCount(final String graph) throws Exception {
+		return size_cache.get(graph, new Callable<Integer>() {
+
+			@Override
+			public Integer call() throws Exception {
+				return store.count(buildVertexKey(graph, 0),
+						buildVertexKey(graph, Long.MAX_VALUE));
+			}
+		});
 	}
 
 	@Override
 	public TLongArrayList getVertices(String graph, long from, int lenght,
 			boolean includeFirst) throws Exception {
+		final int MAX_INIT_SIZE = 1000000;
 		List<byte[]> list = store.getRangeOfLength(includeFirst,
 				buildVertexKey(graph, from),
 				buildVertexKey(graph, Long.MAX_VALUE), lenght);
-		TLongArrayList ret = new TLongArrayList(lenght);
+
+		TLongArrayList ret = new TLongArrayList(Math.min(MAX_INIT_SIZE, lenght));
 		for (byte[] bs : list)
 			ret.add(DataTypeUtils.byteArrayToLong(bs));
+		if (ret.size() > 0)
+			log.info("Returning list of vertices from " + ret.get(0) + "to"
+					+ ret.get(ret.size() - 1));
+
 		return ret;
 	}
 
@@ -566,28 +555,16 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	@Override
 	public synchronized double getDouble(String graph, long v, String k)
 			throws Exception {
-		TObjectDoubleHashMap<String> tObjectDoubleHashMap = doubleMap.get(graph
-				+ "." + v);
-		if (tObjectDoubleHashMap == null)
+		double tObjectDoubleHashMap = doubleProps.get(graph, v, k);
+		if (tObjectDoubleHashMap == doubleProps.NOT_FOUND)
 			return getDefaultDouble(graph, k);
-		return tObjectDoubleHashMap.get(k);
+		return tObjectDoubleHashMap;
 	}
 
 	@Override
 	public void setDouble(String graph, long v, String k, double currentVal)
 			throws Exception {
-		TObjectDoubleHashMap<String> map = doubleMap.get(graph + "." + v);
-		if (map == null) {
-			synchronized (doubleMap) {
-				map = doubleMap.get(graph + "." + v);
-				if (map == null) {
-					map = new TObjectDoubleHashMap<String>();
-					doubleMap.put(graph + "." + v, map);
-				}
-			}
-
-		}
-		map.put(k, currentVal);
+		doubleProps.put(graph, v, k, currentVal);
 	}
 
 	@Override
@@ -623,4 +600,33 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 		return ret;
 	}
 
+	@Override
+	public float getFloat(String graph, long v, String k) throws Exception {
+		float tObjectDoubleHashMap = floatProps.get(graph, v, k);
+		if (tObjectDoubleHashMap == floatProps.NOT_FOUND)
+			return getDefaultFloat(graph, k);
+		return tObjectDoubleHashMap;
+	}
+
+	@Override
+	public void setFloat(String graph, long v, String k, float currentVal)
+			throws Exception {
+		floatProps.put(graph, v, k, currentVal);
+	}
+
+	@Override
+	public void setDefaultFloat(String graph, String k, float v)
+			throws Exception {
+		defaultFloatMap.put(graph + "." + k, v);
+	}
+
+	@Override
+	public float getDefaultFloat(String graph, String k) throws Exception {
+		return defaultFloatMap.get(graph + "." + k);
+	}
+
+	@Override
+	public Object gather(String graph, Gather<?> g) throws Exception {
+		return g.gather(graph, this);
+	}
 }

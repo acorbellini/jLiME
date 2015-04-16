@@ -12,7 +12,10 @@ import edu.jlime.util.ByteBuffer;
 
 class NACKCounter {
 
+	private static final int NACK_SIZE = 1 + 4 + 4;
+
 	final boolean RANGE = true;
+
 	final boolean SINGLE = false;
 
 	private Logger log = Logger.getLogger(NACKCounter.class);
@@ -37,8 +40,9 @@ class NACKCounter {
 
 	Message ackMsg;
 
-	public NACKCounter(NACK ack, Address to, int max_nack_size, int nack_delay,
-			int ack_delay, Configuration config) {
+	AtomicInteger sendNextExpectedCounter = new AtomicInteger(0);
+
+	public NACKCounter(NACK ack, Address to, Configuration config) {
 		this.ack = ack;
 		this.max_resend_size = config.ack_max_resend_size;
 		resendArray = new ResendData[max_resend_size];
@@ -57,14 +61,17 @@ class NACKCounter {
 	public void send(Message msg) throws Exception {
 		int seqN = this.seqN.getAndIncrement();
 
-		while (Math.abs(seqN - confirmed.get()) >= max_resend_size) {
-			log.info("Blocking on seq " + seqN);
+		while (!ack.isStopped()
+				&& Math.abs(seqN - confirmed.get()) >= max_resend_size) {
+			if (log.isDebugEnabled())
+				log.debug("Blocking on seq " + seqN);
 			synchronized (this.seqN) {
 				this.seqN.wait(0, 500);
 			}
 		}
 
-		// log.info("Sending seq " + seqN);
+		if (log.isDebugEnabled())
+			log.debug("Sending seq " + seqN);
 
 		resendArray[pos(seqN)].setData(msg, System.currentTimeMillis(), seqN);
 
@@ -72,15 +79,30 @@ class NACKCounter {
 				.encapsulateOut(msg, MessageType.ACK_SEQ, to);
 		ackSeqMsg.getHeaderBuffer().putInt(seqN);
 		ackSeqMsg.getHeaderBuffer().putInt(nextExpectedNumber);
+
+		// appendNack(ackSeqMsg);
+
 		ack.sendNext(ackSeqMsg);
 	}
 
 	public synchronized boolean seqNumberArrived(int seq) throws Exception {
-		if (seq < nextExpectedNumber)
+		if (seq < nextExpectedNumber || rcvd[pos(seq)].confirmed) {
+			if (log.isDebugEnabled())
+				log.debug("Ignoring seq " + seq + " next expected "
+						+ nextExpectedNumber);
+			if (this.ack.metrics != null)
+				this.ack.metrics.counter("nack." + to + ".repeated").count();
 			return false;
+		}
+		// if (this.ack.metrics != null)
+		// this.ack.metrics.counter("nack." + to + ".rcvd").count();
 
-		if (seq % (rcvd.length / 2) == 0)
-			sendNextExpectedNumber();
+		if (log.isDebugEnabled())
+			log.debug("Sequence number arrived " + seq + " next expected "
+					+ nextExpectedNumber);
+
+		// if (seq % (rcvd.length / 2) == 0)
+		// sendNextExpectedNumber();
 
 		rcvd[pos(seq)].confirmed = true;
 		rcvd[pos(seq)].seq = seq;
@@ -127,16 +149,20 @@ class NACKCounter {
 				}
 			}
 		}
+
+		if (log.isDebugEnabled())
+			log.debug("Confirmed " + seq + " updated confirmed "
+					+ confirmed.get());
 	}
 
-	public boolean sendAcks() throws Exception {
+	public boolean sendNacks() throws Exception {
 		ackMsg.getHeader().clear();
 
 		int currSize = ackMsg.getSize();
 
-		appendNack(ackMsg, 32, rcvd.length);
+		appendNack(ackMsg);
 
-		if (ackMsg.getSize() == currSize)
+		if (ackMsg.getSize() == currSize + 4)
 			return false;
 		this.ack.sendNext(ackMsg);
 		return true;
@@ -145,16 +171,26 @@ class NACKCounter {
 	public void sendNextExpectedNumber() throws Exception {
 		Message msg = Message.newEmptyOutDataMessage(MessageType.SYN, to);
 		msg.getHeaderBuffer().putInt(nextExpectedNumber);
+
+		// int curr = sendNextExpectedCounter.incrementAndGet();
+		// if (curr % 10 == 0) {
+		// msg.getHeaderBuffer().putBoolean(true);
+		// } else
+		// msg.getHeaderBuffer().putBoolean(false);
+
 		ack.sendNext(msg);
 	}
 
-	private void appendNack(Message msg, int max_obtained, int max_total) {
+	private void appendNack(Message msg) {
 		ByteBuffer buff = msg.getHeaderBuffer();
 
 		int diff = ack.max_size - msg.getSize();
-		if (diff > 4 + 1 + 4 + 4) {
 
+		if (diff > 4) {
 			buff.putInt(nextExpectedNumber);
+			diff -= 4;
+		}
+		if (diff > NACK_SIZE) {
 
 			int appended = 0;
 
@@ -164,9 +200,9 @@ class NACKCounter {
 			int count = 0;
 			int gathered = 0;
 
-			while (appended < diff && gathered < max_obtained
-					&& count < max_total && count < rcvd.length) {
-				int i = ackSenderCursor.getAndIncrement() % rcvd.length;
+			while (appended + NACK_SIZE < diff && count < rcvd.length) {
+				int i = Math.abs(ackSenderCursor.getAndIncrement())
+						% rcvd.length;
 				count++;
 				if (!rcvd[i].confirmed && rcvd[i].seq != -1) {
 					int seq = rcvd[i].seq;
@@ -205,23 +241,24 @@ class NACKCounter {
 		}
 	}
 
-	public void receivedAckBuffer(ByteBuffer buffer) throws Exception {
+	public void receivedNackBuffer(ByteBuffer buffer) throws Exception {
 		if (buffer.hasRemaining())
-			sync(buffer.getInt());
+			sync(buffer.getInt(), false);
 		while (buffer.hasRemaining()) {
 			boolean type = buffer.getBoolean();
 			if (type == RANGE) {
 				int from = buffer.getInt();
 				int to = buffer.getInt();
-
-				log.info("Received NACK range :" + from + "-" + to);
+				if (log.isDebugEnabled())
+					log.debug("Received NACK range :" + from + "-" + to);
 				for (int i = from; i <= to; i++) {
 					resend(i);
 				}
 			} else {
 
 				int from = buffer.getInt();
-				log.info("Received NACK :" + from);
+				if (log.isDebugEnabled())
+					log.debug("Received NACK :" + from);
 				resend(from);
 			}
 		}
@@ -231,17 +268,32 @@ class NACKCounter {
 	private void resend(int seq) throws Exception {
 		if (seq < confirmed.get())
 			return;
-		Message data = resendArray[pos(seq)].data;
+
+		if (log.isDebugEnabled())
+			log.debug("Resending " + seq);
+
+		Message data = resendArray[pos(seq)].getData(seq);
 		if (data != null) {
 			Message ackMsg = Message.encapsulateOut(data, MessageType.ACK_SEQ,
 					to);
 			ackMsg.getHeaderBuffer().putInt(seq);
+			ackMsg.getHeaderBuffer().putInt(nextExpectedNumber);
 			ack.sendNext(ackMsg);
 		}
 	}
 
-	public void sync(int remoteNextExpected) {
-		for (int i = confirmed.get(); i < remoteNextExpected; i++)
+	public void sync(int remoteNextExpected, boolean resend) throws Exception {
+		if (remoteNextExpected == seqN.get())
+			return;
+
+		for (int i = confirmed.get() + 1; i < remoteNextExpected; i++)
 			confirm(i);
+
+		if (resend) {
+			// if (remoteNextExpected % 100 == 0)
+			for (int i = remoteNextExpected; i < seqN.get(); i++) {
+				resend(i);
+			}
+		}
 	}
 }

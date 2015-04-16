@@ -20,7 +20,7 @@ import edu.jlime.util.ByteBuffer;
 
 public class NACK extends SimpleMessageProcessor {
 
-	public static final int HEADER = Header.HEADER + 4;
+	public static final int HEADER = Header.HEADER + 4 + 4; //SEQN and NEXTEXPECTEDNUMBER
 
 	Object[] locks = new Object[1021];
 
@@ -29,12 +29,6 @@ public class NACK extends SimpleMessageProcessor {
 	ConcurrentHashMap<Address, NACKCounter> counters = new ConcurrentHashMap<>();
 
 	CopyOnWriteArrayList<NACKCounter> counterList = new CopyOnWriteArrayList<>();
-
-	private int max_size_nack;
-
-	private int nack_delay;
-
-	private int ack_delay;
 
 	private Configuration config;
 
@@ -45,12 +39,10 @@ public class NACK extends SimpleMessageProcessor {
 
 	private Timer t;
 
-	public NACK(MessageProcessor next, int max_size_nack, int nack_delay,
-			int ack_delay, int max_size, Configuration config) {
+	Metrics metrics;
+
+	public NACK(MessageProcessor next, int max_size, Configuration config) {
 		super(next, "Acknowledge");
-		this.max_size_nack = max_size_nack;
-		this.nack_delay = nack_delay;
-		this.ack_delay = ack_delay;
 		for (int i = 0; i < locks.length; i++) {
 			locks[i] = new Object();
 		}
@@ -74,7 +66,7 @@ public class NACK extends SimpleMessageProcessor {
 
 				}
 			}
-		}, config.retransmit_delay, config.retransmit_delay);
+		}, this.config.nack_sync_delay, this.config.nack_sync_delay);
 
 		t.schedule(new TimerTask() {
 
@@ -82,13 +74,13 @@ public class NACK extends SimpleMessageProcessor {
 			public void run() {
 				for (NACKCounter count : counterList) {
 					try {
-						count.sendAcks();
+						count.sendNacks();
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
 				}
 			}
-		}, config.ack_delay, config.ack_delay);
+		}, this.config.nack_delay, this.config.nack_delay);
 
 		getNext().addMessageListener(MessageType.ACK_SEQ,
 				new MessageListener() {
@@ -109,9 +101,9 @@ public class NACK extends SimpleMessageProcessor {
 										m.getDataBuffer(), m.getFrom(),
 										m.getTo()));
 							}
-							counter.sync(confirmed);
+							counter.sync(confirmed, false);
 
-							// counter.receivedAckBuffer(headerBuffer);
+							counter.receivedNackBuffer(headerBuffer);
 						}
 					}
 				});
@@ -122,7 +114,7 @@ public class NACK extends SimpleMessageProcessor {
 					throws Exception {
 				NACKCounter counter = getCounter(m.getFrom());
 				if (counter != null)
-					counter.receivedAckBuffer(m.getHeaderBuffer());
+					counter.receivedNackBuffer(m.getHeaderBuffer());
 			}
 		});
 
@@ -131,8 +123,11 @@ public class NACK extends SimpleMessageProcessor {
 			public void rcv(Message m, MessageProcessor origin)
 					throws Exception {
 				NACKCounter counter = getCounter(m.getFrom());
-				if (counter != null)
-					counter.sync(m.getHeaderBuffer().getInt());
+				if (counter != null) {
+					ByteBuffer headerBuffer = m.getHeaderBuffer();
+					int int1 = headerBuffer.getInt();
+					counter.sync(int1, true);
+				}
 			}
 		});
 	}
@@ -153,8 +148,7 @@ public class NACK extends SimpleMessageProcessor {
 			synchronized (counters) {
 				counter = counters.get(to);
 				if (counter == null) {
-					counter = new NACKCounter(this, to, max_size_nack,
-							nack_delay, ack_delay, config);
+					counter = new NACKCounter(this, to, config);
 					counters.put(to, counter);
 					counterList.add(counter);
 				}
@@ -178,7 +172,7 @@ public class NACK extends SimpleMessageProcessor {
 
 	@Override
 	public void setMetrics(Metrics metrics) {
-
+		this.metrics = metrics;
 	}
 
 }

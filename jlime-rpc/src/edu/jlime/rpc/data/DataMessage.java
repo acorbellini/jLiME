@@ -1,7 +1,5 @@
 package edu.jlime.rpc.data;
 
-import java.util.UUID;
-
 import edu.jlime.core.transport.Address;
 
 public class DataMessage {
@@ -10,7 +8,7 @@ public class DataMessage {
 
 	private byte[] data;
 
-	public DataMessage(byte[] data, UUID msgID, Address to, Address from) {
+	public DataMessage(byte[] data, int msgID, Address to, Address from) {
 		this.setData(data);
 		this.from = from;
 	}

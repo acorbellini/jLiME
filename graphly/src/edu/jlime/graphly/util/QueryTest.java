@@ -1,51 +1,78 @@
 package edu.jlime.graphly.util;
 
+import java.util.List;
+
 import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.client.GraphlyGraph;
+import edu.jlime.graphly.client.VertexList;
 import edu.jlime.graphly.jobs.MapperFactory;
+import edu.jlime.graphly.traversal.Dir;
 import edu.jlime.graphly.traversal.Pregel;
+import edu.jlime.pregel.client.PregelConfig;
 import edu.jlime.pregel.functions.PageRank;
+import edu.jlime.pregel.mergers.MessageMergers;
+import edu.jlime.pregel.worker.FloatMessageMerger;
+import edu.jlime.pregel.worker.FloatPregelMessage;
 import edu.jlime.pregel.worker.MessageMerger;
-import edu.jlime.util.DataTypeUtils;
+import edu.jlime.pregel.worker.PregelMessage;
 
 public class QueryTest {
-	public static class PageRankMerger implements MessageMerger {
-
-		@Override
-		public Object merge(Object v, Object v2) {
-			double d = Double.longBitsToDouble(DataTypeUtils
-					.byteArrayToLong((byte[]) v))
-					+ Double.longBitsToDouble(DataTypeUtils
-							.byteArrayToLong((byte[]) v2));
-			return DataTypeUtils.longToByteArray(Double.doubleToLongBits(d));
-		}
-
-	}
 
 	public static void main(String[] args) throws Exception {
 		Graphly graphly = Graphly.build(4);
 
 		System.out.println(graphly.listGraphs());
 
-		GraphlyGraph g = graphly.getGraph(args[0]);
+		final GraphlyGraph g = graphly.getGraph(args[0]);
+		// int count = 0;
+		// VertexList vlist = g.vertices();
+		// for (Long long1 : vlist) {
+		// count++;
+		// }
+		// System.out.println(count);
 
+		System.out.println("Counting Vertices");
 		int vertexCount = g.getVertexCount();
+
+		System.out.println("Finished Counting Vertices: " + vertexCount);
 		long init = System.currentTimeMillis();
-		g.setDefaultDouble("pagerank", 1d / vertexCount);
-		g.setDefaultDouble("ranksource", .85d);
+		g.setDefaultFloat("pagerank", 1f / vertexCount);
+		g.setDefaultFloat("ranksource", .85f);
 
 		g.v()
 				.set("mapper", MapperFactory.location())
 				.as(Pregel.class)
-				.vertexFunction(new PageRank(vertexCount),
-						new PageRankMerger(), 60, true).exec();
+				.vertexFunction(
+						new PageRank(vertexCount),
+						PregelConfig.create().steps(5).threads(8)
+								.executeOnAll(true)
+								.merger(MessageMergers.FLOAT_SUM).queue(50000)
+								.segments(128)).exec();
 		System.out.println(System.currentTimeMillis() - init);
-		double sum = 0;
-
-		// If everything's alright, the sum should be 1 (Or near)
-		for (Long v : g.vertices()) {
-			sum += g.getDouble(v, "pagerank");
+		float sum = 0;
+		List<Float> vals = g.gather(new SumFloatPropertiesGather("pagerank"));
+		for (Float float1 : vals) {
+			sum += float1;
 		}
+
+		// final AtomicDouble sum = new AtomicDouble(0d);
+		// // If everything's alright, the sum should be 1 (Or near)
+		// ForkJoinPool pool = new ForkJoinPool();
+		// for (final Long v : g.vertices()) {
+		// pool.execute(new Runnable() {
+		// @Override
+		// public void run() {
+		// try {
+		// sum.addAndGet(g.getFloat(v, "pagerank"));
+		// } catch (Exception e) {
+		// e.printStackTrace();
+		// }
+		// }
+		// });
+		// }
+		//
+		// pool.shutdown();
+		// pool.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
 
 		System.out.println(sum);
 

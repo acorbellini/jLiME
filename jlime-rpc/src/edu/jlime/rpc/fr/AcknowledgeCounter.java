@@ -14,6 +14,8 @@ import edu.jlime.util.ByteBuffer;
 
 class AcknowledgeCounter {
 
+	private static final int ACK_HEADER = 1 + 4 + 4;
+
 	AtomicIntegerArray ackSent;
 
 	private Logger log = Logger.getLogger(AcknowledgeCounter.class);
@@ -42,8 +44,7 @@ class AcknowledgeCounter {
 
 	Message ackMsg;
 
-	public AcknowledgeCounter(Acknowledge ack, Address to, int max_nack_size,
-			int nack_delay, int ack_delay, Configuration config) {
+	public AcknowledgeCounter(Acknowledge ack, Address to, Configuration config) {
 		this.ack = ack;
 		this.max_resend_size = config.ack_max_resend_size;
 		resendArray = new ResendData[max_resend_size];
@@ -72,21 +73,37 @@ class AcknowledgeCounter {
 				this.seqN.wait(0, 500);
 			}
 		}
+
+		if (log.isDebugEnabled())
+			log.debug("Sending message with seqN " + seqN + " to "
+					+ msg.getTo());
+
 		resendArray[pos(seqN)].setData(msg, System.currentTimeMillis(), seqN);
 
 		Message ackSeqMsg = Message
 				.encapsulateOut(msg, MessageType.ACK_SEQ, to);
 		ackSeqMsg.getHeaderBuffer().putInt(seqN);
 		appendAcks(ackSeqMsg, 10, 10);
+
+		int size = ackSeqMsg.getSize();
+		if (size > config.max_msg_size)
+			log.warn("Surpasing max message size " + config.max_msg_size
+					+ " with " + size);
+
 		ack.sendNext(ackSeqMsg);
 	}
 
 	public synchronized boolean seqNumberArrived(int seq) throws Exception {
-		if (seq < nextExpectedNumber) {
+		if (seq < nextExpectedNumber || rcvd[pos(seq)].confirmed) {
 			ackSent.set(pos(seq), 0);
 			acks.add(seq);
+			if (log.isDebugEnabled())
+				log.debug("Ignoring repeated seq number " + seq + " from " + to);
 			return false;
 		}
+
+		if (log.isDebugEnabled())
+			log.debug("Received seq number " + seq + " from " + to);
 
 		rcvd[pos(seq)].confirmed = true;
 		ackSent.set(pos(seq), 0);
@@ -110,9 +127,15 @@ class AcknowledgeCounter {
 	}
 
 	public void confirm(int seq) throws Exception {
-		if (seq <= confirmed.get())
+		if (seq <= confirmed.get()) {
+			if (log.isDebugEnabled())
+				log.debug("Ignoring confirmation for seq number " + seq
+						+ " from " + to);
 			return;
-
+		}
+		if (log.isDebugEnabled())
+			log.debug("Received confirmation for seq number " + seq + " from "
+					+ to);
 		ResendData curr = resendArray[pos(seq)];
 		curr.setConfirmed();
 		if (seq == confirmed.get() + 1) {
@@ -159,7 +182,8 @@ class AcknowledgeCounter {
 		while (count <= max
 		// && count < MAX_RESEND_ITERATIONS
 		) {
-			int i = resendCursor.getAndIncrement() % resendArray.length;
+			int i = Math.abs(resendCursor.getAndIncrement())
+					% resendArray.length;
 
 			ResendData res = resendArray[i];
 
@@ -183,8 +207,12 @@ class AcknowledgeCounter {
 
 					// appendAcks(ackMsg, 100, 100);
 
-					if (!confirmed)
+					if (!confirmed) {
+						if (log.isDebugEnabled())
+							log.debug("Resending message with seq" + seq
+									+ " to " + to);
 						ack.sendNext(ackMsg);
+					}
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -200,7 +228,7 @@ class AcknowledgeCounter {
 		ByteBuffer buff = msg.getHeaderBuffer();
 
 		int diff = ack.max_size - msg.getSize();
-		if (diff > 1 + 4 + 4) {
+		if (diff > ACK_HEADER) {
 			int appended = 0;
 
 			int from = -1;
@@ -209,7 +237,7 @@ class AcknowledgeCounter {
 			int count = 0;
 			int gathered = 0;
 			Integer seq = null;
-			while ((seq = acks.poll()) != null && appended < diff
+			while ((seq = acks.poll()) != null && appended + ACK_HEADER < diff
 					&& gathered < max_obtained && count < max_total
 					&& count < ackSent.length()) {
 				// while (appended < diff && gathered < max_obtained
@@ -227,7 +255,7 @@ class AcknowledgeCounter {
 						buff.putBoolean(RANGE);
 						buff.putInt(from);
 						buff.putInt(to);
-						appended += 1 + 4 + 4;
+						appended += ACK_HEADER;
 					} else {
 						buff.putBoolean(SINGLE);
 						buff.putInt(from);

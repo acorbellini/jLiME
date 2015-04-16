@@ -2,44 +2,86 @@ package edu.jlime.graphly.util;
 
 import gnu.trove.iterator.TLongIterator;
 import gnu.trove.list.array.TLongArrayList;
-import gnu.trove.map.hash.TLongObjectHashMap;
 import gnu.trove.set.hash.TLongHashSet;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 
 public class GraphlySintetic {
-	private TLongObjectHashMap<TLongHashSet> out = new TLongObjectHashMap<TLongHashSet>();
+	// private TLongObjectHashMap<TLongHashSet> out = new
+	// TLongObjectHashMap<TLongHashSet>();
 
-	private TLongObjectHashMap<TLongHashSet> in = new TLongObjectHashMap<TLongHashSet>();
+	private static final int MAX_THREADS = 16;
 
-	public GraphlySintetic(int v, int e, float c, long[] ls) {
-		for (int currVertex = 0; currVertex < v; currVertex++) {
-			createVertex(v, ls, e, c, currVertex);
-		}
+	private ConcurrentHashMap<Long, TLongHashSet> in = new ConcurrentHashMap<Long, TLongHashSet>();
 
-		for (long currVertex : ls) {
-			createVertex(v, ls, e, c, currVertex);
-		}
+	private String fName;
+
+	private BufferedWriter outwriter;
+
+	private String sep;
+
+	private int v;
+
+	private int e;
+
+	private float c;
+
+	private TLongArrayList ls;
+
+	public GraphlySintetic(String fName, String sep, int v, int e, float c,
+			long[] ls) throws IOException {
+		this.fName = fName;
+		this.sep = sep;
+		this.outwriter = new BufferedWriter(new FileWriter(new File(fName
+				+ ".out")));
+		this.v = v;
+		this.e = e;
+		this.c = c;
+		this.ls = new TLongArrayList(ls);
 	}
 
-	private void createVertex(int v, long[] ul, int e, float c, long currVertex) {
-		TLongHashSet map = createEdges(v, e, c, ul);
-		out.put(currVertex, map);
+	private void createVertex(long currVertex) throws IOException {
+		TLongHashSet map = createEdges(v);
+
+		long[] edges = map.toArray();
+		Arrays.sort(edges);
+		synchronized (outwriter) {
+			for (long to : edges) {
+				outwriter.write(currVertex + sep + to + "\n");
+			}
+		}
+
 		TLongIterator it = map.iterator();
 		while (it.hasNext()) {
 			long vid = it.next();
 			TLongHashSet set = in.get(vid);
 			if (set == null) {
-				set = new TLongHashSet();
-				in.put(vid, set);
+				synchronized (in) {
+					set = in.get(vid);
+					if (set == null) {
+						set = new TLongHashSet();
+						in.put(vid, set);
+					}
+				}
+
 			}
-			set.add(currVertex);
+			synchronized (set) {
+				set.add(currVertex);
+			}
 		}
 	}
 
@@ -48,6 +90,7 @@ public class GraphlySintetic {
 		int vertices = Integer.valueOf(args[1]);
 		int edges = Integer.valueOf(args[2]);
 		float connectivity = Float.valueOf(args[3]);
+		String sep = args[4];
 
 		TLongArrayList vids = new TLongArrayList();
 		if (args.length > 5) {
@@ -61,51 +104,104 @@ public class GraphlySintetic {
 			reader.close();
 		}
 
-		GraphlySintetic sint = new GraphlySintetic(vertices, edges,
+		GraphlySintetic sint = new GraphlySintetic(fName, sep, vertices, edges,
 				connectivity, vids.toArray());
-		sint.writeTo(fName, args[4]);
-
+		sint.create();
 	}
 
-	private void writeTo(String fName, String sep) throws IOException {
-		FileWriter outwriter = new FileWriter(new File(fName + ".out"));
-		long[] keys = out.keys();
-		Arrays.sort(keys);
-		for (long l : keys) {
-			long[] edges = out.get(l).toArray();
-			Arrays.sort(edges);
-			for (long to : edges) {
-				outwriter.write(l + sep + to + "\n");
+	private void create() throws IOException {
+		ExecutorService exec = Executors.newFixedThreadPool(MAX_THREADS);
+		final Semaphore sem = new Semaphore(2 * 16);
+		int cont = 0;
+		for (int i = 0; i < v; i++) {
+			if (ls.contains(i))
+				continue;
+			try {
+				sem.acquire();
+			} catch (InterruptedException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
 			}
+			final int currVertex = i;
+			cont++;
+			if (cont % 10000 == 0)
+				System.out.println("Current vertex generated: " + cont);
+			exec.execute(new Runnable() {
+
+				@Override
+				public void run() {
+					try {
+						createVertex(currVertex);
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					sem.release();
+
+				}
+			});
+
 		}
+
+		for (final long currVertex : ls.toArray()) {
+			exec.execute(new Runnable() {
+
+				@Override
+				public void run() {
+					try {
+						createVertex(currVertex);
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+			});
+		}
+
+		exec.shutdown();
+		try {
+			exec.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
 		outwriter.close();
 
-		FileWriter inwriter = new FileWriter(new File(fName + ".in"));
-		long[] inkeys = in.keys();
-		Arrays.sort(inkeys);
-		for (long l : inkeys) {
-			long[] edges = in.get(l).toArray();
-			Arrays.sort(edges);
+		BufferedWriter inwriter = new BufferedWriter(new FileWriter(new File(
+				fName + ".in")));
+		for (Entry<Long, TLongHashSet> l : in.entrySet()) {
+			long[] edges = l.getValue().toArray();
 			for (long to : edges) {
-				inwriter.write(l + sep + to + "\n");
+				inwriter.write(l.getKey() + sep + to + "\n");
 			}
 		}
 		inwriter.close();
 	}
 
-	private TLongHashSet createEdges(int vertices, int edges,
-			float connectivity, long[] ul) {
+	private TLongHashSet createEdges(int vertices) {
+		ThreadLocalRandom random = ThreadLocalRandom.current();
 		TLongHashSet ret = new TLongHashSet();
-		for (int i = 0; i < edges; i++) {
-			double r = Math.random();
-			if (r <= connectivity) {
-				double src = Math.random();
-				if (src >= 0.5 && ul.length > 0)
-					ret.add(ul[(int) (Math.random() * ul.length)]);
-				else
-					ret.add((long) (Math.random() * vertices));
-			}
+		int max_edges = (int) (e * c * random.nextDouble());
+		while (ret.size() < max_edges) {
+			long vid = (long) (random.nextDouble() * vertices);
+			if (!ret.contains(vid))
+				ret.add(vid);
 		}
+
+		// for (int i = 0; i < e; i++) {
+		// double r = random.nextDouble();
+		// if (r <= c) {
+		// if (ls.size() > 0) {
+		// double src = random.nextDouble();
+		// if (src >= 0.5)
+		// ret.add(ls.get((int) (random.nextDouble() * ls.size())));
+		// else
+		// ret.add((long) (random.nextDouble() * vertices));
+		// } else
+		// ret.add((long) (random.nextDouble() * vertices));
+		// }
+		// }
 		return ret;
 	}
 

@@ -20,23 +20,19 @@ public class LocalStore {
 	private Options options;
 
 	private String sPath;
-
-	private String sn;
-
 	private volatile boolean isClosed = false;
 
 	private Logger log = Logger.getLogger(LocalStore.class);
 
-	public LocalStore(String sn, String sPath) {
+	public LocalStore(String sPath) {
 		this.sPath = sPath;
-		this.sn = sn;
 	}
 
 	public DB getDb() throws Exception {
-		return getDb(sPath, sn);
+		return getDb(sPath);
 	}
 
-	public DB getDb(String sPath, String sn) throws Exception {
+	public DB getDb(String sPath) throws Exception {
 
 		if (db == null) {
 			synchronized (this) {
@@ -54,7 +50,7 @@ public class LocalStore {
 					options.cacheSize(100 * 1024 * 1024);
 					JniDBFactory.pushMemoryPool(100 * 1024 * 1024);
 
-					File dirDB = new File(sPath + "/" + sn);
+					File dirDB = new File(sPath);
 					if (!dirDB.exists())
 						dirDB.mkdirs();
 					db = JniDBFactory.factory.open(dirDB, options);
@@ -105,11 +101,8 @@ public class LocalStore {
 				if (UnsignedBytes.lexicographicalComparator().compare(to,
 						e.getKey()) > 0)
 					cont++;
-
 			}
-
 		} finally {
-			// Make sure you close the iterator to avoid resource leaks.
 			iterator.close();
 		}
 		return cont;
@@ -129,9 +122,9 @@ public class LocalStore {
 						e.getKey()) > 0) {
 					if (!first || (first && includeFirst)) {
 						ret.add(e.getValue());
+						cont++;
 					}
 					first = false;
-					cont++;
 					if (cont >= max)
 						return ret;
 				} else
@@ -139,7 +132,6 @@ public class LocalStore {
 			}
 
 		} finally {
-			// Make sure you close the iterator to avoid resource leaks.
 			iterator.close();
 		}
 		return ret;

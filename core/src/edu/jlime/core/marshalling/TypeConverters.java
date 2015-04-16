@@ -142,6 +142,9 @@ public class TypeConverters {
 	public Object getObjectFromArray(ByteBuffer buff) throws Exception {
 		byte type = buff.get();
 		// String className = types.get(type);
+		if (convs.size() <= type) {
+			log.error("Converter for type " + type + " not found.");
+		}
 		TypeConverter converter = convs.get(type);
 		return converter.fromArray(buff);
 	}

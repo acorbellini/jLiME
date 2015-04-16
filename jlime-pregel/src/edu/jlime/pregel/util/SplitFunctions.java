@@ -8,13 +8,26 @@ import edu.jlime.pregel.client.SplitFunction;
 public class SplitFunctions {
 
 	public static class RoundRobin implements SplitFunction {
+		private Peer[] peers;
+
 		@Override
 		public Peer getPeer(long v, List<Peer> peers) {
 			return peers.get((int) (v % peers.size()));
 		}
 
 		@Override
-		public void update() throws Exception {
+		public void update(List<Peer> peers) throws Exception {
+			this.peers = peers.toArray(new Peer[] {});
+		}
+
+		@Override
+		public Peer[] getPeers() {
+			return peers;
+		}
+
+		@Override
+		public int hash(long v) {
+			return (int) (v % peers.length);
 		}
 
 	}

@@ -3,11 +3,11 @@ package edu.jlime.graphly.jobs;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
 
+import edu.jlime.core.cluster.Peer;
 import edu.jlime.graphly.util.GraphlyUtil;
 import edu.jlime.graphly.util.Pair;
 import edu.jlime.jd.ClientNode;
@@ -28,7 +28,8 @@ public class CriteriaMapper implements Mapper {
 
 	private boolean dynamic;
 
-	private Map<Integer, ClientNode> division = new HashMap<>();
+	// private Map<Integer, ClientNode> division = new HashMap<>();
+	ClientNode[] division;
 
 	private int range;
 
@@ -111,19 +112,34 @@ public class CriteriaMapper implements Mapper {
 			entry.setValue(entry.getValue() / sum);
 		}
 		int i = 0;
+		division = new ClientNode[VNODES];
 		for (Entry<ClientNode, Float> entry : infoValues.entrySet()) {
 			for (; i < VNODES * entry.getValue(); i++) {
-				division.put(i, entry.getKey());
+				division[i] = entry.getKey();
 			}
 		}
 	}
 
 	@Override
-	public ClientNode getPeer(long v, JobContext ctx) {
-		long hash = v % VNODES;
-		ClientNode ret = division.get(hash);
-		if (ret == null)
-			return division.get(0);
-		return ret;
+	public ClientNode getNode(long v, JobContext ctx) {
+		int hash = (int) (v % VNODES);
+		return division[hash];
+		// if (ret == null)
+		// return division.get(0);
+		// return ret;
+	}
+
+	@Override
+	public Peer[] getPeers() {
+		Peer[] peers = new Peer[division.length];
+		for (int i = 0; i < division.length; i++) {
+			peers[i] = division[i].getPeer();
+		}
+		return peers;
+	}
+
+	@Override
+	public int hash(long v) {
+		return (int) (v % VNODES);
 	}
 }

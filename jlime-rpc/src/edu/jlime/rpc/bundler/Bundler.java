@@ -34,7 +34,7 @@ public class Bundler {
 		this.to = addr;
 		this.t = t;
 		this.next = next;
-		t.schedule(new TimerTask() {
+		t.scheduleAtFixedRate(new TimerTask() {
 			@Override
 			public void run() {
 				try {
@@ -44,7 +44,7 @@ public class Bundler {
 				}
 			}
 
-		}, 5, 5);
+		}, 1, 1);
 	}
 
 	protected synchronized void sendBundle() throws Exception {
@@ -74,10 +74,15 @@ public class Bundler {
 	}
 
 	public synchronized void send(Message msg) throws Exception {
+		int msgSize = msg.getSize();
 		if (log.isDebugEnabled())
 			log.debug("Bundling message of type " + msg.getType()
 					+ " and size " + msg.getSize());
 
+		if (msgSize + 4 > bundle.length) {
+			next.send(msg);
+			return;
+		}
 		byte[] msgAsBytes = msg.toByteArray();
 		if (msgAsBytes.length + 4 + pos >= bundle.length)
 			sendBundle();
@@ -88,5 +93,4 @@ public class Bundler {
 
 		pos += msgAsBytes.length + 4;
 	}
-
 }

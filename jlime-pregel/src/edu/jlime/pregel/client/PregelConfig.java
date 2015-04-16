@@ -2,24 +2,21 @@ package edu.jlime.pregel.client;
 
 import java.io.Serializable;
 import java.util.HashMap;
-import java.util.Set;
 
 import edu.jlime.pregel.coordinator.Aggregator;
 import edu.jlime.pregel.graph.rpc.Graph;
 import edu.jlime.pregel.worker.MessageMerger;
 
 public class PregelConfig implements Serializable {
-	SplitFunction split;
-	int maxSteps = 0;
-
-	HashMap<String, Aggregator> aggregators = new HashMap<>();
-	boolean executeOnAll = false;
-
-	Set<Long> vList = null;
-	Graph graph;
-
+	private HashMap<String, Aggregator> aggregators = new HashMap<>();
 	private MessageMerger merger;
-	private Integer threads;
+	private SplitFunction split;
+	private int threads = 8;
+	private int maxSteps = 0;
+	private boolean executeOnAll = false;
+	private int queue_limit = 10000;
+	private int segments = 32;
+	private Graph graph;
 
 	public PregelConfig graph(Graph graph) {
 		this.graph = graph;
@@ -43,21 +40,12 @@ public class PregelConfig implements Serializable {
 		return this;
 	}
 
-	public PregelConfig setvList(Set<Long> vList) {
-		this.vList = vList;
-		return this;
-	}
-
 	public HashMap<String, Aggregator> getAggregators() {
 		return aggregators;
 	}
 
 	public int getMaxSteps() {
 		return maxSteps;
-	}
-
-	public Set<Long> getvList() {
-		return vList;
 	}
 
 	public boolean isExecuteOnAll() {
@@ -97,7 +85,30 @@ public class PregelConfig implements Serializable {
 		return this;
 	}
 
-	public Integer getThreads() {
+	public int getThreads() {
 		return threads;
 	}
+
+	public int getQueueLimit() {
+		return queue_limit;
+	}
+
+	public PregelConfig queue(int queue_limit) {
+		this.queue_limit = queue_limit;
+		return this;
+	}
+
+	public int getSegments() {
+		return segments;
+	}
+
+	public PregelConfig segments(int segments) {
+		this.segments = segments;
+		return this;
+	}
+
+	public static PregelConfig create() {
+		return new PregelConfig();
+	}
+
 }

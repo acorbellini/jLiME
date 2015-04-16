@@ -398,4 +398,17 @@ public class InMemoryGraph implements Graph, Transferible {
 		getGraph(v).setDouble(v, string, currentVal);
 	}
 
+	@Override
+	public float getFloat(long v, String string) throws Exception {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public void setFloat(long v, String string, float currentVal)
+			throws Exception {
+		// TODO Auto-generated method stub
+
+	}
+
 }

@@ -12,8 +12,8 @@ public class Accumulator extends Meter implements AccumulatorMBean {
 
 	@Override
 	public void update(Float val) {
-		super.update(accumulated - val);
-		accumulated = val;
+		accumulated += val;
+		super.update(val);
 	}
 
 	@Override

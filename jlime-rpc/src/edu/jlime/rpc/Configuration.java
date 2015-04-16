@@ -32,8 +32,6 @@ public class Configuration {
 
 	public long disc_delay;
 
-	public int nack_delay;
-
 	public int ack_delay;
 
 	public int interface_max_update_time;
@@ -60,11 +58,19 @@ public class Configuration {
 
 	public String compression;
 
+	public int udp_threads;
+
+	public Integer nack_delay;
+
+	public Integer nack_sync_delay;
+
+	public boolean useNACK;
+
 	public Configuration(Properties prop) {
 
 		this.prop = prop;
 
-		this.setProtocol(getString("protocol", "nioudp"));
+		this.setProtocol(getString("protocol", "udpnio"));
 
 		this.port = getInt("port", 3550);
 		this.port_range = getInt("port_range", 1000);
@@ -85,12 +91,15 @@ public class Configuration {
 		this.max_pings = getInt("fd.max_pings", 60);
 		this.ping_delay = getInt("fd.ping_delay", 1000);
 
-		this.nack_delay = getInt("ack.nack_delay", 150);
+		this.ack_delay = getInt("ack.ack_delay", 1);
+		this.retransmit_delay = getInt("ack.retransmit_delay", 20);
 
-		this.ack_delay = getInt("ack.ack_delay", 100);
-		this.retransmit_delay = getInt("ack.retransmit_delay", 100);
+		this.useNACK = getBoolean("ack.usenack", false);
 
-		this.ack_max_resend_size = getInt("ack.max_resend_size", 2048);
+		this.nack_delay = getInt("nack.nack_delay", 5);
+		this.nack_sync_delay = getInt("nack.sync_delay", 50);
+
+		this.ack_max_resend_size = getInt("ack.max_resend_size", 4096);
 
 		this.interface_max_update_time = getInt("multi.max_update_time", 10000);
 		try {
@@ -121,7 +130,7 @@ public class Configuration {
 		this.tcpnio_max_msg_size = getInt("tcpnio.max_msg_size", 2 * 2048);
 
 		this.tcp_config = new TCPConfig();
-		this.tcp_config.conn_limit = getInt("tcp.conn_limit", 1);
+		this.tcp_config.conn_limit = getInt("tcp.conn_limit", 10);
 		this.tcp_config.time_limit = getInt("tcp.time_limit", 15000);
 		this.tcp_config.tcp_rcv_buffer = getInt("tcp.rcv_buffer",
 				25 * 1024 * 1024);
@@ -132,6 +141,16 @@ public class Configuration {
 		this.tcp_config.output_buffer = getInt("tcp.output_buffer",
 				25 * 1024 * 1024);
 
+	}
+
+	private boolean getBoolean(String k, boolean defaultValue) {
+		if (prop != null && prop.getProperty(k) != null)
+			try {
+				return new Boolean(prop.getProperty(k));
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		return defaultValue;
 	}
 
 	public Configuration() {

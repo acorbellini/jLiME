@@ -76,7 +76,7 @@ public class MessageBundler extends SimpleMessageProcessor {
 			}
 		});
 
-		timer.schedule(new TimerTask() {
+		timer.scheduleAtFixedRate(new TimerTask() {
 			@Override
 			public void run() {
 				for (Bundle b : bundleList) {

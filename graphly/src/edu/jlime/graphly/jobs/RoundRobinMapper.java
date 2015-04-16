@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
+import edu.jlime.core.cluster.Peer;
 import edu.jlime.graphly.util.GraphlyUtil;
 import edu.jlime.graphly.util.Pair;
 import edu.jlime.jd.ClientNode;
@@ -17,7 +18,7 @@ import gnu.trove.list.array.TLongArrayList;
 public class RoundRobinMapper implements Mapper {
 
 	private static final long serialVersionUID = -2914997038447380314L;
-	private ArrayList<ClientNode> peers;
+	private ClientNode[] nodes;
 
 	// public static void main(String[] args) {
 	// HashMap<ClientNode, TIntArrayList> div = new HashMap<ClientNode,
@@ -83,11 +84,32 @@ public class RoundRobinMapper implements Mapper {
 
 	@Override
 	public void update(JobContext ctx) throws Exception {
-		peers = ctx.getCluster().getExecutors();
+		ArrayList<ClientNode> exec = ctx.getCluster().getExecutors();
+		nodes = new ClientNode[exec.size()];
+		int i = 0;
+		for (ClientNode clientNode : exec) {
+			nodes[i++] = clientNode;
+		}
+
 	}
 
 	@Override
-	public ClientNode getPeer(long v, JobContext ctx) {
-		return peers.get((int) (v % peers.size()));
+	public ClientNode getNode(long v, JobContext ctx) {
+		return nodes[hash(v)];
+
+	}
+
+	@Override
+	public Peer[] getPeers() {
+		Peer[] peers = new Peer[nodes.length];
+		for (int i = 0; i < nodes.length; i++) {
+			peers[i] = nodes[i].getPeer();
+		}
+		return peers;
+	}
+
+	@Override
+	public int hash(long v) {
+		return (int) (v % nodes.length);
 	}
 }
