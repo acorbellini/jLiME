@@ -1,0 +1,122 @@
+package edu.jlime.pregel.worker;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
+
+public class ConcurrentHashedMessageQueue implements PregelMessageQueue {
+	private volatile ConcurrentHashMap<Long, PregelMessage> readOnly = new ConcurrentHashMap<>();
+	private volatile ConcurrentHashMap<Long, PregelMessage> current = new ConcurrentHashMap<>();
+	private MessageMerger merger;
+
+	public ConcurrentHashedMessageQueue(MessageMerger merger) {
+		this.merger = merger;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * edu.jlime.pregel.worker.PregelMessageQueue#put(edu.jlime.pregel.worker
+	 * .PregelMessage)
+	 */
+	@Override
+	public void put(long to, boolean copy, PregelMessage msg) {
+		PregelMessage found = this.current.get(to);
+		if (found == null) {
+			synchronized (current) {
+				found = this.current.get(to);
+				if (found == null) {
+					found = copy ? msg.getCopy() : msg;
+					this.current.put(to, found);
+					return;
+				}
+			}
+		}
+		synchronized (found) {
+			merger.merge(found, msg, found);
+		}
+
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see edu.jlime.pregel.worker.PregelMessageQueue#switchQueue()
+	 */
+	@Override
+	public synchronized void switchQueue() {
+		ConcurrentHashMap<Long, PregelMessage> aux = readOnly;
+		this.readOnly = current;
+		this.current = aux;
+		this.current.clear();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see edu.jlime.pregel.worker.PregelMessageQueue#currentSize()
+	 */
+	@Override
+	public int currentSize() {
+		return current.size();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see edu.jlime.pregel.worker.PregelMessageQueue#readOnlySize()
+	 */
+	@Override
+	public int readOnlySize() {
+		return readOnly.size();
+	}
+
+	@Override
+	public Iterator<PregelMessage> readOnlyIterator() {
+		return new Iterator<PregelMessage>() {
+			Iterator<Entry<Long, PregelMessage>> it = readOnly.entrySet()
+					.iterator();
+
+			@Override
+			public boolean hasNext() {
+				return it.hasNext();
+			}
+
+			@Override
+			public PregelMessage next() {
+				return it.next().getValue();
+			}
+		};
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see edu.jlime.pregel.worker.PregelMessageQueue#iterator()
+	 */
+	@Override
+	public Iterator<List<PregelMessage>> iterator() {
+		// Collections.sort(readOnly);
+
+		return new Iterator<List<PregelMessage>>() {
+			final Iterator<Entry<Long, PregelMessage>> it = readOnly.entrySet()
+					.iterator();
+
+			@Override
+			public List<PregelMessage> next() {
+				ArrayList<PregelMessage> ret = new ArrayList<PregelMessage>();
+				ret.add(it.next().getValue());
+				return ret;
+			}
+
+			@Override
+			public boolean hasNext() {
+				return it.hasNext();
+			}
+		};
+	}
+
+}
