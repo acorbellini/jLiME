@@ -27,9 +27,25 @@ import edu.jlime.pregel.graph.PregelGraphLocal;
 import edu.jlime.pregel.graph.rpc.Graph;
 import edu.jlime.pregel.graph.rpc.GraphBroadcast;
 import edu.jlime.pregel.graph.rpc.GraphFactory;
+import edu.jlime.pregel.util.SplitFunctions;
 import gnu.trove.list.array.TLongArrayList;
 
 public class InMemoryGraph implements Graph, Transferible {
+
+	public static final class InMemoryGraphConnectionFactory implements
+			GraphConnectionFactory {
+		private String name;
+
+		public InMemoryGraphConnectionFactory(String string) {
+			this.name = string;
+		}
+
+		@Override
+		public Graph getGraph(RPCDispatcher rpc) throws Exception {
+			return new InMemoryGraph(rpc, "graph",
+					SplitFunctions.rr(), PregelClient.workerFilter(), 2);
+		}
+	}
 
 	private static final int LIMIT = 10000;
 
@@ -409,6 +425,10 @@ public class InMemoryGraph implements Graph, Transferible {
 			throws Exception {
 		// TODO Auto-generated method stub
 
+	}
+
+	public static GraphConnectionFactory getFactory(String string) {
+		return new InMemoryGraphConnectionFactory(string);
 	}
 
 }

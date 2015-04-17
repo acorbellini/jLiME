@@ -23,11 +23,10 @@ public class SegmentedIterator implements Iterator<List<PregelMessage>> {
 		currIt = null;
 
 		while (currIt == null && segment < sq.queue.length) {
-			currIt = sq.queue[segment].iterator();
+			currIt = sq.queue[segment++].iterator();
 			if (currIt.hasNext())
 				return true;
-			currIt = null;
-			segment++;
+			currIt = null;			
 		}
 
 		return false;

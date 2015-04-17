@@ -16,14 +16,14 @@ public class PregelConfig implements Serializable {
 	private boolean executeOnAll = false;
 	private int queue_limit = 10000;
 	private int segments = 32;
-	private Graph graph;
+	private GraphConnectionFactory graph;
 
-	public PregelConfig graph(Graph graph) {
+	public PregelConfig graph(GraphConnectionFactory graph) {
 		this.graph = graph;
 		return this;
 	}
 
-	public Graph getGraph() {
+	public GraphConnectionFactory getGraph() {
 		return graph;
 	}
 

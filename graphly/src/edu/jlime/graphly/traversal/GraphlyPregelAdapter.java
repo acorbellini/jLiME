@@ -6,6 +6,7 @@ import java.util.Set;
 import org.apache.commons.lang3.NotImplementedException;
 
 import edu.jlime.graphly.client.GraphlyGraph;
+import edu.jlime.pregel.client.GraphConnectionFactory;
 import edu.jlime.pregel.graph.rpc.Graph;
 import gnu.trove.list.array.TLongArrayList;
 
@@ -162,4 +163,7 @@ public class GraphlyPregelAdapter implements Graph {
 
 	}
 
+	public static GraphConnectionFactory getFactory(String g) {
+		return new GraphlyGraphConnectionFactory(g);
+	}
 }

@@ -41,16 +41,16 @@ public class SegmentedMessageQueue implements PregelMessageQueue {
 
 	@Override
 	public synchronized void switchQueue() {
-		for (int i = 0; i < queue.length; i++) {
-			if (fut[i] != null)
+		synchronized (taskCounter) {
+			while (taskCounter.get() != 0)
 				try {
-					fut[i].get();
-				} catch (Exception e) {
+					taskCounter.wait();
+				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
-			queue[i].switchQueue();
 		}
-
+		for (int i = 0; i < queue.length; i++)
+			queue[i].switchQueue();
 	}
 
 	@Override
@@ -64,6 +64,12 @@ public class SegmentedMessageQueue implements PregelMessageQueue {
 
 	@Override
 	public int readOnlySize() {
+		// int count = 0;
+		// for (PregelMessageQueue pregelMessageQueue : queue) {
+		// if (pregelMessageQueue.readOnlySize() == 0)
+		// count++;
+		// }
+		// System.out.println(count);
 		int size = 0;
 		for (int i = 0; i < queue.length; i++) {
 			size += queue[i].readOnlySize();
@@ -78,7 +84,7 @@ public class SegmentedMessageQueue implements PregelMessageQueue {
 
 	@Override
 	public void put(long from, long to, Object msg) {
-		int hash = (int) ((to * 31) % this.queue.length);
+		int hash = getHash(to);
 		final PregelMessageQueue cache = this.queue[hash];
 		synchronized (cache) {
 			checkSize(hash, cache);
@@ -86,11 +92,11 @@ public class SegmentedMessageQueue implements PregelMessageQueue {
 		}
 	}
 
-	private void checkSize(int hash, final PregelMessageQueue cache) {
+	private void checkSize(int queueIndex, final PregelMessageQueue cache) {
 		if (cache.currentSize() == queue_limit) {
-			if (fut[hash] != null)
+			if (fut[queueIndex] != null)
 				try {
-					fut[hash].get();
+					fut[queueIndex].get();
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -99,7 +105,7 @@ public class SegmentedMessageQueue implements PregelMessageQueue {
 
 			taskCounter.incrementAndGet();
 
-			fut[hash] = pool.submit(new Runnable() {
+			fut[queueIndex] = pool.submit(new Runnable() {
 				@Override
 				public void run() {
 					try {
@@ -112,7 +118,6 @@ public class SegmentedMessageQueue implements PregelMessageQueue {
 					synchronized (taskCounter) {
 						taskCounter.notify();
 					}
-
 				}
 			});
 		}
@@ -120,23 +125,20 @@ public class SegmentedMessageQueue implements PregelMessageQueue {
 
 	@Override
 	public void putFloat(long from, long to, float val) {
-		int hash = (int) ((to * 31) % this.queue.length);
-		final PregelMessageQueue cache = this.queue[hash];
+		int hash = getHash(to);
+		PregelMessageQueue cache = this.queue[hash];
 		synchronized (cache) {
 			checkSize(hash, cache);
 			cache.putFloat(from, to, val);
 		}
 	}
 
+	private int getHash(long to) {
+		int hash = (int) ((to * 2147483647) % ((long) this.queue.length));
+		return hash;
+	}
+
 	public void flush(WorkerTask workerTask) throws Exception {
-		synchronized (taskCounter) {
-			while (taskCounter.get() != 0)
-				try {
-					taskCounter.wait();
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-		}
 		for (PregelMessageQueue pregelMessageQueue : queue) {
 			pregelMessageQueue.flush(workerTask);
 		}

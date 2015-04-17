@@ -48,7 +48,6 @@ public class WorkerContext {
 	}
 
 	public void sendFloat(long to, float curr) throws Exception {
-		// task.send(new FloatPregelMessage(this.v, to, curr));
 		task.sendFloat(this.v, to, curr);
 
 	}
@@ -57,28 +56,4 @@ public class WorkerContext {
 		task.sendAllFloat(this.v, -1, val);
 
 	}
-
-	// public void finished() throws Exception {
-	// MessageMerger merger = task.getConfig().getMerger();
-	// if (merger != null) {
-	// Collections.sort(toSend);
-	// PregelMessage last = null;
-	// for (PregelMessage curr : toSend) {
-	// if (last == null)
-	// last = curr;
-	// else if (last.getTo() == curr.getTo()) {
-	// Object val = merger.merge(last.getV(), curr);
-	// last.setV(val);
-	// } else {
-	// task.send(last);
-	// last = curr;
-	// }
-	// }
-	// if (last != null)
-	// task.send(last);
-	// } else
-	// for (PregelMessage pregelMessage : toSend) {
-	// task.send(pregelMessage);
-	// }
-	// };
 }

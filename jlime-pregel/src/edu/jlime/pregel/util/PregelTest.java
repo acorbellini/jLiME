@@ -38,7 +38,7 @@ public class PregelTest {
 
 		cli.execute(new PageRank(g.vertexSize()), null, new PregelConfig()
 				.split(SplitFunctions.rr()).merger(MessageMergers.FLOAT_SUM)
-				.graph(g).steps(30).threads(10).executeOnAll(true));
+				.graph(InMemoryGraph.getFactory("graph")).steps(30).threads(10).executeOnAll(true));
 
 		System.out.println("Finished PageRank Test.");
 

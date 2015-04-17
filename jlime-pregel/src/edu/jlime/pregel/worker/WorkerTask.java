@@ -73,9 +73,6 @@ public class WorkerTask {
 			final VertexFunction func, long[] vList, final int taskID2,
 			PregelConfig config) throws Exception {
 		log.info("Creating task with ID " + taskID2);
-		// cacheBroadcast = new
-		// ArrayList<PregelMessage>(config.getQueueLimit());
-		// fut = new Future[config.getSegments()];
 
 		this.vertexPool = Executors.newFixedThreadPool(config.getThreads(),
 				new ThreadFactory() {
@@ -89,16 +86,7 @@ public class WorkerTask {
 					}
 				});
 
-		this.graph = config.getGraph();
-
-		// this.vList = new TLongArrayList();
-		// try {
-		// for (Long vid : graph.vertices()) {
-		// vList.add(vid);
-		// }
-		// } catch (Exception e) {
-		// e.printStackTrace();
-		// }
+		this.graph = config.getGraph().getGraph(rpc);
 
 		this.worker = w;
 		this.coordMgr = rpc.manage(new CoordinatorFactory(rpc,
@@ -111,7 +99,7 @@ public class WorkerTask {
 		if (config.isExecuteOnAll()) {
 			log.info("Creating vertex list for whole graph.");
 			TLongArrayList gatherVList = new TLongArrayList();
-			for (Long vid : config.getGraph().vertices()) {
+			for (Long vid : graph.vertices()) {
 				gatherVList.add(vid);
 			}
 			this.vList = gatherVList;
@@ -124,48 +112,19 @@ public class WorkerTask {
 				: MessageQueueFactory.simple(null);
 
 		this.queue = new SegmentedMessageQueue(this, config.getSegments(),
-				config.getQueueLimit(), fact);
+				Integer.MAX_VALUE, fact);
 		this.cache = new SegmentedMessageQueue(this, config.getSegments(),
 				config.getQueueLimit(), fact);
 		this.cacheBroadcast = fact.getMQ();
-
-		// this.broadcast_queue = new MessageQueue(config.getMerger());
-
-		// this.cache = new PregelMessageQueue[config.getSegments()];
-		// for (int i = 0; i < cache.length; i++) {
-		// this.cache[i] = new MessageQueue(config.getMerger());
-		// }
-		// } else {
-		// // this.queue = new HashedMessageQueue(config.getMerger());
-		// this.queue = new PregelMessageQueue[config.getSegments()];
-		// for (int i = 0; i < queue.length; i++) {
-		// this.queue[i] = new HashedMessageQueue(config.getMerger());
-		// }
-		//
-		// // this.broadcast_queue = new
-		// // HashedMessageQueue(config.getMerger());
-		//
-		// this.cache = new PregelMessageQueue[config.getSegments()];
-		// for (int i = 0; i < cache.length; i++) {
-		// this.cache[i] = new HashedMessageQueue(config.getMerger());
-		// }
-		//
-		// }
 		this.f = func;
 	}
 
 	public void queueVertexData(long from, long to, Object val) {
 		this.queue.put(from, to, val);
-		// int hash = (int) ((msg.getTo() * 31) % this.queue.length);
-		// final PregelMessageQueue cache = this.queue[hash];
-		// cache.put(msg.getTo(), false, msg);
 	}
 
 	public void queueFloatVertexData(long from, long to, float val) {
 		this.queue.putFloat(from, to, val);
-		// int hash = (int) ((msg.getTo() * 31) % this.queue.length);
-		// final PregelMessageQueue cache = this.queue[hash];
-		// cache.put(msg.getTo(), false, msg);
 	}
 
 	public void queueBroadcastVertexData(long from, Object val) {
@@ -173,9 +132,6 @@ public class WorkerTask {
 		while (it.hasNext()) {
 			long vid = it.next();
 			queue.put(from, vid, val);
-			// int hash = (int) ((vid * 31) % this.queue.length);
-			// final PregelMessageQueue cache = this.queue[hash];
-			// cache.put(vid, true, msg);
 		}
 	}
 
@@ -184,9 +140,6 @@ public class WorkerTask {
 		while (it.hasNext()) {
 			long vid = it.next();
 			queue.putFloat(from, vid, val);
-			// int hash = (int) ((vid * 31) % this.queue.length);
-			// final PregelMessageQueue cache = this.queue[hash];
-			// cache.put(vid, true, msg);
 		}
 	}
 
@@ -205,10 +158,6 @@ public class WorkerTask {
 		this.currentStep = superstep;
 
 		queue.switchQueue();
-		// for (int i = 0; i < queue.length; i++)
-		// queue[i].switchQueue();
-
-		// broadcast_queue.switchQueue();
 
 		// It's done twice, called with -1 and 0.
 		log.info("Loading local slice of vertices from " + vList.size()
@@ -217,6 +166,7 @@ public class WorkerTask {
 		currentSplit.clear();
 		Peer localPeer = workerMgr.getLocalPeer();
 		List<Peer> peers2 = workerMgr.getPeers();
+
 		TLongIterator it = vList.iterator();
 		while (it.hasNext()) {
 			long vid = it.next();
@@ -246,26 +196,14 @@ public class WorkerTask {
 				+ size + " messages.");
 
 		Semaphore execCount = new Semaphore(getConfig().getThreads() * 2);
-
+		// log.info(queue.readOnlySize());
 		int count = 0;
 		Iterator<List<PregelMessage>> it = queue.iterator();
-
 		while (it.hasNext()) {
 			List<PregelMessage> list = it.next();
 			long vid = list.get(0).getTo();
 			count++;
-
 			printCompleted(size, count);
-
-			// executed.add(vid);
-
-			// Iterator<PregelMessage> broadcast = broadcast_queue
-			// .readOnlyIterator();
-			// while (broadcast.hasNext()) {
-			// PregelMessage pregelMessage = (PregelMessage) broadcast
-			// .next();
-			// list.add(pregelMessage);
-			// }
 			execVertex(execCount, vid, list);
 		}
 
@@ -278,32 +216,17 @@ public class WorkerTask {
 				}
 		}
 
-		// exec.shutdown();
-		// exec.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
-
-		// if (log.isDebugEnabled())
 		log.info("Finished work for step " + currentStep + " on Worker "
 				+ worker.getID());
 
+		cache.switchQueue();
 		cache.flush(this);
 
+		cacheBroadcast.switchQueue();
 		cacheBroadcast.flush(this);
 
 		coordMgr.getFirst().finished(getTaskid(), this.worker.getID(), true);
 	}
-
-	// private void forceFlushCache() throws InterruptedException,
-	// ExecutionException {
-	// synchronized (this) {
-	// for (int i = 0; i < cache.length; i++) {
-	// if (fut[i] != null)
-	// fut[i].get();
-	// cache[i].switchQueue();
-	// flushCache(cache[i]);
-	// }
-	//
-	// }
-	// }
 
 	private void printCompleted(int total, double currentCount)
 			throws Exception {
@@ -355,91 +278,27 @@ public class WorkerTask {
 	}
 
 	public void sendAll(long from, Object msg) throws Exception {
+		synchronized (cacheBroadcast) {
+			checkBroadCacheSize();
+			cacheBroadcast.put(from, -1, msg);
+		}
 
-		cacheBroadcast.put(from, -1, msg);
+	}
 
-		// synchronized (cacheBroadcast) {
-		// if (cacheBroadcast.size() == config.getQueueLimit()) {
-		// final ArrayList<PregelMessage> arrayList = new ArrayList<>(
-		// cacheBroadcast);
-		// taskCounter.incrementAndGet();
-		// pool.execute(new Runnable() {
-		// @Override
-		// public void run() {
-		// try {
-		// flushBroadcast(arrayList);
-		// } catch (Exception e) {
-		// e.printStackTrace();
-		// }
-		//
-		// taskCounter.decrementAndGet();
-		// synchronized (taskCounter) {
-		// taskCounter.notify();
-		// }
-		//
-		// }
-		// });
-		// cacheBroadcast.clear();
-		// }
-		// cacheBroadcast.add(pregelMessage);
-		// }
+	private void checkBroadCacheSize() throws Exception {
+		if (cacheBroadcast.currentSize() == config.getQueueLimit()) {
+			cacheBroadcast.switchQueue();
+			cacheBroadcast.flush(this);
+		}
 	}
 
 	public void send(long from, long to, Object val) throws Exception {
-
 		cache.put(from, to, val);
-
-		// int hash = (int) ((msg.getTo() * 31) % this.cache.length);
-		// final PregelMessageQueue cache = this.cache[hash];
-		// synchronized (cache) {
-		// if (cache.currentSize() == config.getQueueLimit()) {
-		// if (fut[hash] != null)
-		// fut[hash].get();
-		//
-		// cache.switchQueue();
-		//
-		// taskCounter.incrementAndGet();
-		// fut[hash] = pool.submit(new Runnable() {
-		// @Override
-		// public void run() {
-		// flushCache(cache);
-		//
-		// taskCounter.decrementAndGet();
-		// synchronized (taskCounter) {
-		// taskCounter.notify();
-		// }
-		//
-		// }
-		// });
-		// }
-		//
-		// cache.put(msg.getFrom(), msg.getTo(), msg.getV());
-		// }
-	}
-
-	private void flushCache(PregelMessageQueue cache) throws Exception {
-		cache.flush(this);
-		// CacheIterator it = cache.readOnlyIterator();
-		// while (it.hasNext()) {
-		// Worker w = workers[split.hash(last.getTo())];
-		// try {
-		// w.sendMessage(last, taskid);
-		// } catch (Exception e) {
-		// e.printStackTrace();
-		// }
-		//
-		// }
 	}
 
 	public Worker getWorker(long vid) {
 		return workers[split.hash(vid)];
 	}
-
-	// public void setHalted(Long v) {
-	// synchronized (halted) {
-	// this.halted.add(v);
-	// }
-	// }
 
 	public Integer getSuperStep() {
 		return currentStep;
@@ -453,25 +312,6 @@ public class WorkerTask {
 			throws Exception {
 		coordMgr.getFirst().setAggregatedValue(getTaskid(), v, string,
 				currentVal);
-	}
-
-	private void flushBroadcast(PregelMessageQueue broadcastQueue)
-			throws Exception {
-		broadcastQueue.flush(this);
-		// MessageMerger merger = config.getMerger();
-		// if (merger != null) {
-		// PregelMessage toSend = arrayList.get(0).getCopy();
-		// toSend.setFrom(-1);
-		// for (PregelMessage pregelMessage : arrayList) {
-		// merger.merge(toSend, pregelMessage, toSend);
-		// }
-		// workerMgr.broadcast().sendMessage(toSend, taskid);
-		// } else
-		// for (PregelMessage b : arrayList) {
-		// b.setBroadcast(true);
-		// workerMgr.broadcast().sendMessage(b, taskid);
-		// }
-
 	}
 
 	public PregelConfig getConfig() {
@@ -490,34 +330,28 @@ public class WorkerTask {
 
 	public void sendAllFloat(long from, long to, float val) throws Exception {
 		synchronized (cacheBroadcast) {
-			if (cacheBroadcast.currentSize() == config.getQueueLimit()) {
-				flushBroadcast(cacheBroadcast);
-			}
+			checkBroadCacheSize();
 			cacheBroadcast.putFloat(from, -1, val);
 		}
 	}
 
 	public void sendFloat(long from, long to, float val) throws Exception {
-		synchronized (cache) {
-			if (cache.currentSize() == config.getQueueLimit()) {
-				flushBroadcast(cache);
-			}
-			cache.putFloat(from, to, val);
-		}
+		cache.putFloat(from, to, val);
 	}
 
 	public void outputObject(long from, long to, Object val) throws Exception {
 		if (to != -1)
 			getWorker(to).sendMessage(from, to, val, getTaskid());
 		else
-			getWorker(to).sendBroadcastMessage(from, val, getTaskid());
+			workerMgr.broadcast().sendBroadcastMessage(from, val, getTaskid());
 	}
 
 	public void outputFloat(long from, long to, float value) throws Exception {
 		if (to != -1)
 			getWorker(to).sendFloatMessage(from, to, value, getTaskid());
 		else
-			getWorker(to).sendFloatBroadcastMessage(from, value, getTaskid());
+			workerMgr.broadcast().sendFloatBroadcastMessage(from, value,
+					getTaskid());
 	}
 
 	public int getTaskid() {

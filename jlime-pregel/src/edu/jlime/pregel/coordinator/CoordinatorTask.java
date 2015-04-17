@@ -95,7 +95,7 @@ public class CoordinatorTask {
 
 			// if (log.isDebugEnabled())
 			log.info("Running superstep " + step + " Remaining "
-					+ currentStep.size());
+					+ (config.getMaxSteps() - step));
 
 			workerMgr.broadcast().execute(taskID);
 

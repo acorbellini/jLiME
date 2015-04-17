@@ -66,8 +66,8 @@ public class PageRank implements VertexFunction {
 		// byte[] data =
 		// DataTypeUtils.intToByteArray(Float.floatToIntBits(val));
 		if (outgoingSize == 0) {
-			// float val = currentVal / vertexSize;
-			// ctx.sendAllFloat(val);
+			float val = currentVal / vertexSize;
+			ctx.sendAllFloat(val);
 		} else {
 			float val = currentVal / outgoingSize;
 			TLongIterator outgoing = graph.getOutgoing(v).iterator();

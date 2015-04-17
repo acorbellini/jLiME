@@ -4,17 +4,11 @@ import java.util.List;
 
 import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.client.GraphlyGraph;
-import edu.jlime.graphly.client.VertexList;
 import edu.jlime.graphly.jobs.MapperFactory;
-import edu.jlime.graphly.traversal.Dir;
 import edu.jlime.graphly.traversal.Pregel;
 import edu.jlime.pregel.client.PregelConfig;
 import edu.jlime.pregel.functions.PageRank;
 import edu.jlime.pregel.mergers.MessageMergers;
-import edu.jlime.pregel.worker.FloatMessageMerger;
-import edu.jlime.pregel.worker.FloatPregelMessage;
-import edu.jlime.pregel.worker.MessageMerger;
-import edu.jlime.pregel.worker.PregelMessage;
 
 public class QueryTest {
 
@@ -44,16 +38,18 @@ public class QueryTest {
 				.as(Pregel.class)
 				.vertexFunction(
 						new PageRank(vertexCount),
-						PregelConfig.create().steps(5).threads(8)
+						PregelConfig.create().steps(100).threads(8)
 								.executeOnAll(true)
-								.merger(MessageMergers.FLOAT_SUM).queue(50000)
-								.segments(128)).exec();
+								.merger(MessageMergers.FLOAT_SUM).queue(5000)
+								.segments(8)).exec();
 		System.out.println(System.currentTimeMillis() - init);
 		float sum = 0;
 		List<Float> vals = g.gather(new SumFloatPropertiesGather("pagerank"));
 		for (Float float1 : vals) {
 			sum += float1;
 		}
+
+		System.out.println(sum);
 
 		// final AtomicDouble sum = new AtomicDouble(0d);
 		// // If everything's alright, the sum should be 1 (Or near)
@@ -73,8 +69,6 @@ public class QueryTest {
 		//
 		// pool.shutdown();
 		// pool.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
-
-		System.out.println(sum);
 
 		// long[][] adj = new long[][] { { 0, 1 }, { 0, 2 }, { 0, 3 }, { 0, 4 },
 		// { 0, 5 }, { 3, 6 }, { 3, 7 }, { 1, 6 }, { 6, 1 }, { 7, 1 },

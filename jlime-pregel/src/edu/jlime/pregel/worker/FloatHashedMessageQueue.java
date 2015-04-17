@@ -9,8 +9,10 @@ import java.util.List;
 
 public class FloatHashedMessageQueue implements PregelMessageQueue {
 
-	private volatile TLongFloatHashMap readOnly = new TLongFloatHashMap();
-	private volatile TLongFloatHashMap current = new TLongFloatHashMap();
+	private volatile TLongFloatHashMap readOnly = new TLongFloatHashMap(8,
+			.8f, Long.MAX_VALUE, Float.MAX_VALUE);
+	private volatile TLongFloatHashMap current = new TLongFloatHashMap(8,
+			.8f, Long.MAX_VALUE, Float.MAX_VALUE);
 	private FloatMessageMerger merger;
 
 	public FloatHashedMessageQueue(FloatMessageMerger merger) {
@@ -96,7 +98,10 @@ public class FloatHashedMessageQueue implements PregelMessageQueue {
 
 	@Override
 	public void put(long from, long to, Object val) {
-		this.putFloat(from, to, (Float) val);
+		if (val == null)
+			this.putFloat(from, to, 0f);
+		else
+			this.putFloat(from, to, (Float) val);
 	}
 
 	@Override
