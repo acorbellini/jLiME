@@ -112,9 +112,9 @@ public class WorkerTask {
 				: MessageQueueFactory.simple(null);
 
 		this.queue = new SegmentedMessageQueue(this, config.getSegments(),
-				Integer.MAX_VALUE, fact);
+				Integer.MAX_VALUE, fact, config.getThreads());
 		this.cache = new SegmentedMessageQueue(this, config.getSegments(),
-				config.getQueueLimit(), fact);
+				config.getQueueLimit(), fact, config.getThreads());
 		this.cacheBroadcast = fact.getMQ();
 		this.f = func;
 	}

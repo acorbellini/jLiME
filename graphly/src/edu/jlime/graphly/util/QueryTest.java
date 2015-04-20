@@ -38,10 +38,10 @@ public class QueryTest {
 				.as(Pregel.class)
 				.vertexFunction(
 						new PageRank(vertexCount),
-						PregelConfig.create().steps(100).threads(8)
+						PregelConfig.create().steps(100).threads(32)
 								.executeOnAll(true)
-								.merger(MessageMergers.FLOAT_SUM).queue(5000)
-								.segments(8)).exec();
+								.merger(MessageMergers.FLOAT_SUM).queue(10000)
+								.segments(1024)).exec();
 		System.out.println(System.currentTimeMillis() - init);
 		float sum = 0;
 		List<Float> vals = g.gather(new SumFloatPropertiesGather("pagerank"));
