@@ -1,7 +1,9 @@
-package edu.jlime.pregel.worker;
+package edu.jlime.pregel.queues;
 
 import java.util.Iterator;
 import java.util.List;
+
+import edu.jlime.pregel.messages.PregelMessage;
 
 public class SegmentedIterator implements Iterator<List<PregelMessage>> {
 
@@ -26,7 +28,7 @@ public class SegmentedIterator implements Iterator<List<PregelMessage>> {
 			currIt = sq.queue[segment++].iterator();
 			if (currIt.hasNext())
 				return true;
-			currIt = null;			
+			currIt = null;
 		}
 
 		return false;

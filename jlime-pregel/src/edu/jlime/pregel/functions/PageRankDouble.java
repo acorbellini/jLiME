@@ -7,16 +7,15 @@ import org.apache.log4j.Logger;
 import edu.jlime.pregel.client.WorkerContext;
 import edu.jlime.pregel.graph.VertexFunction;
 import edu.jlime.pregel.graph.rpc.Graph;
-import edu.jlime.pregel.worker.FloatPregelMessage;
-import edu.jlime.pregel.worker.PregelMessage;
+import edu.jlime.pregel.messages.PregelMessage;
 import gnu.trove.iterator.TLongIterator;
 
-public class PageRank implements VertexFunction {
+public class PageRankDouble implements VertexFunction {
 
-	double error = 0.0001;
+	// double error = 0.0001;
 	private int vertexSize;
 
-	public PageRank(int vSize) {
+	public PageRankDouble(int vSize) {
 		this.vertexSize = vSize;
 	}
 
@@ -25,32 +24,32 @@ public class PageRank implements VertexFunction {
 	@Override
 	public void execute(long v, List<PregelMessage> in, WorkerContext ctx)
 			throws Exception {
-		Logger log = Logger.getLogger(PageRank.class);
+		Logger log = Logger.getLogger(PageRankDouble.class);
 
 		Graph graph = ctx.getGraph();
 
-		float oldval = graph.getFloat(v, "pagerank");
+		double oldval = graph.getDouble(v, "pagerank");
 
 		// Jacobi iterative method: (1-d) + d * function
 		// Example :
 		// http://mathscinotes.wordpress.com/2012/01/02/worked-pagerank-example/
-		float currentVal = oldval;
+		double currentVal = oldval;
 		if (ctx.getSuperStep() >= 1) {
-			float sum = 0f;
+			double sum = 0f;
 			for (PregelMessage pm : in) {
 				// sum += Float.intBitsToFloat(DataTypeUtils
 				// .byteArrayToInt((byte[]) pm.getV()));
-				sum += ((FloatPregelMessage) pm).getFloat();
+				sum += ((DoublePregelMessage) pm).getDouble();
 			}
 
-			float d = graph.getFloat(v, "ranksource");
+			double d = graph.getDouble(v, "ranksource");
 			currentVal = (1 - d) / vertexSize + d * (sum);
 			if (log.isDebugEnabled())
 				log.debug("Saving pagerank " + currentVal + " into " + v
 						+ " ( 1 - " + d + "/" + graph.vertexSize() + " + " + d
 						+ "*" + sum + " )");
 
-			graph.setFloat(v, "pagerank", currentVal);
+			graph.setDouble(v, "pagerank", currentVal);
 
 			// If converged, set as halted for the next superstep. The value of
 			// the current pagerank was saved in
@@ -66,16 +65,16 @@ public class PageRank implements VertexFunction {
 		// byte[] data =
 		// DataTypeUtils.intToByteArray(Float.floatToIntBits(val));
 		if (outgoingSize == 0) {
-			float val = currentVal / vertexSize;
-			ctx.sendAllFloat(val);
+			double val = currentVal / vertexSize;
+			ctx.sendAllDouble(val);
 		} else {
-			float val = currentVal / outgoingSize;
+			double val = currentVal / outgoingSize;
 			TLongIterator outgoing = graph.getOutgoing(v).iterator();
 			while (outgoing.hasNext()) {
 				long vertex = outgoing.next();
 				if (log.isDebugEnabled())
 					log.debug("Sending message to " + vertex + " from " + v);
-				ctx.sendFloat(vertex, val);
+				ctx.sendDouble(vertex, val);
 			}
 		}
 	}

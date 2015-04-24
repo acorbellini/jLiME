@@ -1,6 +1,4 @@
-package edu.jlime.pregel.worker;
-
-import gnu.trove.list.array.TLongArrayList;
+package edu.jlime.pregel.queues;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -10,6 +8,9 @@ import java.util.Map.Entry;
 import org.mapdb.BTreeMap;
 import org.mapdb.Fun;
 import org.mapdb.Fun.Tuple2;
+
+import edu.jlime.pregel.messages.PregelMessage;
+import gnu.trove.list.array.TLongArrayList;
 
 final class PersistentQueueIterator implements Iterator<List<PregelMessage>> {
 	private final Iterator<Entry<Fun.Tuple2<Long, Long>, PregelMessage>> backIt;

@@ -7,7 +7,7 @@ import edu.jlime.graphly.client.GraphlyGraph;
 import edu.jlime.graphly.jobs.MapperFactory;
 import edu.jlime.graphly.traversal.Pregel;
 import edu.jlime.pregel.client.PregelConfig;
-import edu.jlime.pregel.functions.PageRank;
+import edu.jlime.pregel.functions.PageRankFloat;
 import edu.jlime.pregel.mergers.MessageMergers;
 
 public class QueryTest {
@@ -33,20 +33,31 @@ public class QueryTest {
 		g.setDefaultFloat("pagerank", 1f / vertexCount);
 		g.setDefaultFloat("ranksource", .85f);
 
+		{
+			float sum = 0;
+			List<Float> vals = g
+					.gather(new SumFloatPropertiesGather("pagerank"));
+			for (Float d : vals) {
+				sum += d;
+			}
+
+			System.out.println(sum);
+		}
+
 		g.v()
 				.set("mapper", MapperFactory.location())
 				.as(Pregel.class)
 				.vertexFunction(
-						new PageRank(vertexCount),
-						PregelConfig.create().steps(100).threads(32)
+						new PageRankFloat(vertexCount),
+						PregelConfig.create().steps(5).threads(32)
 								.executeOnAll(true)
-								.merger(MessageMergers.FLOAT_SUM).queue(10000)
-								.segments(1024)).exec();
+								.merger(MessageMergers.FLOAT_SUM)
+								.queue(1000000).segments(16)).exec();
 		System.out.println(System.currentTimeMillis() - init);
 		float sum = 0;
 		List<Float> vals = g.gather(new SumFloatPropertiesGather("pagerank"));
-		for (Float float1 : vals) {
-			sum += float1;
+		for (Float d : vals) {
+			sum += d;
 		}
 
 		System.out.println(sum);

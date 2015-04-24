@@ -20,7 +20,7 @@ import edu.jlime.util.ByteBuffer;
 
 public class Acknowledge extends SimpleMessageProcessor {
 
-	public static final int HEADER = Header.HEADER + 4;
+	public static final int HEADER = Header.HEADER + 4 + 4;
 
 	Logger log = Logger.getLogger(Acknowledge.class);
 
@@ -74,18 +74,24 @@ public class Acknowledge extends SimpleMessageProcessor {
 							throws Exception {
 						ByteBuffer headerBuffer = m.getHeaderBuffer();
 						int seq = headerBuffer.getInt();
+						int nextexpected = headerBuffer.getInt();
+
 						if (log.isTraceEnabled())
 							log.trace("Received Ack'd msg with seq # " + seq
 									+ " from " + m.getFrom());
 
 						AcknowledgeCounter counter = getCounter(m.getFrom());
+
 						if (counter != null) {
 							if (counter.seqNumberArrived(seq)) {
 								notifyRcvd(Message.deEncapsulate(
 										m.getDataBuffer(), m.getFrom(),
 										m.getTo()));
 							}
+
 							counter.receivedAckBuffer(headerBuffer);
+
+							counter.confirmAll(nextexpected);
 						}
 					}
 				});
@@ -95,8 +101,12 @@ public class Acknowledge extends SimpleMessageProcessor {
 			public void rcv(Message m, MessageProcessor origin)
 					throws Exception {
 				AcknowledgeCounter counter = getCounter(m.getFrom());
-				if (counter != null)
+
+				if (counter != null) {
+					int nextExpected = m.getHeaderBuffer().getInt();
 					counter.receivedAckBuffer(m.getHeaderBuffer());
+					counter.confirmAll(nextExpected);
+				}
 			}
 		});
 	}

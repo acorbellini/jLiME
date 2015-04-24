@@ -19,8 +19,6 @@ import edu.jlime.pregel.coordinator.rpc.Coordinator;
 import edu.jlime.pregel.coordinator.rpc.CoordinatorBroadcast;
 import edu.jlime.pregel.coordinator.rpc.CoordinatorFactory;
 import edu.jlime.pregel.graph.VertexFunction;
-import edu.jlime.pregel.worker.GenericPregelMessage;
-import edu.jlime.pregel.worker.PregelMessage;
 import edu.jlime.pregel.worker.WorkerFilter;
 import edu.jlime.pregel.worker.WorkerServer;
 import edu.jlime.pregel.worker.rpc.Worker;
@@ -70,15 +68,18 @@ public class CoordinatorTask {
 			log.debug("Remaining in step: " + currentStep.size());
 	}
 
-	public PregelExecution execute(final VertexFunction func, long[] vList,
+	public PregelExecution execute(final VertexFunction func, long[] list,
 			final PregelConfig config) throws Exception {
+
 		final SplitFunction split = config.getSplit();
 
 		split.update(workerMgr.getPeers());
-		long[] list = vList;
 
 		log.info("Creating tasks");
+		long startInit = System.currentTimeMillis();
 		workerMgr.broadcast().createTask(taskID, cli, func, list, config);
+		log.info("Finished creating tasks in "
+				+ (System.currentTimeMillis() - startInit) / 1000f + " sec.");
 
 		log.info("Initial Superstep");
 		workerMgr.broadcast().nextSuperstep(-1, taskID, split);
@@ -86,12 +87,12 @@ public class CoordinatorTask {
 		log.info("Broadcasting initial message");
 		workerMgr.broadcast().sendBroadcastMessage(-1l, null, taskID);
 
-		log.info("Setup of Superstep 0");
-		workerMgr.broadcast().nextSuperstep(0, taskID, split);
-
 		int step = 0;
 		for (; step < config.getMaxSteps(); step++) {
+			long start = System.currentTimeMillis();
 			finished = true;
+
+			workerMgr.broadcast().nextSuperstep(step, taskID, split);
 
 			// if (log.isDebugEnabled())
 			log.info("Running superstep " + step + " Remaining "
@@ -119,7 +120,8 @@ public class CoordinatorTask {
 
 			split.update(workerMgr.getPeers());
 
-			workerMgr.broadcast().nextSuperstep(step + 1, taskID, split);
+			log.info("Finished superstep " + step + " in "
+					+ (System.currentTimeMillis() - start) / 1000f + " sec.");
 
 		}
 		log.info("Finished");

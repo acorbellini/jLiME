@@ -1,8 +1,6 @@
 package edu.jlime.pregel.client;
 
 import edu.jlime.pregel.graph.rpc.Graph;
-import edu.jlime.pregel.worker.FloatPregelMessage;
-import edu.jlime.pregel.worker.GenericPregelMessage;
 import edu.jlime.pregel.worker.WorkerTask;
 
 public class WorkerContext {
@@ -53,7 +51,16 @@ public class WorkerContext {
 	}
 
 	public void sendAllFloat(float val) throws Exception {
-		task.sendAllFloat(this.v, -1, val);
+		task.sendAllFloat(this.v, val);
 
+	}
+
+	public void sendAllDouble(double val) throws Exception {
+		task.sendAllDouble(this.v, val);
+
+	}
+
+	public void sendDouble(long to, double val) {
+		task.sendDouble(this.v, to, val);
 	}
 }

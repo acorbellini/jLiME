@@ -1,5 +1,6 @@
 package edu.jlime.pregel.mergers;
 
+import edu.jlime.pregel.queues.DoubleMessageMerger;
 import edu.jlime.pregel.worker.FloatMessageMerger;
 
 public class MessageMergers {
@@ -24,5 +25,13 @@ public class MessageMergers {
 	// public static MessageMerger sum() {
 	// return new SumMerger();
 	// }
+	public static DoubleMessageMerger DOUBLE_SUM = new DoubleMessageMerger() {
+
+		@Override
+		public double merge(double msg1, double msg2) {
+			return msg1 + msg2;
+		}
+
+	};
 
 }

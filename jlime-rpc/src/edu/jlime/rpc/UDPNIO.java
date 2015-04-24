@@ -34,16 +34,7 @@ public class UDPNIO extends MessageProcessor implements AddressListProvider,
 
 	public static final int HEADER = 32;
 
-	private ExecutorService exec = Executors
-			.newCachedThreadPool(new ThreadFactory() {
-
-				@Override
-				public Thread newThread(Runnable r) {
-					Thread t = Executors.defaultThreadFactory().newThread(r);
-					t.setName("UDP NIO Worker Thread");
-					return t;
-				}
-			});
+	private ExecutorService exec;
 
 	ByteBuffer readbuffer;
 	// ByteBuffer writebuffer;
@@ -63,6 +54,17 @@ public class UDPNIO extends MessageProcessor implements AddressListProvider,
 
 	public UDPNIO(Address local, Configuration config, String iface) {
 		super("UDP NIO");
+		this.exec = Executors.newFixedThreadPool(config.udp_threads,
+				new ThreadFactory() {
+
+					@Override
+					public Thread newThread(Runnable r) {
+						Thread t = Executors.defaultThreadFactory()
+								.newThread(r);
+						t.setName("UDP NIO Worker Thread");
+						return t;
+					}
+				});
 		this.local = local;
 		this.config = config;
 		this.iface = iface;

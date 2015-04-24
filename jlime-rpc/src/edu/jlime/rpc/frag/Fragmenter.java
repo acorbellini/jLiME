@@ -91,42 +91,41 @@ public class Fragmenter extends SimpleMessageProcessor {
 								log.debug("Received first fragment of message with id "
 										+ fragID + " from " + from);
 
-							incomplete = new IncompleteMessage(from,
-									messageLength, fragID);
+							incomplete = new IncompleteMessage(messageLength,
+									fragID);
 
 							incompletes.put(fragID, incomplete);
 						}
 					}
 				}
-				if (!incomplete.contains(offset)) {
-					synchronized (incomplete) {
-						if (!incomplete.contains(offset)) {
-							if (log.isDebugEnabled())
-								log.debug("Adding offset " + offset
-										+ " to message with id " + fragID
-										+ " from " + from);
-							incomplete.addPart(offset, message.getDataAsBytes());
-							if (incomplete.isCompleted()) {
-								if (log.isDebugEnabled())
-									log.debug("Notifying COMPLETED Message with id "
-											+ fragID + " from " + from);
+				if (incomplete.addPart(offset, message.getDataAsBytes())) {
+					// synchronized (incomplete) {
+					// if (!incomplete.contains(offset)) {
+					if (log.isDebugEnabled())
+						log.debug("Adding offset " + offset
+								+ " to message with id " + fragID + " from "
+								+ from);
+					if (incomplete.setCompleted()) {
+						if (log.isDebugEnabled())
+							log.debug("Notifying COMPLETED Message with id "
+									+ fragID + " from " + from);
 
-								parts.get(from).remove(fragID);
+						parts.get(from).remove(fragID);
 
-								notifyRcvd(Message.deEncapsulate(
-										incomplete.getBuff(), from, to));
-							} else {
-								if (log.isDebugEnabled())
-									log.debug("Remaining bytes "
-											+ incomplete.remaining
-											+ " for message with id " + fragID
-											+ " from " + from);
-
-							}
-						}
+						notifyRcvd(Message.deEncapsulate(incomplete.getBuff(),
+								from, to));
 					}
-				} else if (log.isDebugEnabled())
-					log.debug("Repeated");
+					// else {
+					// if (log.isDebugEnabled())
+					// log.debug("Remaining bytes " + incomplete.acc
+					// + " for message with id " + fragID
+					// + " from " + from);
+					//
+					// }
+					// }
+					// }
+				} else
+					log.info("Repeated");
 
 			}
 		});

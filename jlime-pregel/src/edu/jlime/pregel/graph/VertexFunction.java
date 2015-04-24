@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.List;
 
 import edu.jlime.pregel.client.WorkerContext;
-import edu.jlime.pregel.worker.PregelMessage;
+import edu.jlime.pregel.messages.PregelMessage;
 
 public interface VertexFunction extends Serializable {
 	void execute(long v, List<PregelMessage> in, WorkerContext ctx)

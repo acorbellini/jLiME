@@ -497,4 +497,38 @@ public class ByteBuffer {
 	public java.nio.ByteBuffer asByteBuffer() {
 		return java.nio.ByteBuffer.wrap(buffered, readPos, limit - readPos);
 	}
+
+	public void putFloatArray(float[] floatArray) {
+		ensureCapacity(4 + 4 * floatArray.length);
+		putInt(floatArray.length);
+		for (int i = 0; i < floatArray.length; i++) {
+			putInt(Float.floatToIntBits(floatArray[i]));
+		}
+	}
+
+	public float[] getFloatArray() {
+		int size = getInt();
+		float[] ret = new float[size];
+		for (int i = 0; i < size; i++) {
+			ret[i] = Float.intBitsToFloat(getInt());
+		}
+		return ret;
+	}
+
+	public void putDoubleArray(double[] doubleArray) {
+		ensureCapacity(4 + 8 * doubleArray.length);
+		putInt(doubleArray.length);
+		for (int i = 0; i < doubleArray.length; i++) {
+			putLong(Double.doubleToLongBits(doubleArray[i]));
+		}
+	}
+
+	public double[] getDoubleArray() {
+		int size = getInt();
+		double[] ret = new double[size];
+		for (int i = 0; i < size; i++) {
+			ret[i] = Double.longBitsToDouble(getLong());
+		}
+		return ret;
+	}
 }

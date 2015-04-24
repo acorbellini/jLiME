@@ -1,5 +1,9 @@
 package edu.jlime.rpc;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+
 import org.apache.log4j.Logger;
 
 import edu.jlime.core.cluster.Peer;
@@ -17,15 +21,15 @@ public class jLiMETransport extends Transport implements DataListener {
 
 	private Stack commStack;
 
-	// private ExecutorService handleExecutor = Executors.newFixedThreadPool(8,
-	// new ThreadFactory() {
-	// @Override
-	// public Thread newThread(Runnable r) {
-	// Thread t = Executors.defaultThreadFactory().newThread(r);
-	// t.setName("jLiME Transport Incoming");
-	// return t;
-	// }
-	// });
+	private ExecutorService handleExecutor = Executors
+			.newCachedThreadPool(new ThreadFactory() {
+				@Override
+				public Thread newThread(Runnable r) {
+					Thread t = Executors.defaultThreadFactory().newThread(r);
+					t.setName("jLiME Transport Thread");
+					return t;
+				}
+			});
 
 	public jLiMETransport(Peer local, PeerFilter filter, Stack commStack) {
 		super(local, filter, commStack.getDiscovery(), commStack
@@ -67,23 +71,25 @@ public class jLiMETransport extends Transport implements DataListener {
 		// if (log.isDebugEnabled())
 		// log.debug("Received data from processor");
 
-		// handleExecutor.execute(new Runnable() {
-		// public void run() {
-		Address origin = msg.getFrom();
-		byte[] buff = msg.getData();
-		byte[] rsp = jLiMETransport.super.callTransportListener(origin, buff);
+		handleExecutor.execute(new Runnable() {
+			public void run() {
+				Address origin = msg.getFrom();
+				byte[] buff = msg.getData();
+				byte[] rsp = jLiMETransport.super.callTransportListener(origin,
+						buff);
 
-		// if (log.isDebugEnabled())
-		// log.debug("Sending response using response handler: " + handler);
-		if (handler != null) {
-			try {
-				handler.sendResponse(rsp);
-			} catch (Exception e) {
-				e.printStackTrace();
+				// if (log.isDebugEnabled())
+				// log.debug("Sending response using response handler: " +
+				// handler);
+				if (handler != null) {
+					try {
+						handler.sendResponse(rsp);
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
 			}
-		}
-		// }
-		// });
+		});
 	}
 
 	@Override

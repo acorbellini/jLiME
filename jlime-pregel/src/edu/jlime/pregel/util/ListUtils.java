@@ -1,6 +1,9 @@
-package edu.jlime.pregel.worker;
+package edu.jlime.pregel.util;
 
 import java.util.List;
+
+import edu.jlime.pregel.messages.PregelMessage;
+import edu.jlime.pregel.worker.ConcatList;
 
 public class ListUtils {
 

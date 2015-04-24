@@ -6,9 +6,7 @@ import edu.jlime.graphly.rec.CustomStep.CustomFunction;
 import edu.jlime.pregel.client.PregelClient;
 import edu.jlime.pregel.client.PregelConfig;
 import edu.jlime.pregel.graph.VertexFunction;
-import gnu.trove.decorator.TLongSetDecorator;
 import gnu.trove.list.array.TLongArrayList;
-import gnu.trove.set.hash.TLongHashSet;
 
 public class PregelCustomFunction implements CustomFunction {
 

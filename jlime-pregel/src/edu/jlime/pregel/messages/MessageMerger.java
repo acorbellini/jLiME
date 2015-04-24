@@ -1,6 +1,8 @@
-package edu.jlime.pregel.worker;
+package edu.jlime.pregel.messages;
 
 import java.io.Serializable;
+
+import edu.jlime.pregel.queues.MessageQueueFactory;
 
 public interface MessageMerger extends Serializable {
 

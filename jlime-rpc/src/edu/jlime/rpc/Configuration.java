@@ -46,9 +46,9 @@ public class Configuration {
 
 	public String protocol;
 
-	public Integer max_pings;
+	public int max_pings;
 
-	public Integer ping_delay;
+	public int ping_delay;
 
 	public int tcpnio_max_msg_size;
 
@@ -60,11 +60,15 @@ public class Configuration {
 
 	public int udp_threads;
 
-	public Integer nack_delay;
+	public int nack_delay;
 
-	public Integer nack_sync_delay;
+	public int nack_sync_delay;
 
 	public boolean useNACK;
+
+	public int nack_max_resend_size;
+
+	public long nack_resend_delay;
 
 	public Configuration(Properties prop) {
 
@@ -91,15 +95,19 @@ public class Configuration {
 		this.max_pings = getInt("fd.max_pings", 60);
 		this.ping_delay = getInt("fd.ping_delay", 1000);
 
-		this.ack_delay = getInt("ack.ack_delay", 1);
-		this.retransmit_delay = getInt("ack.retransmit_delay", 20);
+		this.udp_threads = getInt("udp.threads", 32);
 
-		this.useNACK = getBoolean("ack.usenack", true);
+		this.ack_delay = getInt("ack.ack_delay", 10);
+		this.retransmit_delay = getInt("ack.retransmit_delay", 10);
+		this.ack_max_resend_size = getInt("ack.max_resend_size", 2048);
 
-		this.nack_delay = getInt("nack.nack_delay", 1);
-		this.nack_sync_delay = getInt("nack.sync_delay", 25);
+		this.useNACK = getBoolean("ack.usenack", false);
 
-		this.ack_max_resend_size = getInt("ack.max_resend_size", 4096);
+		this.nack_delay = getInt("nack.nack_delay", 10);
+		this.nack_sync_delay = getInt("nack.sync_delay", 10);
+		this.nack_resend_delay = getInt("nack.resend_delay", 50);
+
+		this.nack_max_resend_size = getInt("nack.max_resend_size", 32);
 
 		this.interface_max_update_time = getInt("multi.max_update_time", 10000);
 		try {

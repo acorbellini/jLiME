@@ -1,4 +1,6 @@
-package edu.jlime.pregel.worker;
+package edu.jlime.pregel.messages;
+
+import edu.jlime.pregel.queues.MessageQueueFactory;
 
 public abstract class ObjectMessageMerger implements MessageMerger {
 	public abstract Object merge(Object o1, Object o2);

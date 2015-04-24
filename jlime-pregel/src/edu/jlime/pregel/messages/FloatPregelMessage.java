@@ -1,4 +1,4 @@
-package edu.jlime.pregel.worker;
+package edu.jlime.pregel.messages;
 
 public class FloatPregelMessage extends PregelMessage {
 	float v;

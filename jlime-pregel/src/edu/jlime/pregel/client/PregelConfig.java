@@ -4,8 +4,7 @@ import java.io.Serializable;
 import java.util.HashMap;
 
 import edu.jlime.pregel.coordinator.Aggregator;
-import edu.jlime.pregel.graph.rpc.Graph;
-import edu.jlime.pregel.worker.MessageMerger;
+import edu.jlime.pregel.messages.MessageMerger;
 
 public class PregelConfig implements Serializable {
 	private HashMap<String, Aggregator> aggregators = new HashMap<>();
@@ -17,6 +16,7 @@ public class PregelConfig implements Serializable {
 	private int queue_limit = 10000;
 	private int segments = 32;
 	private GraphConnectionFactory graph;
+	private int bQueue = 100;
 
 	public PregelConfig graph(GraphConnectionFactory graph) {
 		this.graph = graph;
@@ -111,4 +111,12 @@ public class PregelConfig implements Serializable {
 		return new PregelConfig();
 	}
 
+	public PregelConfig broadcastQueue(int i) {
+		this.bQueue = i;
+		return this;
+	}
+
+	public int getBroadcastQueue() {
+		return bQueue;
+	}
 }

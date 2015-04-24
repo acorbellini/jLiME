@@ -1,10 +1,16 @@
-package edu.jlime.pregel.worker;
+package edu.jlime.pregel.queues;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.TreeSet;
+
+import edu.jlime.pregel.messages.GenericPregelMessage;
+import edu.jlime.pregel.messages.MessageMerger;
+import edu.jlime.pregel.messages.ObjectMessageMerger;
+import edu.jlime.pregel.messages.PregelMessage;
+import edu.jlime.pregel.worker.WorkerTask;
 
 public class MessageQueue implements PregelMessageQueue {
 	private static final int MAX = 5000000;
@@ -25,7 +31,7 @@ public class MessageQueue implements PregelMessageQueue {
 			@Override
 			public int compare(PregelMessage o1, PregelMessage o2) {
 				if (merger != null)
-					return Long.compare(o1.to, o2.to);
+					return Long.compare(o1.getTo(), o2.getTo());
 				return o1.compareTo(o2);
 			}
 		};
@@ -146,7 +152,7 @@ public class MessageQueue implements PregelMessageQueue {
 						ret.add(curr);
 						curr = null;
 					} else {
-						if (ret.get(0).to != curr.to)
+						if (ret.get(0).getTo() != curr.getTo())
 							return ret;
 						else {
 							ret.add(curr);
@@ -176,5 +182,10 @@ public class MessageQueue implements PregelMessageQueue {
 			PregelMessage msg = it.next();
 			workerTask.send(msg.getFrom(), msg.getTo(), msg.getV());
 		}
+	}
+
+	@Override
+	public void putDouble(long from, long to, double val) {
+		this.put(from, to, val);
 	}
 }

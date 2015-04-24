@@ -12,6 +12,8 @@ public class ResendData {
 
 	volatile boolean confirmed = false;
 
+	volatile boolean resend = false;
+
 	public void setConfirmed() {
 		this.confirmed = true;
 	}

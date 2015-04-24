@@ -1,60 +1,66 @@
 package edu.jlime.rpc.frag;
 
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.log4j.Logger;
 
-import edu.jlime.core.transport.Address;
 import edu.jlime.util.ByteBuffer;
 
 public class IncompleteMessage {
 
 	Logger log = Logger.getLogger(IncompleteMessage.class);
 
-	private ByteBuffer buff;
+	byte[] buff;
 
 	ConcurrentHashMap<Integer, Boolean> added = new ConcurrentHashMap<>();
 
-	int remaining;
+	AtomicInteger acc;
 
 	int id;
 
-	private String from;
+	AtomicBoolean completed = new AtomicBoolean(false);
 
 	private int total;
 
-	public IncompleteMessage(Address from, int total, int id) {
-		this.buff = new ByteBuffer(total);
-		this.from = from.toString();
+	public IncompleteMessage(int total, int id) {
+		this.buff = new byte[total];
 		this.total = total;
-		this.remaining = total;
+		this.acc = new AtomicInteger(0);
 		this.id = id;
 	}
 
-	public void addPart(int offsetInOriginal, byte[] data) {
+	public boolean addPart(int offsetInOriginal, byte[] data) {
 
-		added.put(offsetInOriginal, true);
+		Boolean res = added.putIfAbsent(offsetInOriginal, true);
+		if (res != null)
+			return false;
 
-		buff.putRawByteArray(data, 0, data.length, offsetInOriginal);
+		System.arraycopy(data, 0, buff, offsetInOriginal, data.length);
 
-		remaining -= data.length;
+		int current = acc.getAndAdd(data.length);
 
 		if (log.isDebugEnabled())
-			log.debug("Remaining of incomplete message " + id + " :"
-					+ remaining + " offset: " + offsetInOriginal);
-
+			log.debug("Received incomplete message " + id
+					+ " current accumulated:" + (current + data.length)
+					+ " of total:" + total + " offset: " + offsetInOriginal);
+		return true;
 	};
 
 	public boolean isCompleted() {
-		return remaining == 0;
+		return acc.get() == total;
 	}
 
-	public ByteBuffer getBuff() {
+	public byte[] getBuff() {
 		return buff;
 	}
 
 	public boolean contains(int offset) {
 		return added.containsKey(offset);
+	}
+
+	public boolean setCompleted() {
+		return isCompleted() && completed.compareAndSet(false, true);
 	}
 }

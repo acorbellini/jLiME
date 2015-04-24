@@ -535,8 +535,8 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 		TLongArrayList ret = new TLongArrayList(Math.min(MAX_INIT_SIZE, lenght));
 		for (byte[] bs : list)
 			ret.add(DataTypeUtils.byteArrayToLong(bs));
-		if (ret.size() > 0)
-			log.info("Returning list of vertices from " + ret.get(0) + "to"
+		if (log.isDebugEnabled())
+			log.debug("Returning list of vertices from " + ret.get(0) + "to"
 					+ ret.get(ret.size() - 1));
 
 		return ret;

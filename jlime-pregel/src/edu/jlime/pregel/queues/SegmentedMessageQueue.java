@@ -1,8 +1,7 @@
-package edu.jlime.pregel.worker;
+package edu.jlime.pregel.queues;
 
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -10,11 +9,16 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import edu.jlime.pregel.messages.PregelMessage;
+import edu.jlime.pregel.worker.WorkerTask;
+
 public class SegmentedMessageQueue implements PregelMessageQueue {
 	ExecutorService pool;
 
 	PregelMessageQueue[] queue;
+
 	volatile Future<?>[] fut;
+
 	int queue_limit = 0;
 	private AtomicInteger taskCounter = new AtomicInteger();
 
@@ -36,8 +40,8 @@ public class SegmentedMessageQueue implements PregelMessageQueue {
 			@Override
 			public Thread newThread(Runnable r) {
 				Thread t = Executors.defaultThreadFactory().newThread(r);
-				t.setName("Sender Pool for Task " + task.toString() + ", id:"
-						+ task.getTaskid());
+				t.setName("SegmentedQueue Sender Pool for Task "
+						+ task.toString() + ", id:" + task.getTaskid());
 				return t;
 			}
 		});
@@ -144,7 +148,8 @@ public class SegmentedMessageQueue implements PregelMessageQueue {
 	}
 
 	private int getHash(long to) {
-		int hash = (int) ((to * 2147483647) % ((long) this.queue.length));
+		int hash = Math
+				.abs((int) ((to * 2147483647) % ((long) this.queue.length)));
 		return hash;
 	}
 
@@ -172,6 +177,15 @@ public class SegmentedMessageQueue implements PregelMessageQueue {
 
 	public void clean() {
 		pool.shutdown();
+	}
+
+	public void putDouble(long from, long to, double val) {
+		int hash = getHash(to);
+		PregelMessageQueue cache = this.queue[hash];
+		synchronized (cache) {
+			checkSize(hash, cache);
+			cache.putDouble(from, to, val);
+		}
 	}
 
 }

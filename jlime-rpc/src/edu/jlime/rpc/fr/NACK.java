@@ -4,6 +4,9 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 
 import org.apache.log4j.Logger;
 
@@ -20,7 +23,18 @@ import edu.jlime.util.ByteBuffer;
 
 public class NACK extends SimpleMessageProcessor {
 
-	public static final int HEADER = Header.HEADER + 4 + 4; //SEQN and NEXTEXPECTEDNUMBER
+	ExecutorService exec = Executors.newFixedThreadPool(Runtime.getRuntime()
+			.availableProcessors(), new ThreadFactory() {
+		@Override
+		public Thread newThread(Runnable r) {
+			Thread t = Executors.defaultThreadFactory().newThread(r);
+			t.setName("NACK Resender Thread");
+			return t;
+		}
+	});
+
+	public static final int HEADER = Header.HEADER + 4 + 4; // SEQN and
+															// NEXTEXPECTEDNUMBER
 
 	Object[] locks = new Object[1021];
 
@@ -52,7 +66,21 @@ public class NACK extends SimpleMessageProcessor {
 
 	@Override
 	public void onStart() throws Exception {
-		this.t = new Timer("Ack Timer");
+		this.t = new Timer("NACK Timer");
+
+		t.schedule(new TimerTask() {
+			@Override
+			public void run() {
+				for (NACKCounter count : counterList) {
+					try {
+						count.resend();
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+
+				}
+			}
+		}, this.config.nack_resend_delay, this.config.nack_resend_delay);
 
 		t.schedule(new TimerTask() {
 			@Override
@@ -85,48 +113,80 @@ public class NACK extends SimpleMessageProcessor {
 		getNext().addMessageListener(MessageType.ACK_SEQ,
 				new MessageListener() {
 					@Override
-					public void rcv(Message m, MessageProcessor origin)
+					public void rcv(final Message m, MessageProcessor origin)
 							throws Exception {
-						ByteBuffer headerBuffer = m.getHeaderBuffer();
-						int seq = headerBuffer.getInt();
-						int confirmed = headerBuffer.getInt();
+						final ByteBuffer headerBuffer = m.getHeaderBuffer();
+						final int seq = headerBuffer.getInt();
+						final int confirmed = headerBuffer.getInt();
 						if (log.isTraceEnabled())
 							log.trace("Received Ack'd msg with seq # " + seq
 									+ " from " + m.getFrom());
 
-						NACKCounter counter = getCounter(m.getFrom());
+						final NACKCounter counter = getCounter(m.getFrom());
 						if (counter != null) {
+							// exec.execute(new Runnable() {
+							// @Override
+							// public void run() {
+							// try {
 							if (counter.seqNumberArrived(seq)) {
 								notifyRcvd(Message.deEncapsulate(
 										m.getDataBuffer(), m.getFrom(),
 										m.getTo()));
 							}
 							counter.sync(confirmed, false);
-
 							counter.receivedNackBuffer(headerBuffer);
+							// } catch (Exception e) {
+							// e.printStackTrace();
+							// }
+							//
+							// }
+							// });
+
 						}
 					}
 				});
 
 		getNext().addMessageListener(MessageType.ACK, new MessageListener() {
 			@Override
-			public void rcv(Message m, MessageProcessor origin)
+			public void rcv(final Message m, MessageProcessor origin)
 					throws Exception {
-				NACKCounter counter = getCounter(m.getFrom());
-				if (counter != null)
+				final NACKCounter counter = getCounter(m.getFrom());
+				if (counter != null) {
+					// exec.execute(new Runnable() {
+					//
+					// @Override
+					// public void run() {
+					// try {
 					counter.receivedNackBuffer(m.getHeaderBuffer());
+					// } catch (Exception e) {
+					// e.printStackTrace();
+					// }
+					//
+					// }
+					// });
+				}
 			}
 		});
 
 		getNext().addMessageListener(MessageType.SYN, new MessageListener() {
 			@Override
-			public void rcv(Message m, MessageProcessor origin)
+			public void rcv(final Message m, MessageProcessor origin)
 					throws Exception {
-				NACKCounter counter = getCounter(m.getFrom());
+				final NACKCounter counter = getCounter(m.getFrom());
 				if (counter != null) {
 					ByteBuffer headerBuffer = m.getHeaderBuffer();
-					int int1 = headerBuffer.getInt();
+					final int int1 = headerBuffer.getInt();
+					// exec.execute(new Runnable() {
+					// @Override
+					// public void run() {
+					// try {
 					counter.sync(int1, true);
+					// } catch (Exception e) {
+					// e.printStackTrace();
+					// }
+					//
+					// }
+					// });
 				}
 			}
 		});
@@ -161,6 +221,7 @@ public class NACK extends SimpleMessageProcessor {
 	@Override
 	public void onStop() throws Exception {
 		t.cancel();
+		exec.shutdown();
 	}
 
 	@Override

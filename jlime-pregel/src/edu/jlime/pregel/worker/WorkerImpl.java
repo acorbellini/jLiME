@@ -1,7 +1,6 @@
 package edu.jlime.pregel.worker;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 import edu.jlime.core.cluster.Peer;
@@ -85,5 +84,34 @@ public class WorkerImpl implements Worker {
 	public void sendFloatBroadcastMessage(long from, float val, int taskID)
 			throws Exception {
 		contexts.get(taskID).queueBroadcastFloatVertexData(from, val);
+	}
+
+	@Override
+	public void sendFloatMessage(long from, long[] to, float[] vals, int taskid) {
+		WorkerTask workerTask = contexts.get(taskid);
+		for (int i = 0; i < to.length; i++) {
+			workerTask.queueFloatVertexData(from, to[i], vals[i]);
+		}
+
+	}
+
+	@Override
+	public void sendDoubleMessage(long from, long[] to, double[] vals,
+			int taskid) {
+		WorkerTask workerTask = contexts.get(taskid);
+		for (int i = 0; i < to.length; i++) {
+			workerTask.queueDoubleVertexData(from, to[i], vals[i]);
+		}
+	}
+
+	@Override
+	public void sendDoubleMessage(long from, long to, double val, int taskid) {
+		contexts.get(taskid).queueDoubleVertexData(from, to, val);
+
+	}
+
+	@Override
+	public void sendDoubleBroadcastMessage(long from, double val, int taskid) {
+		contexts.get(taskid).queueBroadcastDoubleVertexData(from, val);
 	}
 }

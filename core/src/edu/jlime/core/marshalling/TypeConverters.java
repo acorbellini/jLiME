@@ -84,6 +84,11 @@ public class TypeConverters {
 		registerTypeConverter(int[].class, new IntArrayConverter());
 
 		registerTypeConverter(long[].class, new LongArrayConverter());
+
+		registerTypeConverter(float[].class, new FloatArrayConverter());
+
+		registerTypeConverter(double[].class, new DoubleArrayConverter());
+
 	}
 
 	public void registerTypeConverter(Class<?> classObj, TypeConverter conv) {

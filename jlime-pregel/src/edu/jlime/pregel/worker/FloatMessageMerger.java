@@ -1,5 +1,8 @@
 package edu.jlime.pregel.worker;
 
+import edu.jlime.pregel.messages.MessageMerger;
+import edu.jlime.pregel.queues.MessageQueueFactory;
+
 
 public abstract class FloatMessageMerger implements MessageMerger {
 

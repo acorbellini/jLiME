@@ -1,5 +1,9 @@
-package edu.jlime.pregel.worker;
+package edu.jlime.pregel.queues;
 
+import edu.jlime.pregel.messages.GenericPregelMessage;
+import edu.jlime.pregel.messages.ObjectMessageMerger;
+import edu.jlime.pregel.messages.PregelMessage;
+import edu.jlime.pregel.worker.WorkerTask;
 import gnu.trove.iterator.TLongObjectIterator;
 import gnu.trove.map.hash.TLongObjectHashMap;
 
@@ -106,6 +110,11 @@ public class HashedMessageQueue implements PregelMessageQueue {
 			workerTask.outputObject(-1, it.key(), it.value());
 			it.remove();
 		}
+	}
+
+	@Override
+	public void putDouble(long from, long to, double val) {
+		this.put(from, to, val);
 	}
 
 }

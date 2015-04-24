@@ -3,7 +3,7 @@ package edu.jlime.pregel.util;
 import edu.jlime.pregel.client.InMemoryGraph;
 import edu.jlime.pregel.client.PregelClient;
 import edu.jlime.pregel.client.PregelConfig;
-import edu.jlime.pregel.functions.PageRank;
+import edu.jlime.pregel.functions.PageRankFloat;
 import edu.jlime.pregel.mergers.MessageMergers;
 
 public class PregelTest {
@@ -36,9 +36,10 @@ public class PregelTest {
 		g.setDefaultValue("pagerank", 1d / g.vertexSize());
 		g.setDefaultValue("ranksource", .85d);
 
-		cli.execute(new PageRank(g.vertexSize()), null, new PregelConfig()
+		cli.execute(new PageRankFloat(g.vertexSize()), null, new PregelConfig()
 				.split(SplitFunctions.rr()).merger(MessageMergers.FLOAT_SUM)
-				.graph(InMemoryGraph.getFactory("graph")).steps(30).threads(10).executeOnAll(true));
+				.graph(InMemoryGraph.getFactory("graph")).steps(30).threads(10)
+				.executeOnAll(true));
 
 		System.out.println("Finished PageRank Test.");
 

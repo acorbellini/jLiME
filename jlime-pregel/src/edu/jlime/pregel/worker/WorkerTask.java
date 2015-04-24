@@ -1,7 +1,9 @@
 package edu.jlime.pregel.worker;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
@@ -23,10 +25,17 @@ import edu.jlime.pregel.coordinator.rpc.CoordinatorBroadcast;
 import edu.jlime.pregel.coordinator.rpc.CoordinatorFactory;
 import edu.jlime.pregel.graph.VertexFunction;
 import edu.jlime.pregel.graph.rpc.Graph;
+import edu.jlime.pregel.messages.MessageMerger;
+import edu.jlime.pregel.messages.PregelMessage;
+import edu.jlime.pregel.queues.MessageQueueFactory;
+import edu.jlime.pregel.queues.PregelMessageQueue;
+import edu.jlime.pregel.queues.SegmentedMessageQueue;
 import edu.jlime.pregel.worker.rpc.Worker;
 import edu.jlime.pregel.worker.rpc.WorkerBroadcast;
 import edu.jlime.pregel.worker.rpc.WorkerFactory;
 import gnu.trove.iterator.TLongIterator;
+import gnu.trove.list.array.TDoubleArrayList;
+import gnu.trove.list.array.TFloatArrayList;
 import gnu.trove.list.array.TLongArrayList;
 
 public class WorkerTask {
@@ -63,6 +72,14 @@ public class WorkerTask {
 
 	private ExecutorService vertexPool;
 
+	private Semaphore execCount;
+
+	private ExecutorService groupedSendPool;
+
+	private Semaphore maxGroupedSend;
+
+	private AtomicInteger sendCount = new AtomicInteger(0);
+
 	private TLongArrayList vList;
 	//
 	private TLongArrayList currentSplit = new TLongArrayList();
@@ -85,6 +102,20 @@ public class WorkerTask {
 						return t;
 					}
 				});
+		this.execCount = new Semaphore(config.getThreads() * 2);
+
+		this.groupedSendPool = Executors.newFixedThreadPool(
+				config.getThreads(), new ThreadFactory() {
+					@Override
+					public Thread newThread(Runnable r) {
+						Thread t = Executors.defaultThreadFactory()
+								.newThread(r);
+						t.setName("Grouped Send Pool for Task "
+								+ func.toString() + ", id:" + taskID2);
+						return t;
+					}
+				});
+		this.maxGroupedSend = new Semaphore(config.getThreads());
 
 		this.graph = config.getGraph().getGraph(rpc);
 
@@ -97,12 +128,15 @@ public class WorkerTask {
 		this.taskid = taskID2;
 
 		if (config.isExecuteOnAll()) {
-			log.info("Creating vertex list for whole graph.");
+			long start = System.currentTimeMillis();
+			log.info("Creating vertex list for the whole graph.");
 			TLongArrayList gatherVList = new TLongArrayList();
 			for (Long vid : graph.vertices()) {
 				gatherVList.add(vid);
 			}
 			this.vList = gatherVList;
+			log.info("Finished creating vertex list for the whole graph in "
+					+ (System.currentTimeMillis() - start) / 1000f + " sec.");
 		} else
 			this.vList = new TLongArrayList(vList);
 
@@ -195,7 +229,6 @@ public class WorkerTask {
 		log.info("Starting Execution on worker " + worker.getID() + " for "
 				+ size + " messages.");
 
-		Semaphore execCount = new Semaphore(getConfig().getThreads() * 2);
 		// log.info(queue.readOnlySize());
 		int count = 0;
 		Iterator<List<PregelMessage>> it = queue.iterator();
@@ -204,13 +237,22 @@ public class WorkerTask {
 			long vid = list.get(0).getTo();
 			count++;
 			printCompleted(size, count);
-			execVertex(execCount, vid, list);
+			execVertex(vid, list);
 		}
 
 		synchronized (vertexCounter) {
 			while (vertexCounter.get() != 0)
 				try {
 					vertexCounter.wait();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+		}
+
+		synchronized (sendCount) {
+			while (sendCount.get() != 0)
+				try {
+					sendCount.wait();
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
@@ -239,9 +281,8 @@ public class WorkerTask {
 		}
 	}
 
-	private void execVertex(final Semaphore execCount,
-			final Long currentVertex, final List<PregelMessage> messages)
-			throws InterruptedException {
+	private void execVertex(final Long currentVertex,
+			final List<PregelMessage> messages) throws InterruptedException {
 		execCount.acquire();
 		vertexCounter.incrementAndGet();
 		vertexPool.execute(new Runnable() {
@@ -280,13 +321,13 @@ public class WorkerTask {
 	public void sendAll(long from, Object msg) throws Exception {
 		synchronized (cacheBroadcast) {
 			checkBroadCacheSize();
-			cacheBroadcast.put(from, -1, msg);
+			cacheBroadcast.put(from, -1l, msg);
 		}
 
 	}
 
 	private void checkBroadCacheSize() throws Exception {
-		if (cacheBroadcast.currentSize() == config.getQueueLimit()) {
+		if (cacheBroadcast.currentSize() == config.getBroadcastQueue()) {
 			cacheBroadcast.switchQueue();
 			cacheBroadcast.flush(this);
 		}
@@ -326,12 +367,13 @@ public class WorkerTask {
 		this.queue.clean();
 		this.cache.clean();
 		vertexPool.shutdown();
+		groupedSendPool.shutdown();
 	}
 
-	public void sendAllFloat(long from, long to, float val) throws Exception {
+	public void sendAllFloat(long from, float val) throws Exception {
 		synchronized (cacheBroadcast) {
 			checkBroadCacheSize();
-			cacheBroadcast.putFloat(from, -1, val);
+			cacheBroadcast.putFloat(from, -1l, val);
 		}
 	}
 
@@ -340,14 +382,14 @@ public class WorkerTask {
 	}
 
 	public void outputObject(long from, long to, Object val) throws Exception {
-		if (to != -1)
+		if (to != -1l)
 			getWorker(to).sendMessage(from, to, val, getTaskid());
 		else
 			workerMgr.broadcast().sendBroadcastMessage(from, val, getTaskid());
 	}
 
 	public void outputFloat(long from, long to, float value) throws Exception {
-		if (to != -1)
+		if (to != -1l)
 			getWorker(to).sendFloatMessage(from, to, value, getTaskid());
 		else
 			workerMgr.broadcast().sendFloatBroadcastMessage(from, value,
@@ -356,5 +398,105 @@ public class WorkerTask {
 
 	public int getTaskid() {
 		return taskid;
+	}
+
+	public void sendAllDouble(long from, double val) throws Exception {
+		synchronized (cacheBroadcast) {
+			checkBroadCacheSize();
+			cacheBroadcast.putDouble(from, -1l, val);
+		}
+	}
+
+	public void sendDouble(long from, long to, double val) {
+		cache.putDouble(from, to, val);
+	}
+
+	public void sendDoubles(HashMap<Worker, TLongArrayList> keys,
+			final HashMap<Worker, TDoubleArrayList> values)
+			throws InterruptedException {
+		final Semaphore count = new Semaphore(-keys.size() + 1);
+
+		for (final Entry<Worker, TLongArrayList> e : keys.entrySet()) {
+			sendCount.incrementAndGet();
+			maxGroupedSend.acquire();
+			groupedSendPool.execute(new Runnable() {
+
+				@Override
+				public void run() {
+					Worker w = e.getKey();
+
+					TLongArrayList toList = e.getValue();
+					TDoubleArrayList valList = values.get(w);
+					try {
+						w.sendDoubleMessage(-1l, toList.toArray(),
+								valList.toArray(), taskid);
+					} catch (Exception e1) {
+						e1.printStackTrace();
+					}
+					count.release();
+					maxGroupedSend.release();
+					sendCount.decrementAndGet();
+					synchronized (sendCount) {
+						sendCount.notify();
+					}
+				}
+			});
+
+		}
+		count.acquire();
+	}
+
+	public void sendFloats(HashMap<Worker, TLongArrayList> keys,
+			final HashMap<Worker, TFloatArrayList> values) throws Exception {
+		final Semaphore count = new Semaphore(-keys.size() + 1);
+
+		for (final Entry<Worker, TLongArrayList> e : keys.entrySet()) {
+			sendCount.incrementAndGet();
+			maxGroupedSend.acquire();
+			groupedSendPool.execute(new Runnable() {
+
+				@Override
+				public void run() {
+					Worker w = e.getKey();
+
+					TLongArrayList toList = e.getValue();
+					TFloatArrayList valList = values.get(w);
+					try {
+						w.sendFloatMessage(-1l, toList.toArray(),
+								valList.toArray(), taskid);
+					} catch (Exception e1) {
+						e1.printStackTrace();
+					}
+					count.release();
+					maxGroupedSend.release();
+					sendCount.decrementAndGet();
+					synchronized (sendCount) {
+						sendCount.notify();
+					}
+				}
+			});
+
+		}
+		count.acquire();
+	}
+
+	public void queueDoubleVertexData(long from, long to, double val) {
+		this.queue.putDouble(from, to, val);
+	}
+
+	public void outputDouble(long from, long to, double val) throws Exception {
+		if (to != -1l)
+			getWorker(to).sendDoubleMessage(from, to, val, getTaskid());
+		else
+			workerMgr.broadcast().sendDoubleBroadcastMessage(from, val,
+					getTaskid());
+	}
+
+	public void queueBroadcastDoubleVertexData(long from, double val) {
+		TLongIterator it = currentSplit.iterator();
+		while (it.hasNext()) {
+			long vid = it.next();
+			queue.putDouble(from, vid, val);
+		}
 	}
 }

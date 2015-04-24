@@ -49,7 +49,7 @@ import gnu.trove.set.hash.TLongHashSet;
 
 public class Graphly implements Closeable {
 
-	private static final int MAX_VERTEX_ITERATOR = 1000000;
+	private static final int MAX_VERTEX_ITERATOR = 100000;
 
 	public static final int NUM_JOBS = 1;
 

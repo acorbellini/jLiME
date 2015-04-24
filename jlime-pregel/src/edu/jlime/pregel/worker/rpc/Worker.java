@@ -41,4 +41,21 @@ public interface Worker {
 	@Sync
 	public void sendFloatBroadcastMessage(long from, float val, int taskID)
 			throws Exception;
+
+	@Sync
+	public void sendFloatMessage(long from, long[] array, float[] array2,
+			int taskid) throws Exception;
+
+	@Sync
+	public void sendDoubleMessage(long i, long[] array, double[] array2,
+			int taskid) throws Exception;
+
+	@Sync
+	public void sendDoubleMessage(long from, long to, double val, int taskid)
+			throws Exception;
+
+	@Sync
+	public void sendDoubleBroadcastMessage(long from, double val, int taskid)
+			throws Exception;
+
 }

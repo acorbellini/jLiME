@@ -1,4 +1,4 @@
-package edu.jlime.pregel.worker;
+package edu.jlime.pregel.messages;
 
 import java.io.Serializable;
 
