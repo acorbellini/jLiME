@@ -1,6 +1,6 @@
 package edu.jlime.pregel.worker;
 
-import edu.jlime.pregel.messages.MessageMerger;
+import edu.jlime.pregel.mergers.MessageMerger;
 import edu.jlime.pregel.queues.MessageQueueFactory;
 
 

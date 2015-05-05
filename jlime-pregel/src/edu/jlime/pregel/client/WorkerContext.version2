@@ -1,0 +1,92 @@
+package edu.jlime.pregel.client;
+
+import edu.jlime.pregel.graph.rpc.Graph;
+import edu.jlime.pregel.queues.PregelMessageQueue;
+import edu.jlime.pregel.worker.WorkerTask;
+
+public class WorkerContext {
+	private WorkerTask task;
+	private long v;
+	private PregelMessageQueue q;
+	private PregelMessageQueue broadcast;
+	private int max;
+
+	// private ArrayList<PregelMessage> toSend = new ArrayList<>();
+
+	public WorkerContext(WorkerTask task, PregelMessageQueue tq,
+			PregelMessageQueue broadcast, int max) {
+		this.task = task;
+		this.q = tq;
+		this.broadcast = broadcast;
+		this.max = max;
+	}
+
+	public Graph getGraph() {
+		return task.getGraph();
+	};
+
+	public Integer getSuperStep() {
+		return task.getSuperStep();
+	};
+
+	public Double getAggregatedValue(String string) throws Exception {
+		return task.getAggregatedValue(v, string);
+	}
+
+	public void setAggregatedValue(String string, double currentVal)
+			throws Exception {
+		task.setAggregatedValue(v, string, currentVal);
+	}
+
+	public void send(long to, Object curr) throws Exception {
+		checkSize();
+		q.put(this.v, to, curr);
+
+	}
+
+	public void sendFloat(long to, float curr) throws Exception {
+		checkSize();
+		q.putFloat(this.v, to, curr);
+	}
+
+	public void sendDouble(long to, double val) throws Exception {
+		checkSize();
+		q.putDouble(this.v, to, val);
+	}
+
+	public void setCurrentVertex(long currentVertex) {
+		this.v = currentVertex;
+	}
+
+	public void sendAll(Object val) throws Exception {
+		checkBroadcastSize();
+		broadcast.put(this.v, -1, val);
+	}
+
+	public void sendAllFloat(float val) throws Exception {
+		checkBroadcastSize();
+		broadcast.putFloat(this.v, -1, val);
+
+	}
+
+	public void sendAllDouble(double val) throws Exception {
+		checkBroadcastSize();
+		broadcast.putDouble(this.v, -1, val);
+
+	}
+
+	private void checkSize() throws Exception {
+		if (q.currentSize() >= max) {
+			q.switchQueue();
+			q.flush(task);
+		}
+	}
+
+	private void checkBroadcastSize() throws Exception {
+		if (broadcast.currentSize() >= max) {
+			broadcast.switchQueue();
+			broadcast.flush(task);
+		}
+	}
+
+}

@@ -43,8 +43,11 @@ class AcknowledgeCounter {
 
 	private volatile long maxSeqRcvd = -1l;
 
+	private float timeout_mult;
+
 	public AcknowledgeCounter(Acknowledge ack, Address to, Configuration config) {
 		this.ack = ack;
+		this.timeout_mult = config.timeout_mult;
 		this.max_resend_size = config.ack_max_resend_size;
 		resendArray = new ResendData[max_resend_size];
 		for (int i = 0; i < resendArray.length; i++) {
@@ -77,7 +80,8 @@ class AcknowledgeCounter {
 			log.debug("Sending message with seqN " + seqN + " to "
 					+ msg.getTo());
 
-		resendArray[pos(seqN)].setData(msg, System.currentTimeMillis(), seqN);
+		resendArray[pos(seqN)].setData(msg, System.currentTimeMillis(), seqN,
+				config.retransmit_delay);
 
 		Message ackSeqMsg = Message
 				.encapsulateOut(msg, MessageType.ACK_SEQ, to);
@@ -99,7 +103,9 @@ class AcknowledgeCounter {
 			// acks.add(seq);
 			recheck = true;
 			if (log.isDebugEnabled())
-				log.debug("Ignoring repeated seq number " + seq + " from " + to);
+				log.debug("Ignoring repeated seq number " + seq
+						+ " next expected " + nextExpectedNumber + " from "
+						+ to);
 			return false;
 		}
 
@@ -160,12 +166,13 @@ class AcknowledgeCounter {
 						} else
 							done = true;
 					}
+					if (log.isDebugEnabled())
+						log.debug("Confirmed " + seq + " updated confirmed "
+								+ confirmed.get() + " for address " + to);
 				}
 			}
 		}
-		if (log.isDebugEnabled())
-			log.debug("Confirmed " + seq + " updated confirmed "
-					+ confirmed.get());
+
 	}
 
 	public boolean sendAcks() throws Exception {
@@ -189,9 +196,11 @@ class AcknowledgeCounter {
 		long curr = System.currentTimeMillis();
 		int min = 0;// confirmed.get() + 1;
 		int max = resendArray.length - 1;// seqN.get();
-
+		int sent = 0;
 		int count = min;
+		// int maxSent = max_resend_size / 4;
 		while (count <= max
+		// && sent <= maxSent
 		// && count < MAX_RESEND_ITERATIONS
 		) {
 			int i = Math.abs(resendCursor.getAndIncrement())
@@ -207,14 +216,12 @@ class AcknowledgeCounter {
 
 			int seq = res.seq;
 
-			if (data != null && !confirmed
-					&& curr - time > config.retransmit_delay) {
+			if (data != null && !confirmed && curr - time > res.timeout) {
 				try {
 					res.timeSent = curr;
-
+					res.timeout *= timeout_mult;
 					Message ackMsg = Message.encapsulateOut(data,
 							MessageType.ACK_SEQ, to);
-
 					ackMsg.getHeaderBuffer().putInt(seq);
 					ackMsg.getHeaderBuffer().putInt(nextExpectedNumber);
 
@@ -225,6 +232,7 @@ class AcknowledgeCounter {
 							log.debug("Resending message with seq" + seq
 									+ " to " + to);
 						ack.sendNext(ackMsg);
+						sent++;
 					}
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -310,7 +318,6 @@ class AcknowledgeCounter {
 	}
 
 	public void receivedAckBuffer(ByteBuffer headerBuffer) throws Exception {
-
 		while (headerBuffer.hasRemaining()) {
 			boolean type = headerBuffer.getBoolean();
 			if (type == RANGE) {
@@ -327,10 +334,10 @@ class AcknowledgeCounter {
 	}
 
 	public void confirmAll(int remoteNextExpected) throws Exception {
-		if (remoteNextExpected == confirmed.get())
+		if (remoteNextExpected <= confirmed.get())
 			return;
 		if (log.isDebugEnabled())
-			log.debug("Confirming all [" + confirmed.get() + ","
+			log.debug("Confirming all [" + confirmed.get() + 1 + ","
 					+ remoteNextExpected + ") from " + to);
 		for (int i = confirmed.get() + 1; i < remoteNextExpected; i++) {
 			confirm(i);

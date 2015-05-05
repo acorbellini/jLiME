@@ -198,28 +198,27 @@ public class TCP extends NetworkProtocol implements DataReceiver {
 		// log.debug("Won't RECEIVE data from different address type.");
 		// return;
 		// }
-		notifyPacketRvcd(new DataPacket(new ByteBuffer(array), addr));
+		notifyPacketRvcd(new ByteBuffer(array), addr);
 	}
 
 	@Override
-	protected void beforeProcess(DataPacket pkt, Address from, Address to) {
+	protected void beforeProcess(ByteBuffer pkt, InetSocketAddress addr,
+			Address from, Address to) {
 		if (lastAddress.get(from) != null
 				&& lastAddress.get(from).getSockTo().getAddress()
-						.equals(pkt.getAddr().getAddress())
-				&& lastAddress.get(from).getSockTo().getPort() == pkt.getAddr()
+						.equals(addr.getAddress())
+				&& lastAddress.get(from).getSockTo().getPort() == addr
 						.getPort())
 			return;
 		List<SocketAddress> possibleAddressList = backup.get(from);
 		if (possibleAddressList != null)
 			for (SocketAddress add : possibleAddressList)
-				if (pkt.getAddr().getAddress()
-						.equals(add.getSockTo().getAddress())
-						&& pkt.getAddr().getPort() == add.getSockTo().getPort()) {
+				if (addr.getAddress().equals(add.getSockTo().getAddress())
+						&& addr.getPort() == add.getSockTo().getPort()) {
 					if (log.isDebugEnabled())
 						log.debug("Changing last address of  " + from + " to "
-								+ pkt.getAddr());
-					lastAddress.put(from, new SocketAddress(pkt.getAddr(),
-							getType()));
+								+ addr);
+					lastAddress.put(from, new SocketAddress(addr, getType()));
 				}
 
 	}

@@ -27,6 +27,8 @@ import edu.jlime.util.RingQueue;
 
 public class UDP extends NetworkProtocol implements PacketReceiver {
 
+	public static final int HEADER = 33;
+
 	private RingQueue packetsTx = new RingQueue();
 
 	private enum DatagramType {
@@ -60,21 +62,24 @@ public class UDP extends NetworkProtocol implements PacketReceiver {
 
 	protected ConcurrentHashMap<Address, HashMap<UUID, LinkedBlockingDeque<byte[]>>> streamData = new ConcurrentHashMap<>();
 
-	private int max_bytes = 2000;
+	private int max_bytes = 0;
 
 	private boolean isMcast = false;
 
 	private DatagramReceiver rx;
 
+	private int threads;
+
 	public UDP(Address logical, String addr, int port, int range,
-			int max_msg_size, SocketFactory fact) {
-		this(logical, addr, port, range, max_msg_size, false, fact);
+			int max_msg_size, SocketFactory fact, int threads) {
+		this(logical, addr, port, range, max_msg_size, false, fact, threads);
 	}
 
 	public UDP(Address logical, String addr, int port, int range,
-			int max_msg_size, boolean mcast, SocketFactory fact) {
+			int max_msg_size, boolean mcast, SocketFactory fact, int threads) {
 		super(addr, port, range, fact, logical);
-		this.max_bytes = max_msg_size + 100;
+		this.max_bytes = max_msg_size;
+		this.threads = threads;
 	}
 
 	@Override
@@ -93,8 +98,7 @@ public class UDP extends NetworkProtocol implements PacketReceiver {
 			// byte[] data = new byte[p.getLength() - 1];
 			// System.arraycopy(buffer.array(), 1, data, 0, data.length);
 
-			notifyPacketRvcd(new DataPacket(new ByteBuffer(
-					buffer.getRawByteArray()), sockAddr));
+			notifyPacketRvcd(new ByteBuffer(buffer.getRawByteArray()), sockAddr);
 		} else if (dt.equals(DatagramType.STREAM)) {
 			UUID streamID = buffer.getUUID();
 			UUID fromID = buffer.getUUID();
@@ -197,7 +201,8 @@ public class UDP extends NetworkProtocol implements PacketReceiver {
 	}
 
 	public void onStart(Object socket) {
-		rx = new DatagramReceiver((DatagramSocket) socket, max_bytes, this);
+		rx = new DatagramReceiver((DatagramSocket) socket, max_bytes, this,
+				threads);
 	}
 
 	private void send(DatagramSocket sock, Object obj) {
@@ -215,7 +220,8 @@ public class UDP extends NetworkProtocol implements PacketReceiver {
 	}
 
 	@Override
-	public void beforeProcess(DataPacket pkt, Address from, Address to) {
+	public void beforeProcess(ByteBuffer pkt, InetSocketAddress addr,
+			Address from, Address to) {
 		// currentSendAddress.put(from,
 		// new SocketAddress(pkt.getAddr(), getType()));
 	}

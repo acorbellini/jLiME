@@ -1,6 +1,5 @@
-package edu.jlime.pregel.functions;
+package edu.jlime.pregel.messages;
 
-import edu.jlime.pregel.messages.PregelMessage;
 
 public class DoublePregelMessage extends PregelMessage {
 

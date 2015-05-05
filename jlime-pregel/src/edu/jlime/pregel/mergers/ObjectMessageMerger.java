@@ -1,4 +1,4 @@
-package edu.jlime.pregel.messages;
+package edu.jlime.pregel.mergers;
 
 import edu.jlime.pregel.queues.MessageQueueFactory;
 

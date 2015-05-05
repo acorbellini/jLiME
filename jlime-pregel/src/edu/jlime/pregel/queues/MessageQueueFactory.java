@@ -1,6 +1,6 @@
 package edu.jlime.pregel.queues;
 
-import edu.jlime.pregel.messages.ObjectMessageMerger;
+import edu.jlime.pregel.mergers.ObjectMessageMerger;
 import edu.jlime.pregel.worker.FloatMessageMerger;
 
 public abstract class MessageQueueFactory {
@@ -31,7 +31,7 @@ public abstract class MessageQueueFactory {
 
 			@Override
 			public PregelMessageQueue getMQ() {
-				return new FloatHashedMessageQueue(merger);
+				return new FloatFastUtilHashedMessageQueue(merger);
 			}
 		};
 	}

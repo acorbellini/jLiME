@@ -1,7 +1,8 @@
 package edu.jlime.pregel.queues;
 
+import edu.jlime.pregel.mergers.ObjectMessageMerger;
+import edu.jlime.pregel.messages.DoublePregelMessage;
 import edu.jlime.pregel.messages.GenericPregelMessage;
-import edu.jlime.pregel.messages.ObjectMessageMerger;
 import edu.jlime.pregel.messages.PregelMessage;
 import edu.jlime.pregel.worker.WorkerTask;
 import gnu.trove.iterator.TLongObjectIterator;
@@ -117,4 +118,25 @@ public class HashedMessageQueue implements PregelMessageQueue {
 		this.put(from, to, val);
 	}
 
+	@Override
+	public Iterator<PregelMessage> getMessages(final long to) {
+		final Object found = this.current.get(to);
+		if (found == null)
+			return null;
+		else
+			return new Iterator<PregelMessage>() {
+				boolean first = true;
+
+				@Override
+				public PregelMessage next() {
+					first = false;
+					return new GenericPregelMessage(-1l, to, found);
+				}
+
+				@Override
+				public boolean hasNext() {
+					return first;
+				}
+			};
+	}
 }

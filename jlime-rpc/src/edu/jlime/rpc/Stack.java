@@ -21,6 +21,7 @@ import edu.jlime.rpc.message.MessageProcessor;
 import edu.jlime.rpc.message.StackElement;
 import edu.jlime.rpc.np.NetworkProtocol;
 import edu.jlime.rpc.rabbit.RabbitProcessor;
+import edu.jlime.rpc.udp.UDP;
 import edu.jlime.rpc.zeromq.ZeroMQProcessor;
 import edu.jlime.util.NetworkUtils;
 
@@ -147,14 +148,14 @@ public class Stack implements Iterable<StackElement> {
 		Fragmenter frag = null;
 		if (config.useNACK) {
 
-			int max_size = config.max_msg_size - UDPNIO.HEADER - NACK.HEADER;
+			int max_size = config.max_msg_size - UDP.HEADER - NACK.HEADER;
 
 			ack = new NACK(udp, max_size, config);
 
 			frag = new Fragmenter(ack, max_size);
 		} else {
 
-			int max_size = config.max_msg_size - UDPNIO.HEADER
+			int max_size = config.max_msg_size - UDP.HEADER
 					- Acknowledge.HEADER;
 
 			ack = new Acknowledge(udp, max_size, config);

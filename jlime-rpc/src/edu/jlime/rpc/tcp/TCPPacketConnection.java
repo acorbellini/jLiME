@@ -3,6 +3,7 @@ package edu.jlime.rpc.tcp;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.TimerTask;
 import java.util.concurrent.locks.ReentrantLock;
@@ -74,7 +75,6 @@ class TCPPacketConnection implements Runnable {
 			// }
 		} catch (Exception e) {
 			throw new Exception("Error reading from " + conn, e);
-		} finally {
 		}
 	}
 
@@ -101,10 +101,12 @@ class TCPPacketConnection implements Runnable {
 				// byte[] br = new byte[size];
 				// is.readFully(br, 0, br.length);
 				byte[] b = read();
-				if (b != null)
-					mgr.packets.put(new TCPPacket(b, this));
-				else
-					return;
+				if (b != null) {
+					mgr.rcvr.dataReceived(b,
+							(InetSocketAddress) conn.getRemoteSocketAddress());
+				}// mgr.packets.put(new TCPPacket(b, this));
+					// else
+					// return;
 			} catch (Exception e) {
 				return;
 			}

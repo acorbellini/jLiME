@@ -24,7 +24,8 @@ public abstract class NetworkProtocolFactory {
 			public NetworkProtocol getProtocol(String addr) {
 				return new UDP(local, addr, config.port, config.port_range,
 						config.max_msg_size, SocketFactory.getUnicastFactory(
-								config.sendBuffer, config.rcvBuffer));
+								config.sendBuffer, config.rcvBuffer),
+						config.udp_threads);
 			}
 
 		};
@@ -52,7 +53,7 @@ public abstract class NetworkProtocolFactory {
 				return new UDP(local, config.mcast_addr, config.mcastport,
 						config.mcast_port_range, config.max_msg_size, true,
 						SocketFactory.getMcastFactory(addr, config.sendBuffer,
-								config.rcvBuffer));
+								config.rcvBuffer), config.udp_threads);
 			}
 
 		};

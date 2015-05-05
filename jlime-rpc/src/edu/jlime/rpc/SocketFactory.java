@@ -74,6 +74,11 @@ public abstract class SocketFactory {
 				DatagramSocket sock = new DatagramSocket(sockAddr);
 				sock.setSendBufferSize(sendBuffer);
 				sock.setReceiveBufferSize(receiveBuffer);
+				// System.out.println(sock.getReceiveBufferSize()
+				// / (1024f * 1024f) + " MB");
+				// System.out.println(sock.getSendBufferSize() / (1024f * 1024f)
+				// + " MB");
+
 				return new jLimeSocket(sock, port, addr);
 			}
 		};

@@ -47,16 +47,16 @@ public class TCPNIO extends MessageProcessor implements AddressListProvider {
 
 	RingQueue events = new RingQueue();
 
-	private ExecutorService exec = Executors
-			.newCachedThreadPool(new ThreadFactory() {
-
-				@Override
-				public Thread newThread(Runnable r) {
-					Thread t = Executors.defaultThreadFactory().newThread(r);
-					t.setName("TCP NIO Worker Thread");
-					return t;
-				}
-			});
+	// private ExecutorService exec = Executors
+	// .newCachedThreadPool(new ThreadFactory() {
+	//
+	// @Override
+	// public Thread newThread(Runnable r) {
+	// Thread t = Executors.defaultThreadFactory().newThread(r);
+	// t.setName("TCP NIO Worker Thread");
+	// return t;
+	// }
+	// });
 
 	private Metrics metrics;
 	private Address local;
@@ -387,31 +387,30 @@ public class TCPNIO extends MessageProcessor implements AddressListProvider {
 		final byte[] b = new byte[length];
 		readbuffer.get(b, 0, b.length);
 
-		exec.execute(new Runnable() {
+		// exec.execute(new Runnable() {
+		//
+		// @Override
+		// public void run() {
+		final edu.jlime.util.ByteBuffer buff = new edu.jlime.util.ByteBuffer(b);
 
-			@Override
-			public void run() {
-				final edu.jlime.util.ByteBuffer buff = new edu.jlime.util.ByteBuffer(
-						b);
+		// final Address from = new Address(buff.getUUID());
+		// final Address to = new Address(buff.getUUID());
 
-				// final Address from = new Address(buff.getUUID());
-				// final Address to = new Address(buff.getUUID());
+		// if (!to.equals(local)) {
+		// if (log.isDebugEnabled())
+		// log.debug("Not for me.");
+		// return;
+		// }
 
-				// if (!to.equals(local)) {
-				// if (log.isDebugEnabled())
-				// log.debug("Not for me.");
-				// return;
-				// }
-
-				Message msg = Message.deEncapsulate(buff.getRawByteArray(),
-						from, local);
-				try {
-					notifyRcvd(msg);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
+		Message msg = Message
+				.deEncapsulate(buff.getRawByteArray(), from, local);
+		try {
+			notifyRcvd(msg);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		// }
+		// });
 
 	}
 
@@ -442,7 +441,7 @@ public class TCPNIO extends MessageProcessor implements AddressListProvider {
 	@Override
 	protected void onStop() throws Exception {
 		sel.close();
-		exec.shutdown();
+		// exec.shutdown();
 		channel.close();
 		for (List<Channel> l : channels.values()) {
 			for (Channel channel : l) {

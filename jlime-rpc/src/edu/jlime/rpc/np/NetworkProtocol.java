@@ -75,17 +75,18 @@ public abstract class NetworkProtocol extends SimpleMessageProcessor implements
 		// t.start();
 	}
 
-	public void notifyPacketRvcd(DataPacket pkt) throws Exception {
+	public void notifyPacketRvcd(ByteBuffer buff, InetSocketAddress addr)
+			throws Exception {
 		// packetsRx.put(pkt);
-		processPacket(pkt);
+		processPacket(buff, addr);
 	};
 
-	private void processPacket(DataPacket pkt) throws Exception {
-		ByteBuffer buff = pkt.reader;
+	private void processPacket(ByteBuffer buff, InetSocketAddress addr)
+			throws Exception {
 		Address from = new Address(buff.getUUID());
 		Address to = new Address(buff.getUUID());
 
-		beforeProcess(pkt, from, to);
+		beforeProcess(buff, addr, from, to);
 
 		if (!to.equals(Address.noAddr()) && !to.equals(getLocal())) {
 			// if (log.isDebugEnabled())
@@ -104,8 +105,8 @@ public abstract class NetworkProtocol extends SimpleMessageProcessor implements
 
 	}
 
-	protected abstract void beforeProcess(DataPacket pkt, Address from,
-			Address to);
+	protected abstract void beforeProcess(ByteBuffer data,
+			InetSocketAddress addr, Address from, Address to);
 
 	public void onStart() throws Exception {
 

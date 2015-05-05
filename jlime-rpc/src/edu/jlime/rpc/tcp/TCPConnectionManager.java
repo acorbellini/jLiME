@@ -27,16 +27,16 @@ class TCPConnectionManager {
 
 	// private ExecutorService rcv;
 
-	private ExecutorService exec = Executors
-			.newCachedThreadPool(new ThreadFactory() {
-
-				@Override
-				public Thread newThread(Runnable r) {
-					Thread t = Executors.defaultThreadFactory().newThread(r);
-					t.setName("TCP Worker Thread");
-					return t;
-				}
-			});
+	// private ExecutorService exec = Executors
+	// .newCachedThreadPool(new ThreadFactory() {
+	//
+	// @Override
+	// public Thread newThread(Runnable r) {
+	// Thread t = Executors.defaultThreadFactory().newThread(r);
+	// t.setName("TCP Worker Thread");
+	// return t;
+	// }
+	// });
 
 	private ExecutorService connection_exec = Executors
 			.newCachedThreadPool(new ThreadFactory() {
@@ -53,7 +53,7 @@ class TCPConnectionManager {
 
 	private boolean stopped = false;
 
-	private TCP rcvr;
+	TCP rcvr;
 
 	private List<TCPPacketConnection> connections = new CopyOnWriteArrayList<TCPPacketConnection>();
 
@@ -102,36 +102,36 @@ class TCPConnectionManager {
 		// };
 		// t.start();
 
-		reader = new Thread("TCP Packet Reader") {
-			@Override
-			public void run() {
-				while (!stopped) {
-					Object[] list = packets.take();
-					for (Object object : list) {
-						final TCPPacket pkt = (TCPPacket) object;
-						if (pkt.d == null)
-							return;
-						exec.execute(new Runnable() {
-
-							@Override
-							public void run() {
-								try {
-									TCPConnectionManager.this.rcvr
-											.dataReceived(
-													pkt.d,
-													(InetSocketAddress) pkt.c.conn
-															.getRemoteSocketAddress());
-								} catch (Exception e) {
-									// TODO Auto-generated catch block
-									e.printStackTrace();
-								}
-							}
-						});
-					}
-				}
-			}
-		};
-		reader.start();
+		// reader = new Thread("TCP Packet Reader") {
+		// @Override
+		// public void run() {
+		// while (!stopped) {
+		// Object[] list = packets.take();
+		// for (Object object : list) {
+		// final TCPPacket pkt = (TCPPacket) object;
+		// if (pkt.d == null)
+		// return;
+		// exec.execute(new Runnable() {
+		//
+		// @Override
+		// public void run() {
+		// try {
+		// TCPConnectionManager.this.rcvr
+		// .dataReceived(
+		// pkt.d,
+		// (InetSocketAddress) pkt.c.conn
+		// .getRemoteSocketAddress());
+		// } catch (Exception e) {
+		// // TODO Auto-generated catch block
+		// e.printStackTrace();
+		// }
+		// }
+		// });
+		// }
+		// }
+		// }
+		// };
+		// reader.start();
 
 		// receiver = new Thread("TCP Connection Reader") {
 		// @Override
@@ -346,7 +346,7 @@ class TCPConnectionManager {
 
 	public void stop() {
 		// rcv.shutdown();
-		exec.shutdown();
+		// exec.shutdown();
 		connection_exec.shutdown();
 		stopped = true;
 		// writeQueue.put(new OutPacket(new byte[] {}, null));

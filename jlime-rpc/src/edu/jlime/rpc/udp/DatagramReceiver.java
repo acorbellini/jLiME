@@ -24,18 +24,19 @@ public class DatagramReceiver {
 
 	private Logger log = Logger.getLogger(DatagramReceiver.class);
 
-	ExecutorService exec = Executors.newCachedThreadPool(new ThreadFactory() {
-
-		@Override
-		public Thread newThread(Runnable r) {
-			Thread t = Executors.defaultThreadFactory().newThread(r);
-			t.setName("UDP Datagram Thread");
-			return t;
-		}
-	});
+	ExecutorService exec;
 
 	public DatagramReceiver(DatagramSocket sock, int buff_size,
-			PacketReceiver receiver) {
+			PacketReceiver receiver, int threads) {
+		exec = Executors.newFixedThreadPool(threads, new ThreadFactory() {
+
+			@Override
+			public Thread newThread(Runnable r) {
+				Thread t = Executors.defaultThreadFactory().newThread(r);
+				t.setName("UDP Datagram Thread");
+				return t;
+			}
+		});
 		this.rcvr = receiver;
 		this.sock = sock;
 		this.buff_size = buff_size;
@@ -66,20 +67,25 @@ public class DatagramReceiver {
 							final DatagramPacket pkt = (DatagramPacket) object;
 							if (stopped)
 								return;
-							exec.execute(new Runnable() {
+							try {
+								// exec.execute(new Runnable() {
+								//
+								// @Override
+								// public void run() {
 
-								@Override
-								public void run() {
-
-									if (stopped)
-										return;
-									try {
-										rcvr.datagramReceived(pkt);
-									} catch (Exception e) {
-										e.printStackTrace();
-									}
+								if (stopped)
+									return;
+								try {
+									rcvr.datagramReceived(pkt);
+								} catch (Exception e) {
+									e.printStackTrace();
 								}
-							});
+								// }
+								// });
+							} catch (Exception e) {
+								if (log.isDebugEnabled())
+									log.debug("Exec is closed");
+							}
 						}
 
 					} catch (Exception e) {
@@ -95,7 +101,9 @@ public class DatagramReceiver {
 		byte[] b = new byte[buff_size];
 		final DatagramPacket d = new DatagramPacket(b, buff_size);
 		sock.receive(d);
-		packets.put(d);
+		rcvr.datagramReceived(d);
+
+		// packets.put(d);
 		// exec.execute(new Runnable() {
 		// @Override
 		// public void run() {

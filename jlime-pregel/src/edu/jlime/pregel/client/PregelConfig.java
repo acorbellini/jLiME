@@ -4,19 +4,19 @@ import java.io.Serializable;
 import java.util.HashMap;
 
 import edu.jlime.pregel.coordinator.Aggregator;
-import edu.jlime.pregel.messages.MessageMerger;
+import edu.jlime.pregel.mergers.MessageMerger;
 
 public class PregelConfig implements Serializable {
 	private HashMap<String, Aggregator> aggregators = new HashMap<>();
 	private MessageMerger merger;
 	private SplitFunction split;
-	private int threads = 8;
+	private Integer threads = null;
 	private int maxSteps = 0;
 	private boolean executeOnAll = false;
-	private int queue_limit = 10000;
-	private int segments = 32;
+	private String queue_limit = "auto";
 	private GraphConnectionFactory graph;
 	private int bQueue = 100;
+	private Integer send_threads = null;
 
 	public PregelConfig graph(GraphConnectionFactory graph) {
 		this.graph = graph;
@@ -86,24 +86,17 @@ public class PregelConfig implements Serializable {
 	}
 
 	public int getThreads() {
+		if (threads == null)
+			return Runtime.getRuntime().availableProcessors();
 		return threads;
 	}
 
-	public int getQueueLimit() {
+	public String getQueueLimit() {
 		return queue_limit;
 	}
 
-	public PregelConfig queue(int queue_limit) {
+	public PregelConfig queue(String queue_limit) {
 		this.queue_limit = queue_limit;
-		return this;
-	}
-
-	public int getSegments() {
-		return segments;
-	}
-
-	public PregelConfig segments(int segments) {
-		this.segments = segments;
 		return this;
 	}
 
@@ -118,5 +111,41 @@ public class PregelConfig implements Serializable {
 
 	public int getBroadcastQueue() {
 		return bQueue;
+	}
+
+	public int getSegments() {
+		int t = 0;
+		if (queue_limit.equals("auto")) {
+			t = getThreads() * 32;
+		} else
+			t = Integer.valueOf(queue_limit.substring(0,
+					queue_limit.indexOf("x")));
+		System.out.println("Segments " + t);
+
+		return t;
+	}
+
+	public int getQueueSize() {
+		int i = 0;
+		if (queue_limit.equals("auto")) {
+			float max = Runtime.getRuntime().maxMemory() * .3f;
+			float entry_size = 8f + 8f + 64f;
+			i = (int) ((max / (entry_size)) / getSegments());
+		} else
+			i = Integer.valueOf(queue_limit.substring(
+					queue_limit.indexOf("x") + 1, queue_limit.length()));
+		System.out.println("Queue size" + i);
+		return i;
+	}
+
+	public int getSendThreads() {
+		if (send_threads == null)
+			return Runtime.getRuntime().availableProcessors();
+		return send_threads;
+	}
+
+	public PregelConfig sendthreads(int send_threads) {
+		this.send_threads = send_threads;
+		return this;
 	}
 }

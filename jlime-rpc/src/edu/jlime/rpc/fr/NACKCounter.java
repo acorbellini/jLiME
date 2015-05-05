@@ -46,7 +46,13 @@ class NACKCounter {
 
 	private volatile boolean recheck = false;
 
+	private int time;
+
+	private float timeout_mult;
+
 	public NACKCounter(NACK ack, Address to, Configuration config) {
+		this.timeout_mult = config.timeout_mult;
+		this.time = config.nack_resend_delay;
 		this.ack = ack;
 		this.max_resend_size = config.nack_max_resend_size;
 		resendArray = new ResendData[max_resend_size];
@@ -77,7 +83,8 @@ class NACKCounter {
 		if (log.isDebugEnabled())
 			log.debug("Sending seq " + seqN);
 
-		resendArray[pos(seqN)].setData(msg, System.currentTimeMillis(), seqN);
+		resendArray[pos(seqN)].setData(msg, System.currentTimeMillis(), seqN,
+				time);
 
 		Message ackSeqMsg = Message
 				.encapsulateOut(msg, MessageType.ACK_SEQ, to);
@@ -273,7 +280,7 @@ class NACKCounter {
 	public void resend() throws Exception {
 		if (seqN.get() == (confirmed.get() + 1))
 			return;
-
+		long curr = System.currentTimeMillis();
 		for (int i = 0; i < resendArray.length; i++) {
 			// if (log.isDebugEnabled())
 			// log.debug("Resending " + seq);
@@ -284,7 +291,11 @@ class NACKCounter {
 
 				Message data = resendArray[i].getData(seq);
 
-				if (resendArray[i].resend && data != null) {
+				if (resendArray[i].resend
+						&& data != null
+						&& curr - resendArray[i].timeSent >= resendArray[i].timeout) {
+					resendArray[i].timeSent = curr;
+					resendArray[i].timeout *= timeout_mult;
 					Message ackMsg = Message.encapsulateOut(data,
 							MessageType.ACK_SEQ, to);
 					ackMsg.getHeaderBuffer().putInt(seq);

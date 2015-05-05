@@ -24,4 +24,5 @@ public interface PregelMessageQueue {
 
 	public abstract void putDouble(long from, long to, double val);
 
+	public abstract Iterator<PregelMessage> getMessages(long currentVertex);
 }

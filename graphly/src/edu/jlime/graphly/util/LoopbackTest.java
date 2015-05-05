@@ -34,8 +34,7 @@ public class LoopbackTest {
 						new PageRankFloat(vertexCount),
 						PregelConfig.create().steps(10).threads(8)
 								.executeOnAll(true)
-								.merger(MessageMergers.FLOAT_SUM).queue(1000)
-								.segments(256)).exec();
+								.merger(MessageMergers.FLOAT_SUM)).exec();
 		System.out.println(System.currentTimeMillis() - init);
 		float sum = 0;
 		List<Float> vals = test

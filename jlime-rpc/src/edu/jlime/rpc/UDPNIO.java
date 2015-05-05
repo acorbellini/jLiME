@@ -17,6 +17,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadFactory;
 
 import org.apache.log4j.Logger;
@@ -52,8 +53,11 @@ public class UDPNIO extends MessageProcessor implements AddressListProvider,
 
 	private InetSocketAddress addr;
 
+	private Semaphore maxThreads;
+
 	public UDPNIO(Address local, Configuration config, String iface) {
 		super("UDP NIO");
+		maxThreads = new Semaphore(config.udp_threads);
 		this.exec = Executors.newFixedThreadPool(config.udp_threads,
 				new ThreadFactory() {
 
@@ -187,7 +191,8 @@ public class UDPNIO extends MessageProcessor implements AddressListProvider,
 						}
 					}
 				} catch (Exception e) {
-					log.info("Closed UDP NIO Selector.");
+					if (log.isDebugEnabled())
+						log.debug("Closed UDP NIO Selector.");
 				}
 			}
 		};
@@ -234,17 +239,17 @@ public class UDPNIO extends MessageProcessor implements AddressListProvider,
 				log.debug("Not for me.");
 			return;
 		}
-		exec.execute(new Runnable() {
-			@Override
-			public void run() {
-				Message msg = Message.deEncapsulate(buff, from, local);
-				try {
-					notifyRcvd(msg);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
+		// exec.execute(new Runnable() {
+		// @Override
+		// public void run() {
+		Message msg = Message.deEncapsulate(buff, from, local);
+		try {
+			notifyRcvd(msg);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		// }
+		// });
 
 	}
 

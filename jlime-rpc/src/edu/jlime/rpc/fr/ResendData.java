@@ -4,6 +4,8 @@ import edu.jlime.rpc.message.Message;
 
 public class ResendData {
 
+	volatile int timeout = -1;
+
 	volatile Message data = null;
 
 	volatile long timeSent = -1;
@@ -22,11 +24,12 @@ public class ResendData {
 		return confirmed;
 	}
 
-	synchronized void setData(Message data, long timeSent, int seq) {
+	synchronized void setData(Message data, long timeSent, int seq, int timeout) {
 		this.confirmed = false;
 		this.timeSent = timeSent;
 		this.seq = seq;
 		this.data = data;
+		this.timeout = timeout;
 	}
 
 	synchronized public Message getData(int seq2) {

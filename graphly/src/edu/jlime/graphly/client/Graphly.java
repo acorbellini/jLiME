@@ -67,6 +67,8 @@ public class Graphly implements Closeable {
 
 	private PregelClient pregel_client;
 
+	private long[] EMPTY_LONG_ARRAY = new long[] {};
+
 	private Graphly(GraphlyCoordinator coord, PregelClient pregel_client,
 			ClientManager<GraphlyStoreNodeI, GraphlyStoreNodeIBroadcast> mgr,
 			JobDispatcher jd) throws Exception {
@@ -503,7 +505,7 @@ public class Graphly implements Closeable {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		return new long[] {};
+		return EMPTY_LONG_ARRAY;
 	}
 
 	public Map<Long, Map<String, Object>> getProperties(String graph,

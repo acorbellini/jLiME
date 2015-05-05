@@ -1,6 +1,6 @@
 package edu.jlime.pregel.queues;
 
-import edu.jlime.pregel.functions.DoublePregelMessage;
+import edu.jlime.pregel.messages.DoublePregelMessage;
 import edu.jlime.pregel.messages.PregelMessage;
 import edu.jlime.pregel.worker.WorkerTask;
 import edu.jlime.pregel.worker.rpc.Worker;
@@ -17,9 +17,9 @@ import java.util.List;
 public class DoubleHashedMessageQueue implements PregelMessageQueue {
 
 	private volatile TLongDoubleHashMap readOnly = new TLongDoubleHashMap(8,
-			.8f, Long.MAX_VALUE, Double.MAX_VALUE);
+			.75f, Long.MAX_VALUE, Double.MAX_VALUE);
 	private volatile TLongDoubleHashMap current = new TLongDoubleHashMap(8,
-			.8f, Long.MAX_VALUE, Double.MAX_VALUE);
+			.75f, Long.MAX_VALUE, Double.MAX_VALUE);
 	private DoubleMessageMerger merger;
 
 	public DoubleHashedMessageQueue(DoubleMessageMerger merger) {
@@ -149,6 +149,28 @@ public class DoubleHashedMessageQueue implements PregelMessageQueue {
 	@Override
 	public void putFloat(long from, long to, float val) {
 		putDouble(from, to, (float) val);
+	}
+
+	@Override
+	public Iterator<PregelMessage> getMessages(final long to) {
+		final double found = this.readOnly.get(to);
+		if (found == this.readOnly.getNoEntryValue())
+			return null;
+		else
+			return new Iterator<PregelMessage>() {
+				boolean first = true;
+
+				@Override
+				public PregelMessage next() {
+					first = false;
+					return new DoublePregelMessage(-1l, to, found);
+				}
+
+				@Override
+				public boolean hasNext() {
+					return first;
+				}
+			};
 	}
 
 }

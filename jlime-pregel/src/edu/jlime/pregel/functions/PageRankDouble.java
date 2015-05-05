@@ -1,5 +1,6 @@
 package edu.jlime.pregel.functions;
 
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.log4j.Logger;
@@ -7,6 +8,7 @@ import org.apache.log4j.Logger;
 import edu.jlime.pregel.client.WorkerContext;
 import edu.jlime.pregel.graph.VertexFunction;
 import edu.jlime.pregel.graph.rpc.Graph;
+import edu.jlime.pregel.messages.DoublePregelMessage;
 import edu.jlime.pregel.messages.PregelMessage;
 import gnu.trove.iterator.TLongIterator;
 
@@ -22,7 +24,7 @@ public class PageRankDouble implements VertexFunction {
 	// double d = 0.85;
 
 	@Override
-	public void execute(long v, List<PregelMessage> in, WorkerContext ctx)
+	public void execute(long v, Iterator<PregelMessage> in, WorkerContext ctx)
 			throws Exception {
 		Logger log = Logger.getLogger(PageRankDouble.class);
 
@@ -36,7 +38,8 @@ public class PageRankDouble implements VertexFunction {
 		double currentVal = oldval;
 		if (ctx.getSuperStep() >= 1) {
 			double sum = 0f;
-			for (PregelMessage pm : in) {
+			while (in.hasNext()) {
+				PregelMessage pm = in.next();
 				// sum += Float.intBitsToFloat(DataTypeUtils
 				// .byteArrayToInt((byte[]) pm.getV()));
 				sum += ((DoublePregelMessage) pm).getDouble();

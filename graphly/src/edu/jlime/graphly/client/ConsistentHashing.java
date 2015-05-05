@@ -5,8 +5,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.esotericsoftware.minlog.Log;
-
 import edu.jlime.core.cluster.Peer;
 import edu.jlime.graphly.GraphlyStoreNodeI;
 import gnu.trove.list.array.TLongArrayList;
@@ -37,7 +35,6 @@ public class ConsistentHashing implements Serializable {
 			throws Exception {
 		boolean mod = false;
 		for (Peer gn : nodes.keySet()) {
-			Log.info("Getting ranges from " + gn);
 			for (Integer range : nodes.get(gn).getRanges()) {
 				circle[range] = gn;
 				mod = true;

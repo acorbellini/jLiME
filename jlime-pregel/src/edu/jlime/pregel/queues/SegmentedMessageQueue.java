@@ -149,7 +149,7 @@ public class SegmentedMessageQueue implements PregelMessageQueue {
 
 	private int getHash(long to) {
 		int hash = Math
-				.abs((int) ((to * 2147483647) % ((long) this.queue.length)));
+				.abs((int) ((to * 2147483647l) % ((long) this.queue.length)));
 		return hash;
 	}
 
@@ -186,6 +186,12 @@ public class SegmentedMessageQueue implements PregelMessageQueue {
 			checkSize(hash, cache);
 			cache.putDouble(from, to, val);
 		}
+	}
+
+	public Iterator<PregelMessage> getMessages(long currentVertex) {
+		int hash = getHash(currentVertex);
+		PregelMessageQueue cache = this.queue[hash];
+		return cache.getMessages(currentVertex);
 	}
 
 }

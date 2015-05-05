@@ -10,6 +10,7 @@ import org.fusesource.leveldbjni.JniDBFactory;
 import org.iq80.leveldb.DB;
 import org.iq80.leveldb.DBIterator;
 import org.iq80.leveldb.Options;
+import org.iq80.leveldb.ReadOptions;
 
 import com.google.common.primitives.UnsignedBytes;
 
@@ -47,8 +48,8 @@ public class LocalStore {
 					options = new Options();
 					options.logger(logger);
 					options.createIfMissing(true);
-					options.cacheSize(100 * 1024 * 1024);
-					JniDBFactory.pushMemoryPool(100 * 1024 * 1024);
+					options.cacheSize(400 * 1024 * 1024);
+					JniDBFactory.pushMemoryPool(1024 * 512);
 
 					File dirDB = new File(sPath);
 					if (!dirDB.exists())

@@ -6,9 +6,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.TreeSet;
 
+import edu.jlime.pregel.mergers.MessageMerger;
+import edu.jlime.pregel.mergers.ObjectMessageMerger;
 import edu.jlime.pregel.messages.GenericPregelMessage;
-import edu.jlime.pregel.messages.MessageMerger;
-import edu.jlime.pregel.messages.ObjectMessageMerger;
 import edu.jlime.pregel.messages.PregelMessage;
 import edu.jlime.pregel.worker.WorkerTask;
 
@@ -177,15 +177,26 @@ public class MessageQueue implements PregelMessageQueue {
 
 	@Override
 	public void flush(WorkerTask workerTask) throws Exception {
-		final Iterator<PregelMessage> it = readOnly.iterator();
-		while (it.hasNext()) {
-			PregelMessage msg = it.next();
-			workerTask.send(msg.getFrom(), msg.getTo(), msg.getV());
-		}
+		// final Iterator<PregelMessage> it = readOnly.iterator();
+		// while (it.hasNext()) {
+		// PregelMessage msg = it.next();
+		// workerTask.send(msg.getFrom(), msg.getTo(), msg.getV());
+		// }
 	}
 
 	@Override
 	public void putDouble(long from, long to, double val) {
 		this.put(from, to, val);
 	}
+
+	@Override
+	public Iterator<PregelMessage> getMessages(long v) {
+		GenericPregelMessage from = new GenericPregelMessage(Long.MIN_VALUE, v,
+				null);
+		GenericPregelMessage to = new GenericPregelMessage(Long.MAX_VALUE, v,
+				null);
+
+		return readOnly.subSet(from, to).iterator();
+	}
+
 }

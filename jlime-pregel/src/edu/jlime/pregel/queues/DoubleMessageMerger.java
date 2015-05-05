@@ -1,6 +1,6 @@
 package edu.jlime.pregel.queues;
 
-import edu.jlime.pregel.messages.MessageMerger;
+import edu.jlime.pregel.mergers.MessageMerger;
 
 public abstract class DoubleMessageMerger implements MessageMerger {
 
