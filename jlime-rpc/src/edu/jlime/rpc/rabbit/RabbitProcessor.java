@@ -18,7 +18,7 @@ import com.rabbitmq.client.QueueingConsumer;
 import edu.jlime.core.transport.Address;
 import edu.jlime.metrics.metric.Metrics;
 import edu.jlime.rpc.AddressListProvider;
-import edu.jlime.rpc.Configuration;
+import edu.jlime.rpc.NetworkConfiguration;
 import edu.jlime.rpc.message.AddressType;
 import edu.jlime.rpc.message.Message;
 import edu.jlime.rpc.message.MessageProcessor;
@@ -32,7 +32,7 @@ public class RabbitProcessor extends MessageProcessor implements
 
 	private ConcurrentHashMap<Address, Channel> addressBook = new ConcurrentHashMap<>();
 
-	private Configuration config;
+	private NetworkConfiguration config;
 	private String iface;
 	private Address local;
 	private Connection connection;
@@ -40,7 +40,7 @@ public class RabbitProcessor extends MessageProcessor implements
 	private String replyQueueName;
 	private QueueingConsumer consumer;
 
-	public RabbitProcessor(Configuration config, String iface, Address local) {
+	public RabbitProcessor(NetworkConfiguration config, String iface, Address local) {
 		super("Rabbit Processor");
 		this.config = config;
 		this.iface = iface;

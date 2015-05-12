@@ -15,7 +15,7 @@ import edu.jlime.core.transport.Address;
 import edu.jlime.core.transport.DiscoveryListener;
 import edu.jlime.core.transport.DiscoveryProvider;
 import edu.jlime.rpc.AddressListProvider;
-import edu.jlime.rpc.Configuration;
+import edu.jlime.rpc.NetworkConfiguration;
 import edu.jlime.rpc.message.AddressType;
 import edu.jlime.rpc.message.Message;
 import edu.jlime.rpc.message.MessageListener;
@@ -34,7 +34,7 @@ public abstract class Discovery implements DiscoveryProvider, StackElement {
 	protected List<DiscoveryListener> listeners = Collections
 			.synchronizedList(new ArrayList<DiscoveryListener>());
 
-	protected Configuration config;
+	protected NetworkConfiguration config;
 
 	protected MessageProcessor discoveryInit;
 
@@ -48,7 +48,7 @@ public abstract class Discovery implements DiscoveryProvider, StackElement {
 
 	private String localName;
 
-	public Discovery(Address localID, String name, Configuration config,
+	public Discovery(Address localID, String name, NetworkConfiguration config,
 			MessageProcessor discoveryInit, MessageProcessor discoveryData) {
 		this.localID = localID;
 		this.localName = name;

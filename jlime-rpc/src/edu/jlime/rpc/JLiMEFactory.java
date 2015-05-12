@@ -13,7 +13,7 @@ import edu.jlime.core.transport.Address;
 
 public class JLiMEFactory implements RPCFactory {
 
-	private Configuration config;
+	private NetworkConfiguration config;
 
 	Logger log = Logger.getLogger(JLiMEFactory.class);
 
@@ -23,20 +23,20 @@ public class JLiMEFactory implements RPCFactory {
 
 	public JLiMEFactory(Map<String, String> localData, PeerFilter filter) {
 		String configFile = System.getProperty("jlime.config");
-		this.config = configFile == null ? new Configuration() : Configuration
-				.newConfig(configFile);
+		this.config = configFile == null ? new NetworkConfiguration()
+				: new NetworkConfiguration(Configuration.newConfig(configFile));
 		this.localData = localData;
 		this.filter = filter;
 	}
 
-	public JLiMEFactory(Configuration config, Map<String, String> localData,
-			PeerFilter filter) throws Exception {
+	public JLiMEFactory(NetworkConfiguration config,
+			Map<String, String> localData, PeerFilter filter) throws Exception {
 		this.config = config;
 		this.localData = localData;
 		this.filter = filter;
 	}
 
-	public JLiMEFactory(Configuration config) throws Exception {
+	public JLiMEFactory(NetworkConfiguration config) throws Exception {
 		this(config, new HashMap<String, String>(), null);
 	}
 
@@ -47,7 +47,7 @@ public class JLiMEFactory implements RPCFactory {
 		p.putData(localData);
 		Stack commStack = null;
 		// STACK
-		switch (config.getProtocol()) {
+		switch (config.protocol) {
 		case "rabbit":
 			commStack = Stack.rabbitStack(config, p.getAddress(), config.name);
 			break;

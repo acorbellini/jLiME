@@ -63,7 +63,7 @@ public class JobExecutorServerImpl extends RPCClient implements JobExecutor,
 		this.localRPC = RPCDispatcher.getLocalDispatcher(super.dest);
 	}
 
-	public JobExecutor getLocal() {
+	public JobExecutor getLocal() throws Exception {
 		if (local == null) {
 			synchronized (this) {
 				if (local == null) {

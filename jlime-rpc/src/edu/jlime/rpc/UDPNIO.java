@@ -42,7 +42,7 @@ public class UDPNIO extends MessageProcessor implements AddressListProvider,
 
 	private Metrics metrics;
 	private Address local;
-	private Configuration config;
+	private NetworkConfiguration config;
 	private String iface;
 	private Selector sel;
 	private DatagramChannel channel;
@@ -55,7 +55,7 @@ public class UDPNIO extends MessageProcessor implements AddressListProvider,
 
 	private Semaphore maxThreads;
 
-	public UDPNIO(Address local, Configuration config, String iface) {
+	public UDPNIO(Address local, NetworkConfiguration config, String iface) {
 		super("UDP NIO");
 		maxThreads = new Semaphore(config.udp_threads);
 		this.exec = Executors.newFixedThreadPool(config.udp_threads,

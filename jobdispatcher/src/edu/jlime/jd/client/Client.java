@@ -13,7 +13,7 @@ import edu.jlime.core.stream.RemoteOutputStream;
 import edu.jlime.jd.ClientCluster;
 import edu.jlime.jd.JobDispatcher;
 import edu.jlime.jd.StreamProvider;
-import edu.jlime.rpc.Configuration;
+import edu.jlime.rpc.NetworkConfiguration;
 import edu.jlime.rpc.JLiMEFactory;
 
 public class Client implements Closeable {
@@ -34,7 +34,7 @@ public class Client implements Closeable {
 		jdData.put(JobDispatcher.ISEXEC, Boolean.valueOf(false).toString());
 		jdData.put(JobDispatcher.TAGS, "Client");
 
-		Configuration config = new Configuration();
+		NetworkConfiguration config = new NetworkConfiguration();
 
 		final RPCDispatcher rpc = new JLiMEFactory(config, jdData,
 				new DataFilter("app", "job", true)).build();

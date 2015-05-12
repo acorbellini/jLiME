@@ -6,7 +6,7 @@ import java.util.List;
 import edu.jlime.core.cluster.IP;
 import edu.jlime.core.transport.Address;
 import edu.jlime.metrics.metric.Metrics;
-import edu.jlime.rpc.Configuration;
+import edu.jlime.rpc.NetworkConfiguration;
 import edu.jlime.rpc.message.AddressType;
 import edu.jlime.rpc.message.Message;
 import edu.jlime.rpc.message.MessageProcessor;
@@ -20,7 +20,7 @@ public class PingDiscovery extends Discovery {
 	private int port_range;
 
 	public PingDiscovery(Address local, String name, MessageProcessor unicast,
-			Configuration opts, int port, int port_range) throws Exception {
+			NetworkConfiguration opts, int port, int port_range) throws Exception {
 		super(local, name, opts, unicast, unicast);
 		this.port = port;
 		this.port_range = port_range;

@@ -9,7 +9,7 @@ import org.apache.log4j.Logger;
 
 import edu.jlime.core.transport.Address;
 import edu.jlime.metrics.metric.Metrics;
-import edu.jlime.rpc.Configuration;
+import edu.jlime.rpc.NetworkConfiguration;
 import edu.jlime.rpc.message.Header;
 import edu.jlime.rpc.message.Message;
 import edu.jlime.rpc.message.MessageListener;
@@ -28,13 +28,13 @@ public class Acknowledge extends SimpleMessageProcessor {
 
 	CopyOnWriteArrayList<AcknowledgeCounter> counterList = new CopyOnWriteArrayList<>();
 
-	private Configuration config;
+	private NetworkConfiguration config;
 
 	int max_size;
 
 	private Timer t;
 
-	public Acknowledge(MessageProcessor next, int max_size, Configuration config) {
+	public Acknowledge(MessageProcessor next, int max_size, NetworkConfiguration config) {
 		super(next, "Acknowledge");
 		this.config = config;
 		this.max_size = max_size;

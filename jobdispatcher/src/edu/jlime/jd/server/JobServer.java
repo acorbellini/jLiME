@@ -9,7 +9,7 @@ import edu.jlime.metrics.jmx.MetricsJMX;
 import edu.jlime.metrics.metric.Metrics;
 import edu.jlime.metrics.sysinfo.InfoProvider;
 import edu.jlime.metrics.sysinfo.SysInfoProvider;
-import edu.jlime.rpc.Configuration;
+import edu.jlime.rpc.NetworkConfiguration;
 import edu.jlime.rpc.JLiMEFactory;
 
 public class JobServer {
@@ -55,7 +55,7 @@ public class JobServer {
 		jdData.put(JobDispatcher.ISEXEC, Boolean.valueOf(true).toString());
 		jdData.put(JobDispatcher.TAGS, "Server");
 
-		final RPCDispatcher rpc = new JLiMEFactory(new Configuration(), jdData,
+		final RPCDispatcher rpc = new JLiMEFactory(new NetworkConfiguration(), jdData,
 				new DataFilter("app", JobDispatcher.SERVER, true)).build();
 
 		// JD

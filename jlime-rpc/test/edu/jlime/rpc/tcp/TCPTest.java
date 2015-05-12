@@ -1,7 +1,7 @@
 package edu.jlime.rpc.tcp;
 
 import edu.jlime.core.transport.Address;
-import edu.jlime.rpc.Configuration;
+import edu.jlime.rpc.NetworkConfiguration;
 import edu.jlime.rpc.message.Message;
 import edu.jlime.rpc.message.MessageListener;
 import edu.jlime.rpc.message.MessageProcessor;
@@ -22,7 +22,7 @@ public class TCPTest {
 		Address id = new Address();
 		Address id2 = new Address();
 		final TCP tcp = new TCP(id, addr, 8000, 1,
-				new Configuration().tcp_config);
+				new NetworkConfiguration().tcp_config);
 		tcp.addAllMessageListener(new MessageListener() {
 
 			@Override
@@ -35,7 +35,7 @@ public class TCPTest {
 		});
 		tcp.start();
 
-		TCP tcp2 = new TCP(id2, addr, 8001, 1, new Configuration().tcp_config);
+		TCP tcp2 = new TCP(id2, addr, 8001, 1, new NetworkConfiguration().tcp_config);
 		tcp2.start();
 
 		Message newFullDataMessage = Message.newFullDataMessage(

@@ -1,5 +1,10 @@
 package edu.jlime.metrics.sysinfo.linux;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+
 import org.apache.log4j.Logger;
 
 import edu.jlime.metrics.metric.Metrics;
@@ -8,6 +13,15 @@ import edu.jlime.metrics.sysinfo.SysInfoProvider;
 import edu.jlime.util.CommandLineUtils;
 
 public class LinuxCPUInfo extends SysInfoProvider {
+	File f = new File("/proc/stat");
+
+	boolean first = true;
+	long prevIdle = -1;
+	long prevNonIdle = -1;
+
+	public LinuxCPUInfo() throws FileNotFoundException {
+
+	}
 
 	@Override
 	public void load(final Metrics mgr) {
@@ -42,18 +56,29 @@ public class LinuxCPUInfo extends SysInfoProvider {
 	}
 
 	private Float getCpuUsage(final String cores) throws Exception {
-		Integer cpuusagepos = Integer
-				.valueOf(CommandLineUtils
-						.execCommand(
-								"top -bn 1 | tail -n+7 | head -1 | tr -s ' ' | sed \"s/^ *//g\" | tr ' ' '\n' | cat -n | grep %CPU | cut -f1")
-						.trim());
 
-		String usage = CommandLineUtils.execCommand(
-				" echo \"(\"$(top -bn 1 | tail -n+8 "
-						+ "| tr -s ' ' | sed \"s/^ *//g\" | cut -d' ' -f"
-						+ cpuusagepos
-						+ " | tr , . | paste -s -d+ - | sed \"s/+*$//g\" )\")/"
-						+ cores + "\"|bc").trim();
-		return Float.valueOf(usage);
+		BufferedReader reader = new BufferedReader(new FileReader(f));
+		String[] cpuStats = reader.readLine().replaceAll("\\s", " ").split(" ");
+		reader.close();
+		long idle = Integer.valueOf(cpuStats[4]) + Integer.valueOf(cpuStats[5]);
+		long nonidle = Integer.valueOf(cpuStats[1])
+				+ Integer.valueOf(cpuStats[2]) + Integer.valueOf(cpuStats[3])
+				+ Integer.valueOf(cpuStats[6]) + Integer.valueOf(cpuStats[7])
+				+ Integer.valueOf(cpuStats[8]);
+
+		long prevtotal = prevIdle + prevNonIdle;
+		long total = idle + nonidle;
+
+		float usage = ((total - prevtotal) - (idle - prevIdle))
+				/ (float) (total - prevtotal);
+
+		prevIdle = idle;
+		prevNonIdle = nonidle;
+
+		if (first) {
+			first = false;
+			return 0f;
+		}
+		return usage;
 	}
 }

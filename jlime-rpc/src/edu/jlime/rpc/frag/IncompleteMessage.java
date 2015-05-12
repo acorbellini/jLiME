@@ -6,8 +6,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.log4j.Logger;
 
-import edu.jlime.util.ByteBuffer;
-
 public class IncompleteMessage {
 
 	Logger log = Logger.getLogger(IncompleteMessage.class);

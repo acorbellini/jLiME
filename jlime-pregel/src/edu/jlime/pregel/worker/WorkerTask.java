@@ -1,5 +1,7 @@
 package edu.jlime.pregel.worker;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -31,14 +33,13 @@ import edu.jlime.pregel.messages.PregelMessage;
 import edu.jlime.pregel.queues.MessageQueueFactory;
 import edu.jlime.pregel.queues.PregelMessageQueue;
 import edu.jlime.pregel.queues.SegmentedMessageQueue;
+import edu.jlime.pregel.worker.PersistedVertexList.PersistedLongIterator;
 import edu.jlime.pregel.worker.rpc.Worker;
 import edu.jlime.pregel.worker.rpc.WorkerBroadcast;
 import edu.jlime.pregel.worker.rpc.WorkerFactory;
 import gnu.trove.iterator.TLongIterator;
 import gnu.trove.list.array.TDoubleArrayList;
-import gnu.trove.list.array.TFloatArrayList;
 import gnu.trove.list.array.TLongArrayList;
-import gnu.trove.map.hash.TLongFloatHashMap;
 
 public class WorkerTask {
 
@@ -82,9 +83,11 @@ public class WorkerTask {
 
 	private AtomicInteger sendCount = new AtomicInteger(0);
 
-	private TLongArrayList vList;
+	private VertexList vList;
 	//
-	private TLongArrayList currentSplit = new TLongArrayList();
+
+	private VertexList currentSplit;
+	// private TLongArrayList currentSplit = new TLongArrayList();
 
 	private AtomicInteger vertexCounter = new AtomicInteger(0);
 
@@ -92,6 +95,12 @@ public class WorkerTask {
 			final VertexFunction func, long[] vList, final int taskID2,
 			PregelConfig config) throws Exception {
 		log.info("Creating task with ID " + taskID2);
+
+		this.vList = config.isPersitentVertexList() ? new PersistedVertexList()
+				: new InMemVertexList();
+
+		this.currentSplit = config.isPersitentCurrentSplitList() ? new PersistedVertexList()
+				: new InMemVertexList();
 
 		this.vertexPool = Executors.newCachedThreadPool(new ThreadFactory() {
 			@Override
@@ -130,15 +139,19 @@ public class WorkerTask {
 		if (config.isExecuteOnAll()) {
 			long start = System.currentTimeMillis();
 			log.info("Creating vertex list for the whole graph.");
-			TLongArrayList gatherVList = new TLongArrayList();
+			// TLongArrayList gatherVList = new TLongArrayList();
 			for (Long vid : graph.vertices()) {
-				gatherVList.add(vid);
+				this.vList.add(vid);
 			}
-			this.vList = gatherVList;
+			this.vList.flush();
+			// this.vList = gatherVList;
 			log.info("Finished creating vertex list for the whole graph in "
 					+ (System.currentTimeMillis() - start) / 1000f + " sec.");
-		} else
-			this.vList = new TLongArrayList(vList);
+		} else {
+			for (long vid : vList) {
+				this.vList.add(vid);
+			}
+		}
 
 		this.setConfig(config);
 		MessageMerger merger = config.getMerger();
@@ -161,16 +174,18 @@ public class WorkerTask {
 		this.queue.putFloat(from, to, val);
 	}
 
-	public void queueBroadcastVertexData(long from, Object val) {
-		TLongIterator it = currentSplit.iterator();
+	public void queueBroadcastVertexData(long from, Object val)
+			throws Exception {
+		LongIterator it = currentSplit.iterator();
 		while (it.hasNext()) {
 			long vid = it.next();
 			queue.put(from, vid, val);
 		}
 	}
 
-	public void queueBroadcastFloatVertexData(long from, float val) {
-		TLongIterator it = currentSplit.iterator();
+	public void queueBroadcastFloatVertexData(long from, float val)
+			throws Exception {
+		LongIterator it = currentSplit.iterator();
 		while (it.hasNext()) {
 			long vid = it.next();
 			queue.putFloat(from, vid, val);
@@ -197,16 +212,20 @@ public class WorkerTask {
 		log.info("Loading local slice of vertices from " + vList.size()
 				+ " vertices.");
 
-		currentSplit.clear();
+		currentSplit.delete();
+		currentSplit = config.isPersitentCurrentSplitList() ? new PersistedVertexList()
+				: new InMemVertexList();
+
 		Peer localPeer = workerMgr.getLocalPeer();
 		List<Peer> peers2 = workerMgr.getPeers();
 
-		TLongIterator it = vList.iterator();
+		LongIterator it = vList.iterator();
 		while (it.hasNext()) {
 			long vid = it.next();
 			if (split.getPeer(vid, peers2).equals(localPeer))
 				currentSplit.add(vid);
 		}
+		currentSplit.flush();
 		log.info("Loaded slice " + currentSplit.size() + " vertices.");
 	}
 
@@ -251,33 +270,38 @@ public class WorkerTask {
 				@Override
 				public void run() {
 					int cont = 0;
-					TLongIterator it = currentSplit.iterator();
-					while (it.hasNext()) {
-						long currentVertex = it.next();
-						if (cont % threads == currentIndex)
-							try {
-								Iterator<PregelMessage> messages = queue
-										.getMessages(currentVertex);
-								if (messages != null) {
-									printCompleted(size,
-											count.getAndIncrement());
-									if (log.isDebugEnabled())
-										log.debug("Executing function on vertex "
-												+ currentVertex);
-									WorkerContext ctx = new WorkerContext(
-											WorkerTask.this, currentVertex);
-									f.execute(currentVertex, messages, ctx);
-									if (log.isDebugEnabled())
-										log.debug("Finished executing function on vertex "
-												+ currentVertex);
+					try {
+						LongIterator it = currentSplit.iterator();
+						while (it.hasNext()) {
+							long currentVertex = it.next();
+							if (cont % threads == currentIndex)
+								try {
+									Iterator<PregelMessage> messages = queue
+											.getMessages(currentVertex);
+									if (messages != null) {
+										printCompleted(size,
+												count.getAndIncrement());
+										if (log.isDebugEnabled())
+											log.debug("Executing function on vertex "
+													+ currentVertex);
+										WorkerContext ctx = new WorkerContext(
+												WorkerTask.this, currentVertex);
+										f.execute(currentVertex, messages, ctx);
+										if (log.isDebugEnabled())
+											log.debug("Finished executing function on vertex "
+													+ currentVertex);
+									}
+									// ctx.finished();
+								} catch (Exception e) {
+									e.printStackTrace();
+								} finally {
+									maxVertexThreads.release();
 								}
-								// ctx.finished();
-							} catch (Exception e) {
-								e.printStackTrace();
-							} finally {
-								maxVertexThreads.release();
-							}
-						cont++;
+							cont++;
+						}
+					} catch (Exception e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
 					}
 
 					vertexCounter.decrementAndGet();
@@ -413,11 +437,14 @@ public class WorkerTask {
 		this.config = config;
 	}
 
-	public void cleanup() {
+	public void cleanup() throws Exception {
 		this.queue.clean();
 		this.cache.clean();
 		vertexPool.shutdown();
 		groupedSendPool.shutdown();
+
+		currentSplit.delete();
+		vList.delete();
 	}
 
 	public void sendAllFloat(long from, float val) throws Exception {
@@ -549,8 +576,9 @@ public class WorkerTask {
 					getTaskid());
 	}
 
-	public void queueBroadcastDoubleVertexData(long from, double val) {
-		TLongIterator it = currentSplit.iterator();
+	public void queueBroadcastDoubleVertexData(long from, double val)
+			throws Exception {
+		LongIterator it = currentSplit.iterator();
 		while (it.hasNext()) {
 			long vid = it.next();
 			queue.putDouble(from, vid, val);

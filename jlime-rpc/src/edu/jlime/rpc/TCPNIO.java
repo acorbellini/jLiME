@@ -16,9 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 
 import org.apache.log4j.Logger;
 
@@ -60,7 +57,7 @@ public class TCPNIO extends MessageProcessor implements AddressListProvider {
 
 	private Metrics metrics;
 	private Address local;
-	private Configuration config;
+	private NetworkConfiguration config;
 	private String iface;
 	private Selector sel;
 	private ServerSocketChannel channel;
@@ -75,7 +72,7 @@ public class TCPNIO extends MessageProcessor implements AddressListProvider {
 
 	private List<Channel> toRegister = new ArrayList<>();
 
-	public TCPNIO(Address local, Configuration config, String iface) {
+	public TCPNIO(Address local, NetworkConfiguration config, String iface) {
 		super("UDP NIO");
 		this.local = local;
 		this.config = config;

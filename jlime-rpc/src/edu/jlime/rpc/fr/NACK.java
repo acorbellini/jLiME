@@ -12,7 +12,7 @@ import org.apache.log4j.Logger;
 
 import edu.jlime.core.transport.Address;
 import edu.jlime.metrics.metric.Metrics;
-import edu.jlime.rpc.Configuration;
+import edu.jlime.rpc.NetworkConfiguration;
 import edu.jlime.rpc.message.Header;
 import edu.jlime.rpc.message.Message;
 import edu.jlime.rpc.message.MessageListener;
@@ -44,7 +44,7 @@ public class NACK extends SimpleMessageProcessor {
 
 	CopyOnWriteArrayList<NACKCounter> counterList = new CopyOnWriteArrayList<>();
 
-	private Configuration config;
+	private NetworkConfiguration config;
 
 	// protected ConcurrentHashMap<Address, HashSet<Integer>> acks = new
 	// ConcurrentHashMap<>();
@@ -55,7 +55,7 @@ public class NACK extends SimpleMessageProcessor {
 
 	Metrics metrics;
 
-	public NACK(MessageProcessor next, int max_size, Configuration config) {
+	public NACK(MessageProcessor next, int max_size, NetworkConfiguration config) {
 		super(next, "Acknowledge");
 		for (int i = 0; i < locks.length; i++) {
 			locks[i] = new Object();

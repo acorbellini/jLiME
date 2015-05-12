@@ -19,7 +19,7 @@ public class SyncPerfClient {
 
 		// System.in.read();
 
-		Configuration config = new Configuration();
+		NetworkConfiguration config = new NetworkConfiguration();
 		config.port = 6070;
 		config.mcastport = 5050;
 

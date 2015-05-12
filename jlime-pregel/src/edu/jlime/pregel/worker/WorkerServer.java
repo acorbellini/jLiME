@@ -11,7 +11,7 @@ import edu.jlime.pregel.coordinator.rpc.Coordinator;
 import edu.jlime.pregel.coordinator.rpc.CoordinatorBroadcast;
 import edu.jlime.pregel.worker.rpc.Worker;
 import edu.jlime.pregel.worker.rpc.WorkerBroadcast;
-import edu.jlime.rpc.Configuration;
+import edu.jlime.rpc.NetworkConfiguration;
 import edu.jlime.rpc.JLiMEFactory;
 
 public class WorkerServer {
@@ -29,7 +29,7 @@ public class WorkerServer {
 	}
 
 	public static WorkerServer main(String[] args) throws Exception {
-		Configuration config = new Configuration();
+		NetworkConfiguration config = new NetworkConfiguration();
 		config.port = 6060;
 		config.mcastport = 5050;
 

@@ -8,7 +8,7 @@ import edu.jlime.rpc.multi.MultiInterface;
 
 public class MultiInterfaceManager {
 
-	public MultiInterface create(AddressType type, Configuration config,
+	public MultiInterface create(AddressType type, NetworkConfiguration config,
 			NetworkProtocolFactory factory) {
 		MultiInterface iface = MultiInterface.create(type, config, factory);
 		iface.addAllMessageListener(new MessageListener() {

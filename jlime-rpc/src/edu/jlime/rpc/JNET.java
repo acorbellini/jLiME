@@ -24,12 +24,12 @@ public class JNET extends MessageProcessor implements AddressListProvider,
 	ProtocolHost<byte[]> localProto;
 
 	private Address local;
-	private Configuration config;
+	private NetworkConfiguration config;
 	private String iface;
 
 	private InetSocketAddress addr;
 
-	public JNET(Address local, Configuration config, String iface) {
+	public JNET(Address local, NetworkConfiguration config, String iface) {
 		super("JNET Message Processor");
 		this.local = local;
 		this.config = config;

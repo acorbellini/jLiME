@@ -3,11 +3,7 @@ package edu.jlime.rpc;
 import java.util.HashSet;
 
 import edu.jlime.core.rpc.RPCDispatcher;
-import edu.jlime.core.transport.Transport;
 import edu.jlime.metrics.metric.Metrics;
-import edu.jlime.metrics.metric.SensorMeasure;
-import edu.jlime.rpc.fr.NACK;
-import edu.jlime.rpc.message.StackElement;
 
 public class SyncPerfTest {
 
@@ -33,7 +29,7 @@ public class SyncPerfTest {
 	}
 
 	public static void main(String[] args) throws Exception {
-		Configuration config = new Configuration();
+		NetworkConfiguration config = new NetworkConfiguration();
 
 		config.port = 6070;
 		config.mcastport = 5050;

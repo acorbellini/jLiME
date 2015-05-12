@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.log4j.Logger;
 
 import edu.jlime.core.transport.Address;
-import edu.jlime.rpc.Configuration;
+import edu.jlime.rpc.NetworkConfiguration;
 import edu.jlime.rpc.message.Message;
 import edu.jlime.rpc.message.MessageType;
 import edu.jlime.util.ByteBuffer;
@@ -50,7 +50,7 @@ class NACKCounter {
 
 	private float timeout_mult;
 
-	public NACKCounter(NACK ack, Address to, Configuration config) {
+	public NACKCounter(NACK ack, Address to, NetworkConfiguration config) {
 		this.timeout_mult = config.timeout_mult;
 		this.time = config.nack_resend_delay;
 		this.ack = ack;
@@ -277,6 +277,9 @@ class NACKCounter {
 
 	}
 
+	int resends = 0;
+	int avg = 0;
+
 	public void resend() throws Exception {
 		if (seqN.get() == (confirmed.get() + 1))
 			return;
@@ -285,17 +288,30 @@ class NACKCounter {
 			// if (log.isDebugEnabled())
 			// log.debug("Resending " + seq);
 
-			int seq = resendArray[i].seq;
+			ResendData resendData = resendArray[i];
+			int seq = resendData.seq;
 
 			if (seq >= confirmed.get()) {
 
-				Message data = resendArray[i].getData(seq);
+				Message data = resendData.getData(seq);
 
-				if (resendArray[i].resend
-						&& data != null
-						&& curr - resendArray[i].timeSent >= resendArray[i].timeout) {
-					resendArray[i].timeSent = curr;
-					resendArray[i].timeout *= timeout_mult;
+				if (resendData.resend && data != null
+						&& curr - resendData.timeSent >= resendData.timeout) {
+					resendData.timeSent = curr;
+					resendData.timeout *= timeout_mult;
+
+					// synchronized (this) {
+					// resends += 1;
+					// avg += resendData.timeout;
+					// if (resends % 1000 == 0) {
+					// System.out
+					// .println("Timeout avg after 1000 resends: "
+					// + avg / (float) resends);
+					// avg = 0;
+					// resends = 0;
+					// }
+					// }
+
 					Message ackMsg = Message.encapsulateOut(data,
 							MessageType.ACK_SEQ, to);
 					ackMsg.getHeaderBuffer().putInt(seq);

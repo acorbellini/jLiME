@@ -15,7 +15,7 @@ import org.zeromq.ZMQ.Socket;
 import edu.jlime.core.transport.Address;
 import edu.jlime.metrics.metric.Metrics;
 import edu.jlime.rpc.AddressListProvider;
-import edu.jlime.rpc.Configuration;
+import edu.jlime.rpc.NetworkConfiguration;
 import edu.jlime.rpc.message.AddressType;
 import edu.jlime.rpc.message.Message;
 import edu.jlime.rpc.message.MessageProcessor;
@@ -27,7 +27,7 @@ public class ZeroMQProcessor extends MessageProcessor implements
 
 	private Context context;
 	private Socket responder;
-	private Configuration config;
+	private NetworkConfiguration config;
 	private String iface;
 	private Address local;
 	Logger log = Logger.getLogger(ZeroMQProcessor.class);
@@ -35,7 +35,7 @@ public class ZeroMQProcessor extends MessageProcessor implements
 	private ConcurrentHashMap<Address, Socket> addressBook = new ConcurrentHashMap<>();
 	private SocketAddress socket;
 
-	public ZeroMQProcessor(Configuration config, String iface, Address local) {
+	public ZeroMQProcessor(NetworkConfiguration config, String iface, Address local) {
 		super("ZeroMQ");
 		this.config = config;
 		this.iface = iface;

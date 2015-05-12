@@ -111,17 +111,22 @@ public abstract class NetworkProtocol extends SimpleMessageProcessor implements
 	public void onStart() throws Exception {
 
 		int tries = 0;
+		Exception last = null;
 		while (getSocket() == null && tries != portrange) {
 			try {
 				socket = fact.getSocket(getAddr(), port + tries);
 			} catch (Exception e) {
+				last = e;
 				tries++;
 			}
 		}
 
-		if (socket == null)
+		if (socket == null) {
+			if (last != null)
+				last.printStackTrace();
 			throw new Exception("Could not set port from " + port + " to "
-					+ (port + portrange));
+					+ (port + portrange), last);
+		}
 
 		if (metrics != null)
 			this.metrics.set("jlime.interface").update(

@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.log4j.Logger;
 
 import edu.jlime.core.transport.Address;
-import edu.jlime.rpc.Configuration;
+import edu.jlime.rpc.NetworkConfiguration;
 import edu.jlime.rpc.message.Message;
 import edu.jlime.rpc.message.MessageType;
 import edu.jlime.util.ByteBuffer;
@@ -32,7 +32,7 @@ class AcknowledgeCounter {
 
 	private volatile AtomicInteger resendCursor = new AtomicInteger(0);
 
-	private Configuration config;
+	private NetworkConfiguration config;
 
 	private Acknowledge ack;
 
@@ -45,7 +45,7 @@ class AcknowledgeCounter {
 
 	private float timeout_mult;
 
-	public AcknowledgeCounter(Acknowledge ack, Address to, Configuration config) {
+	public AcknowledgeCounter(Acknowledge ack, Address to, NetworkConfiguration config) {
 		this.ack = ack;
 		this.timeout_mult = config.timeout_mult;
 		this.max_resend_size = config.ack_max_resend_size;

@@ -9,7 +9,6 @@ import edu.jlime.core.transport.DiscoveryProvider;
 import edu.jlime.core.transport.FailureProvider;
 import edu.jlime.core.transport.Streamer;
 import edu.jlime.metrics.metric.Metrics;
-import edu.jlime.rpc.bundler.MessageBundler;
 import edu.jlime.rpc.data.DataProcessor;
 import edu.jlime.rpc.data.DataProvider;
 import edu.jlime.rpc.discovery.MultiCastDiscovery;
@@ -101,7 +100,7 @@ public class Stack implements Iterable<StackElement> {
 		return fail;
 	}
 
-	public static Stack tcpStack(Configuration config, Address local,
+	public static Stack tcpStack(NetworkConfiguration config, Address local,
 			String name) {
 
 		String iface = NetworkUtils.getFirstHostAddress();
@@ -133,7 +132,7 @@ public class Stack implements Iterable<StackElement> {
 		return tcpStack;
 	}
 
-	public static Stack udpStack(Configuration config, Address local,
+	public static Stack udpStack(NetworkConfiguration config, Address local,
 			String name) {
 
 		String iface = NetworkUtils.getFirstHostAddress();
@@ -177,7 +176,7 @@ public class Stack implements Iterable<StackElement> {
 		return tcpStack;
 	}
 
-	public static Stack tcpNioStack(Configuration config, Address local,
+	public static Stack tcpNioStack(NetworkConfiguration config, Address local,
 			String name) {
 
 		String iface = NetworkUtils.getFirstHostAddress();
@@ -212,7 +211,7 @@ public class Stack implements Iterable<StackElement> {
 		return tcpStack;
 	}
 
-	public static Stack udpNioStack(Configuration config, Address local,
+	public static Stack udpNioStack(NetworkConfiguration config, Address local,
 			String name) {
 
 		String iface = NetworkUtils.getFirstHostAddress(true);
@@ -264,7 +263,7 @@ public class Stack implements Iterable<StackElement> {
 		return tcpStack;
 	}
 
-	public static Stack zeroMqStack(Configuration config, Address local,
+	public static Stack zeroMqStack(NetworkConfiguration config, Address local,
 			String name) {
 
 		String iface = NetworkUtils.getFirstHostAddress(true);
@@ -289,7 +288,7 @@ public class Stack implements Iterable<StackElement> {
 		return tcpStack;
 	}
 
-	public static Stack jnetStack(Configuration config, Address local,
+	public static Stack jnetStack(NetworkConfiguration config, Address local,
 			String name) {
 
 		String iface = NetworkUtils.getFirstHostAddress();
@@ -330,7 +329,7 @@ public class Stack implements Iterable<StackElement> {
 		}
 	}
 
-	public static Stack rabbitStack(Configuration config, Address local,
+	public static Stack rabbitStack(NetworkConfiguration config, Address local,
 			String name) {
 		String iface = NetworkUtils.getFirstHostAddress(true);
 
@@ -354,7 +353,7 @@ public class Stack implements Iterable<StackElement> {
 		return tcpStack;
 	}
 
-	public static Stack localStack(Configuration config, Address address,
+	public static Stack localStack(NetworkConfiguration config, Address address,
 			String name) {
 		LoopbackMP local = new LoopbackMP();
 		DataProcessor data = new DataProcessor(local, config);

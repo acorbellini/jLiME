@@ -54,13 +54,13 @@ public class UDPResender extends SimpleMessageProcessor {
 
 	Timer t = new Timer("Resender Timer");
 
-	private Configuration config;
+	private NetworkConfiguration config;
 
 	protected ConcurrentHashMap<Address, List<UUID>> acks = new ConcurrentHashMap<>();
 
 	private int max_size;
 
-	public UDPResender(MessageProcessor next, Configuration config, int max_size) {
+	public UDPResender(MessageProcessor next, NetworkConfiguration config, int max_size) {
 		super(next, "UDP resender");
 		this.max_size = max_size;
 		next.addMessageListener(MessageType.ACK, new MessageListener() {

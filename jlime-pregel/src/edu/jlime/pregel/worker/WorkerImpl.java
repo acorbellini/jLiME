@@ -1,5 +1,6 @@
 package edu.jlime.pregel.worker;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.UUID;
 
@@ -50,7 +51,7 @@ public class WorkerImpl implements Worker {
 		contexts.get(taskID).execute();
 	}
 
-	public Graph getLocalGraph(String name) {
+	public Graph getLocalGraph(String name) throws Exception {
 		return (Graph) this.rpc.getTarget(name);
 	}
 
@@ -111,7 +112,8 @@ public class WorkerImpl implements Worker {
 	}
 
 	@Override
-	public void sendDoubleBroadcastMessage(long from, double val, int taskid) {
+	public void sendDoubleBroadcastMessage(long from, double val, int taskid)
+			throws Exception {
 		contexts.get(taskid).queueBroadcastDoubleVertexData(from, val);
 	}
 }

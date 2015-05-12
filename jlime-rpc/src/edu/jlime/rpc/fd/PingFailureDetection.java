@@ -15,7 +15,7 @@ import edu.jlime.core.transport.Address;
 import edu.jlime.core.transport.FailureListener;
 import edu.jlime.core.transport.FailureProvider;
 import edu.jlime.metrics.metric.Metrics;
-import edu.jlime.rpc.Configuration;
+import edu.jlime.rpc.NetworkConfiguration;
 import edu.jlime.rpc.message.Message;
 import edu.jlime.rpc.message.MessageListener;
 import edu.jlime.rpc.message.MessageProcessor;
@@ -46,7 +46,7 @@ public class PingFailureDetection implements StackElement, FailureProvider {
 	}
 
 	public PingFailureDetection(final MessageProcessor conn,
-			Configuration config) {
+			NetworkConfiguration config) {
 		this.conn = conn;
 		this.max_missed = config.max_pings;
 		this.ping_delay = config.ping_delay;

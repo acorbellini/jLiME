@@ -14,7 +14,7 @@ import edu.jlime.core.transport.Address;
 import edu.jlime.core.transport.Streamer;
 import edu.jlime.metrics.metric.Metrics;
 import edu.jlime.rpc.AddressListProvider;
-import edu.jlime.rpc.Configuration;
+import edu.jlime.rpc.NetworkConfiguration;
 import edu.jlime.rpc.NetworkProtocolFactory;
 import edu.jlime.rpc.message.AddressType;
 import edu.jlime.rpc.message.Message;
@@ -211,7 +211,7 @@ public class MultiInterface extends MessageProcessor implements
 		}
 	}
 
-	public static MultiInterface create(AddressType type, Configuration config,
+	public static MultiInterface create(AddressType type, NetworkConfiguration config,
 			NetworkProtocolFactory fact) {
 		return new MultiInterface(type, config.interface_max_update_time, fact);
 	}

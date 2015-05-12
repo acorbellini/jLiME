@@ -17,7 +17,7 @@ public abstract class NetworkProtocolFactory {
 	public abstract NetworkProtocol getProtocol(String addr);
 
 	public static NetworkProtocolFactory udp(final Address local,
-			final Configuration config) {
+			final NetworkConfiguration config) {
 		return new NetworkProtocolFactory(AddressType.MCAST) {
 
 			@Override
@@ -32,7 +32,7 @@ public abstract class NetworkProtocolFactory {
 	}
 
 	public static NetworkProtocolFactory tcp(final Address localID,
-			final Configuration config) {
+			final NetworkConfiguration config) {
 		return new NetworkProtocolFactory(AddressType.TCP) {
 
 			@Override
@@ -45,7 +45,7 @@ public abstract class NetworkProtocolFactory {
 	}
 
 	public static NetworkProtocolFactory mcast(final Address local,
-			final Configuration config) {
+			final NetworkConfiguration config) {
 		return new NetworkProtocolFactory(AddressType.UDP) {
 
 			@Override

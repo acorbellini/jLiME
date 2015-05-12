@@ -20,7 +20,6 @@ import edu.jlime.core.transport.Address;
 import edu.jlime.rpc.SocketFactory;
 import edu.jlime.rpc.message.AddressType;
 import edu.jlime.rpc.message.SocketAddress;
-import edu.jlime.rpc.np.DataPacket;
 import edu.jlime.rpc.np.NetworkProtocol;
 import edu.jlime.util.ByteBuffer;
 import edu.jlime.util.RingQueue;

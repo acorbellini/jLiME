@@ -11,10 +11,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.log4j.Logger;
 
-import edu.jlime.core.cache.jLiMELRUMap;
 import edu.jlime.core.transport.Address;
 import edu.jlime.metrics.metric.Metrics;
-import edu.jlime.rpc.Configuration;
+import edu.jlime.rpc.NetworkConfiguration;
 import edu.jlime.rpc.message.Message;
 import edu.jlime.rpc.message.MessageListener;
 import edu.jlime.rpc.message.MessageProcessor;
@@ -47,7 +46,7 @@ public class DataProcessor extends SimpleMessageProcessor implements
 
 	private AtomicInteger idCount = new AtomicInteger(0);
 
-	public DataProcessor(MessageProcessor next, Configuration config) {
+	public DataProcessor(MessageProcessor next, NetworkConfiguration config) {
 		super(next, "Data");
 		this.comp = null;
 		try {
