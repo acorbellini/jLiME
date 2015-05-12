@@ -1,7 +1,6 @@
 package edu.jlime.pregel.queues;
 
 import edu.jlime.pregel.mergers.ObjectMessageMerger;
-import edu.jlime.pregel.messages.DoublePregelMessage;
 import edu.jlime.pregel.messages.GenericPregelMessage;
 import edu.jlime.pregel.messages.PregelMessage;
 import edu.jlime.pregel.worker.WorkerTask;

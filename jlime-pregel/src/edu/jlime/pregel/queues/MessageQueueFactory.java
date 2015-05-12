@@ -31,7 +31,7 @@ public abstract class MessageQueueFactory {
 
 			@Override
 			public PregelMessageQueue getMQ() {
-				return new FloatFastUtilHashedMessageQueue(merger);
+				return new FloatHashedMessageQueue(merger);
 			}
 		};
 	}

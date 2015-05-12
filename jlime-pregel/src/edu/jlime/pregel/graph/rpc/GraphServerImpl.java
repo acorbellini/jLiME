@@ -271,7 +271,7 @@ public class GraphServerImpl extends RPCClient implements Graph, Transferible {
 		this.localRPC = RPCDispatcher.getLocalDispatcher(super.dest);
 	}
 
-	public Graph getLocal() {
+	public Graph getLocal() throws Exception {
 		if (local == null) {
 			synchronized (this) {
 				if (local == null) {

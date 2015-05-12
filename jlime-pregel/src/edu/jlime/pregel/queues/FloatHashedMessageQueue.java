@@ -8,11 +8,8 @@ import edu.jlime.pregel.worker.FloatSenderCallback;
 import edu.jlime.pregel.worker.WorkerTask;
 import edu.jlime.pregel.worker.rpc.Worker;
 import gnu.trove.iterator.TLongFloatIterator;
-import gnu.trove.list.array.TFloatArrayList;
-import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.map.hash.TLongFloatHashMap;
 import gnu.trove.map.hash.TObjectIntHashMap;
-import it.unimi.dsi.fastutil.longs.LongIterator;
 
 import java.util.ArrayList;
 import java.util.HashMap;

@@ -30,11 +30,6 @@
 			<artifactId>lmdbjni</artifactId>
 			<version>0.1.2</version>
 		</dependency>
-		<dependency>
-			<groupId>org.fusesource.leveldbjni</groupId>
-			<artifactId>leveldbjni-all</artifactId>
-			<version>1.8</version>
-		</dependency>
 	</dependencies>
 	<build>
 		<plugins>

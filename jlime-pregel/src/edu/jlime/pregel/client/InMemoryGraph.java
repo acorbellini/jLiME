@@ -42,8 +42,8 @@ public class InMemoryGraph implements Graph, Transferible {
 
 		@Override
 		public Graph getGraph(RPCDispatcher rpc) throws Exception {
-			return new InMemoryGraph(rpc, "graph",
-					SplitFunctions.rr(), PregelClient.workerFilter(), 2);
+			return new InMemoryGraph(rpc, "graph", SplitFunctions.rr(),
+					PregelClient.workerFilter(), 2);
 		}
 	}
 

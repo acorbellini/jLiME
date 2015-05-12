@@ -201,7 +201,7 @@ public class RPCCreator {
 				+ "}\n");
 
 		writer.write("public " + serverInterface.getSimpleName()
-				+ " getLocal() {" + "	if(local==null){"
+				+ " getLocal() throws Exception {" + "	if(local==null){"
 				+ "		synchronized(this){" + "			if(local==null){"
 				+ "				this.local = (" + serverInterface.getSimpleName()
 				+ "							  ) localRPC.getTarget(targetID);\n" + "			}" + "		}"

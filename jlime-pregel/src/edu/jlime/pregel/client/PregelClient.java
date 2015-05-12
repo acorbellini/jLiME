@@ -16,7 +16,7 @@ import edu.jlime.pregel.worker.WorkerServer;
 import edu.jlime.pregel.worker.rpc.Worker;
 import edu.jlime.pregel.worker.rpc.WorkerBroadcast;
 import edu.jlime.pregel.worker.rpc.WorkerFactory;
-import edu.jlime.rpc.Configuration;
+import edu.jlime.rpc.NetworkConfiguration;
 import edu.jlime.rpc.JLiMEFactory;
 
 public class PregelClient {
@@ -68,7 +68,7 @@ public class PregelClient {
 	}
 
 	public static PregelClient build(int min) throws Exception {
-		Configuration config = new Configuration();
+		NetworkConfiguration config = new NetworkConfiguration();
 		config.port = 4040;
 		config.mcastport = 5050;
 		HashMap<String, String> data = new HashMap<>();

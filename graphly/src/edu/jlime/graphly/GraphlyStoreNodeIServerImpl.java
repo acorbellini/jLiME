@@ -372,7 +372,7 @@ public class GraphlyStoreNodeIServerImpl extends RPCClient implements
 		this.localRPC = RPCDispatcher.getLocalDispatcher(super.dest);
 	}
 
-	public GraphlyStoreNodeI getLocal() {
+	public GraphlyStoreNodeI getLocal() throws Exception {
 		if (local == null) {
 			synchronized (this) {
 				if (local == null) {

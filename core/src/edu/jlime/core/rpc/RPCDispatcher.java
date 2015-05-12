@@ -83,6 +83,8 @@ public class RPCDispatcher implements TransportListener {
 				}
 			});
 
+	private volatile boolean stopped = false;
+
 	public RPCDispatcher(Transport tr) {
 		this.tr = tr;
 		this.marshaller = new Marshaller(this);
@@ -159,6 +161,7 @@ public class RPCDispatcher implements TransportListener {
 
 	public void stop() throws Exception {
 		// asyncExec.shutdown();
+		this.stopped = true;
 		broadcastExec.shutdown();
 		tr.stop();
 		localdispatchers.remove(localPeer);
@@ -496,13 +499,14 @@ public class RPCDispatcher implements TransportListener {
 		}
 	}
 
-	public Object getTarget(String name) {
+	public Object getTarget(String name) throws Exception {
 		RPCStatus rpcStatus = targetsStatuses.get(name);
 		if (rpcStatus == null || !rpcStatus.equals(RPCStatus.STARTED))
 			synchronized (targetsStatuses) {
 				rpcStatus = targetsStatuses.get(name);
-				while (rpcStatus == null
-						|| !rpcStatus.equals(RPCStatus.STARTED))
+				while (!stopped
+						&& (rpcStatus == null || !rpcStatus
+								.equals(RPCStatus.STARTED)))
 					try {
 						if (log.isDebugEnabled())
 							log.debug("Waiting for target " + name
@@ -513,7 +517,8 @@ public class RPCDispatcher implements TransportListener {
 						e.printStackTrace();
 					}
 			}
-
+		if (stopped)
+			throw new Exception("RPC was stopped");
 		return targets.get(name);
 	}
 

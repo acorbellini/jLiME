@@ -5,6 +5,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -48,16 +49,23 @@ import gnu.trove.set.hash.TLongHashSet;
 
 public class GraphlyStoreNode implements GraphlyStoreNodeI {
 
-	private static byte VERTEX = 0x0;
-	private static byte ADJACENCY = 0x1;
-	private static byte VERTEX_PROP = 0x2;
-	private static byte GRAPH = 0x3;
-	private static byte EDGE_PROP = 0x4;
-	private static byte COUNT = 0x5;
+	private static final byte VERTEX = 0x0;
+	private static final byte ADJACENCY = 0x1;
+	private static final byte VERTEX_PROP = 0x2;
+	private static final byte GRAPH = 0x3;
+	private static final byte EDGE_PROP = 0x4;
+	private static final byte COUNT = 0x5;
+	private static final byte FLOAT_PROPS = 0x6;
 
 	Logger log = Logger.getLogger(GraphlyStoreNode.class);
 
-	// private Graph graph;
+	Random random = new Random(System.currentTimeMillis());
+
+	Semaphore sem = new Semaphore(2);
+	private Map<String, Object> defaults = new ConcurrentHashMap<>();
+	private TObjectDoubleHashMap<String> defaultDoubleMap = new TObjectDoubleHashMap<>();
+	private Map<String, TObjectFloatHashMap<String>> defaultFloatMap = new ConcurrentHashMap<String, TObjectFloatHashMap<String>>();
+
 	private LocalStore store;
 
 	Cache<String, Boolean> graph_cache = CacheBuilder.newBuilder()
@@ -78,16 +86,18 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	private InMemoryGraphFloatProperties floatProps = new InMemoryGraphFloatProperties();
 
 	private Map<String, Map<Long, Map<String, Object>>> temps = new ConcurrentHashMap<>();
+	private GraphlyConfiguration config;
 
 	// Store store;
 
-	public GraphlyStoreNode(String localpath, RPCDispatcher rpc)
-			throws IOException {
+	public GraphlyStoreNode(String localpath, GraphlyConfiguration config,
+			RPCDispatcher rpc) throws IOException {
 
-		try {
-			Files.createDirectory(Paths.get(localpath));
-		} catch (Exception e) {
-		}
+		this.config = config;
+
+		Path path = Paths.get(localpath);
+		if (!path.toFile().exists())
+			Files.createDirectory(path);
 
 		this.localRanges = new File(localpath + "/ranges.prop");
 		if (!localRanges.exists())
@@ -104,7 +114,8 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 			}
 		}
 		// this.graph = Neo4jGraph.open(localpath + "/neo4j");
-		this.store = new LocalStore(localpath);
+		this.store = new LocalStore(localpath, config.storeCache,
+				config.storePool);
 	}
 
 	@Override
@@ -205,8 +216,6 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 		return buff.build();
 	}
 
-	Random random = new Random(System.currentTimeMillis());
-
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -258,51 +267,48 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 		return getEdges0(graph, id);
 	}
 
+	@SuppressWarnings("unchecked")
 	private long[] getEdges0(final String graph, long id)
 			throws ExecutionException {
+		if (config.edgeCacheType.equals("no-cache"))
+			return loadEdgesFromStore(graph, id);
+
 		LoadingCache<Long, long[]> cache = adj_cache.get(graph);
 		if (cache == null) {
 			synchronized (adj_cache) {
 				cache = adj_cache.get(graph);
 				if (cache == null) {
-					long size = (long) (Runtime.getRuntime().maxMemory() * .05f);
+
 					// log.info("Max adjacency size: " + (size / (1024f *
 					// 1024f))
 					// + " MB");
-					cache = CacheBuilder
-							.newBuilder()
-							// .maximumSize(1000)
-							.maximumWeight(size)
-							.weigher(new Weigher<Long, long[]>() {
+					@SuppressWarnings("rawtypes")
+					CacheBuilder builder = CacheBuilder.newBuilder();
+					if (config.edgeCacheType.equals("mem-based")) {
+						long size = (long) (Runtime.getRuntime().maxMemory() * config.cacheSize);
+						builder = builder.maximumWeight(size)
+								.weigher(new Weigher<Long, long[]>() {
 
-								@Override
-								public int weigh(Long key, long[] value) {
-									// Es lo que más ocupa en un heap dump=> 68
-									// de softEntry y 68 de weightedEntry
-									return 68 + 68 + 24 // size of Long
-											+ 24 + value.length * 8;
-								}
-							}).softValues()
-							.build(new CacheLoader<Long, long[]>() {
-
-								@Override
-								public long[] load(Long key) throws Exception {
-									byte[] array;
-									try {
-										array = store.load(buildAdjacencyKey(
-												graph, key));
-										if (array != null) {
-											long[] byteArrayToLongArray = DataTypeUtils
-													.byteArrayToLongArray(array);
-											return byteArrayToLongArray;
-										}
-									} catch (Exception e) {
-										e.printStackTrace();
-
+									@Override
+									public int weigh(Long key, long[] value) {
+										// Es lo que más ocupa en un heap dump=>
+										// 68
+										// de softEntry y 68 de weightedEntry
+										return 68 + 68 + 24 // size of Long
+												+ 24 + value.length * 8;
 									}
-									return new long[] {};
-								}
-							});
+								}).softValues();
+					} else if (config.edgeCacheType.equals("fixed-size")) {
+						builder = builder.maximumSize(config.cacheLength);
+					}
+					cache = builder.build(new CacheLoader<Long, long[]>() {
+
+						@Override
+						public long[] load(Long key) throws Exception {
+							return loadEdgesFromStore(graph, key);
+						}
+
+					});
 					adj_cache.put(graph, cache);
 				}
 			}
@@ -323,6 +329,22 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 		// }
 		// return new long[] {};
 
+	}
+
+	private long[] loadEdgesFromStore(final String graph, Long key) {
+		byte[] array;
+		try {
+			array = store.load(buildAdjacencyKey(graph, key));
+			if (array != null) {
+				long[] byteArrayToLongArray = DataTypeUtils
+						.byteArrayToLongArray(array);
+				return byteArrayToLongArray;
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+
+		}
+		return new long[] {};
 	}
 
 	/*
@@ -365,7 +387,7 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 						if (intBytes != null)
 							toStore = DataTypeUtils.byteArrayToInt(intBytes);
 						store.store(buildCountKey,
-								DataTypeUtils.intToByteArray(toStore));
+								DataTypeUtils.intToByteArray(toStore + 1));
 					}
 
 				}
@@ -392,11 +414,6 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	public void addInEdgePlaceholder(String graph, long id2, long id,
 			String label) throws Exception {
 	}
-
-	Semaphore sem = new Semaphore(2);
-	private Map<String, Object> defaults = new ConcurrentHashMap<>();
-	private TObjectDoubleHashMap<String> defaultDoubleMap = new TObjectDoubleHashMap<>();
-	private Map<String, TObjectFloatHashMap<String>> defaultFloatMap = new ConcurrentHashMap<String, TObjectFloatHashMap<String>>();
 
 	@Override
 	public GraphlyCount countEdges(String graph, Dir dir, int max_edges,
@@ -679,16 +696,43 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 
 	@Override
 	public float getFloat(String graph, long v, String k) throws Exception {
-		float tObjectDoubleHashMap = floatProps.get(graph, v, k);
-		if (tObjectDoubleHashMap == floatProps.NOT_FOUND)
-			return getDefaultFloat(graph, k);
-		return tObjectDoubleHashMap;
+		if (config.persistfloats) {
+			byte[] key = buildFloatPropertyKey(graph, v, k);
+			byte[] val = store.load(key);
+			if (val == null) {
+				return getDefaultFloat(graph, k);
+			}
+			return Float.intBitsToFloat(DataTypeUtils.byteArrayToInt(val));
+		} else {
+			float tObjectDoubleHashMap = floatProps.get(graph, v, k);
+			if (tObjectDoubleHashMap == InMemoryGraphFloatProperties.NOT_FOUND)
+				return getDefaultFloat(graph, k);
+			return tObjectDoubleHashMap;
+		}
 	}
 
 	@Override
 	public void setFloat(String graph, long v, String k, float currentVal)
 			throws Exception {
-		floatProps.put(graph, v, k, currentVal);
+		if (config.persistfloats) {
+			byte[] key = buildFloatPropertyKey(graph, v, k);
+			store.store(key, DataTypeUtils.intToByteArray(Float
+					.floatToIntBits(currentVal)));
+		} else {
+			floatProps.put(graph, v, k, currentVal);
+		}
+	}
+
+	private static byte[] buildFloatPropertyKey(String g, long id, String k) {
+		byte[] gName = g.getBytes();
+		byte[] keyBytes = k.getBytes();
+		ByteBuffer buff = new ByteBuffer(1 + 4 + gName.length + keyBytes.length
+				+ 8);
+		buff.put(FLOAT_PROPS);
+		buff.putByteArray(gName);
+		buff.putByteArray(keyBytes);
+		buff.putRawByteArray(DataTypeUtils.longToByteArrayOrdered(id));
+		return buff.build();
 	}
 
 	@Override

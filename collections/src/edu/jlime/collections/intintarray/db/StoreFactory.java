@@ -32,7 +32,7 @@ public class StoreFactory {
 		case H2:
 			return new H2(name, path);
 		case LEVELDB:
-			return new LevelDb(name, path);
+			// return new LevelDb(name, path);
 		default:
 			if (storeClass != null) {
 				try {

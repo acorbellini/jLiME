@@ -12,7 +12,7 @@ public class FloatArrayConverter implements TypeConverter {
 	}
 
 	@Override
-	public Object fromArray(ByteBuffer buff) throws Exception {		
+	public Object fromArray(ByteBuffer buff) throws Exception {
 		return buff.getFloatArray();
 	}
 

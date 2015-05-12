@@ -1,24 +1,16 @@
 package edu.jlime.pregel.queues;
 
-import edu.jlime.pregel.messages.FloatPregelMessage;
-import edu.jlime.pregel.messages.PregelMessage;
-import edu.jlime.pregel.worker.FloatMessageMerger;
-import edu.jlime.pregel.worker.WorkerTask;
-import edu.jlime.pregel.worker.rpc.Worker;
-import gnu.trove.iterator.TLongFloatIterator;
-import gnu.trove.list.array.TFloatArrayList;
-import gnu.trove.list.array.TLongArrayList;
-import gnu.trove.map.hash.TLongFloatHashMap;
-import gnu.trove.map.hash.TObjectFloatHashMap;
-import gnu.trove.map.hash.TObjectIntHashMap;
-
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
 import com.carrotsearch.hppc.LongFloatOpenHashMap;
 import com.carrotsearch.hppc.cursors.LongFloatCursor;
+
+import edu.jlime.pregel.messages.FloatPregelMessage;
+import edu.jlime.pregel.messages.PregelMessage;
+import edu.jlime.pregel.worker.FloatMessageMerger;
+import edu.jlime.pregel.worker.WorkerTask;
 
 public class FloatHPPCHashedMessageQueue implements PregelMessageQueue {
 	private volatile LongFloatOpenHashMap readOnly = new LongFloatOpenHashMap(

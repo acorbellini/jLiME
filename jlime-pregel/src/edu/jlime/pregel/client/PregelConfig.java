@@ -7,16 +7,22 @@ import edu.jlime.pregel.coordinator.Aggregator;
 import edu.jlime.pregel.mergers.MessageMerger;
 
 public class PregelConfig implements Serializable {
+	
 	private HashMap<String, Aggregator> aggregators = new HashMap<>();
+	
 	private MessageMerger merger;
 	private SplitFunction split;
 	private Integer threads = null;
+	
 	private int maxSteps = 0;
 	private boolean executeOnAll = false;
 	private String queue_limit = "auto";
 	private GraphConnectionFactory graph;
 	private int bQueue = 100;
 	private Integer send_threads = null;
+	
+	private boolean persitentVertexList = true;
+	private boolean persitentCurrentSplitList = true;
 
 	public PregelConfig graph(GraphConnectionFactory graph) {
 		this.graph = graph;
@@ -128,7 +134,7 @@ public class PregelConfig implements Serializable {
 	public int getQueueSize() {
 		int i = 0;
 		if (queue_limit.equals("auto")) {
-			float max = Runtime.getRuntime().maxMemory() * .3f;
+			float max = Runtime.getRuntime().maxMemory() * .5f;
 			float entry_size = 8f + 8f + 64f;
 			i = (int) ((max / (entry_size)) / getSegments());
 		} else
@@ -147,5 +153,23 @@ public class PregelConfig implements Serializable {
 	public PregelConfig sendthreads(int send_threads) {
 		this.send_threads = send_threads;
 		return this;
+	}
+
+	public PregelConfig persistVList(boolean persist) {
+		this.persitentVertexList = persist;
+		return this;
+	}
+
+	public PregelConfig persistCurrSplit(boolean persist) {
+		this.persitentCurrentSplitList = persist;
+		return this;
+	}
+
+	public boolean isPersitentCurrentSplitList() {
+		return persitentCurrentSplitList;
+	}
+
+	public boolean isPersitentVertexList() {
+		return persitentVertexList;
 	}
 }

@@ -23,6 +23,7 @@ import edu.jlime.core.marshalling.TypeConverter;
 import edu.jlime.core.marshalling.TypeConverters;
 import edu.jlime.core.rpc.ClientManager;
 import edu.jlime.core.rpc.RPCDispatcher;
+import edu.jlime.graphly.GraphlyConfiguration;
 import edu.jlime.graphly.GraphlyCount;
 import edu.jlime.graphly.GraphlyStoreNodeI;
 import edu.jlime.graphly.GraphlyStoreNodeIBroadcast;
@@ -37,7 +38,7 @@ import edu.jlime.graphly.util.Gather;
 import edu.jlime.graphly.util.GraphlyUtil;
 import edu.jlime.jd.JobDispatcher;
 import edu.jlime.pregel.client.PregelClient;
-import edu.jlime.rpc.Configuration;
+import edu.jlime.rpc.NetworkConfiguration;
 import edu.jlime.rpc.JLiMEFactory;
 import edu.jlime.util.ByteBuffer;
 import gnu.trove.iterator.TLongIntIterator;
@@ -163,10 +164,12 @@ public class Graphly implements Closeable {
 	}
 
 	public static Graphly buildLocal(String path) throws Exception {
-		Configuration config = new Configuration();
-		config.protocol = "local";
+		NetworkConfiguration net = new NetworkConfiguration();
+		GraphlyConfiguration gconfig = new GraphlyConfiguration();
+
+		net.protocol = "local";
 		GraphlyServer server = GraphlyServer.createServer(path, 0, true, 1,
-				config);
+				net, gconfig);
 		return server.getGraphly();
 	}
 

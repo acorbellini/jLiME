@@ -10,7 +10,6 @@ import org.fusesource.leveldbjni.JniDBFactory;
 import org.iq80.leveldb.DB;
 import org.iq80.leveldb.DBIterator;
 import org.iq80.leveldb.Options;
-import org.iq80.leveldb.ReadOptions;
 
 import com.google.common.primitives.UnsignedBytes;
 
@@ -23,10 +22,16 @@ public class LocalStore {
 	private String sPath;
 	private volatile boolean isClosed = false;
 
+	int cacheSize;
+
+	int memPool;
+
 	private Logger log = Logger.getLogger(LocalStore.class);
 
-	public LocalStore(String sPath) {
+	public LocalStore(String sPath, int cacheSize, int memPool) {
 		this.sPath = sPath;
+		this.cacheSize = cacheSize;
+		this.memPool = memPool;
 	}
 
 	public DB getDb() throws Exception {
@@ -39,6 +44,9 @@ public class LocalStore {
 			synchronized (this) {
 				if (db == null) {
 
+					System.out.println(System.getProperty("java.library.path"));
+					System.out.println(System.getenv("java.library.path"));
+					
 					org.iq80.leveldb.Logger logger = new org.iq80.leveldb.Logger() {
 						public void log(String message) {
 							if (log.isDebugEnabled())
@@ -48,8 +56,8 @@ public class LocalStore {
 					options = new Options();
 					options.logger(logger);
 					options.createIfMissing(true);
-					options.cacheSize(400 * 1024 * 1024);
-					JniDBFactory.pushMemoryPool(1024 * 512);
+					options.cacheSize(cacheSize);
+					JniDBFactory.pushMemoryPool(memPool);
 
 					File dirDB = new File(sPath);
 					if (!dirDB.exists())
@@ -70,7 +78,13 @@ public class LocalStore {
 
 	public byte[] load(byte[] key) throws Exception {
 		// DataTypeUtils.longToByteArray(key)
-		return getDb().get(key);
+		while (true)
+			try {
+				return getDb().get(key);
+			} catch (Exception e) {
+				if (!e.getMessage().contains("code: 32"))
+					throw e;
+			}
 		// return res;
 	}
 
@@ -83,7 +97,7 @@ public class LocalStore {
 			return;
 		try {
 			// Test for being open
-			db.get(new byte[] { 'a' });
+			load(new byte[] { 'a' });
 			db.close();
 			isClosed = true;
 		} catch (Exception e) {
@@ -96,13 +110,24 @@ public class LocalStore {
 		int cont = 0;
 		DBIterator iterator = getDb().iterator();
 		Entry<byte[], byte[]> e = null;
+
 		try {
-			for (iterator.seek(from); iterator.hasNext();) {
-				e = iterator.next();
-				if (UnsignedBytes.lexicographicalComparator().compare(to,
-						e.getKey()) > 0)
-					cont++;
-			}
+			boolean done = false;
+			while (!done)
+				try {
+					for (iterator.seek(from); iterator.hasNext();) {
+						e = iterator.next();
+						if (UnsignedBytes.lexicographicalComparator().compare(
+								to, e.getKey()) > 0)
+							cont++;
+						else
+							done = true;
+					}
+					done = true;
+				} catch (Exception e1) {
+					if (!e1.getMessage().contains("code: 32"))
+						throw e1;
+				}
 		} finally {
 			iterator.close();
 		}
@@ -117,20 +142,28 @@ public class LocalStore {
 		Entry<byte[], byte[]> e = null;
 		boolean first = true;
 		try {
-			for (iterator.seek(from); iterator.hasNext();) {
-				e = iterator.next();
-				if (UnsignedBytes.lexicographicalComparator().compare(to,
-						e.getKey()) > 0) {
-					if (!first || (first && includeFirst)) {
-						ret.add(e.getValue());
-						cont++;
+			boolean done = false;
+			while (!done)
+				try {
+					for (iterator.seek(from); iterator.hasNext();) {
+						e = iterator.next();
+						if (UnsignedBytes.lexicographicalComparator().compare(
+								to, e.getKey()) > 0) {
+							if (!first || (first && includeFirst)) {
+								ret.add(e.getValue());
+								cont++;
+							}
+							first = false;
+							if (cont >= max)
+								return ret;
+						} else
+							return ret;
 					}
-					first = false;
-					if (cont >= max)
-						return ret;
-				} else
-					return ret;
-			}
+					done = true;
+				} catch (Exception e1) {
+					if (!e1.getMessage().contains("code: 32"))
+						throw e1;
+				}
 
 		} finally {
 			iterator.close();

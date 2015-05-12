@@ -62,11 +62,6 @@
 			<version>3.0.3</version>
 		</dependency>
 		<dependency>
-			<groupId>org.fusesource.leveldbjni</groupId>
-			<artifactId>leveldbjni-all</artifactId>
-			<version>1.8</version>
-		</dependency>
-		<dependency>
 			<groupId>org.mapdb</groupId>
 			<artifactId>mapdb</artifactId>
 			<version>1.0.6</version>
@@ -90,6 +85,29 @@
 			<groupId>org.deephacks.lmdbjni</groupId>
 			<artifactId>lmdbjni-linux64</artifactId>
 			<version>0.3.2</version>
+		</dependency>
+		<dependency>
+			<groupId>REPL</groupId>
+			<artifactId>REPL</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>com.sun.jersey</groupId>
+			<artifactId>jersey-server</artifactId>
+			<version>1.19</version>
+		</dependency>
+		<dependency>
+			<groupId>com.sun.net.httpserver</groupId>
+			<artifactId>http</artifactId>
+			<version>20070405</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.fusesource</groupId>
+			<artifactId>leveldbjni</artifactId>
+			<version>99</version>
+			<scope>system</scope>
+			<systemPath>${project.basedir}/lib/leveldbjni-99.jar</systemPath>
 		</dependency>
 	</dependencies>
 </project>

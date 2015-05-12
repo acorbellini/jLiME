@@ -1,6 +1,5 @@
 package edu.jlime.pregel.messages;
 
-
 public class DoublePregelMessage extends PregelMessage {
 
 	double d = 0d;

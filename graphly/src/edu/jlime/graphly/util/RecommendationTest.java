@@ -136,7 +136,7 @@ public class RecommendationTest {
 		else {
 			String localdir = ctxt.getBean("localdir", String.class);
 			this.localServers = GraphlyServer.createServers(localdir,
-					this.servers, true, this.servers);
+					this.servers, true, this.servers, null, null);
 		}
 		System.out.println("Creating client, waiting for " + servers
 				+ " execution nodes.");

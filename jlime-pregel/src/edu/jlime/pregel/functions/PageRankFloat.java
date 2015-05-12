@@ -1,9 +1,6 @@
 package edu.jlime.pregel.functions;
 
 import java.util.Iterator;
-import java.util.List;
-
-import org.apache.log4j.Logger;
 
 import edu.jlime.pregel.client.WorkerContext;
 import edu.jlime.pregel.graph.VertexFunction;
