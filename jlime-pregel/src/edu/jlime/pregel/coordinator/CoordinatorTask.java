@@ -26,6 +26,8 @@ import edu.jlime.pregel.worker.rpc.WorkerBroadcast;
 import edu.jlime.pregel.worker.rpc.WorkerFactory;
 
 public class CoordinatorTask {
+	private static final String INIT_MSG = "_INIT_MSG";
+
 	int taskID;
 
 	private volatile boolean finished = true;
@@ -54,22 +56,28 @@ public class CoordinatorTask {
 		this.cli = cli;
 	}
 
-	public synchronized void finished(UUID workerID, Boolean didWork) {
+	public synchronized void finished(UUID workerID, Boolean didWork,
+			HashMap<String, Aggregator> ags) {
+
+		for (Entry<String, Aggregator> e : ags.entrySet())
+			aggregators.get(e.getKey()).merge(e.getValue());
+
 		if (didWork)
 			finished = false;
 
-		if (log.isDebugEnabled())
-			log.debug("Received finished  from worker : " + workerID);
+		log.info("Received finished  from worker : " + workerID);
 
 		currentStep.remove(workerID);
 
 		notifyAll();
-		if (log.isDebugEnabled())
-			log.debug("Remaining in step: " + currentStep.size());
+
+		log.info("Remaining in step: " + currentStep.size());
 	}
 
 	public PregelExecution execute(final VertexFunction func, long[] list,
 			final PregelConfig config) throws Exception {
+
+		HaltCondition haltCondition = config.getHaltCondition();
 
 		final SplitFunction split = config.getSplit();
 
@@ -78,6 +86,7 @@ public class CoordinatorTask {
 		log.info("Creating tasks");
 		long startInit = System.currentTimeMillis();
 		workerMgr.broadcast().createTask(taskID, cli, func, list, config);
+
 		log.info("Finished creating tasks in "
 				+ (System.currentTimeMillis() - startInit) / 1000f + " sec.");
 
@@ -85,16 +94,26 @@ public class CoordinatorTask {
 		workerMgr.broadcast().nextSuperstep(-1, taskID, split);
 
 		log.info("Broadcasting initial message");
-		workerMgr.broadcast().sendBroadcastMessage(-1l, null, taskID);
+		workerMgr.broadcast().sendBroadcastMessage(INIT_MSG, -1l, null, taskID);
 
 		int step = 0;
-		for (; step < config.getMaxSteps(); step++) {
+		for (; step < config.getMaxSteps()
+				&& (haltCondition == null || !haltCondition.eval(this, step)); step++) {
+
+			log.info("Updating aggregators.");
+			for (Entry<String, Aggregator> e : aggregators.entrySet()) {
+				e.getValue().superstep(step);
+			}
+
+			log.info("Initializing current list of workers");
+			for (Worker w : workerMgr.getAll())
+				currentStep.add(w.getID());
+
 			long start = System.currentTimeMillis();
 			finished = true;
 
 			workerMgr.broadcast().nextSuperstep(step, taskID, split);
 
-			// if (log.isDebugEnabled())
 			log.info("Running superstep " + step + " Remaining "
 					+ (config.getMaxSteps() - step));
 
@@ -105,18 +124,10 @@ public class CoordinatorTask {
 					wait();
 			}
 
-			// if (log.isDebugEnabled())
 			log.info("Finished superstep " + step);
 
 			if (finished)
 				break;
-
-			for (Worker w : workerMgr.getAll())
-				currentStep.add(w.getID());
-
-			for (Entry<String, Aggregator> e : aggregators.entrySet()) {
-				e.getValue().superstep(step);
-			}
 
 			split.update(workerMgr.getPeers());
 
@@ -131,36 +142,7 @@ public class CoordinatorTask {
 		return new PregelExecution(step, taskID);
 	}
 
-	// private Graph mergeGraph() throws Exception {
-	// if (log.isDebugEnabled())
-	// log.debug("Merging Graph");
-	//
-	// Graph ret = null;
-	// for (Worker w : coord.getWorkers()) {
-	// Graph result = w.getResult(taskID);
-	// if (ret == null)
-	// ret = result;
-	// if (ret != result)
-	// ret.merge(result);
-	// }
-	// return ret;
-	// }
-
-	public Double getAggregatedValue(Long v, String k) {
-		log.info("Obtaining aggregated value from " + k + " for " + v);
-		Aggregator a = aggregators.get(k);
-		if (a != null) {
-			Double val = a.getVal(v);
-			log.info("Obtained " + k + " for " + v + ": " + val);
-			return val;
-		}
-		log.info("No aggregator by that name: " + k);
-		return null;
-	}
-
-	public void setAggregatedValue(Long v, String name, Double val) {
-		Aggregator a = aggregators.get(name);
-		if (a != null)
-			a.setVal(v, val);
+	public Aggregator getAggregator(String ag) {
+		return aggregators.get(ag);
 	}
 }

@@ -118,7 +118,6 @@ public class SalsaRepeat implements Repeat<long[]> {
 					}
 					return res;
 				}
-
 			});
 			authCalc += res;
 		}
@@ -140,7 +139,6 @@ public class SalsaRepeat implements Repeat<long[]> {
 					return res;
 				}
 			});
-
 			hubCalc += res;
 		}
 

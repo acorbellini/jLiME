@@ -9,8 +9,8 @@ import edu.jlime.metrics.jmx.MetricsJMX;
 import edu.jlime.metrics.metric.Metrics;
 import edu.jlime.metrics.sysinfo.InfoProvider;
 import edu.jlime.metrics.sysinfo.SysInfoProvider;
-import edu.jlime.rpc.NetworkConfiguration;
 import edu.jlime.rpc.JLiMEFactory;
+import edu.jlime.rpc.NetworkConfiguration;
 
 public class JobServer {
 

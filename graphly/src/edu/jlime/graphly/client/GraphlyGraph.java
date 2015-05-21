@@ -5,7 +5,7 @@ import java.util.Map;
 
 import edu.jlime.core.rpc.RPCDispatcher;
 import edu.jlime.core.rpc.Transferible;
-import edu.jlime.graphly.GraphlyCount;
+import edu.jlime.graphly.storenode.GraphlyCount;
 import edu.jlime.graphly.traversal.Dir;
 import edu.jlime.graphly.traversal.GraphlyTraversal;
 import edu.jlime.graphly.util.Gather;

@@ -1,6 +1,7 @@
 package edu.jlime.graphly.rec.salsa;
 
 import edu.jlime.graphly.client.GraphlyGraph;
+import edu.jlime.graphly.jobs.SubGraphClean;
 import edu.jlime.graphly.traversal.RepeatStep.RepeatSync;
 
 public class SalsaSync implements RepeatSync<long[]> {

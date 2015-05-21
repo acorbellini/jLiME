@@ -6,13 +6,17 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.LogManager;
 
 import org.apache.log4j.Logger;
+import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import edu.jlime.core.rpc.RPCDispatcher;
 import edu.jlime.graphly.GraphlyConfiguration;
-import edu.jlime.graphly.GraphlyStoreNode;
 import edu.jlime.graphly.client.Graphly;
+import edu.jlime.graphly.http.WebServer;
+import edu.jlime.graphly.storenode.GraphlyStoreNode;
 import edu.jlime.jd.JobDispatcher;
 import edu.jlime.jd.server.ClusterProvider;
 import edu.jlime.metrics.jmx.MetricsJMX;
@@ -23,8 +27,8 @@ import edu.jlime.pregel.client.PregelClient;
 import edu.jlime.pregel.coordinator.CoordinatorServer;
 import edu.jlime.pregel.worker.WorkerServer;
 import edu.jlime.rpc.Configuration;
-import edu.jlime.rpc.NetworkConfiguration;
 import edu.jlime.rpc.JLiMEFactory;
+import edu.jlime.rpc.NetworkConfiguration;
 
 public class GraphlyServer {
 
@@ -48,6 +52,7 @@ public class GraphlyServer {
 	}
 
 	public static void main(final String[] args) throws Exception {
+
 		final String storeDir = args[0];
 		final Integer localServers = Integer.valueOf(args[1]);
 		Boolean coord = Boolean.valueOf(args[2]);
@@ -61,6 +66,12 @@ public class GraphlyServer {
 			final Integer localServers, final Boolean coord,
 			final Integer remoteServers, String netConfigFile,
 			String graphlyConfigFile) throws Exception, InterruptedException {
+
+		// LogManager.getLogManager().reset();
+		// SLF4JBridgeHandler.install();
+		//
+		// java.util.logging.Logger.getLogger("com.sun.jersey.api.core.PackagesResourceConfig").log(Level.FINEST,
+		// "");
 
 		final ArrayList<GraphlyServer> ret = new ArrayList<>();
 
@@ -196,6 +207,16 @@ public class GraphlyServer {
 
 			log.info("Graphly Server Fully Started on peer "
 					+ rpc.getCluster().getLocalPeer());
+
+			log.info("Starting Web Server");
+			try {
+				WebServer ws = new WebServer().port(8080);
+				ws.start();
+				log.info("Started Web Server on port " + ws.getPort());
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
 		} catch (Exception e) {
 			if (rpc != null)
 				rpc.stop();

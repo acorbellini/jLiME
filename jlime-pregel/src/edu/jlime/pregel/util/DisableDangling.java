@@ -26,7 +26,7 @@ public class DisableDangling implements VertexFunction {
 			TLongArrayList incoming = graph.getIncoming(v);
 			TLongIterator it = incoming.iterator();
 			while (it.hasNext()) {
-				ctx.send(it.next(), "DELETED");
+				ctx.send("dangling", it.next(), "DELETED");
 			}
 			graph.disable(v);
 		}

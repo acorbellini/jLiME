@@ -4,25 +4,29 @@ import java.io.Serializable;
 import java.util.HashMap;
 
 import edu.jlime.pregel.coordinator.Aggregator;
+import edu.jlime.pregel.coordinator.HaltCondition;
 import edu.jlime.pregel.mergers.MessageMerger;
 
 public class PregelConfig implements Serializable {
-	
+
 	private HashMap<String, Aggregator> aggregators = new HashMap<>();
-	
-	private MessageMerger merger;
+
+	private HashMap<String, MessageMerger> mergers = new HashMap<>();
+
 	private SplitFunction split;
 	private Integer threads = null;
-	
+
 	private int maxSteps = 0;
 	private boolean executeOnAll = false;
 	private String queue_limit = "auto";
 	private GraphConnectionFactory graph;
 	private int bQueue = 100;
 	private Integer send_threads = null;
-	
+
 	private boolean persitentVertexList = true;
 	private boolean persitentCurrentSplitList = true;
+
+	private HaltCondition condition = null;
 
 	public PregelConfig graph(GraphConnectionFactory graph) {
 		this.graph = graph;
@@ -73,8 +77,8 @@ public class PregelConfig implements Serializable {
 		return this;
 	}
 
-	public PregelConfig merger(MessageMerger m) {
-		this.merger = m;
+	public PregelConfig merger(String type, MessageMerger m) {
+		this.mergers.put(type, m);
 		return this;
 	}
 
@@ -82,8 +86,8 @@ public class PregelConfig implements Serializable {
 		return split;
 	}
 
-	public MessageMerger getMerger() {
-		return merger;
+	public MessageMerger getMerger(String type) {
+		return this.mergers.get(type);
 	}
 
 	public PregelConfig threads(int i) {
@@ -122,11 +126,11 @@ public class PregelConfig implements Serializable {
 	public int getSegments() {
 		int t = 0;
 		if (queue_limit.equals("auto")) {
-			t = getThreads() * 32;
+			t = getThreads() * 64;
 		} else
 			t = Integer.valueOf(queue_limit.substring(0,
 					queue_limit.indexOf("x")));
-		System.out.println("Segments " + t);
+		// System.out.println("Segments " + t);
 
 		return t;
 	}
@@ -140,7 +144,7 @@ public class PregelConfig implements Serializable {
 		} else
 			i = Integer.valueOf(queue_limit.substring(
 					queue_limit.indexOf("x") + 1, queue_limit.length()));
-		System.out.println("Queue size" + i);
+		// System.out.println("Queue size" + i);
 		return i;
 	}
 
@@ -171,5 +175,15 @@ public class PregelConfig implements Serializable {
 
 	public boolean isPersitentVertexList() {
 		return persitentVertexList;
+	}
+
+	public PregelConfig haltCondition(HaltCondition cond) {
+		this.condition = cond;
+		return this;
+
+	}
+
+	public HaltCondition getHaltCondition() {
+		return condition;
 	}
 }

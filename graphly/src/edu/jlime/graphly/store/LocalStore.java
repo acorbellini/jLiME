@@ -44,9 +44,6 @@ public class LocalStore {
 			synchronized (this) {
 				if (db == null) {
 
-					System.out.println(System.getProperty("java.library.path"));
-					System.out.println(System.getenv("java.library.path"));
-					
 					org.iq80.leveldb.Logger logger = new org.iq80.leveldb.Logger() {
 						public void log(String message) {
 							if (log.isDebugEnabled())
@@ -110,23 +107,33 @@ public class LocalStore {
 		int cont = 0;
 		DBIterator iterator = getDb().iterator();
 		Entry<byte[], byte[]> e = null;
-
+		boolean inclFirst = true;
+		boolean first = true;
+		byte[] curr = from;
 		try {
 			boolean done = false;
 			while (!done)
 				try {
-					for (iterator.seek(from); iterator.hasNext();) {
+					for (iterator.seek(curr); iterator.hasNext();) {
 						e = iterator.next();
+						byte[] key = e.getKey();
+						curr = key;
 						if (UnsignedBytes.lexicographicalComparator().compare(
-								to, e.getKey()) > 0)
-							cont++;
-						else
+								to, key) > 0) {
+							if (!first || (first && inclFirst))
+								cont++;
+							first = false;
+						} else
 							done = true;
 					}
 					done = true;
 				} catch (Exception e1) {
 					if (!e1.getMessage().contains("code: 32"))
 						throw e1;
+					iterator.close();
+					iterator = getDb().iterator();
+					first = true;
+					inclFirst = false;
 				}
 		} finally {
 			iterator.close();
@@ -137,6 +144,7 @@ public class LocalStore {
 	public List<byte[]> getRangeOfLength(boolean includeFirst, byte[] from,
 			byte[] to, int max) throws Exception {
 		List<byte[]> ret = new ArrayList<byte[]>();
+		byte[] curr = from;
 		int cont = 0;
 		DBIterator iterator = getDb().iterator();
 		Entry<byte[], byte[]> e = null;
@@ -145,10 +153,12 @@ public class LocalStore {
 			boolean done = false;
 			while (!done)
 				try {
-					for (iterator.seek(from); iterator.hasNext();) {
+					for (iterator.seek(curr); iterator.hasNext();) {
 						e = iterator.next();
+						byte[] key = e.getKey();
+						curr = key;
 						if (UnsignedBytes.lexicographicalComparator().compare(
-								to, e.getKey()) > 0) {
+								to, key) > 0) {
 							if (!first || (first && includeFirst)) {
 								ret.add(e.getValue());
 								cont++;
@@ -163,6 +173,10 @@ public class LocalStore {
 				} catch (Exception e1) {
 					if (!e1.getMessage().contains("code: 32"))
 						throw e1;
+					iterator.close();
+					iterator = getDb().iterator();
+					first = true;
+					includeFirst = false;
 				}
 
 		} finally {

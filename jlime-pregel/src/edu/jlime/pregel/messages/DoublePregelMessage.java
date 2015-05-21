@@ -4,14 +4,9 @@ public class DoublePregelMessage extends PregelMessage {
 
 	double d = 0d;
 
-	public DoublePregelMessage(long from, long to, double val) {
-		super(from, to);
+	public DoublePregelMessage(String msgType, long from, long to, double val) {
+		super(msgType, from, to);
 		this.d = val;
-	}
-
-	@Override
-	public void setV(Object v) {
-		setDouble((Double) v);
 	}
 
 	private void setDouble(Double v) {
@@ -19,13 +14,8 @@ public class DoublePregelMessage extends PregelMessage {
 	}
 
 	@Override
-	public Object getV() {
-		return d;
-	}
-
-	@Override
 	public PregelMessage getCopy() {
-		return new DoublePregelMessage(from, to, d);
+		return new DoublePregelMessage(getType(), from, to, d);
 	}
 
 	public double getDouble() {

@@ -11,8 +11,8 @@ import edu.jlime.pregel.coordinator.rpc.Coordinator;
 import edu.jlime.pregel.coordinator.rpc.CoordinatorBroadcast;
 import edu.jlime.pregel.worker.rpc.Worker;
 import edu.jlime.pregel.worker.rpc.WorkerBroadcast;
-import edu.jlime.rpc.NetworkConfiguration;
 import edu.jlime.rpc.JLiMEFactory;
+import edu.jlime.rpc.NetworkConfiguration;
 
 public class WorkerServer {
 	public static final String WORKER_KEY = "pregel_worker";

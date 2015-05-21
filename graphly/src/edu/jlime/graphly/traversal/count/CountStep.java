@@ -7,9 +7,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.log4j.Logger;
 
-import edu.jlime.graphly.GraphlyCount;
 import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.jobs.Mapper;
+import edu.jlime.graphly.storenode.GraphlyCount;
 import edu.jlime.graphly.traversal.CountResult;
 import edu.jlime.graphly.traversal.Dir;
 import edu.jlime.graphly.traversal.GraphlyTraversal;

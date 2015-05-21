@@ -1,14 +1,14 @@
 package edu.jlime.pregel.worker;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -22,6 +22,7 @@ import edu.jlime.pregel.client.CoordinatorFilter;
 import edu.jlime.pregel.client.PregelConfig;
 import edu.jlime.pregel.client.SplitFunction;
 import edu.jlime.pregel.client.WorkerContext;
+import edu.jlime.pregel.coordinator.Aggregator;
 import edu.jlime.pregel.coordinator.CoordinatorServer;
 import edu.jlime.pregel.coordinator.rpc.Coordinator;
 import edu.jlime.pregel.coordinator.rpc.CoordinatorBroadcast;
@@ -30,26 +31,23 @@ import edu.jlime.pregel.graph.VertexFunction;
 import edu.jlime.pregel.graph.rpc.Graph;
 import edu.jlime.pregel.mergers.MessageMerger;
 import edu.jlime.pregel.messages.PregelMessage;
+import edu.jlime.pregel.queues.DoubleData;
+import edu.jlime.pregel.queues.FloatArrayData;
 import edu.jlime.pregel.queues.MessageQueueFactory;
-import edu.jlime.pregel.queues.PregelMessageQueue;
 import edu.jlime.pregel.queues.SegmentedMessageQueue;
-import edu.jlime.pregel.worker.PersistedVertexList.PersistedLongIterator;
 import edu.jlime.pregel.worker.rpc.Worker;
 import edu.jlime.pregel.worker.rpc.WorkerBroadcast;
 import edu.jlime.pregel.worker.rpc.WorkerFactory;
-import gnu.trove.iterator.TLongIterator;
-import gnu.trove.list.array.TDoubleArrayList;
-import gnu.trove.list.array.TLongArrayList;
 
 public class WorkerTask {
 
-	Worker[] workers;
+	protected Logger log = Logger.getLogger(WorkerTask.class);
 
-	// volatile Future<?>[] fut;
+	HashMap<String, Aggregator> aggregators = new HashMap<>();
 
-	private SegmentedMessageQueue cache;
+	private Worker[] workers;
 
-	private PregelMessageQueue cacheBroadcast;
+	private CacheManager cacheMgr;
 
 	private Graph graph;
 
@@ -59,13 +57,11 @@ public class WorkerTask {
 
 	private WorkerImpl worker;
 
-	protected Logger log = Logger.getLogger(WorkerTask.class);
-
 	private int currentStep;
 
-	private SegmentedMessageQueue queue;
-
 	private PregelConfig config;
+
+	private Map<String, SegmentedMessageQueue> queue;
 
 	private ClientManager<Coordinator, CoordinatorBroadcast> coordMgr;
 
@@ -75,26 +71,28 @@ public class WorkerTask {
 
 	private ExecutorService vertexPool;
 
-	private Semaphore maxVertexThreads;
+	private ExecutorService multiSendPool;
 
-	private ExecutorService groupedSendPool;
-
-	private Semaphore maxGroupedSend;
+	private Semaphore multiSendCounter;
 
 	private AtomicInteger sendCount = new AtomicInteger(0);
 
 	private VertexList vList;
-	//
 
 	private VertexList currentSplit;
-	// private TLongArrayList currentSplit = new TLongArrayList();
 
 	private AtomicInteger vertexCounter = new AtomicInteger(0);
 
 	public WorkerTask(WorkerImpl w, RPCDispatcher rpc, Peer client,
-			final VertexFunction func, long[] vList, final int taskID2,
+			final VertexFunction func, long[] vList, final int taskID,
 			PregelConfig config) throws Exception {
-		log.info("Creating task with ID " + taskID2);
+		this.log.info("Creating task with ID " + taskID);
+
+		for (Entry<String, Aggregator> e : config.getAggregators().entrySet()) {
+			aggregators.put(e.getKey(), e.getValue().copy());
+		}
+
+		this.cacheMgr = new CacheManager(this, config);
 
 		this.vList = config.isPersitentVertexList() ? new PersistedVertexList()
 				: new InMemVertexList();
@@ -107,44 +105,41 @@ public class WorkerTask {
 			public Thread newThread(Runnable r) {
 				Thread t = Executors.defaultThreadFactory().newThread(r);
 				t.setName("Vertex Pool for Task " + func.toString() + ", id:"
-						+ taskID2);
+						+ taskID);
 				return t;
 			}
 		});
-		this.maxVertexThreads = new Semaphore(config.getThreads());
 
-		this.groupedSendPool = Executors
-				.newCachedThreadPool(new ThreadFactory() {
-					@Override
-					public Thread newThread(Runnable r) {
-						Thread t = Executors.defaultThreadFactory()
-								.newThread(r);
-						t.setName("Grouped Send Pool for Task "
-								+ func.toString() + ", id:" + taskID2);
-						return t;
-					}
-				});
-		this.maxGroupedSend = new Semaphore(config.getSendThreads());
+		this.multiSendPool = Executors.newCachedThreadPool(new ThreadFactory() {
+			@Override
+			public Thread newThread(Runnable r) {
+				Thread t = Executors.defaultThreadFactory().newThread(r);
+				t.setName("Grouped Send Pool for Task " + func.toString()
+						+ ", id:" + taskID);
+				return t;
+			}
+		});
+		this.multiSendCounter = new Semaphore(config.getSendThreads());
 
 		this.graph = config.getGraph().getGraph(rpc);
 
 		this.worker = w;
+
 		this.coordMgr = rpc.manage(new CoordinatorFactory(rpc,
 				CoordinatorServer.COORDINATOR_KEY), new CoordinatorFilter(),
 				client);
 		this.workerMgr = rpc.manage(new WorkerFactory(rpc,
 				WorkerServer.WORKER_KEY), new WorkerFilter(), client);
-		this.taskid = taskID2;
+
+		this.taskid = taskID;
 
 		if (config.isExecuteOnAll()) {
 			long start = System.currentTimeMillis();
 			log.info("Creating vertex list for the whole graph.");
-			// TLongArrayList gatherVList = new TLongArrayList();
 			for (Long vid : graph.vertices()) {
 				this.vList.add(vid);
 			}
 			this.vList.flush();
-			// this.vList = gatherVList;
 			log.info("Finished creating vertex list for the whole graph in "
 					+ (System.currentTimeMillis() - start) / 1000f + " sec.");
 		} else {
@@ -153,155 +148,110 @@ public class WorkerTask {
 			}
 		}
 
-		this.setConfig(config);
-		MessageMerger merger = config.getMerger();
-		MessageQueueFactory fact = merger != null ? merger.getFactory()
-				: MessageQueueFactory.simple(null);
+		this.config = config;
+		this.queue = new ConcurrentHashMap<>();
 
-		this.queue = new SegmentedMessageQueue(this, config.getSegments(),
-				Integer.MAX_VALUE, fact, config.getThreads());
-		this.cache = new SegmentedMessageQueue(this, config.getSegments(),
-				config.getQueueSize(), fact, config.getThreads());
-		this.cacheBroadcast = fact.getMQ();
 		this.f = func;
 	}
 
-	public void queueVertexData(long from, long to, Object val) {
-		this.queue.put(from, to, val);
-	}
-
-	public void queueFloatVertexData(long from, long to, float val) {
-		this.queue.putFloat(from, to, val);
-	}
-
-	public void queueBroadcastVertexData(long from, Object val)
+	public void queueVertexData(String msg, long from, long to, Object val)
 			throws Exception {
-		LongIterator it = currentSplit.iterator();
-		while (it.hasNext()) {
-			long vid = it.next();
-			queue.put(from, vid, val);
-		}
+		getQueue(msg).put(from, to, val);
 	}
 
-	public void queueBroadcastFloatVertexData(long from, float val)
-			throws Exception {
-		LongIterator it = currentSplit.iterator();
-		while (it.hasNext()) {
-			long vid = it.next();
-			queue.putFloat(from, vid, val);
+	private SegmentedMessageQueue getQueue(String msg) {
+		SegmentedMessageQueue ret = queue.get(msg);
+		if (ret == null) {
+			synchronized (queue) {
+				ret = queue.get(msg);
+				if (ret == null) {
+					ret = new SegmentedMessageQueue(msg, this,
+							config.getSegments(), Integer.MAX_VALUE,
+							getQueueFactory(msg), config.getThreads());
+					queue.put(msg, ret);
+				}
+			}
 		}
+		return ret;
+	}
+
+	MessageQueueFactory getQueueFactory(String msgType) {
+		MessageMerger merger = config.getMerger(msgType);
+		MessageQueueFactory fact = merger != null ? merger.getFactory()
+				: MessageQueueFactory.simple(null);
+		return fact;
 	}
 
 	public void nextStep(int superstep, SplitFunction func) throws Exception {
-		log.info("Executing step " + superstep + " on Worker " + worker.getID());
+		this.log.info("Configuring step " + superstep + " on Worker "
+				+ worker.getID());
+
+		for (Entry<String, Aggregator> e : aggregators.entrySet()) {
+			e.getValue().reset();
+		}
 
 		this.split = func;
 
 		Peer[] peers = this.split.getPeers();
 
-		workers = new Worker[peers.length];
-		for (int i = 0; i < peers.length; i++) {
-			workers[i] = workerMgr.get(peers[i]);
-		}
+		this.workers = new Worker[peers.length];
+		for (int i = 0; i < peers.length; i++)
+			this.workers[i] = this.workerMgr.get(peers[i]);
 
 		this.currentStep = superstep;
 
-		queue.switchQueue();
+		for (SegmentedMessageQueue s : queue.values())
+			s.switchQueue();
 
-		// It's done twice, called with -1 and 0.
-		log.info("Loading local slice of vertices from " + vList.size()
+		// TODO It's done twice, called with -1 and 0.
+		this.log.info("Loading local slice of vertices from " + vList.size()
 				+ " vertices.");
 
-		currentSplit.delete();
-		currentSplit = config.isPersitentCurrentSplitList() ? new PersistedVertexList()
+		this.currentSplit.delete();
+		this.currentSplit = this.config.isPersitentCurrentSplitList() ? new PersistedVertexList()
 				: new InMemVertexList();
 
-		Peer localPeer = workerMgr.getLocalPeer();
-		List<Peer> peers2 = workerMgr.getPeers();
+		Peer localPeer = this.workerMgr.getLocalPeer();
+		List<Peer> peers2 = this.workerMgr.getPeers();
 
 		LongIterator it = vList.iterator();
 		while (it.hasNext()) {
 			long vid = it.next();
-			if (split.getPeer(vid, peers2).equals(localPeer))
-				currentSplit.add(vid);
+			if (this.split.getPeer(vid, peers2).equals(localPeer))
+				this.currentSplit.add(vid);
 		}
-		currentSplit.flush();
-		log.info("Loaded slice " + currentSplit.size() + " vertices.");
+		this.currentSplit.flush();
+		this.log.info("Loaded slice " + this.currentSplit.size() + " vertices.");
 	}
 
 	public void execute() throws Exception {
-		final int size = queue.readOnlySize();
+		final int size = queueSize();
 
 		if (size == 0) {
-			// if (log.isDebugEnabled())
-			log.info("Queue was empty, finished step " + currentStep
-					+ " on Worker " + worker.getID());
-			try {
-				coordMgr.getFirst().finished(getTaskid(), this.worker.getID(),
-						false);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+			this.log.info("Queue was empty, finished step " + currentStep
+					+ " on Worker " + this.worker.getID());
+			this.coordMgr.getFirst().finished(getTaskid(), this.worker.getID(),
+					false, aggregators);
 			return;
 		}
 
-		log.info("Starting Execution on worker " + worker.getID() + " for "
-				+ size + " messages.");
+		this.log.info("Starting Execution on worker " + worker.getID()
+				+ " for " + size + " messages.");
 
-		// log.info(queue.readOnlySize());
-		// int count = 0;
-		// Iterator<List<PregelMessage>> it = queue.iterator();
-		// while (it.hasNext()) {
-		// List<PregelMessage> list = it.next();
-		// long vid = list.get(0).getTo();
-		// count++;
-		// printCompleted(size, count);
-		// execVertex(vid, list);
-		// }
-		final int threads = config.getThreads();
+		final int threads = this.config.getThreads();
 
 		final AtomicInteger count = new AtomicInteger(0);
-		for (int i = 0; i < config.getThreads(); i++) {
+		for (int i = 0; i < this.config.getThreads(); i++) {
 			final int currentIndex = i;
 
-			maxVertexThreads.acquire();
-			vertexCounter.incrementAndGet();
-			vertexPool.execute(new Runnable() {
+			this.vertexCounter.incrementAndGet();
+			this.vertexPool.execute(new Runnable() {
 				@Override
 				public void run() {
-					int cont = 0;
 					try {
-						LongIterator it = currentSplit.iterator();
-						while (it.hasNext()) {
-							long currentVertex = it.next();
-							if (cont % threads == currentIndex)
-								try {
-									Iterator<PregelMessage> messages = queue
-											.getMessages(currentVertex);
-									if (messages != null) {
-										printCompleted(size,
-												count.getAndIncrement());
-										if (log.isDebugEnabled())
-											log.debug("Executing function on vertex "
-													+ currentVertex);
-										WorkerContext ctx = new WorkerContext(
-												WorkerTask.this, currentVertex);
-										f.execute(currentVertex, messages, ctx);
-										if (log.isDebugEnabled())
-											log.debug("Finished executing function on vertex "
-													+ currentVertex);
-									}
-									// ctx.finished();
-								} catch (Exception e) {
-									e.printStackTrace();
-								} finally {
-									maxVertexThreads.release();
-								}
-							cont++;
-						}
-					} catch (Exception e1) {
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
+						executeVertex(size, threads, count, currentIndex);
+					} catch (Exception e) {
+						e.printStackTrace();
 					}
 
 					vertexCounter.decrementAndGet();
@@ -314,34 +264,68 @@ public class WorkerTask {
 
 		synchronized (vertexCounter) {
 			while (vertexCounter.get() != 0)
-				try {
-					vertexCounter.wait();
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
+				vertexCounter.wait();
 		}
 
 		synchronized (sendCount) {
 			while (sendCount.get() != 0)
-				try {
-					sendCount.wait();
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
+				sendCount.wait();
 		}
 
 		log.info("Flushing cache on step " + currentStep + " on Worker "
 				+ worker.getID());
-
-		cache.switchQueue();
-		cache.flush(this);
-
-		cacheBroadcast.switchQueue();
-		cacheBroadcast.flush(this);
+		cacheMgr.flush();
 
 		log.info("Finished work for step " + currentStep + " on Worker "
 				+ worker.getID());
-		coordMgr.getFirst().finished(getTaskid(), this.worker.getID(), true);
+		coordMgr.getFirst().finished(getTaskid(), this.worker.getID(), true,
+				aggregators);
+	}
+
+	private void executeVertex(final int size, final int threads,
+			final AtomicInteger count, final int threadID) throws Exception {
+		int vertexCursor = 0;
+
+		LongIterator it = currentSplit.iterator();
+
+		ArrayList<Iterator<PregelMessage>> currList = new ArrayList<>();
+
+		WorkerContext ctx = new WorkerContext(WorkerTask.this, -1);
+
+		while (it.hasNext()) {
+			long currentVertex = it.next();
+			if (vertexCursor % threads == threadID) {
+				ctx.setCurrVertex(currentVertex);
+				currList.clear();
+				for (Entry<String, SegmentedMessageQueue> e : queue.entrySet()) {
+					SegmentedMessageQueue q = e.getValue();
+					currList.add(q.getMessages(e.getKey(), currentVertex));
+				}
+
+				Iterator<PregelMessage> messages = new ConcatIterator(currList);
+				if (messages.hasNext()) {
+					printCompleted(size, count.getAndIncrement());
+
+					if (log.isDebugEnabled())
+						log.debug("Executing function on vertex "
+								+ currentVertex);
+
+					f.execute(currentVertex, messages, ctx);
+					if (log.isDebugEnabled())
+						log.debug("Finished executing function on vertex "
+								+ currentVertex);
+				}
+
+			}
+			vertexCursor++;
+		}
+	}
+
+	private int queueSize() {
+		int ret = 0;
+		for (SegmentedMessageQueue s : queue.values())
+			ret += s.readOnlySize();
+		return ret;
 	}
 
 	private void printCompleted(int total, double currentCount)
@@ -349,66 +333,13 @@ public class WorkerTask {
 		int fraction = ((int) (total / (double) 10));
 		if ((currentCount % fraction) == 0) {
 			double completed = ((currentCount / total) * 100);
-			// if (log.isDebugEnabled())
 			log.info("Completed work on worker " + worker.getID() + ": "
 					+ Math.ceil(completed) + " % ");
 		}
 	}
 
-	// private void execVertex(final Long currentVertex,
-	// final List<PregelMessage> messages) throws InterruptedException {
-	// execCount.acquire();
-	// vertexCounter.incrementAndGet();
-	// vertexPool.execute(new Runnable() {
-	// @Override
-	// public void run() {
-	//
-	// try {
-	// if (log.isDebugEnabled())
-	// log.debug("Executing function on vertex "
-	// + currentVertex);
-	// WorkerContext ctx = new WorkerContext(WorkerTask.this,
-	// currentVertex);
-	// f.execute(currentVertex, messages, ctx);
-	// if (log.isDebugEnabled())
-	// log.debug("Finished executing function on vertex "
-	// + currentVertex);
-	// // ctx.finished();
-	// } catch (Exception e) {
-	// e.printStackTrace();
-	// } finally {
-	// execCount.release();
-	// }
-	//
-	// vertexCounter.decrementAndGet();
-	// synchronized (vertexCounter) {
-	// vertexCounter.notify();
-	// }
-	// }
-	// });
-	// }
-
 	public Graph getGraph() {
 		return graph;
-	}
-
-	public void sendAll(long from, Object msg) throws Exception {
-		synchronized (cacheBroadcast) {
-			checkBroadCacheSize();
-			cacheBroadcast.put(from, -1l, msg);
-		}
-
-	}
-
-	private void checkBroadCacheSize() throws Exception {
-		if (cacheBroadcast.currentSize() == config.getBroadcastQueue()) {
-			cacheBroadcast.switchQueue();
-			cacheBroadcast.flush(this);
-		}
-	}
-
-	public void send(long from, long to, Object val) throws Exception {
-		cache.put(from, to, val);
 	}
 
 	public Worker getWorker(long vid) {
@@ -419,169 +350,244 @@ public class WorkerTask {
 		return currentStep;
 	}
 
-	public Double getAggregatedValue(Long v, String k) throws Exception {
-		return coordMgr.getFirst().getAggregatedValue(getTaskid(), v, k);
-	}
-
-	public void setAggregatedValue(Long v, String string, double currentVal)
-			throws Exception {
-		coordMgr.getFirst().setAggregatedValue(getTaskid(), v, string,
-				currentVal);
-	}
+	// public Double getAggregatedValue(Long v, String k) throws Exception {
+	// return coordMgr.getFirst().getAggregatedValue(getTaskid(), v, k);
+	// }
+	//
+	// public void setAggregatedValue(Long v, String string, double currentVal)
+	// throws Exception {
+	// coordMgr.getFirst().setAggregatedValue(getTaskid(), v, string,
+	// currentVal);
+	// }
 
 	public PregelConfig getConfig() {
 		return config;
 	}
 
-	public void setConfig(PregelConfig config) {
-		this.config = config;
-	}
-
 	public void cleanup() throws Exception {
-		this.queue.clean();
-		this.cache.clean();
 		vertexPool.shutdown();
-		groupedSendPool.shutdown();
-
+		multiSendPool.shutdown();
 		currentSplit.delete();
 		vList.delete();
 	}
 
-	public void sendAllFloat(long from, float val) throws Exception {
-		synchronized (cacheBroadcast) {
-			checkBroadCacheSize();
-			cacheBroadcast.putFloat(from, -1l, val);
-		}
+	public void send(String msgType, long from, long to, Object val)
+			throws Exception {
+		cacheMgr.send(msgType, from, to, val);
 	}
 
-	public void sendFloat(long from, long to, float val) throws Exception {
-		cache.putFloat(from, to, val);
+	public void sendFloat(String msg, long from, long to, float val)
+			throws Exception {
+		cacheMgr.sendFloat(msg, from, to, val);
 	}
 
-	public void outputObject(long from, long to, Object val) throws Exception {
+	public void sendDouble(String msg, long from, long to, double val)
+			throws Exception {
+		cacheMgr.sendDouble(msg, from, to, val);
+	}
+
+	public void sendAll(String type, long from, Object msg) throws Exception {
+		cacheMgr.sendAll(type, from, msg);
+	}
+
+	public void sendAllFloat(String type, long from, float val)
+			throws Exception {
+		cacheMgr.sendAllFloat(type, from, val);
+	}
+
+	public void sendAllDouble(String type, long from, double val)
+			throws Exception {
+		cacheMgr.sendAllDouble(type, from, val);
+	}
+
+	public void outputDouble(String msgtype, long from, long to, double val)
+			throws Exception {
 		if (to != -1l)
-			getWorker(to).sendMessage(from, to, val, getTaskid());
+			getWorker(to)
+					.sendDoubleMessage(msgtype, from, to, val, getTaskid());
 		else
-			workerMgr.broadcast().sendBroadcastMessage(from, val, getTaskid());
+			workerMgr.broadcast().sendDoubleBroadcastMessage(msgtype, from,
+					val, getTaskid());
 	}
 
-	public void outputFloat(long from, long to, float value) throws Exception {
+	public void outputObject(String msgtype, long from, long to, Object val)
+			throws Exception {
 		if (to != -1l)
-			getWorker(to).sendFloatMessage(from, to, value, getTaskid());
+			getWorker(to).sendMessage(msgtype, from, to, val, getTaskid());
 		else
-			workerMgr.broadcast().sendFloatBroadcastMessage(from, value,
+			workerMgr.broadcast().sendBroadcastMessage(msgtype, from, val,
 					getTaskid());
+	}
+
+	public void outputFloat(String msgtype, long from, long to, float value)
+			throws Exception {
+		if (to != -1l)
+			getWorker(to).sendFloatMessage(msgtype, from, to, value,
+					getTaskid());
+		else
+			workerMgr.broadcast().sendFloatBroadcastMessage(msgtype, from,
+					value, getTaskid());
 	}
 
 	public int getTaskid() {
 		return taskid;
 	}
 
-	public void sendAllDouble(long from, double val) throws Exception {
-		synchronized (cacheBroadcast) {
-			checkBroadCacheSize();
-			cacheBroadcast.putDouble(from, -1l, val);
-		}
-	}
-
-	public void sendDouble(long from, long to, double val) {
-		cache.putDouble(from, to, val);
-	}
-
-	public void sendDoubles(HashMap<Worker, TLongArrayList> keys,
-			final HashMap<Worker, TDoubleArrayList> values)
-			throws InterruptedException {
-		final Semaphore count = new Semaphore(-keys.size() + 1);
-
-		for (final Entry<Worker, TLongArrayList> e : keys.entrySet()) {
-			sendCount.incrementAndGet();
-			maxGroupedSend.acquire();
-			groupedSendPool.execute(new Runnable() {
-
-				@Override
-				public void run() {
-					Worker w = e.getKey();
-
-					TLongArrayList toList = e.getValue();
-					TDoubleArrayList valList = values.get(w);
-					try {
-						w.sendDoubleMessage(-1l, toList.toArray(),
-								valList.toArray(), taskid);
-					} catch (Exception e1) {
-						e1.printStackTrace();
-					}
-					count.release();
-					maxGroupedSend.release();
-					sendCount.decrementAndGet();
-					synchronized (sendCount) {
-						sendCount.notify();
-					}
-				}
-			});
-
-		}
-		count.acquire();
-	}
-
-	public void sendFloats(final FloatSenderCallback cb) throws Exception {
-
-		// HashMap<Worker, TLongArrayList> keys,
-		// final HashMap<Worker, TFloatArrayList> values
-
-		// final Semaphore count = new Semaphore(-keys.size() + 1);
-
-		// for (final Entry<Worker, TLongArrayList> e : keys.entrySet()) {
-		sendCount.incrementAndGet();
-		maxGroupedSend.acquire();
-		final HashMap<Worker, FloatData> map = cb.buildMap();
-		Future[] futs = new Future[map.size()];
-		int i = 0;
-		for (final Entry<Worker, FloatData> e : map.entrySet()) {
-
-			futs[i++] = groupedSendPool.submit(new Runnable() {
-				@Override
-				public void run() {
-					Worker w = e.getKey();
-					FloatData lfmap = e.getValue();
-					try {
-						w.sendFloatMessage(-1l, lfmap.keys, lfmap.values,
-								taskid);
-					} catch (Exception e1) {
-						e1.printStackTrace();
-					}
-
-				}
-			});
-		}
-		for (Future future : futs) {
-			future.get();
-		}
-
-		maxGroupedSend.release();
-		sendCount.decrementAndGet();
-		synchronized (sendCount) {
-			sendCount.notify();
-		}
-	}
-
-	public void queueDoubleVertexData(long from, long to, double val) {
-		this.queue.putDouble(from, to, val);
-	}
-
-	public void outputDouble(long from, long to, double val) throws Exception {
-		if (to != -1l)
-			getWorker(to).sendDoubleMessage(from, to, val, getTaskid());
-		else
-			workerMgr.broadcast().sendDoubleBroadcastMessage(from, val,
-					getTaskid());
-	}
-
-	public void queueBroadcastDoubleVertexData(long from, double val)
+	public void sendFloats(final String msgType, HashMap<Worker, FloatData> ret)
 			throws Exception {
+		for (final Entry<Worker, FloatData> e : ret.entrySet()) {
+			multiSendCounter.acquire();
+			multiSendPool.execute(new Runnable() {
+				@Override
+				public void run() {
+					FloatData fData = e.getValue();
+					try {
+						e.getKey().sendFloatMessage(msgType, -1l, fData.keys,
+								fData.values, taskid);
+					} catch (Exception e1) {
+						e1.printStackTrace();
+					} finally {
+						multiSendCounter.release();
+					}
+				}
+			});
+		}
+
+	}
+
+	public void sendDoubles(final String msgType,
+			HashMap<Worker, DoubleData> ret) throws Exception {
+		for (final Entry<Worker, DoubleData> e : ret.entrySet()) {
+			multiSendCounter.acquire();
+			multiSendPool.execute(new Runnable() {
+				@Override
+				public void run() {
+					DoubleData dData = e.getValue();
+					try {
+						e.getKey().sendDoubleMessage(msgType, -1l, dData.keys,
+								dData.values, taskid);
+					} catch (Exception e1) {
+						e1.printStackTrace();
+					} finally {
+						multiSendCounter.release();
+					}
+				}
+			});
+		}
+	}
+
+	public void queueDoubleVertexData(String msg, long from, long to, double val)
+			throws Exception {
+		// DoubleAggregator ag = (DoubleAggregator) aggregators.get(msg);
+		// if (ag != null)
+		// ag.add(from, to, val);
+		getQueue(msg).putDouble(from, to, val);
+	}
+
+	public void queueBroadcastDoubleVertexData(String type, long from,
+			double val) throws Exception {
+		// DoubleAggregator ag = (DoubleAggregator) aggregators.get(type);
+
+		SegmentedMessageQueue q = getQueue(type);
 		LongIterator it = currentSplit.iterator();
 		while (it.hasNext()) {
 			long vid = it.next();
-			queue.putDouble(from, vid, val);
+			// if (ag != null)
+			// ag.add(from, vid, val);
+
+			q.putDouble(from, vid, val);
 		}
+	}
+
+	public void queueFloatVertexData(String msg, long from, long to, float val)
+			throws Exception {
+		// FloatAggregator ag = (FloatAggregator) aggregators.get(msg);
+		// if (ag != null)
+		// ag.add(from, to, val);
+
+		getQueue(msg).putFloat(from, to, val);
+	}
+
+	public void queueBroadcastVertexData(String msg, long from, Object val)
+			throws Exception {
+
+		// GenericAggregator ag = (GenericAggregator) aggregators.get(msg);
+
+		SegmentedMessageQueue q = getQueue(msg);
+		LongIterator it = currentSplit.iterator();
+		while (it.hasNext()) {
+			long vid = it.next();
+
+			// if (ag != null)
+			// ag.add(from, vid, val);
+
+			q.put(from, vid, val);
+		}
+	}
+
+	public void queueBroadcastFloatVertexData(String msg, long from, float val)
+			throws Exception {
+		// FloatAggregator ag = (FloatAggregator) aggregators.get(msg);
+
+		SegmentedMessageQueue q = getQueue(msg);
+		LongIterator it = currentSplit.iterator();
+		while (it.hasNext()) {
+			long vid = it.next();
+			// if (ag != null)
+			// ag.add(from, vid, val);
+			q.putFloat(from, vid, val);
+		}
+	}
+
+	public Aggregator getAggregator(String string) {
+		return aggregators.get(string);
+	}
+
+	public void outputFloatArray(String msgtype, long from, long to,
+			float[] value) throws Exception {
+		if (to != -1l)
+			getWorker(to).sendFloatArrayMessage(msgtype, from, to, value,
+					getTaskid());
+		else
+			workerMgr.broadcast().sendFloatArrayBroadcastMessage(msgtype, from,
+					value, getTaskid());
+	}
+
+	public void sendFloatArrays(final String msgType,
+			HashMap<Worker, FloatArrayData> ret) throws InterruptedException {
+		for (final Entry<Worker, FloatArrayData> e : ret.entrySet()) {
+			multiSendCounter.acquire();
+			multiSendPool.execute(new Runnable() {
+				@Override
+				public void run() {
+					FloatArrayData fData = e.getValue();
+					try {
+						e.getKey().sendFloatArrayMessage(msgType, -1l,
+								fData.getVids(), fData.getData(), taskid);
+					} catch (Exception e1) {
+						e1.printStackTrace();
+					} finally {
+						multiSendCounter.release();
+					}
+				}
+			});
+		}
+	}
+
+	public void queueBroadcastFloatArrayVertexData(String msg, long from,
+			float[] val) throws Exception {
+		SegmentedMessageQueue q = getQueue(msg);
+		LongIterator it = currentSplit.iterator();
+		while (it.hasNext()) {
+			long vid = it.next();
+			// if (ag != null)
+			// ag.add(from, vid, val);
+			q.putFloatArray(from, vid, val);
+		}
+	}
+
+	public void queueFloatArrayVertexData(String msg, long from, long to,
+			float[] data) throws Exception {
+		getQueue(msg).putFloatArray(from, to, data);
 	}
 }

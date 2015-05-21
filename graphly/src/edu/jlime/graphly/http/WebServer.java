@@ -1,6 +1,7 @@
 package edu.jlime.graphly.http;
 
 import java.io.IOException;
+import java.net.BindException;
 import java.net.URI;
 import java.util.logging.LogManager;
 
@@ -14,26 +15,55 @@ import com.sun.jersey.api.core.ResourceConfig;
 import com.sun.net.httpserver.HttpServer;
 
 public class WebServer {
+
+	private static final int PORT_RANGE = 10;
+	private int port = 8080;
+
+	public WebServer() {
+		LogManager.getLogManager().reset();
+		SLF4JBridgeHandler.install();
+	}
+
+	public WebServer port(int p) {
+		this.port = p;
+		return this;
+	}
+
 	private HttpServer httpserver() throws IllegalArgumentException,
 			IOException {
 		ResourceConfig config = new PackagesResourceConfig(
-				"edu.jlime.graphly.http.web");
-		return HttpServerFactory.create(getURI(), config);
+				"edu.jlime.graphly.http.resource");
+		return HttpServerFactory.create(getURI(getPort()), config);
 	}
 
-	private static URI getURI() {
-		return UriBuilder.fromUri("http://localhost/").port(8085).build();
+	private static URI getURI(int port) {
+		return UriBuilder.fromUri("http://localhost/").port(port).build();
 	}
 
 	public static void main(String[] args) throws IllegalArgumentException,
 			IOException {
-		LogManager.getLogManager().reset();
-		SLF4JBridgeHandler.install();
-
 		new WebServer().start();
 	}
 
-	private void start() throws IllegalArgumentException, IOException {
-		httpserver().start();
+	public void start() throws IllegalArgumentException, IOException {
+		int cont = 0;
+		HttpServer httpserver = null;
+		while (true)
+			try {
+				httpserver = httpserver();
+				httpserver.start();
+				return;
+			} catch (BindException e) {
+				if (httpserver != null)
+					httpserver.stop(0);
+				if (cont == PORT_RANGE)
+					throw e;
+				port++;
+				cont++;
+			}
+	}
+
+	public int getPort() {
+		return port;
 	}
 }

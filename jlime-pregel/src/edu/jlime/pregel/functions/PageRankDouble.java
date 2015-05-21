@@ -68,7 +68,7 @@ public class PageRankDouble implements VertexFunction {
 		// DataTypeUtils.intToByteArray(Float.floatToIntBits(val));
 		if (outgoingSize == 0) {
 			double val = currentVal / vertexSize;
-			ctx.sendAllDouble(val);
+			ctx.sendAllDouble("pr", val);
 		} else {
 			double val = currentVal / outgoingSize;
 			TLongIterator outgoing = graph.getOutgoing(v).iterator();
@@ -76,7 +76,7 @@ public class PageRankDouble implements VertexFunction {
 				long vertex = outgoing.next();
 				if (log.isDebugEnabled())
 					log.debug("Sending message to " + vertex + " from " + v);
-				ctx.sendDouble(vertex, val);
+				ctx.sendDouble("pr", vertex, val);
 			}
 		}
 	}

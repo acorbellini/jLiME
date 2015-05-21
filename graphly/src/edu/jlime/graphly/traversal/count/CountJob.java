@@ -2,8 +2,8 @@ package edu.jlime.graphly.traversal.count;
 
 import org.apache.log4j.Logger;
 
-import edu.jlime.graphly.GraphlyCount;
 import edu.jlime.graphly.client.GraphlyGraph;
+import edu.jlime.graphly.storenode.GraphlyCount;
 import edu.jlime.graphly.traversal.Dir;
 import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.client.JobContext;

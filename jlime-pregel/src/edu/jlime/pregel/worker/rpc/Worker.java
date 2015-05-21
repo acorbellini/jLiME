@@ -10,13 +10,6 @@ import edu.jlime.pregel.client.SplitFunction;
 import edu.jlime.pregel.graph.VertexFunction;
 
 public interface Worker {
-	@Sync
-	public void sendMessage(long from, long to, Object msg, int taskID)
-			throws Exception;
-
-	@Sync
-	public void sendFloatMessage(long from, long to, float msg, int taskID)
-			throws Exception;
 
 	@Sync
 	public void nextSuperstep(int superstep, int taskID,
@@ -35,27 +28,46 @@ public interface Worker {
 	public void cleanup(int taskID) throws Exception;
 
 	@Sync
-	public void sendBroadcastMessage(long from, Object val, int taskID)
-			throws Exception;
+	public void sendMessage(String msgType, long from, long to, Object msg,
+			int taskID) throws Exception;
 
 	@Sync
-	public void sendFloatBroadcastMessage(long from, float val, int taskID)
-			throws Exception;
+	public void sendFloatMessage(String msgType, long from, long to, float msg,
+			int taskID) throws Exception;
 
 	@Sync
-	public void sendFloatMessage(long from, long[] array, float[] array2,
-			int taskid) throws Exception;
+	public void sendBroadcastMessage(String msgType, long from, Object val,
+			int taskID) throws Exception;
 
 	@Sync
-	public void sendDoubleMessage(long i, long[] array, double[] array2,
-			int taskid) throws Exception;
+	public void sendFloatBroadcastMessage(String msgType, long from, float val,
+			int taskID) throws Exception;
 
 	@Sync
-	public void sendDoubleMessage(long from, long to, double val, int taskid)
-			throws Exception;
+	public void sendFloatMessage(String msgType, long from, long[] keys,
+			float[] values, int taskid) throws Exception;
 
 	@Sync
-	public void sendDoubleBroadcastMessage(long from, double val, int taskid)
-			throws Exception;
+	public void sendDoubleMessage(String msgType, long i, long[] keys,
+			double[] values, int taskid) throws Exception;
 
+	@Sync
+	public void sendDoubleMessage(String msgType, long from, long to,
+			double val, int taskid) throws Exception;
+
+	@Sync
+	public void sendDoubleBroadcastMessage(String msgType, long from,
+			double val, int taskid) throws Exception;
+
+	@Sync
+	public void sendFloatArrayMessage(String msgtype, long from, long to,
+			float[] value, int taskid) throws Exception;
+
+	@Sync
+	public void sendFloatArrayMessage(String msgType, long l, long[] vids,
+			float[][] data, int taskid) throws Exception;
+
+	@Sync
+	public void sendFloatArrayBroadcastMessage(String msgtype, long from,
+			float[] value, int taskid) throws Exception;
 }

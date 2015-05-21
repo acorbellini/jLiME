@@ -1,6 +1,7 @@
 package edu.jlime.pregel.coordinator;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.UUID;
 
 import edu.jlime.core.cluster.Peer;
@@ -32,9 +33,9 @@ public class CoordinatorImpl implements Coordinator {
 	}
 
 	@Override
-	public void finished(int taskID, UUID workerID, Boolean didWork)
-			throws Exception {
-		tasks.get(taskID).finished(workerID, didWork);
+	public void finished(int taskID, UUID workerID, Boolean didWork,
+			HashMap<String, Aggregator> ags) throws Exception {
+		tasks.get(taskID).finished(workerID, didWork, ags);
 	}
 
 	@Override
@@ -59,18 +60,18 @@ public class CoordinatorImpl implements Coordinator {
 
 	}
 
-	@Override
-	public Double getAggregatedValue(int taskID, Long v, String k)
-			throws Exception {
-		return tasks.get(taskID).getAggregatedValue(v, k);
-
-	}
-
-	@Override
-	public void setAggregatedValue(int taskID, Long v, String name, Double val)
-			throws Exception {
-		tasks.get(taskID).setAggregatedValue(v, name, val);
-
-	}
+	// @Override
+	// public Double getAggregatedValue(int taskID, Long v, String k)
+	// throws Exception {
+	// return tasks.get(taskID).getAggregatedValue(v, k);
+	//
+	// }
+	//
+	// @Override
+	// public void setAggregatedValue(int taskID, Long v, String name, Double
+	// val)
+	// throws Exception {
+	// tasks.get(taskID).setAggregatedValue(v, name, val);
+	// }
 
 }

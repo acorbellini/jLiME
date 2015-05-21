@@ -1,11 +1,8 @@
 package edu.jlime.rpc;
 
-import java.io.FileInputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Properties;
-
-import org.apache.log4j.Logger;
 
 import edu.jlime.rpc.fc.FCConfiguration;
 import edu.jlime.rpc.tcp.TCPConfig;

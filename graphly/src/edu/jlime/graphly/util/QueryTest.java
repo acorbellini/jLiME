@@ -5,10 +5,7 @@ import java.util.List;
 import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.client.GraphlyGraph;
 import edu.jlime.graphly.jobs.MapperFactory;
-import edu.jlime.graphly.traversal.Pregel;
-import edu.jlime.pregel.client.PregelConfig;
-import edu.jlime.pregel.functions.PageRankFloat;
-import edu.jlime.pregel.mergers.MessageMergers;
+import edu.jlime.graphly.rec.Recommendation;
 
 public class QueryTest {
 
@@ -18,6 +15,52 @@ public class QueryTest {
 		System.out.println(graphly.listGraphs());
 
 		final GraphlyGraph g = graphly.getGraph(args[0]);
+
+		long init = System.currentTimeMillis();
+		g.v().set("mapper", MapperFactory.location()).as(Recommendation.class)
+				.hitsPregel("auth", "hub", 10).exec();
+
+		// System.out.println(System.currentTimeMillis() - init);
+		// {
+		// float sum = 0;
+		// List<Float> vals = g.gather(new SumFloatPropertiesGather("auth"));
+		// for (Float d : vals) {
+		// sum += d;
+		// }
+		//
+		// System.out.println(sum);
+		// }
+		//
+		// {
+		// float sum = 0;
+		// List<Float> vals = g.gather(new SumFloatPropertiesGather("hub"));
+		// for (Float d : vals) {
+		// sum += d;
+		// }
+		// System.out.println(sum);
+		// }
+		{
+			float sum = 0;
+			float quad = 0;
+			List<Float> vals = g.gather(new SumFloatPropertiesGather("auth"));
+			for (Float d : vals) {
+				sum += d;
+				quad += d * d;
+			}
+
+			System.out.println(sum / Math.sqrt(quad));
+		}
+
+		{
+			float sum = 0;
+			float quad = 0;
+			List<Float> vals = g.gather(new SumFloatPropertiesGather("hub"));
+			for (Float d : vals) {
+				sum += d;
+				quad += d * d;
+			}
+			System.out.println(sum / Math.sqrt(quad));
+		}
 		// int count = 0;
 		// VertexList vlist = g.vertices();
 		// for (Long long1 : vlist) {
@@ -25,43 +68,38 @@ public class QueryTest {
 		// }
 		// System.out.println(count);
 
-		System.out.println("Counting Vertices");
-		int vertexCount = g.getVertexCount();
+		// System.out.println("Counting Vertices");
+		// int vertexCount = g.getVertexCount();
 
-		System.out.println("Finished Counting Vertices: " + vertexCount);
-		long init = System.currentTimeMillis();
-		g.setDefaultFloat("pagerank", 1f / vertexCount);
-		g.setDefaultFloat("ranksource", .85f);
+		// System.out.println("Finished Counting Vertices: " + vertexCount);
 
-		{
-			float sum = 0;
-			List<Float> vals = g
-					.gather(new SumFloatPropertiesGather("pagerank"));
-			for (Float d : vals) {
-				sum += d;
-			}
-
-			System.out.println(sum);
-		}
-
-		g.v()
-				.set("mapper", MapperFactory.location())
-				.as(Pregel.class)
-				.vertexFunction(
-						new PageRankFloat(vertexCount),
-						PregelConfig.create().steps(5)
-								.executeOnAll(true)
-								.merger(MessageMergers.FLOAT_SUM)).exec();
-
-		System.out.println(System.currentTimeMillis() - init);
-
-		float sum = 0;
-		List<Float> vals = g.gather(new SumFloatPropertiesGather("pagerank"));
-		for (Float d : vals) {
-			sum += d;
-		}
-
-		System.out.println(sum);
+		// g.setDefaultFloat("pagerank", 1f / vertexCount);
+		// g.setDefaultFloat("ranksource", .85f);
+		//
+		// {
+		// float sum = 0;
+		// List<Float> vals = g
+		// .gather(new SumFloatPropertiesGather("pagerank"));
+		// for (Float d : vals) {
+		// sum += d;
+		// }
+		//
+		// System.out.println(sum);
+		// }
+		// long init = System.currentTimeMillis();
+		// g.v().set("mapper",
+		// MapperFactory.location()).as(Recommendation.class)
+		// .pagerank("pagerank", 30, 0.00000005f).exec();
+		//
+		// System.out.println(System.currentTimeMillis() - init);
+		//
+		// float sum = 0;
+		// List<Float> vals = g.gather(new
+		// SumFloatPropertiesGather("pagerank"));
+		// for (Float d : vals)
+		// sum += d;
+		//
+		// System.out.println(sum);
 
 		// final AtomicDouble sum = new AtomicDouble(0d);
 		// // If everything's alright, the sum should be 1 (Or near)

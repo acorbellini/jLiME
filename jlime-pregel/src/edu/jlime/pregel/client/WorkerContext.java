@@ -1,5 +1,6 @@
 package edu.jlime.pregel.client;
 
+import edu.jlime.pregel.coordinator.Aggregator;
 import edu.jlime.pregel.graph.rpc.Graph;
 import edu.jlime.pregel.worker.WorkerTask;
 
@@ -7,8 +8,6 @@ public class WorkerContext {
 	private WorkerTask task;
 
 	private long v;
-
-	// private ArrayList<PregelMessage> toSend = new ArrayList<>();
 
 	public WorkerContext(WorkerTask task, long v) {
 		this.task = task;
@@ -19,48 +18,43 @@ public class WorkerContext {
 		return task.getGraph();
 	};
 
-	// public void setHalted() {
-	// task.setHalted(v);
-	// };
-
 	public Integer getSuperStep() {
 		return task.getSuperStep();
 	};
 
-	public Double getAggregatedValue(String string) throws Exception {
-		return task.getAggregatedValue(v, string);
-	}
-
-	public void setAggregatedValue(String string, double currentVal)
-			throws Exception {
-		task.setAggregatedValue(v, string, currentVal);
-	}
-
-	public void send(long to, Object curr) throws Exception {
-		task.send(this.v, to, curr);
+	public void send(String type, long to, Object curr) throws Exception {
+		task.send(type, this.v, to, curr);
 
 	}
 
-	public void sendAll(Object val) throws Exception {
-		task.sendAll(this.v, val);
+	public void sendAll(String msgType, Object val) throws Exception {
+		task.sendAll(msgType, this.v, val);
 	}
 
-	public void sendFloat(long to, float curr) throws Exception {
-		task.sendFloat(this.v, to, curr);
-
-	}
-
-	public void sendAllFloat(float val) throws Exception {
-		task.sendAllFloat(this.v, val);
+	public void sendFloat(String type, long to, float curr) throws Exception {
+		task.sendFloat(type, this.v, to, curr);
 
 	}
 
-	public void sendAllDouble(double val) throws Exception {
-		task.sendAllDouble(this.v, val);
+	public void sendAllFloat(String msgType, float val) throws Exception {
+		task.sendAllFloat(msgType, this.v, val);
 
 	}
 
-	public void sendDouble(long to, double val) {
-		task.sendDouble(this.v, to, val);
+	public void sendAllDouble(String msgType, double val) throws Exception {
+		task.sendAllDouble(msgType, this.v, val);
+
+	}
+
+	public void sendDouble(String type, long to, double val) throws Exception {
+		task.sendDouble(type, this.v, to, val);
+	}
+
+	public void setCurrVertex(long currentVertex) {
+		this.v = currentVertex;
+	}
+
+	public Aggregator getAggregator(String string) {
+		return task.getAggregator(string);
 	}
 }

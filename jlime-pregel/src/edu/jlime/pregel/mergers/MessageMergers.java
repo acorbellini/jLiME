@@ -1,9 +1,30 @@
 package edu.jlime.pregel.mergers;
 
 import edu.jlime.pregel.queues.DoubleMessageMerger;
+import edu.jlime.pregel.queues.FloatArrayMessageQueue;
+import edu.jlime.pregel.queues.MessageQueueFactory;
 import edu.jlime.pregel.worker.FloatMessageMerger;
 
 public class MessageMergers {
+	public static final class FloatArrayMerger implements MessageMerger {
+		@Override
+		public MessageQueueFactory getFactory() {
+			return MessageQueueFactory.floatArrayFactory(this);
+		}
+
+		public void merge(float[] a, float[] b, float[] to) {
+			for (int i = 0; i < a.length; i++) {
+				if (a[i] == FloatArrayMessageQueue.NULL)
+					to[i] = b[i];
+				else if (b[i] == FloatArrayMessageQueue.NULL)
+					to[i] = a[i];
+				else
+					to[i] = a[i] + b[i];
+			}
+		}
+	}
+
+	public static final MessageMerger FLOAT_ARRAY_SUM = new FloatArrayMerger();
 	public static FloatMessageMerger FLOAT_SUM = new FloatMessageMerger() {
 
 		@Override

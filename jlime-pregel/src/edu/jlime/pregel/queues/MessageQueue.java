@@ -1,10 +1,10 @@
 package edu.jlime.pregel.queues;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.List;
-import java.util.TreeSet;
+import java.util.Map.Entry;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import edu.jlime.pregel.mergers.MessageMerger;
 import edu.jlime.pregel.mergers.ObjectMessageMerger;
@@ -12,11 +12,11 @@ import edu.jlime.pregel.messages.GenericPregelMessage;
 import edu.jlime.pregel.messages.PregelMessage;
 import edu.jlime.pregel.worker.WorkerTask;
 
-public class MessageQueue implements PregelMessageQueue {
+public class MessageQueue implements ObjectMessageQueue {
 	private static final int MAX = 5000000;
 	private static final int AVGSIZE = 500;
-	private volatile TreeSet<PregelMessage> readOnly;
-	private volatile TreeSet<PregelMessage> current;
+	private volatile TreeMap<long[], Object> readOnly;
+	private volatile TreeMap<long[], Object> current;
 	private ObjectMessageMerger merger;
 	private int contPut = 0;
 
@@ -25,18 +25,19 @@ public class MessageQueue implements PregelMessageQueue {
 
 	public MessageQueue(ObjectMessageMerger merger) {
 		this.merger = merger;
-		Comparator<PregelMessage> comparator = new Comparator<PregelMessage>() {
+		Comparator<long[]> comparator = new Comparator<long[]>() {
 			MessageMerger merger = MessageQueue.this.merger;
 
 			@Override
-			public int compare(PregelMessage o1, PregelMessage o2) {
-				if (merger != null)
-					return Long.compare(o1.getTo(), o2.getTo());
-				return o1.compareTo(o2);
+			public int compare(long[] o1, long[] o2) {
+				int compare = Long.compare(o1[0], o2[0]);
+				if (merger == null && compare == 0)
+					return Long.compare(o1[1], o2[1]);
+				return compare;
 			}
 		};
-		readOnly = new TreeSet<PregelMessage>(comparator);
-		current = new TreeSet<PregelMessage>(comparator);
+		readOnly = new TreeMap<>(comparator);
+		current = new TreeMap<>(comparator);
 		// this.readOnly = new PersistentOrderedQueue(merger, MAX, AVGSIZE);
 		// this.current = new PersistentOrderedQueue(merger, MAX, AVGSIZE);
 	}
@@ -48,17 +49,17 @@ public class MessageQueue implements PregelMessageQueue {
 	 * edu.jlime.pregel.worker.PregelMessageQueue#put(edu.jlime.pregel.worker
 	 * .PregelMessage)
 	 */
-	@Override
 	public synchronized void put(long from, long to, Object msg) {
-		GenericPregelMessage e = new GenericPregelMessage(from, to, msg);
+		// GenericPregelMessage e = new GenericPregelMessage("", from, to, msg);
+		long[] key = new long[] { to, from };
 		if (merger == null)
-			this.current.add(e);
+			this.current.put(key, msg);
 		else {
-			PregelMessage found = this.current.ceiling(e);
-			if (found != null && found.getTo() == to) {
-				found.setV(merger.merge(found.getV(), msg));
+			Entry<long[], Object> found = this.current.ceilingEntry(key);
+			if (found != null && found.getKey()[0] == to) {
+				merger.merge(msg, found.getValue());
 			} else {
-				this.current.add(e);
+				this.current.put(key, merger.getCopy(msg));
 			}
 		}
 
@@ -99,7 +100,7 @@ public class MessageQueue implements PregelMessageQueue {
 	 */
 	@Override
 	public synchronized void switchQueue() {
-		TreeSet<PregelMessage> aux = readOnly;
+		TreeMap<long[], Object> aux = readOnly;
 		this.readOnly = current;
 		this.current = aux;
 		this.current.clear();
@@ -126,57 +127,8 @@ public class MessageQueue implements PregelMessageQueue {
 		return readOnly.size();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see edu.jlime.pregel.worker.PregelMessageQueue#iterator()
-	 */
 	@Override
-	public Iterator<List<PregelMessage>> iterator() {
-		// Collections.sort(readOnly);
-
-		return new Iterator<List<PregelMessage>>() {
-			PregelMessage curr;
-			final Iterator<PregelMessage> it = readOnly.iterator();
-
-			@Override
-			public List<PregelMessage> next() {
-				ArrayList<PregelMessage> ret = new ArrayList<PregelMessage>();
-				if (curr != null) {
-					ret.add(curr);
-					curr = null;
-				}
-				while (it.hasNext()) {
-					curr = it.next();
-					if (ret.isEmpty()) {
-						ret.add(curr);
-						curr = null;
-					} else {
-						if (ret.get(0).getTo() != curr.getTo())
-							return ret;
-						else {
-							ret.add(curr);
-							curr = null;
-						}
-					}
-				}
-				return ret;
-			}
-
-			@Override
-			public boolean hasNext() {
-				return curr != null || it.hasNext();
-			}
-		};
-	}
-
-	@Override
-	public void putFloat(long from, long to, float val) {
-		this.put(from, to, val);
-	}
-
-	@Override
-	public void flush(WorkerTask workerTask) throws Exception {
+	public void flush(String msgType, WorkerTask workerTask) throws Exception {
 		// final Iterator<PregelMessage> it = readOnly.iterator();
 		// while (it.hasNext()) {
 		// PregelMessage msg = it.next();
@@ -185,18 +137,24 @@ public class MessageQueue implements PregelMessageQueue {
 	}
 
 	@Override
-	public void putDouble(long from, long to, double val) {
-		this.put(from, to, val);
+	public Iterator<PregelMessage> getMessages(final String msgType, long v) {
+		SortedMap<long[], Object> sm = readOnly.subMap(new long[] { v,
+				Long.MIN_VALUE }, new long[] { v + 1, Long.MIN_VALUE });
+		final Iterator<Entry<long[], Object>> it = sm.entrySet().iterator();
+		return new Iterator<PregelMessage>() {
+
+			@Override
+			public PregelMessage next() {
+				Entry<long[], Object> e = it.next();
+				long[] k = e.getKey();
+				return new GenericPregelMessage(msgType, k[1], k[0],
+						e.getValue());
+			}
+
+			@Override
+			public boolean hasNext() {
+				return it.hasNext();
+			}
+		};
 	}
-
-	@Override
-	public Iterator<PregelMessage> getMessages(long v) {
-		GenericPregelMessage from = new GenericPregelMessage(Long.MIN_VALUE, v,
-				null);
-		GenericPregelMessage to = new GenericPregelMessage(Long.MAX_VALUE, v,
-				null);
-
-		return readOnly.subSet(from, to).iterator();
-	}
-
 }

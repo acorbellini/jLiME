@@ -3,20 +3,9 @@ package edu.jlime.pregel.messages;
 public class FloatPregelMessage extends PregelMessage {
 	float v;
 
-	public FloatPregelMessage(long from, long to, float val) {
-		super(from, to);
+	public FloatPregelMessage(String msgType, long from, long to, float val) {
+		super(msgType, from, to);
 		this.v = val;
-	}
-
-	@Override
-	public void setV(Object v) {
-		this.v = (Float) v;
-
-	}
-
-	@Override
-	public Object getV() {
-		return v;
 	}
 
 	public void setFloat(float v) {
@@ -30,8 +19,8 @@ public class FloatPregelMessage extends PregelMessage {
 
 	@Override
 	public PregelMessage getCopy() {
-		FloatPregelMessage floatPregelMessage = new FloatPregelMessage(from,
-				to, v);
+		FloatPregelMessage floatPregelMessage = new FloatPregelMessage(
+				getType(), from, to, v);
 		floatPregelMessage.setBroadcast(isBroadcast());
 		return floatPregelMessage;
 	}

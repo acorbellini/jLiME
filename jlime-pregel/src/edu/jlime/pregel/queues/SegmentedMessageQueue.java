@@ -1,7 +1,6 @@
 package edu.jlime.pregel.queues;
 
 import java.util.Iterator;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -12,7 +11,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import edu.jlime.pregel.messages.PregelMessage;
 import edu.jlime.pregel.worker.WorkerTask;
 
-public class SegmentedMessageQueue implements PregelMessageQueue {
+public class SegmentedMessageQueue {
 	ExecutorService pool;
 
 	PregelMessageQueue[] queue;
@@ -26,8 +25,11 @@ public class SegmentedMessageQueue implements PregelMessageQueue {
 
 	Semaphore maxThreads;
 
-	public SegmentedMessageQueue(WorkerTask wt, int segs, int queuelimit,
-			MessageQueueFactory fact, int threads) {
+	private String msgType;
+
+	public SegmentedMessageQueue(String msgType, WorkerTask wt, int segs,
+			int queuelimit, MessageQueueFactory fact, int threads) {
+		this.msgType = msgType;
 		this.maxThreads = new Semaphore((int) (threads * 1.5f));
 		this.task = wt;
 		this.queue_limit = queuelimit;
@@ -47,7 +49,6 @@ public class SegmentedMessageQueue implements PregelMessageQueue {
 		});
 	}
 
-	@Override
 	public synchronized void switchQueue() {
 		synchronized (taskCounter) {
 			while (taskCounter.get() != 0)
@@ -61,7 +62,6 @@ public class SegmentedMessageQueue implements PregelMessageQueue {
 			queue[i].switchQueue();
 	}
 
-	@Override
 	public int currentSize() {
 		int size = 0;
 		for (int i = 0; i < queue.length; i++) {
@@ -70,14 +70,7 @@ public class SegmentedMessageQueue implements PregelMessageQueue {
 		return size;
 	}
 
-	@Override
 	public int readOnlySize() {
-		// int count = 0;
-		// for (PregelMessageQueue pregelMessageQueue : queue) {
-		// if (pregelMessageQueue.readOnlySize() == 0)
-		// count++;
-		// }
-		// System.out.println(count);
 		int size = 0;
 		for (int i = 0; i < queue.length; i++) {
 			size += queue[i].readOnlySize();
@@ -85,44 +78,30 @@ public class SegmentedMessageQueue implements PregelMessageQueue {
 		return size;
 	}
 
-	@Override
-	public Iterator<List<PregelMessage>> iterator() {
-		return new SegmentedIterator(this);
-	}
-
-	@Override
-	public void put(long from, long to, Object msg) {
+	public void put(long from, long to, Object msg) throws Exception {
 		int hash = getHash(to);
-		final PregelMessageQueue cache = this.queue[hash];
+		final ObjectMessageQueue cache = (ObjectMessageQueue) this.queue[hash];
 		synchronized (cache) {
 			checkSize(hash, cache);
 			cache.put(from, to, msg);
 		}
 	}
 
-	private void checkSize(int queueIndex, final PregelMessageQueue cache) {
+	private void checkSize(int queueIndex, final PregelMessageQueue cache)
+			throws Exception {
 		if (cache.currentSize() == queue_limit) {
 			if (fut[queueIndex] != null)
-				try {
-					fut[queueIndex].get();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+				fut[queueIndex].get();
 
 			cache.switchQueue();
 
 			taskCounter.incrementAndGet();
-			try {
-				maxThreads.acquire();
-			} catch (InterruptedException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
+			maxThreads.acquire();
 			fut[queueIndex] = pool.submit(new Runnable() {
 				@Override
 				public void run() {
 					try {
-						cache.flush(task);
+						cache.flush(msgType, task);
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
@@ -137,14 +116,17 @@ public class SegmentedMessageQueue implements PregelMessageQueue {
 		}
 	}
 
-	@Override
-	public void putFloat(long from, long to, float val) {
+	public void putFloat(long from, long to, float val) throws Exception {
 		int hash = getHash(to);
-		PregelMessageQueue cache = this.queue[hash];
+		FloatMessageQueue cache = (FloatMessageQueue) this.queue[hash];
 		synchronized (cache) {
 			checkSize(hash, cache);
 			cache.putFloat(from, to, val);
 		}
+	}
+
+	public PregelMessageQueue getMQ(long to) {
+		return this.queue[getHash(to)];
 	}
 
 	private int getHash(long to) {
@@ -153,7 +135,8 @@ public class SegmentedMessageQueue implements PregelMessageQueue {
 		return hash;
 	}
 
-	public void flush(final WorkerTask workerTask) throws Exception {
+	public void flush(final String msgType, final WorkerTask workerTask)
+			throws Exception {
 		final Semaphore waitFlush = new Semaphore(-queue.length + 1);
 		for (final PregelMessageQueue pregelMessageQueue : queue) {
 			maxThreads.acquire();
@@ -162,7 +145,7 @@ public class SegmentedMessageQueue implements PregelMessageQueue {
 				@Override
 				public void run() {
 					try {
-						pregelMessageQueue.flush(workerTask);
+						pregelMessageQueue.flush(msgType, workerTask);
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
@@ -179,19 +162,30 @@ public class SegmentedMessageQueue implements PregelMessageQueue {
 		pool.shutdown();
 	}
 
-	public void putDouble(long from, long to, double val) {
+	public void putDouble(long from, long to, double val) throws Exception {
 		int hash = getHash(to);
-		PregelMessageQueue cache = this.queue[hash];
+		DoubleMessageQueue cache = (DoubleMessageQueue) this.queue[hash];
 		synchronized (cache) {
 			checkSize(hash, cache);
 			cache.putDouble(from, to, val);
 		}
 	}
 
-	public Iterator<PregelMessage> getMessages(long currentVertex) {
+	public Iterator<PregelMessage> getMessages(String msgType,
+			long currentVertex) {
 		int hash = getHash(currentVertex);
 		PregelMessageQueue cache = this.queue[hash];
-		return cache.getMessages(currentVertex);
+		return cache.getMessages(msgType, currentVertex);
+	}
+
+	public void putFloatArray(long from, long to, float[] val) throws Exception {
+		int hash = getHash(to);
+		FloatArrayMessageQueue cache = (FloatArrayMessageQueue) this.queue[hash];
+		synchronized (cache) {
+			checkSize(hash, cache);
+			cache.putFloatArray(from, to, val);
+		}
+
 	}
 
 }

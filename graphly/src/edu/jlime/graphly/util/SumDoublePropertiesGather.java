@@ -1,6 +1,6 @@
 package edu.jlime.graphly.util;
 
-import edu.jlime.graphly.GraphlyStoreNode;
+import edu.jlime.graphly.storenode.GraphlyStoreNode;
 import gnu.trove.iterator.TLongIterator;
 import gnu.trove.list.array.TLongArrayList;
 

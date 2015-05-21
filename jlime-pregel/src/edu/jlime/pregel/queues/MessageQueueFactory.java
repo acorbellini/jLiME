@@ -1,5 +1,6 @@
 package edu.jlime.pregel.queues;
 
+import edu.jlime.pregel.mergers.MessageMergers.FloatArrayMerger;
 import edu.jlime.pregel.mergers.ObjectMessageMerger;
 import edu.jlime.pregel.worker.FloatMessageMerger;
 
@@ -31,7 +32,7 @@ public abstract class MessageQueueFactory {
 
 			@Override
 			public PregelMessageQueue getMQ() {
-				return new FloatHashedMessageQueue(merger);
+				return new FloatMessageQueue(merger);
 			}
 		};
 	}
@@ -42,9 +43,20 @@ public abstract class MessageQueueFactory {
 
 			@Override
 			public PregelMessageQueue getMQ() {
-				DoubleHashedMessageQueue ret = new DoubleHashedMessageQueue(
+				DoubleMessageQueue ret = new DoubleMessageQueue(
 						doubleMessageMerger);
 				return ret;
+			}
+		};
+	}
+
+	public static MessageQueueFactory floatArrayFactory(
+			final FloatArrayMerger messageMerger) {
+		return new MessageQueueFactory() {
+
+			@Override
+			public PregelMessageQueue getMQ() {
+				return new FloatArrayMessageQueue(messageMerger);
 			}
 		};
 	}

@@ -8,7 +8,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
 
-import edu.jlime.graphly.GraphlyStoreNodeI;
+import edu.jlime.graphly.storenode.GraphlyStoreNodeI;
 import gnu.trove.list.array.TLongArrayList;
 
 public class VertexIterator implements Iterator<Long> {

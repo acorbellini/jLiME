@@ -16,8 +16,8 @@ import edu.jlime.pregel.worker.WorkerServer;
 import edu.jlime.pregel.worker.rpc.Worker;
 import edu.jlime.pregel.worker.rpc.WorkerBroadcast;
 import edu.jlime.pregel.worker.rpc.WorkerFactory;
-import edu.jlime.rpc.NetworkConfiguration;
 import edu.jlime.rpc.JLiMEFactory;
+import edu.jlime.rpc.NetworkConfiguration;
 
 public class PregelClient {
 

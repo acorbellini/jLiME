@@ -1,30 +1,23 @@
 package edu.jlime.pregel.messages;
 
-public class GenericPregelMessage extends PregelMessage {
+public class GenericPregelMessage<T> extends PregelMessage {
 
-	Object v;
+	T v;
 
-	public GenericPregelMessage(long from, long to, Object val) {
-		super(from, to);
+	public GenericPregelMessage(String msgType, long from, long to, T val) {
+		super(msgType, from, to);
 		this.v = val;
 	}
 
-	@Override
-	public Object getV() {
+	public T getV() {
 		return v;
-	}
-
-	@Override
-	public void setV(Object v) {
-		this.v = v;
 	}
 
 	@Override
 	public PregelMessage getCopy() {
 		GenericPregelMessage genericPregelMessage = new GenericPregelMessage(
-				from, to, v);
+				getType(), from, to, v);
 		genericPregelMessage.setBroadcast(isBroadcast());
 		return genericPregelMessage;
 	}
-
 }

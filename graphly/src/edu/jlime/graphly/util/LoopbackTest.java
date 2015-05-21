@@ -31,9 +31,9 @@ public class LoopbackTest {
 				.set("mapper", MapperFactory.rr())
 				.as(Pregel.class)
 				.vertexFunction(
-						new PageRankFloat(vertexCount),
+						new PageRankFloat("pagerank", vertexCount),
 						PregelConfig.create().steps(10).executeOnAll(true)
-								.merger(MessageMergers.FLOAT_SUM)).exec();
+								.merger("pr", MessageMergers.FLOAT_SUM)).exec();
 		System.out.println(System.currentTimeMillis() - init);
 		float sum = 0;
 		List<Float> vals = test

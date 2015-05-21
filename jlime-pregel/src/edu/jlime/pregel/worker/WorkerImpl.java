@@ -1,6 +1,5 @@
 package edu.jlime.pregel.worker;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.UUID;
 
@@ -64,56 +63,81 @@ public class WorkerImpl implements Worker {
 	}
 
 	@Override
-	public void sendMessage(long from, long to, Object val, int taskID)
-			throws Exception {
-		contexts.get(taskID).queueVertexData(from, to, val);
+	public void sendMessage(String msgType, long from, long to, Object val,
+			int taskID) throws Exception {
+		contexts.get(taskID).queueVertexData(msgType, from, to, val);
 	}
 
 	@Override
-	public void sendFloatMessage(long from, long to, float msg, int taskID)
-			throws Exception {
-		contexts.get(taskID).queueFloatVertexData(from, to, msg);
+	public void sendFloatMessage(String msgType, long from, long to, float msg,
+			int taskID) throws Exception {
+		contexts.get(taskID).queueFloatVertexData(msgType, from, to, msg);
 	}
 
 	@Override
-	public void sendBroadcastMessage(long from, Object val, int taskID)
-			throws Exception {
-		contexts.get(taskID).queueBroadcastVertexData(from, val);
+	public void sendBroadcastMessage(String msgType, long from, Object val,
+			int taskID) throws Exception {
+		contexts.get(taskID).queueBroadcastVertexData(msgType, from, val);
 	}
 
 	@Override
-	public void sendFloatBroadcastMessage(long from, float val, int taskID)
-			throws Exception {
-		contexts.get(taskID).queueBroadcastFloatVertexData(from, val);
+	public void sendFloatBroadcastMessage(String msgType, long from, float val,
+			int taskID) throws Exception {
+		contexts.get(taskID).queueBroadcastFloatVertexData(msgType, from, val);
 	}
 
 	@Override
-	public void sendFloatMessage(long from, long[] to, float[] vals, int taskid) {
+	public void sendFloatMessage(String msgType, long from, long[] to,
+			float[] vals, int taskid) throws Exception {
 		WorkerTask workerTask = contexts.get(taskid);
 		for (int i = 0; i < to.length; i++) {
-			workerTask.queueFloatVertexData(from, to[i], vals[i]);
+			workerTask.queueFloatVertexData(msgType, from, to[i], vals[i]);
 		}
 
 	}
 
 	@Override
-	public void sendDoubleMessage(long from, long[] to, double[] vals,
-			int taskid) {
+	public void sendDoubleMessage(String msgType, long from, long[] to,
+			double[] vals, int taskid) throws Exception {
 		WorkerTask workerTask = contexts.get(taskid);
 		for (int i = 0; i < to.length; i++) {
-			workerTask.queueDoubleVertexData(from, to[i], vals[i]);
+			workerTask.queueDoubleVertexData(msgType, from, to[i], vals[i]);
 		}
 	}
 
 	@Override
-	public void sendDoubleMessage(long from, long to, double val, int taskid) {
-		contexts.get(taskid).queueDoubleVertexData(from, to, val);
+	public void sendDoubleMessage(String msgType, long from, long to,
+			double val, int taskid) throws Exception {
+		contexts.get(taskid).queueDoubleVertexData(msgType, from, to, val);
 
 	}
 
 	@Override
-	public void sendDoubleBroadcastMessage(long from, double val, int taskid)
-			throws Exception {
-		contexts.get(taskid).queueBroadcastDoubleVertexData(from, val);
+	public void sendDoubleBroadcastMessage(String msgType, long from,
+			double val, int taskid) throws Exception {
+		contexts.get(taskid).queueBroadcastDoubleVertexData(msgType, from, val);
+	}
+
+	@Override
+	public void sendFloatArrayMessage(String msgtype, long from, long to,
+			float[] value, int taskid) throws Exception {
+		contexts.get(taskid)
+				.queueFloatArrayVertexData(msgtype, from, to, value);
+	}
+
+	@Override
+	public void sendFloatArrayMessage(String msgType, long from, long[] to,
+			float[][] vals, int taskid) throws Exception {
+		WorkerTask workerTask = contexts.get(taskid);
+		for (int i = 0; i < to.length; i++) {
+			workerTask.queueFloatArrayVertexData(msgType, from, to[i], vals[i]);
+		}
+	}
+
+	@Override
+	public void sendFloatArrayBroadcastMessage(String msgtype, long from,
+			float[] value, int taskid) throws Exception {
+		contexts.get(taskid).queueBroadcastFloatArrayVertexData(msgtype, from,
+				value);
 	}
 }

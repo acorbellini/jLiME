@@ -13,8 +13,8 @@ import edu.jlime.core.stream.RemoteOutputStream;
 import edu.jlime.jd.ClientCluster;
 import edu.jlime.jd.JobDispatcher;
 import edu.jlime.jd.StreamProvider;
-import edu.jlime.rpc.NetworkConfiguration;
 import edu.jlime.rpc.JLiMEFactory;
+import edu.jlime.rpc.NetworkConfiguration;
 
 public class Client implements Closeable {
 

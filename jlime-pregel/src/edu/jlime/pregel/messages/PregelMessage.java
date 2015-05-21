@@ -9,13 +9,12 @@ public abstract class PregelMessage implements Comparable<PregelMessage>,
 
 	protected long from;
 
-	public abstract void setV(Object v);
-
-	public abstract Object getV();
-
 	protected long to;
 
-	public PregelMessage(long from, long to) {
+	private String type;
+
+	public PregelMessage(String msgType, long from, long to) {
+		this.type = msgType;
 		this.from = from;
 		this.to = to;
 	}
@@ -36,10 +35,14 @@ public abstract class PregelMessage implements Comparable<PregelMessage>,
 		return from;
 	}
 
+	public String getType() {
+		return type;
+	}
+
 	@Override
 	public String toString() {
-		return "PregelMessage [from=" + getFrom() + ", to=" + to + ", v="
-				+ getV() + "]";
+		return "PregelMessage [type=" + getType() + ", from=" + getFrom()
+				+ ", to=" + to + "]";
 	}
 
 	@Override
