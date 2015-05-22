@@ -140,7 +140,9 @@ public class PregelConfig implements Serializable {
 		if (queue_limit.equals("auto")) {
 			float max = Runtime.getRuntime().maxMemory() * .5f;
 			float entry_size = 8f + 8f + 64f;
-			i = (int) ((max / (entry_size)) / getSegments());
+			// i = (int) ((max / (entry_size)) / getSegments());
+			i = (int) (max / entry_size);
+			i = 10000;
 		} else
 			i = Integer.valueOf(queue_limit.substring(
 					queue_limit.indexOf("x") + 1, queue_limit.length()));

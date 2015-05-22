@@ -47,7 +47,7 @@ public class WorkerTask {
 
 	private Worker[] workers;
 
-	private CacheManager cacheMgr;
+	private HashMap<Integer, CacheManager> cacheMgr;
 
 	private Graph graph;
 
@@ -92,7 +92,10 @@ public class WorkerTask {
 			aggregators.put(e.getKey(), e.getValue().copy());
 		}
 
-		this.cacheMgr = new CacheManager(this, config);
+		this.cacheMgr = new HashMap<>();
+		for (int i = 0; i < config.getThreads(); i++) {
+			this.cacheMgr.put(i, new CacheManager(this, config));
+		}
 
 		this.vList = config.isPersitentVertexList() ? new PersistedVertexList()
 				: new InMemVertexList();
@@ -274,7 +277,9 @@ public class WorkerTask {
 
 		log.info("Flushing cache on step " + currentStep + " on Worker "
 				+ worker.getID());
-		cacheMgr.flush();
+		for (CacheManager cache : cacheMgr.values()) {
+			cache.flush();
+		}
 
 		log.info("Finished work for step " + currentStep + " on Worker "
 				+ worker.getID());
@@ -290,7 +295,8 @@ public class WorkerTask {
 
 		ArrayList<Iterator<PregelMessage>> currList = new ArrayList<>();
 
-		WorkerContext ctx = new WorkerContext(WorkerTask.this, -1);
+		WorkerContext ctx = new WorkerContext(WorkerTask.this,
+				cacheMgr.get(threadID), -1);
 
 		while (it.hasNext()) {
 			long currentVertex = it.next();
@@ -371,34 +377,35 @@ public class WorkerTask {
 		vList.delete();
 	}
 
-	public void send(String msgType, long from, long to, Object val)
-			throws Exception {
-		cacheMgr.send(msgType, from, to, val);
-	}
-
-	public void sendFloat(String msg, long from, long to, float val)
-			throws Exception {
-		cacheMgr.sendFloat(msg, from, to, val);
-	}
-
-	public void sendDouble(String msg, long from, long to, double val)
-			throws Exception {
-		cacheMgr.sendDouble(msg, from, to, val);
-	}
-
-	public void sendAll(String type, long from, Object msg) throws Exception {
-		cacheMgr.sendAll(type, from, msg);
-	}
-
-	public void sendAllFloat(String type, long from, float val)
-			throws Exception {
-		cacheMgr.sendAllFloat(type, from, val);
-	}
-
-	public void sendAllDouble(String type, long from, double val)
-			throws Exception {
-		cacheMgr.sendAllDouble(type, from, val);
-	}
+	// public void send(String msgType, long from, long to, Object val)
+	// throws Exception {
+	// cacheMgr.send(msgType, from, to, val);
+	// }
+	//
+	// public void sendFloat(String msg, long from, long to, float val)
+	// throws Exception {
+	// cacheMgr.sendFloat(msg, from, to, val);
+	// }
+	//
+	// public void sendDouble(String msg, long from, long to, double val)
+	// throws Exception {
+	// cacheMgr.sendDouble(msg, from, to, val);
+	// }
+	//
+	// public void sendAll(String type, long from, Object msg) throws Exception
+	// {
+	// cacheMgr.sendAll(type, from, msg);
+	// }
+	//
+	// public void sendAllFloat(String type, long from, float val)
+	// throws Exception {
+	// cacheMgr.sendAllFloat(type, from, val);
+	// }
+	//
+	// public void sendAllDouble(String type, long from, double val)
+	// throws Exception {
+	// cacheMgr.sendAllDouble(type, from, val);
+	// }
 
 	public void outputDouble(String msgtype, long from, long to, double val)
 			throws Exception {
