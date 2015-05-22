@@ -6,11 +6,10 @@ import edu.jlime.pregel.client.WorkerContext;
 import edu.jlime.pregel.graph.VertexFunction;
 import edu.jlime.pregel.graph.rpc.Graph;
 import edu.jlime.pregel.messages.FloatPregelMessage;
-import edu.jlime.pregel.messages.PregelMessage;
 import edu.jlime.pregel.worker.FloatAggregator;
 import gnu.trove.iterator.TLongIterator;
 
-public class PageRankFloat implements VertexFunction {
+public class PageRankFloat implements VertexFunction<FloatPregelMessage> {
 	private int vertexSize;
 	private String prop;
 
@@ -20,8 +19,8 @@ public class PageRankFloat implements VertexFunction {
 	}
 
 	@Override
-	public void execute(long v, Iterator<PregelMessage> in, WorkerContext ctx)
-			throws Exception {
+	public void execute(long v, Iterator<FloatPregelMessage> in,
+			WorkerContext ctx) throws Exception {
 		Graph graph = ctx.getGraph();
 
 		float oldval = graph.getFloat(v, prop);

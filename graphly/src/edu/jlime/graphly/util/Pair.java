@@ -1,8 +1,14 @@
 package edu.jlime.graphly.util;
 
-public class Pair<L, R> {
-	L left;
-	R right;
+import java.io.Serializable;
+
+public class Pair<L, R> implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 3575315521739357724L;
+	public L left;
+	public R right;
 
 	public Pair(L left, R right) {
 		super();

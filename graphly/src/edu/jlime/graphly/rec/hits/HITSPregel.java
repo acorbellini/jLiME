@@ -3,16 +3,17 @@ package edu.jlime.graphly.rec.hits;
 import java.io.Serializable;
 import java.util.Iterator;
 
+import edu.jlime.graphly.rec.hits.HITSPregel.HITSMessage;
 import edu.jlime.pregel.client.WorkerContext;
 import edu.jlime.pregel.graph.VertexFunction;
 import edu.jlime.pregel.graph.rpc.Graph;
 import edu.jlime.pregel.mergers.ObjectMessageMerger;
 import edu.jlime.pregel.messages.GenericPregelMessage;
-import edu.jlime.pregel.messages.PregelMessage;
 import gnu.trove.iterator.TLongIterator;
 import gnu.trove.list.array.TLongArrayList;
 
-public class HITSPregel implements VertexFunction {
+public class HITSPregel implements
+		VertexFunction<GenericPregelMessage<HITSMessage>> {
 	public static final class HITSMerger extends
 			ObjectMessageMerger<HITSMessage> {
 		@Override
@@ -61,8 +62,8 @@ public class HITSPregel implements VertexFunction {
 	}
 
 	@Override
-	public void execute(long v, Iterator<PregelMessage> in, WorkerContext ctx)
-			throws Exception {
+	public void execute(long v, Iterator<GenericPregelMessage<HITSMessage>> in,
+			WorkerContext ctx) throws Exception {
 
 		Graph g = ctx.getGraph();
 
@@ -70,15 +71,13 @@ public class HITSPregel implements VertexFunction {
 		float hub = 0f;
 		if (ctx.getSuperStep() > 0) {
 			while (in.hasNext()) {
-				GenericPregelMessage<HITSMessage> pm = (GenericPregelMessage<HITSMessage>) in
-						.next();
+				GenericPregelMessage<HITSMessage> pm = in.next();
 				HITSMessage m = pm.getV();
-				auth += m.a;
-				hub += m.h;
+				// This is switched on purpose, the algorithm sums hub messages
+				// into auth and auth messages into hub.
+				hub += m.a;
+				auth += m.h;
 			}
-			float aux = hub;
-			hub = auth;
-			auth = aux;
 			g.setFloat(v, authKey, auth);
 			g.setFloat(v, hubKey, hub);
 		} else {

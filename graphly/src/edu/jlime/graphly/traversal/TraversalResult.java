@@ -35,7 +35,5 @@ public abstract class TraversalResult implements Serializable {
 
 	public TraversalResult top(int top) {
 		return this;
-
-	};
-
+	}
 }

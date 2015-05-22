@@ -6,11 +6,8 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.LogManager;
 
 import org.apache.log4j.Logger;
-import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import edu.jlime.core.rpc.RPCDispatcher;
 import edu.jlime.graphly.GraphlyConfiguration;

@@ -1,7 +1,7 @@
 package edu.jlime.graphly.client;
 
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import edu.jlime.core.rpc.RPCDispatcher;
 import edu.jlime.core.rpc.Transferible;
@@ -9,6 +9,9 @@ import edu.jlime.graphly.storenode.GraphlyCount;
 import edu.jlime.graphly.traversal.Dir;
 import edu.jlime.graphly.traversal.GraphlyTraversal;
 import edu.jlime.graphly.util.Gather;
+import edu.jlime.graphly.util.Pair;
+import edu.jlime.graphly.util.SumFloatPropertiesGather;
+import edu.jlime.graphly.util.TopGatherer;
 import edu.jlime.jd.JobDispatcher;
 import edu.jlime.pregel.client.PregelClient;
 import gnu.trove.map.hash.TLongObjectHashMap;
@@ -196,7 +199,24 @@ public class GraphlyGraph implements Transferible {
 		this.graphly.setDefaultFloat(graph, string, f);
 	}
 
-	public <T> List<T> gather(Gather<T> g) throws Exception {
-		return this.graphly.gather(graph, g);
+	public <T> GatherResult<T> gather(Gather<T> g) throws Exception {
+		return new GatherResult(this.graphly.gather(graph, g));
+	}
+
+	public Set<Pair<Long, Float>> topFloat(String string, int i)
+			throws Exception {
+		return this.gather(new TopGatherer(string, i)).merge(new TopMerger(i));
+	}
+
+	public Float sumFloat(String string) throws Exception {
+		return this.gather(new SumFloatPropertiesGather(string)).merge(
+				new SumMerger());
+
+	}
+
+	public Float quadSumFloat(String string) throws Exception {
+		return this.gather(new QuadSumFloatPropertiesGather(string)).merge(
+				new SumMerger());
+
 	}
 }

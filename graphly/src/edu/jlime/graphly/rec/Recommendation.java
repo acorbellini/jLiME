@@ -153,8 +153,9 @@ public class Recommendation extends CustomTraversal {
 		GraphlyGraph g = tr.getGraph();
 		int vertexCount = g.getVertexCount();
 
-		g.setDefaultFloat(auth, 1f / vertexCount);
-		g.setDefaultFloat(hub, 1f / vertexCount);
+		float init = 1f / vertexCount;
+		g.setDefaultFloat(auth, init);
+		g.setDefaultFloat(hub, init);
 
 		PregelConfig config = PregelConfig.create()
 				.merger("salsa", new SalsaMerger()).steps(steps)

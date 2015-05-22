@@ -9,7 +9,7 @@ import edu.jlime.pregel.messages.PregelMessage;
 import gnu.trove.iterator.TLongIterator;
 import gnu.trove.list.array.TLongArrayList;
 
-public class DisableDangling implements VertexFunction {
+public class DisableDangling implements VertexFunction<PregelMessage> {
 
 	@Override
 	public void execute(long v, Iterator<PregelMessage> in, WorkerContext ctx)

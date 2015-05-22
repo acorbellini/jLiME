@@ -37,7 +37,7 @@ public class LoopbackTest {
 		System.out.println(System.currentTimeMillis() - init);
 		float sum = 0;
 		List<Float> vals = test
-				.gather(new SumFloatPropertiesGather("pagerank"));
+				.gather(new SumFloatPropertiesGather("pagerank")).value();
 		for (Float float1 : vals) {
 			sum += float1;
 		}

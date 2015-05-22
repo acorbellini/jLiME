@@ -11,7 +11,7 @@ import edu.jlime.pregel.messages.DoublePregelMessage;
 import edu.jlime.pregel.messages.PregelMessage;
 import gnu.trove.iterator.TLongIterator;
 
-public class PageRankDouble implements VertexFunction {
+public class PageRankDouble implements VertexFunction<PregelMessage> {
 
 	// double error = 0.0001;
 	private int vertexSize;

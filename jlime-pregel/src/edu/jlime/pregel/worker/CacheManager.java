@@ -7,7 +7,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import edu.jlime.pregel.client.PregelConfig;
 import edu.jlime.pregel.queues.DoubleMessageQueue;
 import edu.jlime.pregel.queues.FloatMessageQueue;
-import edu.jlime.pregel.queues.MessageQueue;
 import edu.jlime.pregel.queues.ObjectMessageQueue;
 import edu.jlime.pregel.queues.PregelMessageQueue;
 import edu.jlime.pregel.queues.SegmentedMessageQueue;

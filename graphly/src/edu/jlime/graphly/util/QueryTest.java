@@ -1,6 +1,6 @@
 package edu.jlime.graphly.util;
 
-import java.util.List;
+import java.util.Set;
 
 import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.client.GraphlyGraph;
@@ -18,9 +18,9 @@ public class QueryTest {
 
 		long init = System.currentTimeMillis();
 		g.v().set("mapper", MapperFactory.location()).as(Recommendation.class)
-				.hitsPregel("auth", "hub", 10).exec();
+				.salsaPregel("auth", "hub", 10).exec();
 
-		// System.out.println(System.currentTimeMillis() - init);
+		System.out.println("Time: " + (System.currentTimeMillis() - init));
 		// {
 		// float sum = 0;
 		// List<Float> vals = g.gather(new SumFloatPropertiesGather("auth"));
@@ -40,27 +40,38 @@ public class QueryTest {
 		// System.out.println(sum);
 		// }
 		{
-			float sum = 0;
-			float quad = 0;
-			List<Float> vals = g.gather(new SumFloatPropertiesGather("auth"));
-			for (Float d : vals) {
-				sum += d;
-				quad += d * d;
+			System.out.println("Top Auth\n----------");
+			Set<Pair<Long, Float>> top = g.topFloat("auth", 10);
+			for (Pair<Long, Float> pair : top) {
+				System.out.println(pair.left + ":" + pair.right);
 			}
+		}
+		{
+			System.out.println("Top Hub\n----------");
+			Set<Pair<Long, Float>> top = g.topFloat("hub", 10);
+			for (Pair<Long, Float> pair : top) {
+				System.out.println(pair.left + ":" + pair.right);
+			}
+		}
 
-			System.out.println(sum / Math.sqrt(quad));
+		System.out.println("\nSum");
+		{
+			float sum = g.sumFloat("auth");
+			float quad = g.quadSumFloat("auth");
+			System.out.println("auth: " + sum);
+			System.out.println("auth quad: " + quad);
+			System.out.println("norm l2: " + sum / Math.sqrt(quad));
 		}
 
 		{
-			float sum = 0;
-			float quad = 0;
-			List<Float> vals = g.gather(new SumFloatPropertiesGather("hub"));
-			for (Float d : vals) {
-				sum += d;
-				quad += d * d;
-			}
-			System.out.println(sum / Math.sqrt(quad));
+			float sum = g.sumFloat("hub");
+			float quad = g.quadSumFloat("hub");
+			System.out.println("hub: " + sum);
+			System.out.println("hub quad: " + quad);
+			System.out.println("norm l2: " + sum / Math.sqrt(quad));
+
 		}
+
 		// int count = 0;
 		// VertexList vlist = g.vertices();
 		// for (Long long1 : vlist) {
