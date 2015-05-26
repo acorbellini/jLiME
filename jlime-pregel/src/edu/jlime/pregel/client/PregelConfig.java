@@ -24,9 +24,11 @@ public class PregelConfig implements Serializable {
 	private Integer send_threads = null;
 
 	private boolean persitentVertexList = true;
-	private boolean persitentCurrentSplitList = true;
+	private boolean persitentCurrentSplitList = false;
 
 	private HaltCondition condition = null;
+
+	private int queue_size = 100000;
 
 	public PregelConfig graph(GraphConnectionFactory graph) {
 		this.graph = graph;
@@ -105,8 +107,8 @@ public class PregelConfig implements Serializable {
 		return queue_limit;
 	}
 
-	public PregelConfig queue(String queue_limit) {
-		this.queue_limit = queue_limit;
+	public PregelConfig queue(int queue_limit) {
+		this.queue_size = queue_limit;
 		return this;
 	}
 
@@ -123,31 +125,8 @@ public class PregelConfig implements Serializable {
 		return bQueue;
 	}
 
-	public int getSegments() {
-		int t = 0;
-		if (queue_limit.equals("auto")) {
-			t = getThreads() * 64;
-		} else
-			t = Integer.valueOf(queue_limit.substring(0,
-					queue_limit.indexOf("x")));
-		// System.out.println("Segments " + t);
-
-		return t;
-	}
-
 	public int getQueueSize() {
-		int i = 0;
-		if (queue_limit.equals("auto")) {
-			float max = Runtime.getRuntime().maxMemory() * .5f;
-			float entry_size = 8f + 8f + 64f;
-			// i = (int) ((max / (entry_size)) / getSegments());
-			i = (int) (max / entry_size);
-			i = 10000;
-		} else
-			i = Integer.valueOf(queue_limit.substring(
-					queue_limit.indexOf("x") + 1, queue_limit.length()));
-		// System.out.println("Queue size" + i);
-		return i;
+		return queue_size;
 	}
 
 	public int getSendThreads() {

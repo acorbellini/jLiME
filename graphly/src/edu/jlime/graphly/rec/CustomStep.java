@@ -33,4 +33,8 @@ public class CustomStep implements Step {
 		return "CustomStep [func=" + func + "]";
 	}
 
+	public CustomFunction getFunction() {
+		return func;
+	}
+
 }

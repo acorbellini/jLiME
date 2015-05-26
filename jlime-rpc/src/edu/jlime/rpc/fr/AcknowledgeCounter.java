@@ -45,7 +45,8 @@ class AcknowledgeCounter {
 
 	private float timeout_mult;
 
-	public AcknowledgeCounter(Acknowledge ack, Address to, NetworkConfiguration config) {
+	public AcknowledgeCounter(Acknowledge ack, Address to,
+			NetworkConfiguration config) {
 		this.ack = ack;
 		this.timeout_mult = config.timeout_mult;
 		this.max_resend_size = config.ack_max_resend_size;

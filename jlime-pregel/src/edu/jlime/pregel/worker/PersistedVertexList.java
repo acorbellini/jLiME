@@ -12,7 +12,7 @@ import java.util.UUID;
 import edu.jlime.util.DataTypeUtils;
 
 public class PersistedVertexList implements VertexList {
-	public static class PersistedLongIterator implements LongIterator{
+	public static class PersistedLongIterator implements LongIterator {
 		private BufferedInputStream reader;
 		long curr = -1;
 		private boolean closed = false;

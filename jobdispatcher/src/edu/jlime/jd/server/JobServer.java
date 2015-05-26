@@ -55,8 +55,9 @@ public class JobServer {
 		jdData.put(JobDispatcher.ISEXEC, Boolean.valueOf(true).toString());
 		jdData.put(JobDispatcher.TAGS, "Server");
 
-		final RPCDispatcher rpc = new JLiMEFactory(new NetworkConfiguration(), jdData,
-				new DataFilter("app", JobDispatcher.SERVER, true)).build();
+		final RPCDispatcher rpc = new JLiMEFactory(new NetworkConfiguration(),
+				jdData, new DataFilter("app", JobDispatcher.SERVER, true))
+				.build();
 
 		// JD
 		final JobDispatcher disp = JobDispatcher.build(0, rpc);

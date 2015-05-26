@@ -1,26 +1,30 @@
 package edu.jlime.graphly.util;
 
-import java.util.Set;
-
 import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.client.GraphlyGraph;
 import edu.jlime.graphly.jobs.MapperFactory;
 import edu.jlime.graphly.rec.Recommendation;
+import edu.jlime.graphly.traversal.Pregel;
 
 public class QueryTest {
 
 	public static void main(String[] args) throws Exception {
 		Graphly graphly = Graphly.build(4);
 
-		System.out.println(graphly.listGraphs());
-
+		// System.out.println(graphly.listGraphs());
+		//
 		final GraphlyGraph g = graphly.getGraph(args[0]);
-
-		long init = System.currentTimeMillis();
-		g.v().set("mapper", MapperFactory.location()).as(Recommendation.class)
-				.salsaPregel("auth", "hub", 10).exec();
-
-		System.out.println("Time: " + (System.currentTimeMillis() - init));
+		//
+		// long init = System.currentTimeMillis();
+		// Pregel tr = g.v().set("mapper", MapperFactory.location())
+		// .as(Recommendation.class).hitsPregel("auth", "hub", 50)
+		// .as(Pregel.class);
+		//
+		// tr.getConfig().threads(2).queue(1000);
+		//
+		// tr.exec();
+		//
+		// System.out.println("Time: " + (System.currentTimeMillis() - init));
 		// {
 		// float sum = 0;
 		// List<Float> vals = g.gather(new SumFloatPropertiesGather("auth"));
@@ -39,38 +43,38 @@ public class QueryTest {
 		// }
 		// System.out.println(sum);
 		// }
-		{
-			System.out.println("Top Auth\n----------");
-			Set<Pair<Long, Float>> top = g.topFloat("auth", 10);
-			for (Pair<Long, Float> pair : top) {
-				System.out.println(pair.left + ":" + pair.right);
-			}
-		}
-		{
-			System.out.println("Top Hub\n----------");
-			Set<Pair<Long, Float>> top = g.topFloat("hub", 10);
-			for (Pair<Long, Float> pair : top) {
-				System.out.println(pair.left + ":" + pair.right);
-			}
-		}
-
-		System.out.println("\nSum");
-		{
-			float sum = g.sumFloat("auth");
-			float quad = g.quadSumFloat("auth");
-			System.out.println("auth: " + sum);
-			System.out.println("auth quad: " + quad);
-			System.out.println("norm l2: " + sum / Math.sqrt(quad));
-		}
-
-		{
-			float sum = g.sumFloat("hub");
-			float quad = g.quadSumFloat("hub");
-			System.out.println("hub: " + sum);
-			System.out.println("hub quad: " + quad);
-			System.out.println("norm l2: " + sum / Math.sqrt(quad));
-
-		}
+		// {
+		// System.out.println("\nTop Auth\n----------");
+		// Set<Pair<Long, Float>> top = g.topFloat("auth", 10);
+		// for (Pair<Long, Float> pair : top) {
+		// System.out.println(pair.left + ":" + pair.right);
+		// }
+		// }
+		// {
+		// System.out.println("\nTop Hub\n----------");
+		// Set<Pair<Long, Float>> top = g.topFloat("hub", 10);
+		// for (Pair<Long, Float> pair : top) {
+		// System.out.println(pair.left + ":" + pair.right);
+		// }
+		// }
+		//
+		// System.out.println("\nSum");
+		// {
+		// float sum = g.sumFloat("auth");
+		// float quad = g.quadSumFloat("auth");
+		// System.out.println("auth: " + sum);
+		// System.out.println("auth quad: " + quad);
+		// System.out.println("norm l2: " + sum / Math.sqrt(quad));
+		// }
+		//
+		// {
+		// float sum = g.sumFloat("hub");
+		// float quad = g.quadSumFloat("hub");
+		// System.out.println("hub: " + sum);
+		// System.out.println("hub quad: " + quad);
+		// System.out.println("norm l2: " + sum / Math.sqrt(quad));
+		//
+		// }
 
 		// int count = 0;
 		// VertexList vlist = g.vertices();
@@ -97,20 +101,20 @@ public class QueryTest {
 		//
 		// System.out.println(sum);
 		// }
-		// long init = System.currentTimeMillis();
-		// g.v().set("mapper",
-		// MapperFactory.location()).as(Recommendation.class)
-		// .pagerank("pagerank", 30, 0.00000005f).exec();
-		//
-		// System.out.println(System.currentTimeMillis() - init);
-		//
-		// float sum = 0;
-		// List<Float> vals = g.gather(new
-		// SumFloatPropertiesGather("pagerank"));
-		// for (Float d : vals)
-		// sum += d;
-		//
-		// System.out.println(sum);
+		long init = System.currentTimeMillis();
+		Pregel pagerank = g.v().set("mapper", MapperFactory.location())
+				.as(Recommendation.class).pagerank("pagerank", 30, 1E-5f)
+				.as(Pregel.class);
+
+		pagerank.getConfig().threads(2).queue(1000);
+
+		pagerank.exec();
+
+		System.out.println(System.currentTimeMillis() - init);
+
+		float sum = g.sumFloat("pagerank");
+
+		System.out.println(sum);
 
 		// final AtomicDouble sum = new AtomicDouble(0d);
 		// // If everything's alright, the sum should be 1 (Or near)

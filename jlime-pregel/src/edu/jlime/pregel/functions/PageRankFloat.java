@@ -38,7 +38,7 @@ public class PageRankFloat implements VertexFunction<FloatPregelMessage> {
 
 			currentVal = (1 - d) / vertexSize + d * sum;
 
-			float diff = currentVal - oldval;
+			float diff = Math.abs(currentVal - oldval);
 
 			FloatAggregator ag = (FloatAggregator) ctx.getAggregator("pr");
 

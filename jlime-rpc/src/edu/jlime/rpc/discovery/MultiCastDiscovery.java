@@ -21,8 +21,9 @@ public class MultiCastDiscovery extends Discovery {
 	// ,int announcedPort, String mcastaddr,
 	// int mcastport, long discDelay
 
-	public MultiCastDiscovery(Address id, String name, NetworkConfiguration config,
-			MessageProcessor mcast, MessageProcessor unicast) {
+	public MultiCastDiscovery(Address id, String name,
+			NetworkConfiguration config, MessageProcessor mcast,
+			MessageProcessor unicast) {
 		super(id, name, config, mcast, unicast);
 	}
 

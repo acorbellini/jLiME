@@ -86,28 +86,29 @@ public class HITSPregel implements
 		}
 
 		{
-			HITSMessage authM = HITSMessage.auth(auth);
 
 			TLongArrayList inc = g.getIncoming(v);
 			if (!inc.isEmpty()) {
+				HITSMessage authM = HITSMessage.auth(auth / inc.size());
 				TLongIterator it = inc.iterator();
 				while (it.hasNext())
 					ctx.send("hits", it.next(), authM);
 			} else {
-				authM.a = auth / gSize;
+				HITSMessage authM = HITSMessage.auth(auth / gSize);
 				ctx.sendAll("hits", authM);
 			}
 		}
 
 		{
-			HITSMessage hubM = HITSMessage.hub(hub);
+
 			TLongArrayList out = g.getOutgoing(v);
 			if (!out.isEmpty()) {
-				TLongIterator itOut = out.iterator();
-				while (itOut.hasNext())
-					ctx.send("hits", itOut.next(), hubM);
+				HITSMessage hubM = HITSMessage.hub(hub / out.size());
+				TLongIterator it = out.iterator();
+				while (it.hasNext())
+					ctx.send("hits", it.next(), hubM);
 			} else {
-				hubM.h = hub / gSize;
+				HITSMessage hubM = HITSMessage.hub(hub / gSize);
 				ctx.sendAll("hits", hubM);
 			}
 		}

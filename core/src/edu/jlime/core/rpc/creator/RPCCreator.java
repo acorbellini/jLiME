@@ -360,18 +360,28 @@ public class RPCCreator {
 				// throw new Exception("Primitive arguments not supported");
 
 				if (c.getType().getTypeParameters().length > 0) {
+
+					TypeVariable<?>[] parameterizedType = c.getType()
+							.getTypeParameters();
 					type = type + "<";
 					boolean first = true;
-					ParameterizedType t = (ParameterizedType) c
-							.getParameterizedType();
-					for (Type parameter : t.getActualTypeArguments()) {
+					for (TypeVariable<?> parameter : parameterizedType) {
 						if (first)
 							first = false;
 						else
 							type += ",";
-						type = type + parameter.getTypeName();
+						try {
+							getClass().getClassLoader().loadClass(
+									parameter.getTypeName());
+							type = type + parameter.getTypeName();
+						} catch (Exception e) {
+							e.printStackTrace();
+							type = type + "?";
+						}
+
 					}
 					type = type + ">";
+
 				}
 				String arg = c.getName();
 				HashSet<String> set = used.get(type);

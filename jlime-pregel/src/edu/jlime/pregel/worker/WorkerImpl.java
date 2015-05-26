@@ -35,7 +35,7 @@ public class WorkerImpl implements Worker {
 	}
 
 	@Override
-	public void createTask(int taskID, Peer cli, VertexFunction func,
+	public void createTask(int taskID, Peer cli, VertexFunction<?> func,
 			long[] vList, PregelConfig config) throws Exception {
 		synchronized (contexts) {
 			while (contexts.size() <= taskID)
@@ -87,25 +87,6 @@ public class WorkerImpl implements Worker {
 	}
 
 	@Override
-	public void sendFloatMessage(String msgType, long from, long[] to,
-			float[] vals, int taskid) throws Exception {
-		WorkerTask workerTask = contexts.get(taskid);
-		for (int i = 0; i < to.length; i++) {
-			workerTask.queueFloatVertexData(msgType, from, to[i], vals[i]);
-		}
-
-	}
-
-	@Override
-	public void sendDoubleMessage(String msgType, long from, long[] to,
-			double[] vals, int taskid) throws Exception {
-		WorkerTask workerTask = contexts.get(taskid);
-		for (int i = 0; i < to.length; i++) {
-			workerTask.queueDoubleVertexData(msgType, from, to[i], vals[i]);
-		}
-	}
-
-	@Override
 	public void sendDoubleMessage(String msgType, long from, long to,
 			double val, int taskid) throws Exception {
 		contexts.get(taskid).queueDoubleVertexData(msgType, from, to, val);
@@ -126,18 +107,49 @@ public class WorkerImpl implements Worker {
 	}
 
 	@Override
-	public void sendFloatArrayMessage(String msgType, long from, long[] to,
-			float[][] vals, int taskid) throws Exception {
-		WorkerTask workerTask = contexts.get(taskid);
-		for (int i = 0; i < to.length; i++) {
-			workerTask.queueFloatArrayVertexData(msgType, from, to[i], vals[i]);
-		}
-	}
-
-	@Override
 	public void sendFloatArrayBroadcastMessage(String msgtype, long from,
 			float[] value, int taskid) throws Exception {
 		contexts.get(taskid).queueBroadcastFloatArrayVertexData(msgtype, from,
 				value);
+	}
+
+	@Override
+	public void sendObjectsMessage(String msgtype, long from, long[] to,
+			Object[] objects, int taskid) throws Exception {
+		WorkerTask workerTask = contexts.get(taskid);
+
+		workerTask.queueVertexData(msgtype, from, to, objects);
+
+	}
+
+	@Override
+	public void sendFloatArrayMessage(String msgType, long from, long[] to,
+			float[][] vals, int taskid) throws Exception {
+		WorkerTask workerTask = contexts.get(taskid);
+		synchronized (workerTask) {
+			for (int i = 0; i < to.length; i++) {
+				workerTask.queueFloatArrayVertexData(msgType, from, to[i],
+						vals[i]);
+			}
+		}
+	}
+
+	@Override
+	public void sendFloatMessage(String msgType, long from, long[] to,
+			float[] vals, int taskid) throws Exception {
+		WorkerTask workerTask = contexts.get(taskid);
+		workerTask.queueFloatVertexData(msgType, from, to, vals);
+
+	}
+
+	@Override
+	public void sendDoubleMessage(String msgType, long from, long[] to,
+			double[] vals, int taskid) throws Exception {
+		WorkerTask workerTask = contexts.get(taskid);
+		synchronized (workerTask) {
+			for (int i = 0; i < to.length; i++) {
+				workerTask.queueDoubleVertexData(msgType, from, to[i], vals[i]);
+			}
+		}
 	}
 }

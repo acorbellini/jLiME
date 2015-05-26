@@ -27,6 +27,7 @@ import edu.jlime.pregel.worker.FloatAggregator;
 public class Recommendation extends CustomTraversal {
 
 	public static final class PageRankHaltCondition implements HaltCondition {
+
 		private float cut;
 
 		public PageRankHaltCondition(float cut) {
@@ -41,7 +42,6 @@ public class Recommendation extends CustomTraversal {
 			FloatAggregator ag = (FloatAggregator) coordinatorTask
 					.getAggregator("pr");
 			float f = ag.get();
-			// System.out.printf("Current Difference: %.20f \n", f);
 			return f < cut;
 		}
 	}
@@ -119,10 +119,11 @@ public class Recommendation extends CustomTraversal {
 		g.setDefaultFloat(pagerankProp, 1f / vertexCount);
 		g.setDefaultFloat("ranksource", .85f);
 
-		PregelConfig config = PregelConfig.create()
+		PregelConfig config = PregelConfig.create().steps(steps)
 				.aggregator("pr", MessageAggregators.FLOAT_SUM)
-				.haltCondition(new PageRankHaltCondition(cut)).steps(steps)
-				.executeOnAll(true).merger("pr", MessageMergers.FLOAT_SUM);
+				.merger("pr", MessageMergers.FLOAT_SUM)
+				.haltCondition(new PageRankHaltCondition(cut))
+				.executeOnAll(true);
 
 		tr.as(Pregel.class).vertexFunction(
 				new PageRankFloat(pagerankProp, vertexCount), config);
@@ -135,8 +136,8 @@ public class Recommendation extends CustomTraversal {
 		GraphlyGraph g = tr.getGraph();
 		int vertexCount = g.getVertexCount();
 
-		g.setDefaultFloat(auth, (float) (1f / Math.sqrt(vertexCount)));
-		g.setDefaultFloat(hub, (float) (1f / Math.sqrt(vertexCount)));
+		g.setDefaultFloat(auth, (float) (1f / vertexCount));
+		g.setDefaultFloat(hub, (float) (1f / vertexCount));
 
 		PregelConfig config = PregelConfig.create()
 				.merger("hits", new HITSMerger()).steps(steps)
@@ -167,4 +168,19 @@ public class Recommendation extends CustomTraversal {
 		return this;
 	}
 
+	public Recommendation whotofollow(String auth, String hub, int steps)
+			throws Exception {
+		// GraphlyGraph g = tr.getGraph();
+		//
+		// randomwalk("whotofollow-rw", steps, max, out);
+		//
+		// PregelConfig config = PregelConfig.create()
+		// .merger("salsa", new SalsaMerger()).steps(steps)
+		// .executeOnAll(true);
+		//
+		// tr.as(Pregel.class).vertexFunction(
+		// new SALSAPregel(auth, hub, vertexCount), config);
+
+		return this;
+	}
 }

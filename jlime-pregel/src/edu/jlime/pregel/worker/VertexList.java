@@ -1,6 +1,5 @@
 package edu.jlime.pregel.worker;
 
-
 public interface VertexList {
 	public void add(long vid) throws Exception;
 

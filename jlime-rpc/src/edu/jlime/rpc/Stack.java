@@ -353,8 +353,8 @@ public class Stack implements Iterable<StackElement> {
 		return tcpStack;
 	}
 
-	public static Stack localStack(NetworkConfiguration config, Address address,
-			String name) {
+	public static Stack localStack(NetworkConfiguration config,
+			Address address, String name) {
 		LoopbackMP local = new LoopbackMP();
 		DataProcessor data = new DataProcessor(local, config);
 		MultiCastDiscovery disco = new MultiCastDiscovery(address, name,

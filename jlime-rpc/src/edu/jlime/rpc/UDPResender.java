@@ -60,7 +60,8 @@ public class UDPResender extends SimpleMessageProcessor {
 
 	private int max_size;
 
-	public UDPResender(MessageProcessor next, NetworkConfiguration config, int max_size) {
+	public UDPResender(MessageProcessor next, NetworkConfiguration config,
+			int max_size) {
 		super(next, "UDP resender");
 		this.max_size = max_size;
 		next.addMessageListener(MessageType.ACK, new MessageListener() {

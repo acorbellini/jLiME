@@ -1,10 +1,7 @@
 package edu.jlime.pregel.worker;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -30,9 +27,11 @@ public class CacheManager {
 
 	private ExecutorService pool;
 
+	private int max_size;
+
 	public CacheManager(WorkerTask workerTask, PregelConfig config) {
 		this.task = workerTask;
-
+		this.max_size = config.getQueueSize();
 		this.config = config;
 		this.cache = new ConcurrentHashMap<>();
 		this.cacheBroadcast = new ConcurrentHashMap<>();
@@ -126,7 +125,7 @@ public class CacheManager {
 
 	private void checkSize(final String type, final PregelMessageQueue cache)
 			throws Exception {
-		if (cache.currentSize() == config.getQueueSize()) {
+		if (cache.currentSize() == max_size) {
 
 			Future<?> fut = futures.remove(type);
 			if (fut != null)

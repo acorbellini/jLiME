@@ -211,8 +211,8 @@ public class MultiInterface extends MessageProcessor implements
 		}
 	}
 
-	public static MultiInterface create(AddressType type, NetworkConfiguration config,
-			NetworkProtocolFactory fact) {
+	public static MultiInterface create(AddressType type,
+			NetworkConfiguration config, NetworkProtocolFactory fact) {
 		return new MultiInterface(type, config.interface_max_update_time, fact);
 	}
 

@@ -40,7 +40,8 @@ public class RabbitProcessor extends MessageProcessor implements
 	private String replyQueueName;
 	private QueueingConsumer consumer;
 
-	public RabbitProcessor(NetworkConfiguration config, String iface, Address local) {
+	public RabbitProcessor(NetworkConfiguration config, String iface,
+			Address local) {
 		super("Rabbit Processor");
 		this.config = config;
 		this.iface = iface;

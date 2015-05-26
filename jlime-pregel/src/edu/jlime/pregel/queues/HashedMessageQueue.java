@@ -4,9 +4,12 @@ import edu.jlime.pregel.mergers.ObjectMessageMerger;
 import edu.jlime.pregel.messages.GenericPregelMessage;
 import edu.jlime.pregel.messages.PregelMessage;
 import edu.jlime.pregel.worker.WorkerTask;
+import edu.jlime.pregel.worker.rpc.Worker;
 import gnu.trove.iterator.TLongObjectIterator;
 import gnu.trove.map.hash.TLongObjectHashMap;
+import gnu.trove.map.hash.TObjectIntHashMap;
 
+import java.util.HashMap;
 import java.util.Iterator;
 
 public class HashedMessageQueue implements ObjectMessageQueue {
@@ -61,12 +64,47 @@ public class HashedMessageQueue implements ObjectMessageQueue {
 
 	@Override
 	public void flush(String msgType, WorkerTask workerTask) throws Exception {
+		// final TLongObjectIterator<Object> it = readOnly.iterator();
+		// while (it.hasNext()) {
+		// it.advance();
+		// workerTask.outputObject(msgType, -1, it.key(), it.value());
+		// it.remove();
+		// }
+
+		TObjectIntHashMap<Worker> sizes = new TObjectIntHashMap<>();
+		{
+			final TLongObjectIterator<Object> it = readOnly.iterator();
+			while (it.hasNext()) {
+				it.advance();
+				long to = it.key();
+				if (to != -1) {
+					Worker w = workerTask.getWorker(to);
+					sizes.adjustOrPutValue(w, 1, 1);
+				}
+			}
+		}
+
+		HashMap<Worker, ObjectData> ret = new HashMap<>();
 		final TLongObjectIterator<Object> it = readOnly.iterator();
 		while (it.hasNext()) {
 			it.advance();
-			workerTask.outputObject(msgType, -1, it.key(), it.value());
-			it.remove();
+			long to = it.key();
+			if (to == -1) {
+				workerTask.outputObject(msgType, -1l, -1l, it.value());
+			} else {
+				Worker w = workerTask.getWorker(to);
+				ObjectData data = ret.get(w);
+				if (data == null) {
+					data = new ObjectData(sizes.get(w));
+					ret.put(w, data);
+				}
+				data.addL(to);
+				data.addObj(it.value());
+			}
 		}
+		readOnly.clear();
+		workerTask.sendObjects(msgType, ret);
+
 	}
 
 	@Override

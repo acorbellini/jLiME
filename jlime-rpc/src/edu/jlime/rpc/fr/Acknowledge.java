@@ -34,7 +34,8 @@ public class Acknowledge extends SimpleMessageProcessor {
 
 	private Timer t;
 
-	public Acknowledge(MessageProcessor next, int max_size, NetworkConfiguration config) {
+	public Acknowledge(MessageProcessor next, int max_size,
+			NetworkConfiguration config) {
 		super(next, "Acknowledge");
 		this.config = config;
 		this.max_size = max_size;

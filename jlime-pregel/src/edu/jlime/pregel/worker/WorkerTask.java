@@ -32,9 +32,14 @@ import edu.jlime.pregel.graph.rpc.Graph;
 import edu.jlime.pregel.mergers.MessageMerger;
 import edu.jlime.pregel.messages.PregelMessage;
 import edu.jlime.pregel.queues.DoubleData;
+import edu.jlime.pregel.queues.DoubleMessageQueue;
 import edu.jlime.pregel.queues.FloatArrayData;
+import edu.jlime.pregel.queues.FloatArrayMessageQueue;
+import edu.jlime.pregel.queues.FloatMessageQueue;
 import edu.jlime.pregel.queues.MessageQueueFactory;
-import edu.jlime.pregel.queues.SegmentedMessageQueue;
+import edu.jlime.pregel.queues.ObjectData;
+import edu.jlime.pregel.queues.ObjectMessageQueue;
+import edu.jlime.pregel.queues.PregelMessageQueue;
 import edu.jlime.pregel.worker.rpc.Worker;
 import edu.jlime.pregel.worker.rpc.WorkerBroadcast;
 import edu.jlime.pregel.worker.rpc.WorkerFactory;
@@ -61,7 +66,7 @@ public class WorkerTask {
 
 	private PregelConfig config;
 
-	private Map<String, SegmentedMessageQueue> queue;
+	private Map<String, PregelMessageQueue> queue;
 
 	private ClientManager<Coordinator, CoordinatorBroadcast> coordMgr;
 
@@ -159,18 +164,19 @@ public class WorkerTask {
 
 	public void queueVertexData(String msg, long from, long to, Object val)
 			throws Exception {
-		getQueue(msg).put(from, to, val);
+		((ObjectMessageQueue) getQueue(msg)).put(from, to, val);
 	}
 
-	private SegmentedMessageQueue getQueue(String msg) {
-		SegmentedMessageQueue ret = queue.get(msg);
+	private PregelMessageQueue getQueue(String msg) {
+		PregelMessageQueue ret = queue.get(msg);
 		if (ret == null) {
 			synchronized (queue) {
 				ret = queue.get(msg);
 				if (ret == null) {
-					ret = new SegmentedMessageQueue(msg, this,
-							config.getSegments(), Integer.MAX_VALUE,
-							getQueueFactory(msg), config.getThreads());
+					// ret = new SegmentedMessageQueue(msg, this,
+					// config.getSegments(), Integer.MAX_VALUE,
+					// getQueueFactory(msg), config.getThreads());
+					ret = getQueueFactory(msg).getMQ();
 					queue.put(msg, ret);
 				}
 			}
@@ -203,7 +209,7 @@ public class WorkerTask {
 
 		this.currentStep = superstep;
 
-		for (SegmentedMessageQueue s : queue.values())
+		for (PregelMessageQueue s : queue.values())
 			s.switchQueue();
 
 		// TODO It's done twice, called with -1 and 0.
@@ -303,8 +309,8 @@ public class WorkerTask {
 			if (vertexCursor % threads == threadID) {
 				ctx.setCurrVertex(currentVertex);
 				currList.clear();
-				for (Entry<String, SegmentedMessageQueue> e : queue.entrySet()) {
-					SegmentedMessageQueue q = e.getValue();
+				for (Entry<String, PregelMessageQueue> e : queue.entrySet()) {
+					PregelMessageQueue q = e.getValue();
 					currList.add(q.getMessages(e.getKey(), currentVertex));
 				}
 
@@ -329,7 +335,7 @@ public class WorkerTask {
 
 	private int queueSize() {
 		int ret = 0;
-		for (SegmentedMessageQueue s : queue.values())
+		for (PregelMessageQueue s : queue.values())
 			ret += s.readOnlySize();
 		return ret;
 	}
@@ -483,36 +489,38 @@ public class WorkerTask {
 		}
 	}
 
-	public void queueDoubleVertexData(String msg, long from, long to, double val)
-			throws Exception {
-		// DoubleAggregator ag = (DoubleAggregator) aggregators.get(msg);
-		// if (ag != null)
-		// ag.add(from, to, val);
-		getQueue(msg).putDouble(from, to, val);
-	}
-
-	public void queueBroadcastDoubleVertexData(String type, long from,
-			double val) throws Exception {
-		// DoubleAggregator ag = (DoubleAggregator) aggregators.get(type);
-
-		SegmentedMessageQueue q = getQueue(type);
-		LongIterator it = currentSplit.iterator();
-		while (it.hasNext()) {
-			long vid = it.next();
-			// if (ag != null)
-			// ag.add(from, vid, val);
-
-			q.putDouble(from, vid, val);
-		}
-	}
-
 	public void queueFloatVertexData(String msg, long from, long to, float val)
 			throws Exception {
 		// FloatAggregator ag = (FloatAggregator) aggregators.get(msg);
 		// if (ag != null)
 		// ag.add(from, to, val);
 
-		getQueue(msg).putFloat(from, to, val);
+		((FloatMessageQueue) getQueue(msg)).putFloat(from, to, val);
+	}
+
+	public void queueDoubleVertexData(String msg, long from, long to, double val)
+			throws Exception {
+		// DoubleAggregator ag = (DoubleAggregator) aggregators.get(msg);
+		// if (ag != null)
+		// ag.add(from, to, val);
+		((DoubleMessageQueue) getQueue(msg)).putDouble(from, to, val);
+	}
+
+	public void queueBroadcastDoubleVertexData(String type, long from,
+			double val) throws Exception {
+		// DoubleAggregator ag = (DoubleAggregator) aggregators.get(type);
+		LongIterator it = currentSplit.iterator();
+		DoubleMessageQueue q = (DoubleMessageQueue) getQueue(type);
+
+		synchronized (q) {
+			while (it.hasNext()) {
+				long vid = it.next();
+				// if (ag != null)
+				// ag.add(from, vid, val);
+
+				q.putDouble(from, vid, val);
+			}
+		}
 	}
 
 	public void queueBroadcastVertexData(String msg, long from, Object val)
@@ -520,29 +528,35 @@ public class WorkerTask {
 
 		// GenericAggregator ag = (GenericAggregator) aggregators.get(msg);
 
-		SegmentedMessageQueue q = getQueue(msg);
 		LongIterator it = currentSplit.iterator();
-		while (it.hasNext()) {
-			long vid = it.next();
 
-			// if (ag != null)
-			// ag.add(from, vid, val);
+		ObjectMessageQueue q = (ObjectMessageQueue) getQueue(msg);
+		synchronized (q) {
+			while (it.hasNext()) {
+				long vid = it.next();
 
-			q.put(from, vid, val);
+				// if (ag != null)
+				// ag.add(from, vid, val);
+
+				q.put(from, vid, val);
+			}
 		}
 	}
 
 	public void queueBroadcastFloatVertexData(String msg, long from, float val)
 			throws Exception {
 		// FloatAggregator ag = (FloatAggregator) aggregators.get(msg);
-
-		SegmentedMessageQueue q = getQueue(msg);
 		LongIterator it = currentSplit.iterator();
-		while (it.hasNext()) {
-			long vid = it.next();
-			// if (ag != null)
-			// ag.add(from, vid, val);
-			q.putFloat(from, vid, val);
+
+		FloatMessageQueue q = (FloatMessageQueue) getQueue(msg);
+
+		synchronized (q) {
+			while (it.hasNext()) {
+				long vid = it.next();
+				// if (ag != null)
+				// ag.add(from, vid, val);
+				q.putFloat(from, vid, val);
+			}
 		}
 	}
 
@@ -583,7 +597,7 @@ public class WorkerTask {
 
 	public void queueBroadcastFloatArrayVertexData(String msg, long from,
 			float[] val) throws Exception {
-		SegmentedMessageQueue q = getQueue(msg);
+		FloatArrayMessageQueue q = (FloatArrayMessageQueue) getQueue(msg);
 		LongIterator it = currentSplit.iterator();
 		while (it.hasNext()) {
 			long vid = it.next();
@@ -595,6 +609,47 @@ public class WorkerTask {
 
 	public void queueFloatArrayVertexData(String msg, long from, long to,
 			float[] data) throws Exception {
-		getQueue(msg).putFloatArray(from, to, data);
+		((FloatArrayMessageQueue) getQueue(msg)).putFloatArray(from, to, data);
+	}
+
+	public void sendObjects(final String msgType,
+			HashMap<Worker, ObjectData> ret) throws InterruptedException {
+		for (final Entry<Worker, ObjectData> e : ret.entrySet()) {
+			multiSendCounter.acquire();
+			multiSendPool.execute(new Runnable() {
+				@Override
+				public void run() {
+					ObjectData dData = e.getValue();
+					try {
+						e.getKey().sendObjectsMessage(msgType, -1l, dData.vids,
+								dData.objects, taskid);
+					} catch (Exception e1) {
+						e1.printStackTrace();
+					} finally {
+						multiSendCounter.release();
+					}
+				}
+			});
+		}
+	}
+
+	public void queueVertexData(String msgtype, long from, long[] to,
+			Object[] objects) {
+		ObjectMessageQueue q = (ObjectMessageQueue) getQueue(msgtype);
+		synchronized (q) {
+			for (int i = 0; i < to.length; i++) {
+				q.put(from, to[i], objects[i]);
+			}
+		}
+	}
+
+	public void queueFloatVertexData(String msgType, long from, long[] to,
+			float[] vals) {
+		FloatMessageQueue q = (FloatMessageQueue) getQueue(msgType);
+		synchronized (q) {
+			for (int i = 0; i < to.length; i++) {
+				q.putFloat(from, to[i], vals[i]);
+			}
+		}
 	}
 }

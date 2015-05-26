@@ -133,7 +133,7 @@ public class LocalStore {
 					iterator.close();
 					iterator = getDb().iterator();
 					first = true;
-					inclFirst = false;
+					inclFirst = (cont == 0 && inclFirst);
 				}
 		} finally {
 			iterator.close();
@@ -176,7 +176,7 @@ public class LocalStore {
 					iterator.close();
 					iterator = getDb().iterator();
 					first = true;
-					includeFirst = false;
+					includeFirst = ret.isEmpty() && includeFirst;
 				}
 
 		} finally {

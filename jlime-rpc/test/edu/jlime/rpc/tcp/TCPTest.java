@@ -35,7 +35,8 @@ public class TCPTest {
 		});
 		tcp.start();
 
-		TCP tcp2 = new TCP(id2, addr, 8001, 1, new NetworkConfiguration().tcp_config);
+		TCP tcp2 = new TCP(id2, addr, 8001, 1,
+				new NetworkConfiguration().tcp_config);
 		tcp2.start();
 
 		Message newFullDataMessage = Message.newFullDataMessage(

@@ -21,7 +21,7 @@ public interface Worker {
 	public void execute(int taskID) throws Exception;
 
 	@Sync
-	void createTask(int taskID, Peer cli, VertexFunction func, long[] vList,
+	void createTask(int taskID, Peer cli, VertexFunction<?> func, long[] vList,
 			PregelConfig config) throws Exception;
 
 	@Sync
@@ -70,4 +70,8 @@ public interface Worker {
 	@Sync
 	public void sendFloatArrayBroadcastMessage(String msgtype, long from,
 			float[] value, int taskid) throws Exception;
+
+	@Sync
+	public void sendObjectsMessage(String msgType, long l, long[] vids,
+			Object[] objects, int taskid) throws Exception;
 }

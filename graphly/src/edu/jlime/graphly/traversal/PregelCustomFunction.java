@@ -35,4 +35,8 @@ public class PregelCustomFunction implements CustomFunction {
 		return before;
 
 	}
+
+	public PregelConfig getConfig() {
+		return config;
+	}
 }

@@ -13,6 +13,10 @@ public class CustomTraversal {
 		return tr;
 	}
 
+	public <T extends CustomTraversal> T as(Class<T> c) throws Exception {
+		return tr.as(c);
+	}
+
 	public TraversalResult exec() throws Exception {
 		return tr.exec();
 	}

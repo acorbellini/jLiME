@@ -20,7 +20,8 @@ public class PingDiscovery extends Discovery {
 	private int port_range;
 
 	public PingDiscovery(Address local, String name, MessageProcessor unicast,
-			NetworkConfiguration opts, int port, int port_range) throws Exception {
+			NetworkConfiguration opts, int port, int port_range)
+			throws Exception {
 		super(local, name, opts, unicast, unicast);
 		this.port = port;
 		this.port_range = port_range;

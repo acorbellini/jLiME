@@ -35,7 +35,8 @@ public class ZeroMQProcessor extends MessageProcessor implements
 	private ConcurrentHashMap<Address, Socket> addressBook = new ConcurrentHashMap<>();
 	private SocketAddress socket;
 
-	public ZeroMQProcessor(NetworkConfiguration config, String iface, Address local) {
+	public ZeroMQProcessor(NetworkConfiguration config, String iface,
+			Address local) {
 		super("ZeroMQ");
 		this.config = config;
 		this.iface = iface;
