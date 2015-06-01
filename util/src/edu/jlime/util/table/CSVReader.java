@@ -28,7 +28,7 @@ public class CSVReader {
 	}
 
 	public boolean ready() throws IOException {
-		return reader.ready();
+		return peeked != null || reader.ready();
 	}
 
 	String peeked = null;
@@ -64,11 +64,11 @@ public class CSVReader {
 	}
 
 	public String peekLine() throws IOException {
-		if (!ready())
-			return null;
-
 		if (peeked != null)
 			return peeked;
+
+		if (!ready())
+			return null;
 
 		peeked = readLine();
 		return peeked;
