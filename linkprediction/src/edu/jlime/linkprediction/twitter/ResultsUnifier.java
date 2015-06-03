@@ -9,7 +9,7 @@ import java.io.IOException;
 
 import edu.jlime.util.table.FunctionCell;
 import edu.jlime.util.table.Functions;
-import edu.jlime.util.table.Promedio;
+import edu.jlime.util.table.Average;
 import edu.jlime.util.table.Row;
 import edu.jlime.util.table.Table;
 import edu.jlime.util.table.ValueCell;
@@ -72,7 +72,7 @@ public class ResultsUnifier {
 					timeTable.set(
 							3,
 							timeTable.getRowLimit() - 1,
-							new FunctionCell(new Promedio(timeTable.colRange(3,
+							new FunctionCell(new Average(timeTable.colRange(3,
 									1, timeTable.getRowLimit() - 2))));
 					r.add(timeTable.getRow(timeTable.getRowLimit() - 1).get(3));
 				}

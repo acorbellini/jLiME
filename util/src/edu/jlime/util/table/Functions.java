@@ -11,7 +11,7 @@ public class Functions {
 
 		@Override
 		public Cell build(Range r) {
-			return new FunctionCell(new Promedio(r));
+			return new FunctionCell(new Average(r));
 		}
 	};
 

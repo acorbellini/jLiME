@@ -1,10 +1,10 @@
 package edu.jlime.util.table;
 
-public class Promedio extends Function {
+public class Average extends Function {
 
 	private Range range;
 
-	public Promedio(Range range) {
+	public Average(Range range) {
 		this.range = range;
 	}
 
