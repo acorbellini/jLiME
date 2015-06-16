@@ -362,16 +362,6 @@ public class WorkerTask {
 		return currentStep;
 	}
 
-	// public Double getAggregatedValue(Long v, String k) throws Exception {
-	// return coordMgr.getFirst().getAggregatedValue(getTaskid(), v, k);
-	// }
-	//
-	// public void setAggregatedValue(Long v, String string, double currentVal)
-	// throws Exception {
-	// coordMgr.getFirst().setAggregatedValue(getTaskid(), v, string,
-	// currentVal);
-	// }
-
 	public PregelConfig getConfig() {
 		return config;
 	}
@@ -382,36 +372,6 @@ public class WorkerTask {
 		currentSplit.delete();
 		vList.delete();
 	}
-
-	// public void send(String msgType, long from, long to, Object val)
-	// throws Exception {
-	// cacheMgr.send(msgType, from, to, val);
-	// }
-	//
-	// public void sendFloat(String msg, long from, long to, float val)
-	// throws Exception {
-	// cacheMgr.sendFloat(msg, from, to, val);
-	// }
-	//
-	// public void sendDouble(String msg, long from, long to, double val)
-	// throws Exception {
-	// cacheMgr.sendDouble(msg, from, to, val);
-	// }
-	//
-	// public void sendAll(String type, long from, Object msg) throws Exception
-	// {
-	// cacheMgr.sendAll(type, from, msg);
-	// }
-	//
-	// public void sendAllFloat(String type, long from, float val)
-	// throws Exception {
-	// cacheMgr.sendAllFloat(type, from, val);
-	// }
-	//
-	// public void sendAllDouble(String type, long from, double val)
-	// throws Exception {
-	// cacheMgr.sendAllDouble(type, from, val);
-	// }
 
 	public void outputDouble(String msgtype, long from, long to, double val)
 			throws Exception {
@@ -491,33 +451,22 @@ public class WorkerTask {
 
 	public void queueFloatVertexData(String msg, long from, long to, float val)
 			throws Exception {
-		// FloatAggregator ag = (FloatAggregator) aggregators.get(msg);
-		// if (ag != null)
-		// ag.add(from, to, val);
-
 		((FloatMessageQueue) getQueue(msg)).putFloat(from, to, val);
 	}
 
 	public void queueDoubleVertexData(String msg, long from, long to, double val)
 			throws Exception {
-		// DoubleAggregator ag = (DoubleAggregator) aggregators.get(msg);
-		// if (ag != null)
-		// ag.add(from, to, val);
 		((DoubleMessageQueue) getQueue(msg)).putDouble(from, to, val);
 	}
 
 	public void queueBroadcastDoubleVertexData(String type, long from,
 			double val) throws Exception {
-		// DoubleAggregator ag = (DoubleAggregator) aggregators.get(type);
 		LongIterator it = currentSplit.iterator();
 		DoubleMessageQueue q = (DoubleMessageQueue) getQueue(type);
 
 		synchronized (q) {
 			while (it.hasNext()) {
 				long vid = it.next();
-				// if (ag != null)
-				// ag.add(from, vid, val);
-
 				q.putDouble(from, vid, val);
 			}
 		}
@@ -525,19 +474,12 @@ public class WorkerTask {
 
 	public void queueBroadcastVertexData(String msg, long from, Object val)
 			throws Exception {
-
-		// GenericAggregator ag = (GenericAggregator) aggregators.get(msg);
-
 		LongIterator it = currentSplit.iterator();
 
 		ObjectMessageQueue q = (ObjectMessageQueue) getQueue(msg);
 		synchronized (q) {
 			while (it.hasNext()) {
 				long vid = it.next();
-
-				// if (ag != null)
-				// ag.add(from, vid, val);
-
 				q.put(from, vid, val);
 			}
 		}
@@ -545,7 +487,6 @@ public class WorkerTask {
 
 	public void queueBroadcastFloatVertexData(String msg, long from, float val)
 			throws Exception {
-		// FloatAggregator ag = (FloatAggregator) aggregators.get(msg);
 		LongIterator it = currentSplit.iterator();
 
 		FloatMessageQueue q = (FloatMessageQueue) getQueue(msg);
@@ -553,8 +494,6 @@ public class WorkerTask {
 		synchronized (q) {
 			while (it.hasNext()) {
 				long vid = it.next();
-				// if (ag != null)
-				// ag.add(from, vid, val);
 				q.putFloat(from, vid, val);
 			}
 		}
@@ -601,8 +540,6 @@ public class WorkerTask {
 		LongIterator it = currentSplit.iterator();
 		while (it.hasNext()) {
 			long vid = it.next();
-			// if (ag != null)
-			// ag.add(from, vid, val);
 			q.putFloatArray(from, vid, val);
 		}
 	}
