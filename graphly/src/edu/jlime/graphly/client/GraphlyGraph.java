@@ -219,4 +219,8 @@ public class GraphlyGraph implements Transferible {
 				new SumMerger());
 
 	}
+
+	public float getDefaultFloat(String prop) throws Exception {
+		return this.graphly.getDefaultFloat(graph, prop);
+	}
 }

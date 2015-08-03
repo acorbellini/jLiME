@@ -30,6 +30,8 @@ public class PregelConfig implements Serializable {
 
 	private int queue_size = 100000;
 
+	private CacheFactory cacheFactory = CacheFactory.SIMPLE;
+
 	public PregelConfig graph(GraphConnectionFactory graph) {
 		this.graph = graph;
 		return this;
@@ -166,5 +168,14 @@ public class PregelConfig implements Serializable {
 
 	public HaltCondition getHaltCondition() {
 		return condition;
+	}
+
+	public CacheFactory getCacheFactory() {
+		return cacheFactory;
+	}
+
+	public PregelConfig cache(CacheFactory cf) {
+		cacheFactory = cf;
+		return this;
 	}
 }

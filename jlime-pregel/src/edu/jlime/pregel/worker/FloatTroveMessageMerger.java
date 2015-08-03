@@ -2,10 +2,11 @@ package edu.jlime.pregel.worker;
 
 import edu.jlime.pregel.mergers.MessageMerger;
 import edu.jlime.pregel.queues.MessageQueueFactory;
+import gnu.trove.map.hash.TLongFloatHashMap;
 
-public abstract class FloatMessageMerger implements MessageMerger {
+public abstract class FloatTroveMessageMerger implements MessageMerger {
 
-	public abstract float merge(float msg1, float msg2);
+	public abstract void merge(long to, float msg2, TLongFloatHashMap map);
 
 	@Override
 	public MessageQueueFactory getFactory() {

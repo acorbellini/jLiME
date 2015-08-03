@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -40,6 +41,7 @@ import edu.jlime.pregel.queues.MessageQueueFactory;
 import edu.jlime.pregel.queues.ObjectData;
 import edu.jlime.pregel.queues.ObjectMessageQueue;
 import edu.jlime.pregel.queues.PregelMessageQueue;
+import edu.jlime.pregel.queues.VertexContext;
 import edu.jlime.pregel.worker.rpc.Worker;
 import edu.jlime.pregel.worker.rpc.WorkerBroadcast;
 import edu.jlime.pregel.worker.rpc.WorkerFactory;
@@ -103,7 +105,7 @@ public class WorkerTask {
 
 		this.cacheMgr = new HashMap<>();
 		for (int i = 0; i < config.getThreads(); i++) {
-			this.cacheMgr.put(i, config.getCacheFactory().build(this, config));
+			this.cacheMgr.put(i, new NoCache(this));
 		}
 
 		this.vList = config.isPersitentVertexList() ? new PersistedVertexList()
@@ -256,7 +258,27 @@ public class WorkerTask {
 		this.log.info("Starting Execution on worker " + worker.getID()
 				+ " for " + size + " messages.");
 
+		final ArrayBlockingQueue<VertexContext> ctx = new ArrayBlockingQueue<>(
+				128);
 		final int threads = this.config.getThreads();
+		Thread loader = new Thread() {
+			@Override
+			public void run() {
+				try {
+					LongIterator it = currentSplit.iterator();
+					while (it.hasNext()) {
+						long vid = it.next();
+						ctx.put(new VertexCtxImpl(vid, graph.getOutgoing(vid)));
+					}
+					for (int i = 0; i < threads; i++) {
+						ctx.put(new VertexCtxImpl(Long.MIN_VALUE, null));
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		};
+		loader.start();
 
 		final AtomicInteger count = new AtomicInteger(0);
 		for (int i = 0; i < this.config.getThreads(); i++) {
@@ -266,11 +288,10 @@ public class WorkerTask {
 				@Override
 				public void run() {
 					try {
-						executeVertex(size, threads, count, currentIndex);
+						executeVertex(size, threads, count, currentIndex, ctx);
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
-
 					int vc = vertexCounter.decrementAndGet();
 					if (vc == 0)
 						synchronized (vertexCounter) {
@@ -310,49 +331,52 @@ public class WorkerTask {
 	}
 
 	private void executeVertex(final int size, final int threads,
-			final AtomicInteger count, final int threadID) throws Exception {
-		int vertexCursor = 0;
-
-		LongIterator it = currentSplit.iterator();
+			final AtomicInteger count, final int threadID,
+			ArrayBlockingQueue<VertexContext> bq) throws Exception {
+		// int vertexCursor = 0;
+		//
+		// LongIterator it = currentSplit.iterator();
 
 		ArrayList<Iterator<PregelMessage>> currList = new ArrayList<>();
 
 		WorkerContext ctx = new WorkerContext(WorkerTask.this,
 				cacheMgr.get(threadID), -1);
-
-		while (it.hasNext()) {
-			long currentVertex = it.next();
-			if (vertexCursor % threads == threadID) {
-				ctx.setCurrVertex(currentVertex);
-				currList.clear();
-				for (Entry<String, PregelMessageQueue> e : queue.entrySet()) {
-					PregelMessageQueue q = e.getValue();
-					currList.add(q.getMessages(e.getKey(), currentVertex));
-				}
-
-				for (Entry<String, PregelMessageQueue> e : broadcast.entrySet()) {
-					PregelMessageQueue q = e.getValue();
-					currList.add(q.getMessages(e.getKey(), -1l));
-				}
-
-				Iterator<PregelMessage> messages = new ConcatIterator(currList);
-				if (messages.hasNext()) {
-					printCompleted(size, count.getAndIncrement());
-
-					if (log.isDebugEnabled())
-						log.debug("Executing function on vertex "
-								+ currentVertex);
-
-					f.execute(currentVertex, messages, ctx);
-
-					if (log.isDebugEnabled())
-						log.debug("Finished executing function on vertex "
-								+ currentVertex);
-				}
-
+		VertexContext vtx = null;
+		while ((vtx = bq.take()).getVid() != Long.MIN_VALUE) {
+			long currentVertex = vtx.getVid();
+			// while (it.hasNext()) {
+			// long currentVertex = it.next();
+			// if (vertexCursor % threads == threadID) {
+			ctx.setCurrVertex(currentVertex);
+			currList.clear();
+			for (Entry<String, PregelMessageQueue> e : queue.entrySet()) {
+				PregelMessageQueue q = e.getValue();
+				currList.add(q.getMessages(e.getKey(), currentVertex));
 			}
-			vertexCursor++;
+
+			for (Entry<String, PregelMessageQueue> e : broadcast.entrySet()) {
+				PregelMessageQueue q = e.getValue();
+				currList.add(q.getMessages(e.getKey(), -1l));
+			}
+
+			Iterator<PregelMessage> messages = new ConcatIterator(currList);
+			if (messages.hasNext()) {
+				printCompleted(size, count.getAndIncrement());
+
+				if (log.isDebugEnabled())
+					log.debug("Executing function on vertex " + currentVertex);
+
+				f.execute(currentVertex, messages, ctx, vtx);
+
+				if (log.isDebugEnabled())
+					log.debug("Finished executing function on vertex "
+							+ currentVertex);
+			}
 		}
+
+		// }
+		// vertexCursor++;
+		// }
 	}
 
 	private int queueSize() {

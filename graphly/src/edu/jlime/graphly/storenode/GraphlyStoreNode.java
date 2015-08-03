@@ -202,7 +202,8 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	}
 
 	private static byte[] buildVertexKey(String graph, long id) {
-		ByteBuffer buff = new ByteBuffer(1 + 8);
+		byte[] gName = graph.getBytes();
+		ByteBuffer buff = new ByteBuffer(1 + 4 + gName.length + 8);
 		buff.put(VERTEX);
 		buff.putString(graph);
 		buff.putRawByteArray(DataTypeUtils.longToByteArrayOrdered(id));

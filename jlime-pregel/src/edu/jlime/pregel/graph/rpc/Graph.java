@@ -82,4 +82,6 @@ public interface Graph extends Serializable {
 	public abstract void setFloat(long v, String string, float currentVal)
 			throws Exception;
 
+	public abstract float getDefaultFloat(String prop) throws Exception;
+
 }

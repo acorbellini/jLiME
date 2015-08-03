@@ -23,11 +23,9 @@ import edu.jlime.core.marshalling.TypeConverter;
 import edu.jlime.core.marshalling.TypeConverters;
 import edu.jlime.core.rpc.ClientManager;
 import edu.jlime.core.rpc.RPCDispatcher;
-import edu.jlime.graphly.GraphlyConfiguration;
 import edu.jlime.graphly.server.GraphlyCoordinator;
 import edu.jlime.graphly.server.GraphlyCoordinatorBroadcast;
 import edu.jlime.graphly.server.GraphlyCoordinatorFactory;
-import edu.jlime.graphly.server.GraphlyServer;
 import edu.jlime.graphly.storenode.GraphlyCount;
 import edu.jlime.graphly.storenode.GraphlyStoreNodeI;
 import edu.jlime.graphly.storenode.rpc.GraphlyStoreNodeIBroadcast;
@@ -39,7 +37,6 @@ import edu.jlime.graphly.util.GraphlyUtil;
 import edu.jlime.jd.JobDispatcher;
 import edu.jlime.pregel.client.PregelClient;
 import edu.jlime.rpc.JLiMEFactory;
-import edu.jlime.rpc.NetworkConfiguration;
 import edu.jlime.util.ByteBuffer;
 import gnu.trove.iterator.TLongIntIterator;
 import gnu.trove.iterator.TLongObjectIterator;
@@ -50,7 +47,7 @@ import gnu.trove.set.hash.TLongHashSet;
 
 public class Graphly implements Closeable {
 
-	private static final int MAX_VERTEX_ITERATOR = 100000;
+	private static final int MAX_VERTEX_ITERATOR = 1000;
 
 	public static final int NUM_JOBS = 1;
 
@@ -163,21 +160,11 @@ public class Graphly implements Closeable {
 
 	}
 
-	public static Graphly buildLocal(String path) throws Exception {
-		NetworkConfiguration net = new NetworkConfiguration();
-		GraphlyConfiguration gconfig = new GraphlyConfiguration();
-
-		net.protocol = "local";
-		GraphlyServer server = GraphlyServer.createServer(path, 0, true, 1,
-				net, gconfig);
-		return server.getGraphly();
-	}
-
 	public static Graphly build(RPCDispatcher rpc, PregelClient pregel_client,
 			JobDispatcher jd, int min) throws Exception {
 
 		TypeConverters tc = rpc.getMarshaller().getTc();
-		tc.registerTypeConverter(Dir.class, new TypeConverter() {
+		tc.registerTypeConverter((byte) 4, Dir.class, new TypeConverter() {
 
 			@Override
 			public void toArray(Object o, ByteBuffer buffer, Peer cliID)
@@ -604,6 +591,10 @@ public class Graphly implements Closeable {
 		}
 		return ret;
 
+	}
+
+	public float getDefaultFloat(String graph, String prop) throws Exception {
+		return mgr.getFirst().getDefaultFloat(graph, prop);
 	}
 
 }

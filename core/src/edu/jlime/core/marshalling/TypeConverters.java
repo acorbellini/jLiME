@@ -40,6 +40,8 @@ public class TypeConverters {
 
 	private byte count = 0;
 
+	private byte start = (byte) 128;
+
 	RPCDispatcher rpc;
 
 	public RPCDispatcher getRPC() {
@@ -91,7 +93,12 @@ public class TypeConverters {
 
 	}
 
-	public void registerTypeConverter(Class<?> classObj, TypeConverter conv) {
+	/**
+	 * 
+	 * @param class of the object to be marshalled/unmarshalled
+	 * @param converter to be used
+	 */
+	private void registerTypeConverter(Class<?> classObj, TypeConverter conv) {
 		byte id = count++;
 		String className = classObj.getName();
 
@@ -99,6 +106,23 @@ public class TypeConverters {
 		convs.add(conv);
 
 		ids.put(className, id);
+
+	}
+	
+	/**
+	 * 
+	 * @param id of the class
+	 * @param classObj class to be marshalled/unmarshalled
+	 * @param conv converter
+	 */
+	public void registerTypeConverter(byte id, Class<?> classObj,
+			TypeConverter conv) {
+		String className = classObj.getName();
+
+		types.add(className);
+		convs.add(conv);
+
+		ids.put(className, (byte) (start + id));
 
 	}
 

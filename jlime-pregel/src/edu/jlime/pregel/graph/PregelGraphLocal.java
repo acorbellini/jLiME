@@ -489,4 +489,10 @@ public class PregelGraphLocal implements Serializable, Graph {
 		// TODO Auto-generated method stub
 
 	}
+
+	@Override
+	public float getDefaultFloat(String prop) throws Exception {
+		// TODO Auto-generated method stub
+		return 0;
+	}
 }

@@ -1,0 +1,62 @@
+package edu.jlime.pregel.queues;
+
+import java.util.Iterator;
+import java.util.UUID;
+
+import edu.bigtextformat.levels.LevelOptions;
+import edu.bigtextformat.levels.SortedLevelFile;
+import edu.jlime.pregel.mergers.MessageMergers.FloatMapDBMerger;
+import edu.jlime.pregel.messages.PregelMessage;
+import edu.jlime.pregel.worker.WorkerTask;
+
+public class BigTextFormatQueue implements FloatMessageQueue {
+
+	private FloatMapDBMerger merger;
+	private SortedLevelFile current;
+	private SortedLevelFile read;
+
+	public BigTextFormatQueue(FloatMapDBMerger merger) throws Exception {
+		String dir = System.getProperty("java.io.tmpdir") + "/queue-"
+				+ UUID.randomUUID();
+		this.current = SortedLevelFile.open(dir,
+				new LevelOptions().setCompressed(null));
+		this.read = SortedLevelFile.open(dir,
+				new LevelOptions().setCompressed(null));
+		this.merger = merger;
+	}
+
+	@Override
+	public void switchQueue() {
+		SortedLevelFile aux = this.current;
+		this.current = this.read;
+		this.read = aux;
+	}
+
+	@Override
+	public int currentSize() {
+		// return this.current.size();
+		return 0;
+	}
+
+	@Override
+	public int readOnlySize() {
+		// return this.read.size();
+		return 0;
+	}
+
+	@Override
+	public void flush(String msgType, WorkerTask workerTask) throws Exception {
+
+	}
+
+	@Override
+	public Iterator<PregelMessage> getMessages(String msgType,
+			long currentVertex) {
+		return null;
+	}
+
+	@Override
+	public void putFloat(long from, long to, float msg) {
+
+	}
+}

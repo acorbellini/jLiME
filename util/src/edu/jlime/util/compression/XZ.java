@@ -5,17 +5,27 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import org.tukaani.xz.LZMA2Options;
+import org.tukaani.xz.UnsupportedOptionsException;
 import org.tukaani.xz.XZInputStream;
 import org.tukaani.xz.XZOutputStream;
 
 public class XZ implements Compressor {
+	private static LZMA2Options options = new LZMA2Options();
+	static {
+		try {
+			options.setPreset(3);
+			options.setMode(LZMA2Options.MODE_FAST);
+		} catch (UnsupportedOptionsException e) {
+			e.printStackTrace();
+		}
+	}
 
 	@Override
 	public byte[] compress(byte[] in) {
 		ByteArrayOutputStream bas = new ByteArrayOutputStream(in.length);
 		try {
-
-			XZOutputStream comp = new XZOutputStream(bas, new LZMA2Options());
+			
+			XZOutputStream comp = new XZOutputStream(bas, options);
 
 			comp.write(in);
 			comp.close();

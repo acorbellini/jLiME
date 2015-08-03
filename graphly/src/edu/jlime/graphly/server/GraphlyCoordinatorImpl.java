@@ -15,7 +15,6 @@ public class GraphlyCoordinatorImpl implements GraphlyCoordinator {
 
 	private ClientManager<GraphlyStoreNodeI, GraphlyStoreNodeIBroadcast> mgr;
 	private ConsistentHashing hash;
-	private RPCDispatcher rpc;
 
 	public GraphlyCoordinatorImpl(RPCDispatcher rpc, int nodes)
 			throws Exception {
@@ -38,9 +37,5 @@ public class GraphlyCoordinatorImpl implements GraphlyCoordinator {
 
 	public ConsistentHashing getHash() {
 		return this.hash;
-	}
-
-	public void stop() throws Exception {
-		this.rpc.stop();
 	}
 }

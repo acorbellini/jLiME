@@ -166,4 +166,9 @@ public class GraphlyPregelAdapter implements Graph {
 	public static GraphConnectionFactory getFactory(String g) {
 		return new GraphlyGraphConnectionFactory(g);
 	}
+
+	@Override
+	public float getDefaultFloat(String prop) throws Exception {
+		return g.getDefaultFloat(prop);
+	}
 }

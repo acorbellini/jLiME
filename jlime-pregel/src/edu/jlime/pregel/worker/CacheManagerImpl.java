@@ -14,7 +14,7 @@ import edu.jlime.pregel.queues.FloatMessageQueue;
 import edu.jlime.pregel.queues.ObjectMessageQueue;
 import edu.jlime.pregel.queues.PregelMessageQueue;
 
-public class CacheManager {
+public class CacheManagerImpl implements CacheManagerI{
 
 	private Map<String, PregelMessageQueue> cache;
 
@@ -29,7 +29,7 @@ public class CacheManager {
 
 	private int max_size;
 
-	public CacheManager(WorkerTask workerTask, PregelConfig config) {
+	public CacheManagerImpl(WorkerTask workerTask, PregelConfig config) {
 		this.task = workerTask;
 		this.max_size = config.getQueueSize();
 		this.config = config;
@@ -85,9 +85,6 @@ public class CacheManager {
 			synchronized (cache) {
 				ret = cache.get(msgType);
 				if (ret == null) {
-					// ret = new SegmentedMessageQueue(msgType, task,
-					// config.getSegments(), config.getQueueSize(),
-					// task.getQueueFactory(msgType), config.getThreads());
 					ret = task.getQueueFactory(msgType).getMQ();
 					cache.put(msgType, ret);
 				}

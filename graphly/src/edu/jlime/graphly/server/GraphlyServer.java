@@ -42,6 +42,8 @@ public class GraphlyServer {
 	private WorkerServer pregel_worker;
 	private Graphly graphly;
 
+	private WebServer ws;
+
 	public GraphlyServer(String storeLoc, Boolean isCoord, Integer rs) {
 		this.storeLoc = storeLoc;
 		this.isCoord = isCoord;
@@ -142,7 +144,7 @@ public class GraphlyServer {
 
 		try {
 			if (isCoord)
-				new Thread() {
+				new Thread("Coordinator Thread") {
 					public void run() {
 						try {
 							// if (log.isDebugEnabled())
@@ -207,7 +209,7 @@ public class GraphlyServer {
 
 			log.info("Starting Web Server");
 			try {
-				WebServer ws = new WebServer().port(8080);
+				this.ws = new WebServer().port(8080);
 				ws.start();
 				log.info("Started Web Server on port " + ws.getPort());
 			} catch (Exception e) {
@@ -229,11 +231,7 @@ public class GraphlyServer {
 
 		pregel_worker.stop();
 
-		if (coord != null)
-			coord.stop();
-
-		if (pregel_coord != null)
-			pregel_coord.stop();
+		ws.stop();
 	}
 
 	public Graphly getGraphly() {
@@ -242,5 +240,15 @@ public class GraphlyServer {
 
 	public void setGraphly(Graphly graphly) {
 		this.graphly = graphly;
+	}
+
+	public static GraphlyServer buildLocalServer(String path) throws Exception {
+		NetworkConfiguration net = new NetworkConfiguration();
+		GraphlyConfiguration gconfig = new GraphlyConfiguration();
+
+		net.protocol = "local";
+		GraphlyServer server = GraphlyServer.createServer(path, 0, true, 1,
+				net, gconfig);
+		return server;
 	}
 }

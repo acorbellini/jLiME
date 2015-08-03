@@ -24,19 +24,19 @@ public class GraphlyConfiguration {
 	public GraphlyConfiguration(Configuration newConfig) {
 		this.config = newConfig;
 		this.persistfloats = newConfig.getBoolean(
-				"graphly.store.persistfloats", false);
+				"graphly.store.persistfloats", true);
 
 		this.edgeCacheType = newConfig.getString("graphly.store.edgecachetype",
-				"fixed-size");// mem-based, no-cache
+				"no-cache");// fixed-size, mem-based, no-cache
 
-		this.cacheLength = newConfig.getInt("graphly.store.cachelength", 1000);
+		this.cacheLength = newConfig.getInt("graphly.store.cachelength", 50);
 		this.cacheSize = newConfig.getFloat("graphly.store.cachesize", 0.1f);
 
 		this.storePool = newConfig.getInt("graphly.store.internalcache",
-				400 * 1024 * 1024);
+				100 * 1024 * 1024);
 
 		this.storeCache = newConfig.getInt("graphly.store.internalpool",
-				512 * 1024);
+				10 * 1024 * 1024);
 
 	}
 

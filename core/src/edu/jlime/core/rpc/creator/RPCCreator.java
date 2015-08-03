@@ -361,26 +361,44 @@ public class RPCCreator {
 
 				if (c.getType().getTypeParameters().length > 0) {
 
-					TypeVariable<?>[] parameterizedType = c.getType()
-							.getTypeParameters();
-					type = type + "<";
-					boolean first = true;
-					for (TypeVariable<?> parameter : parameterizedType) {
-						if (first)
-							first = false;
-						else
-							type += ",";
-						try {
-							getClass().getClassLoader().loadClass(
-									parameter.getTypeName());
+					Type pType = c.getParameterizedType();
+					if (pType instanceof ParameterizedType) {
+						boolean first = true;
+						type = type + "<";
+						ParameterizedType t = (ParameterizedType) c
+								.getParameterizedType();
+						for (Type parameter : t.getActualTypeArguments()) {
+							if (first)
+								first = false;
+							else
+								type += ",";
 							type = type + parameter.getTypeName();
-						} catch (Exception e) {
-							e.printStackTrace();
-							type = type + "?";
 						}
+						type = type + ">";
+					} else {
 
+						TypeVariable<?>[] parameterizedType = c.getType()
+								.getTypeParameters();
+
+						type = type + "<";
+						boolean first = true;
+						for (TypeVariable<?> parameter : parameterizedType) {
+							if (first)
+								first = false;
+							else
+								type += ",";
+							try {
+								getClass().getClassLoader().loadClass(
+										parameter.getTypeName());
+								type = type + parameter.getTypeName();
+							} catch (Exception e) {
+								e.printStackTrace();
+								type = type + "?";
+							}
+
+						}
+						type = type + ">";
 					}
-					type = type + ">";
 
 				}
 				String arg = c.getName();

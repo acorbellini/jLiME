@@ -10,6 +10,7 @@ import org.fusesource.leveldbjni.JniDBFactory;
 import org.iq80.leveldb.DB;
 import org.iq80.leveldb.DBIterator;
 import org.iq80.leveldb.Options;
+import org.iq80.leveldb.ReadOptions;
 
 import com.google.common.primitives.UnsignedBytes;
 
@@ -51,6 +52,7 @@ public class LocalStore {
 						}
 					};
 					options = new Options();
+					options.maxOpenFiles(200);
 					options.logger(logger);
 					options.createIfMissing(true);
 					options.cacheSize(cacheSize);
@@ -104,7 +106,7 @@ public class LocalStore {
 	}
 
 	public int count(byte[] from, byte[] to) throws Exception {
-		int cont = 0;
+		int cont = 0;		
 		DBIterator iterator = getDb().iterator();
 		Entry<byte[], byte[]> e = null;
 		boolean inclFirst = true;

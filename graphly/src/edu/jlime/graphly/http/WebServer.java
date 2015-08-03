@@ -3,6 +3,9 @@ package edu.jlime.graphly.http;
 import java.io.IOException;
 import java.net.BindException;
 import java.net.URI;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.logging.LogManager;
 
 import javax.ws.rs.core.UriBuilder;
@@ -18,6 +21,7 @@ public class WebServer {
 
 	private static final int PORT_RANGE = 10;
 	private int port = 8080;
+	private HttpServer httpserver;
 
 	public WebServer() {
 		LogManager.getLogManager().reset();
@@ -47,17 +51,30 @@ public class WebServer {
 
 	public void start() throws IllegalArgumentException, IOException {
 		int cont = 0;
-		HttpServer httpserver = null;
+		this.httpserver = null;
 		while (true)
 			try {
 				httpserver = httpserver();
+				// ExecutorService asyncExec = Executors
+				// .newCachedThreadPool(new ThreadFactory() {
+				//
+				// @Override
+				// public Thread newThread(Runnable r) {
+				// Thread t = Executors.defaultThreadFactory()
+				// .newThread(r);
+				// t.setName("Admin Console Thread");
+				// t.setDaemon(true);
+				// return t;
+				// }
+				// });
+				// httpserver.setExecutor(asyncExec);
 				httpserver.start();
 				return;
 			} catch (BindException e) {
 				if (httpserver != null)
 					httpserver.stop(0);
 				if (cont == PORT_RANGE)
-					throw e;
+					throw e; 
 				port++;
 				cont++;
 			}
@@ -65,5 +82,10 @@ public class WebServer {
 
 	public int getPort() {
 		return port;
+	}
+
+	public void stop() {
+		if (httpserver != null)
+			httpserver.stop(0);
 	}
 }

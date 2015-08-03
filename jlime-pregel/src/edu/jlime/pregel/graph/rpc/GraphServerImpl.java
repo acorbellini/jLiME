@@ -107,13 +107,12 @@ public class GraphServerImpl extends RPCClient implements Graph, Transferible {
 		disp.callSync(dest, client, targetID, "disable", new Object[] { arg0 });
 	}
 
-	public void putLink(final long arg0, final long arg1) throws Exception {
+	public int getAdyacencySize(final long arg0) throws Exception {
 		if (localRPC != null) {
-			getLocal().putLink(arg0, arg1);
-			return;
+			return getLocal().getAdyacencySize(arg0);
 		}
-		disp.callSync(dest, client, targetID, "putLink", new Object[] { arg0,
-				arg1 });
+		return (int) disp.callSync(dest, client, targetID, "getAdyacencySize",
+				new Object[] { arg0 });
 	}
 
 	public void putOutgoing(final long arg0, final long arg1) throws Exception {
@@ -134,30 +133,31 @@ public class GraphServerImpl extends RPCClient implements Graph, Transferible {
 				new Object[] { arg0 });
 	}
 
-	public void removeOutgoing(final long arg0, final long arg1)
-			throws Exception {
+	public int getOutgoingSize(final long arg0) throws Exception {
 		if (localRPC != null) {
-			getLocal().removeOutgoing(arg0, arg1);
+			return getLocal().getOutgoingSize(arg0);
+		}
+		return (int) disp.callSync(dest, client, targetID, "getOutgoingSize",
+				new Object[] { arg0 });
+	}
+
+	public void disableLink(final long arg0, final long arg1) throws Exception {
+		if (localRPC != null) {
+			getLocal().disableLink(arg0, arg1);
 			return;
 		}
-		disp.callSync(dest, client, targetID, "removeOutgoing", new Object[] {
+		disp.callSync(dest, client, targetID, "disableLink", new Object[] {
 				arg0, arg1 });
 	}
 
-	public int vertexSize() throws Exception {
+	public void disableIncoming(final long arg0, final long arg1)
+			throws Exception {
 		if (localRPC != null) {
-			return getLocal().vertexSize();
+			getLocal().disableIncoming(arg0, arg1);
+			return;
 		}
-		return (int) disp.callSync(dest, client, targetID, "vertexSize",
-				new Object[] {});
-	}
-
-	public TLongArrayList getIncoming(final long arg0) throws Exception {
-		if (localRPC != null) {
-			return getLocal().getIncoming(arg0);
-		}
-		return (TLongArrayList) disp.callSync(dest, client, targetID,
-				"getIncoming", new Object[] { arg0 });
+		disp.callSync(dest, client, targetID, "disableIncoming", new Object[] {
+				arg0, arg1 });
 	}
 
 	public void createVertices(final Set<java.lang.Long> arg0) throws Exception {
@@ -169,13 +169,13 @@ public class GraphServerImpl extends RPCClient implements Graph, Transferible {
 				new Object[] { arg0 });
 	}
 
-	public void putIncoming(final long arg0, final long arg1) throws Exception {
+	public void putLink(final long arg0, final long arg1) throws Exception {
 		if (localRPC != null) {
-			getLocal().putIncoming(arg0, arg1);
+			getLocal().putLink(arg0, arg1);
 			return;
 		}
-		disp.callSync(dest, client, targetID, "putIncoming", new Object[] {
-				arg0, arg1 });
+		disp.callSync(dest, client, targetID, "putLink", new Object[] { arg0,
+				arg1 });
 	}
 
 	public void setDefaultValue(final String arg0, final Object arg1)
@@ -185,23 +185,6 @@ public class GraphServerImpl extends RPCClient implements Graph, Transferible {
 			return;
 		}
 		disp.callSync(dest, client, targetID, "setDefaultValue", new Object[] {
-				arg0, arg1 });
-	}
-
-	public int getAdyacencySize(final long arg0) throws Exception {
-		if (localRPC != null) {
-			return getLocal().getAdyacencySize(arg0);
-		}
-		return (int) disp.callSync(dest, client, targetID, "getAdyacencySize",
-				new Object[] { arg0 });
-	}
-
-	public void disableLink(final long arg0, final long arg1) throws Exception {
-		if (localRPC != null) {
-			getLocal().disableLink(arg0, arg1);
-			return;
-		}
-		disp.callSync(dest, client, targetID, "disableLink", new Object[] {
 				arg0, arg1 });
 	}
 
@@ -247,22 +230,47 @@ public class GraphServerImpl extends RPCClient implements Graph, Transferible {
 				new Object[] {});
 	}
 
-	public int getOutgoingSize(final long arg0) throws Exception {
+	public void removeOutgoing(final long arg0, final long arg1)
+			throws Exception {
 		if (localRPC != null) {
-			return getLocal().getOutgoingSize(arg0);
+			getLocal().removeOutgoing(arg0, arg1);
+			return;
 		}
-		return (int) disp.callSync(dest, client, targetID, "getOutgoingSize",
+		disp.callSync(dest, client, targetID, "removeOutgoing", new Object[] {
+				arg0, arg1 });
+	}
+
+	public float getDefaultFloat(final String arg0) throws Exception {
+		if (localRPC != null) {
+			return getLocal().getDefaultFloat(arg0);
+		}
+		return (float) disp.callSync(dest, client, targetID, "getDefaultFloat",
 				new Object[] { arg0 });
 	}
 
-	public void disableIncoming(final long arg0, final long arg1)
-			throws Exception {
+	public TLongArrayList getIncoming(final long arg0) throws Exception {
 		if (localRPC != null) {
-			getLocal().disableIncoming(arg0, arg1);
+			return getLocal().getIncoming(arg0);
+		}
+		return (TLongArrayList) disp.callSync(dest, client, targetID,
+				"getIncoming", new Object[] { arg0 });
+	}
+
+	public void putIncoming(final long arg0, final long arg1) throws Exception {
+		if (localRPC != null) {
+			getLocal().putIncoming(arg0, arg1);
 			return;
 		}
-		disp.callSync(dest, client, targetID, "disableIncoming", new Object[] {
+		disp.callSync(dest, client, targetID, "putIncoming", new Object[] {
 				arg0, arg1 });
+	}
+
+	public int vertexSize() throws Exception {
+		if (localRPC != null) {
+			return getLocal().vertexSize();
+		}
+		return (int) disp.callSync(dest, client, targetID, "vertexSize",
+				new Object[] {});
 	}
 
 	@Override

@@ -3,9 +3,21 @@ package edu.jlime.pregel.mergers;
 import edu.jlime.pregel.queues.DoubleMessageMerger;
 import edu.jlime.pregel.queues.FloatArrayMessageQueue;
 import edu.jlime.pregel.queues.MessageQueueFactory;
-import edu.jlime.pregel.worker.FloatMessageMerger;
+import edu.jlime.pregel.worker.FloatTroveMessageMerger;
+import gnu.trove.map.hash.TLongFloatHashMap;
 
 public class MessageMergers {
+	// public static final class FloatMapDBMerger implements MessageMerger {
+	// public float merge(float msg1, float msg2) {
+	// return msg1 + msg2;
+	// }
+	//
+	// @Override
+	// public MessageQueueFactory getFactory() {
+	// return MessageQueueFactory.floatMapDBQueue(this);
+	// }
+	// }
+
 	public static final class FloatArrayMerger implements MessageMerger {
 		@Override
 		public MessageQueueFactory getFactory() {
@@ -25,11 +37,15 @@ public class MessageMergers {
 	}
 
 	public static final MessageMerger FLOAT_ARRAY_SUM = new FloatArrayMerger();
-	public static FloatMessageMerger FLOAT_SUM = new FloatMessageMerger() {
+
+	// public static final MessageMerger FLOAT_SUM_PERSISTED = new
+	// FloatMapDBMerger();
+	public static FloatTroveMessageMerger FLOAT_SUM = new FloatTroveMessageMerger() {
 
 		@Override
-		public float merge(float msg1, float msg2) {
-			return msg1 + msg2;
+		public void merge(long to, float msg2, TLongFloatHashMap map) {
+			map.adjustOrPutValue(to, msg2, msg2);
+			// return msg1 + msg2;
 		}
 
 	};

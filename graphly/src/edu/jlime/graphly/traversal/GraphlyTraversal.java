@@ -113,7 +113,11 @@ public class GraphlyTraversal implements Serializable {
 		return this;
 	}
 
-	public GraphlyTraversal countOut(String k, int top, int max_edges) {
+	public GraphlyTraversal countOut(int top) {
+		return countOut(top, Integer.MAX_VALUE);
+	}
+
+	public GraphlyTraversal countOut(int top, int max_edges) {
 		return count(Dir.OUT, top, max_edges);
 	}
 

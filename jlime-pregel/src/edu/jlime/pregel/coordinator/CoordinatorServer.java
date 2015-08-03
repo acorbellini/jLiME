@@ -17,13 +17,10 @@ import edu.jlime.rpc.NetworkConfiguration;
 
 public class CoordinatorServer {
 	public static final String COORDINATOR_KEY = "pregel_coordinator";
-	private RPCDispatcher rpc;
 	private ClientManager<Worker, WorkerBroadcast> workers;
 	private Logger log = Logger.getLogger(CoordinatorServer.class);
 
 	public CoordinatorServer(RPCDispatcher rpc) throws Exception {
-
-		this.rpc = rpc;
 
 		this.workers = rpc.manage(new WorkerFactory(rpc,
 				WorkerServer.WORKER_KEY), new PeerFilter() {
@@ -32,14 +29,10 @@ public class CoordinatorServer {
 					return true;
 				return false;
 			}
-		}, this.rpc.getCluster().getLocalPeer());
-		this.rpc.registerTarget(COORDINATOR_KEY, new CoordinatorImpl(rpc,
-				workers), true);
+		}, rpc.getCluster().getLocalPeer());
+		rpc.registerTarget(COORDINATOR_KEY, new CoordinatorImpl(rpc, workers),
+				true);
 
-	}
-
-	public void stop() throws Exception {
-		this.rpc.stop();
 	}
 
 	public static void main(String[] args) throws Exception {

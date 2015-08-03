@@ -1,26 +1,25 @@
 package edu.jlime.pregel.worker;
 
-import gnu.trove.iterator.TLongIterator;
-import gnu.trove.list.array.TLongArrayList;
+import java.util.Iterator;
 
-import java.io.IOException;
+import edu.jlime.pregel.graph.rpc.Graph;
 
-public class InMemVertexList implements VertexList {
-	TLongArrayList list = new TLongArrayList();
+public class GraphVertexList implements VertexList {
 
-	public InMemVertexList() throws IOException {
-		super();
-		// TODO Auto-generated constructor stub
+	private Graph g;
+
+	public GraphVertexList(Graph graph) {
+		this.g = graph;
 	}
 
 	@Override
 	public void add(long vid) throws Exception {
-		list.add(vid);
+		g.createVertex(vid);
 	}
 
 	@Override
 	public LongIterator iterator() throws Exception {
-		final TLongIterator it = list.iterator();
+		final Iterator<Long> it = g.vertices().iterator();
 		return new LongIterator() {
 
 			@Override
@@ -37,19 +36,30 @@ public class InMemVertexList implements VertexList {
 
 	@Override
 	public int size() {
-		return list.size();
+		try {
+			return g.vertexSize();
+		} catch (Exception e) {
+			e.printStackTrace();
+			return 0;
+		}
 	}
 
 	@Override
 	public void flush() throws Exception {
+		// TODO Auto-generated method stub
+
 	}
 
 	@Override
 	public void close() throws Exception {
+		// TODO Auto-generated method stub
+
 	}
 
 	@Override
 	public void delete() throws Exception {
+		// TODO Auto-generated method stub
+
 	}
 
 }

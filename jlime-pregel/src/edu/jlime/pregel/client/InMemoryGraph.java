@@ -431,4 +431,10 @@ public class InMemoryGraph implements Graph, Transferible {
 		return new InMemoryGraphConnectionFactory(string);
 	}
 
+	@Override
+	public float getDefaultFloat(String prop) throws Exception {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
 }

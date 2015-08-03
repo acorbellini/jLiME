@@ -9,5 +9,7 @@ public interface VertexList {
 
 	public void flush() throws Exception;
 
+	public void close() throws Exception;
+
 	public void delete() throws Exception;
 }

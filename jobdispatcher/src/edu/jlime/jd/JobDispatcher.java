@@ -109,67 +109,72 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 		factory = new JobExecutorFactory(rpc, JOB_DISPATCHER);
 
 		final TypeConverters tc = rpc.getMarshaller().getTc();
-		tc.registerTypeConverter(JobContainer.class, new TypeConverter() {
-			@Override
-			public void toArray(Object o, ByteBuffer buffer, Peer cliID)
-					throws Exception {
-				JobContainer jc = (JobContainer) o;
-				tc.objectToByteArray(jc.getRequestor(), buffer, cliID);
-				tc.objectToByteArray(jc.getJob(), buffer, cliID);
-				buffer.putUUID(jc.getJobID());
-				buffer.putBoolean(jc.isNoresponse());
-			}
+		tc.registerTypeConverter((byte) 0, JobContainer.class,
+				new TypeConverter() {
+					@Override
+					public void toArray(Object o, ByteBuffer buffer, Peer cliID)
+							throws Exception {
+						JobContainer jc = (JobContainer) o;
+						tc.objectToByteArray(jc.getRequestor(), buffer, cliID);
+						tc.objectToByteArray(jc.getJob(), buffer, cliID);
+						buffer.putUUID(jc.getJobID());
+						buffer.putBoolean(jc.isNoresponse());
+					}
 
-			@Override
-			public Object fromArray(ByteBuffer buff) throws Exception {
+					@Override
+					public Object fromArray(ByteBuffer buff) throws Exception {
 
-				ClientNode p = (ClientNode) tc.getObjectFromArray(buff);
+						ClientNode p = (ClientNode) tc.getObjectFromArray(buff);
 
-				ClientJob<?> job = (ClientJob<?>) tc.getObjectFromArray(buff);
-				UUID id = buff.getUUID();
-				boolean isNoResponse = buff.getBoolean();
-				JobContainer jc = new JobContainer(job, p);
-				jc.setID(id);
-				jc.setNoResponse(isNoResponse);
-				return jc;
-			}
-		});
+						ClientJob<?> job = (ClientJob<?>) tc
+								.getObjectFromArray(buff);
+						UUID id = buff.getUUID();
+						boolean isNoResponse = buff.getBoolean();
+						JobContainer jc = new JobContainer(job, p);
+						jc.setID(id);
+						jc.setNoResponse(isNoResponse);
+						return jc;
+					}
+				});
 
-		tc.registerTypeConverter(ClientNode.class, new TypeConverter() {
-			@Override
-			public void toArray(Object o, ByteBuffer buffer, Peer cliID)
-					throws Exception {
-				ClientNode jc = (ClientNode) o;
-				tc.objectToByteArray(jc.getPeer(), buffer, cliID);
-				tc.objectToByteArray(jc.getClient(), buffer, cliID);
-			}
+		tc.registerTypeConverter((byte) 1, ClientNode.class,
+				new TypeConverter() {
+					@Override
+					public void toArray(Object o, ByteBuffer buffer, Peer cliID)
+							throws Exception {
+						ClientNode jc = (ClientNode) o;
+						tc.objectToByteArray(jc.getPeer(), buffer, cliID);
+						tc.objectToByteArray(jc.getClient(), buffer, cliID);
+					}
 
-			@Override
-			public Object fromArray(ByteBuffer buff) throws Exception {
-				Peer p = (Peer) tc.getObjectFromArray(buff);
-				Peer client = (Peer) tc.getObjectFromArray(buff);
-				ClientNode jn = new ClientNode(p, client, JobDispatcher.this);
-				return jn;
-			}
-		});
+					@Override
+					public Object fromArray(ByteBuffer buff) throws Exception {
+						Peer p = (Peer) tc.getObjectFromArray(buff);
+						Peer client = (Peer) tc.getObjectFromArray(buff);
+						ClientNode jn = new ClientNode(p, client,
+								JobDispatcher.this);
+						return jn;
+					}
+				});
 
-		tc.registerTypeConverter(RemoteReference.class, new TypeConverter() {
-			@Override
-			public void toArray(Object o, ByteBuffer buffer, Peer cliID)
-					throws Exception {
-				RemoteReference rr = (RemoteReference) o;
-				tc.objectToByteArray(rr.getNode(), buffer, cliID);
-				buffer.putString(rr.getKey());
-			}
+		tc.registerTypeConverter((byte) 2, RemoteReference.class,
+				new TypeConverter() {
+					@Override
+					public void toArray(Object o, ByteBuffer buffer, Peer cliID)
+							throws Exception {
+						RemoteReference rr = (RemoteReference) o;
+						tc.objectToByteArray(rr.getNode(), buffer, cliID);
+						buffer.putString(rr.getKey());
+					}
 
-			@Override
-			public Object fromArray(ByteBuffer buff) throws Exception {
-				ClientNode p = (ClientNode) tc.getObjectFromArray(buff);
-				String key = buff.getString();
-				RemoteReference rr = new RemoteReference(p, key);
-				return rr;
-			}
-		});
+					@Override
+					public Object fromArray(ByteBuffer buff) throws Exception {
+						ClientNode p = (ClientNode) tc.getObjectFromArray(buff);
+						String key = buff.getString();
+						RemoteReference rr = new RemoteReference(p, key);
+						return rr;
+					}
+				});
 
 	}
 

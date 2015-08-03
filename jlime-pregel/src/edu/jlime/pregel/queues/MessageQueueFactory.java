@@ -2,7 +2,7 @@ package edu.jlime.pregel.queues;
 
 import edu.jlime.pregel.mergers.MessageMergers.FloatArrayMerger;
 import edu.jlime.pregel.mergers.ObjectMessageMerger;
-import edu.jlime.pregel.worker.FloatMessageMerger;
+import edu.jlime.pregel.worker.FloatTroveMessageMerger;
 
 public abstract class MessageQueueFactory {
 	public abstract PregelMessageQueue getMQ();
@@ -27,12 +27,12 @@ public abstract class MessageQueueFactory {
 		};
 	}
 
-	public static MessageQueueFactory floatQueue(final FloatMessageMerger merger) {
+	public static MessageQueueFactory floatQueue(final FloatTroveMessageMerger merger) {
 		return new MessageQueueFactory() {
 
 			@Override
 			public PregelMessageQueue getMQ() {
-				return new FloatMessageQueue(merger);
+				return new FloatMessageQueueImpl(merger);
 			}
 		};
 	}
@@ -60,4 +60,26 @@ public abstract class MessageQueueFactory {
 			}
 		};
 	}
+
+	// public static MessageQueueFactory floatMapDBQueue(
+	// final FloatMapDBMerger merger) {
+	// return new MessageQueueFactory() {
+	//
+	// @Override
+	// public PregelMessageQueue getMQ() {
+	// return new FloatMapDBQueue(merger);
+	// }
+	// };
+	// }
+
+	// public static MessageQueueFactory floatBigTextFormatQueue(
+	// final FloatMapDBMerger merger) {
+	// return new MessageQueueFactory() {
+	//
+	// @Override
+	// public PregelMessageQueue getMQ() {
+	// return new BigTextFormatQueue(merger);
+	// }
+	// };
+	// }
 }

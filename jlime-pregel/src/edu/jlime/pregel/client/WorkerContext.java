@@ -2,7 +2,7 @@ package edu.jlime.pregel.client;
 
 import edu.jlime.pregel.coordinator.Aggregator;
 import edu.jlime.pregel.graph.rpc.Graph;
-import edu.jlime.pregel.worker.CacheManager;
+import edu.jlime.pregel.worker.CacheManagerI;
 import edu.jlime.pregel.worker.WorkerTask;
 
 public class WorkerContext {
@@ -10,9 +10,9 @@ public class WorkerContext {
 
 	private long v;
 
-	private CacheManager cache;
+	private CacheManagerI cache;
 
-	public WorkerContext(WorkerTask task, CacheManager cacheManager, long v) {
+	public WorkerContext(WorkerTask task, CacheManagerI cacheManager, long v) {
 		this.task = task;
 		this.v = v;
 		this.cache = cacheManager;

@@ -6,24 +6,23 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import org.mapdb.BTreeMap;
-import org.mapdb.Fun;
-import org.mapdb.Fun.Tuple2;
+import org.mapdb.Fun.Pair;
 
 import edu.jlime.pregel.messages.PregelMessage;
 import gnu.trove.list.array.TLongArrayList;
 
 final class PersistentQueueIterator implements Iterator<List<PregelMessage>> {
-	private final Iterator<Entry<Fun.Tuple2<Long, Long>, PregelMessage>> backIt;
-	private final Iterator<Entry<Tuple2<Long, Long>, PregelMessage>> cacheIt;
+	private final Iterator<Entry<Pair<Long, Long>, PregelMessage>> backIt;
+	private final Iterator<Entry<Pair<Long, Long>, PregelMessage>> cacheIt;
 
-	Entry<Fun.Tuple2<Long, Long>, PregelMessage> currBack = null;
-	Entry<Tuple2<Long, Long>, PregelMessage> currCache = null;
-	private BTreeMap<Tuple2<Long, Long>, PregelMessage> cache;
+	Entry<Pair<Long, Long>, PregelMessage> currBack = null;
+	Entry<Pair<Long, Long>, PregelMessage> currCache = null;
+	private BTreeMap<Pair<Long, Long>, PregelMessage> cache;
 
 	PersistentQueueIterator(
-			Iterator<Entry<Fun.Tuple2<Long, Long>, PregelMessage>> backIt,
+			Iterator<Entry<Pair<Long, Long>, PregelMessage>> backIt,
 			TLongArrayList list,
-			BTreeMap<Tuple2<Long, Long>, PregelMessage> cache2) {
+			BTreeMap<Pair<Long, Long>, PregelMessage> cache2) {
 		this.backIt = backIt;
 		this.cacheIt = cache2.entrySet().iterator();
 

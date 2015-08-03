@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.UUID;
 
 import edu.jlime.util.DataTypeUtils;
+import gnu.trove.list.array.TByteArrayList;
 
 public class PersistedVertexList implements VertexList {
 	public static class PersistedLongIterator implements LongIterator {
@@ -42,6 +43,9 @@ public class PersistedVertexList implements VertexList {
 		}
 	}
 
+	private static final int MAX = 512 * 1024;
+
+	// private TByteArrayList cache = new TByteArrayList();
 	private File file;
 	private BufferedOutputStream writer;
 	int cont = 0;
@@ -50,15 +54,26 @@ public class PersistedVertexList implements VertexList {
 		this.file = new File(System.getProperty("java.io.tmpdir") + "/"
 				+ UUID.randomUUID() + ".list");
 		this.file.createNewFile();
-		this.writer = new BufferedOutputStream(new FileOutputStream(file));
+		this.writer = new BufferedOutputStream(new FileOutputStream(file), MAX);
 	}
 
 	public void add(long vid) throws IOException {
+		// cache.add(DataTypeUtils.longToByteArray(vid));
+		// if (cache.size() == MAX) {
+		// this.flush();
+		// System.out.println(cont);
+		// }
 		this.writer.write(DataTypeUtils.longToByteArray(vid));
 		cont++;
 	}
 
 	public void flush() throws IOException {
+		// this.writer.write(cache.toArray());
+		// this.cache.clear();
+	}
+
+	public void close() throws IOException {
+		this.flush();
 		this.writer.close();
 	}
 
