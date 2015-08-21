@@ -392,7 +392,6 @@ public class RPCCreator {
 										parameter.getTypeName());
 								type = type + parameter.getTypeName();
 							} catch (Exception e) {
-								e.printStackTrace();
 								type = type + "?";
 							}
 

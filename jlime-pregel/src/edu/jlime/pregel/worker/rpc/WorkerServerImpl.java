@@ -1,5 +1,6 @@
 package edu.jlime.pregel.worker.rpc;
 
+import java.util.Map;
 import java.util.UUID;
 
 import edu.jlime.core.cluster.Peer;
@@ -62,58 +63,17 @@ public class WorkerServerImpl extends RPCClient implements Worker, Transferible 
 		return getIDCached;
 	}
 
-	public void sendObjectsMessage(final String arg0, final long arg1,
-			final long[] arg2, final Object[] arg3, final int arg4)
+	public void sendBroadcastMessageSubgraphFloat(final String arg0,
+			final String arg1, final long arg2, final float arg3, final int arg4)
 			throws Exception {
 		if (localRPC != null) {
-			getLocal().sendObjectsMessage(arg0, arg1, arg2, arg3, arg4);
+			getLocal().sendBroadcastMessageSubgraphFloat(arg0, arg1, arg2,
+					arg3, arg4);
 			return;
 		}
-		disp.callSync(dest, client, targetID, "sendObjectsMessage",
-				new Object[] { arg0, arg1, arg2, arg3, arg4 });
-	}
-
-	public void sendFloatArrayBroadcastMessage(final String arg0,
-			final long arg1, final float[] arg2, final int arg3)
-			throws Exception {
-		if (localRPC != null) {
-			getLocal().sendFloatArrayBroadcastMessage(arg0, arg1, arg2, arg3);
-			return;
-		}
-		disp.callSync(dest, client, targetID, "sendFloatArrayBroadcastMessage",
-				new Object[] { arg0, arg1, arg2, arg3 });
-	}
-
-	public void sendFloatArrayMessage(final String arg0, final long arg1,
-			final long arg2, final float[] arg3, final int arg4)
-			throws Exception {
-		if (localRPC != null) {
-			getLocal().sendFloatArrayMessage(arg0, arg1, arg2, arg3, arg4);
-			return;
-		}
-		disp.callSync(dest, client, targetID, "sendFloatArrayMessage",
-				new Object[] { arg0, arg1, arg2, arg3, arg4 });
-	}
-
-	public void sendFloatArrayMessage(final String arg0, final long arg1,
-			final long[] arg2, final float[][] arg3, final int arg4)
-			throws Exception {
-		if (localRPC != null) {
-			getLocal().sendFloatArrayMessage(arg0, arg1, arg2, arg3, arg4);
-			return;
-		}
-		disp.callSync(dest, client, targetID, "sendFloatArrayMessage",
-				new Object[] { arg0, arg1, arg2, arg3, arg4 });
-	}
-
-	public void sendBroadcastMessage(final String arg0, final long arg1,
-			final Object arg2, final int arg3) throws Exception {
-		if (localRPC != null) {
-			getLocal().sendBroadcastMessage(arg0, arg1, arg2, arg3);
-			return;
-		}
-		disp.callSync(dest, client, targetID, "sendBroadcastMessage",
-				new Object[] { arg0, arg1, arg2, arg3 });
+		disp.callSync(dest, client, targetID,
+				"sendBroadcastMessageSubgraphFloat", new Object[] { arg0, arg1,
+						arg2, arg3, arg4 });
 	}
 
 	public void sendFloatBroadcastMessage(final String arg0, final long arg1,
@@ -148,6 +108,39 @@ public class WorkerServerImpl extends RPCClient implements Worker, Transferible 
 				new Object[] { arg0, arg1, arg2, arg3, arg4 });
 	}
 
+	public void sendFloatArrayMessage(final String arg0, final long arg1,
+			final long[] arg2, final float[][] arg3, final int arg4)
+			throws Exception {
+		if (localRPC != null) {
+			getLocal().sendFloatArrayMessage(arg0, arg1, arg2, arg3, arg4);
+			return;
+		}
+		disp.callSync(dest, client, targetID, "sendFloatArrayMessage",
+				new Object[] { arg0, arg1, arg2, arg3, arg4 });
+	}
+
+	public void sendFloatArrayMessage(final String arg0, final long arg1,
+			final long arg2, final float[] arg3, final int arg4)
+			throws Exception {
+		if (localRPC != null) {
+			getLocal().sendFloatArrayMessage(arg0, arg1, arg2, arg3, arg4);
+			return;
+		}
+		disp.callSync(dest, client, targetID, "sendFloatArrayMessage",
+				new Object[] { arg0, arg1, arg2, arg3, arg4 });
+	}
+
+	public void sendFloatArrayBroadcastMessage(final String arg0,
+			final long arg1, final float[] arg2, final int arg3)
+			throws Exception {
+		if (localRPC != null) {
+			getLocal().sendFloatArrayBroadcastMessage(arg0, arg1, arg2, arg3);
+			return;
+		}
+		disp.callSync(dest, client, targetID, "sendFloatArrayBroadcastMessage",
+				new Object[] { arg0, arg1, arg2, arg3 });
+	}
+
 	public void sendDoubleBroadcastMessage(final String arg0, final long arg1,
 			final double arg2, final int arg3) throws Exception {
 		if (localRPC != null) {
@@ -158,15 +151,51 @@ public class WorkerServerImpl extends RPCClient implements Worker, Transferible 
 				new Object[] { arg0, arg1, arg2, arg3 });
 	}
 
-	public void createTask(final int arg0, final Peer arg1,
-			final VertexFunction<?> arg2, final long[] arg3,
-			final PregelConfig arg4) throws Exception {
+	public void sendObjectsMessage(final String arg0, final long[] arg1,
+			final long[] arg2, final Object[] arg3, final int arg4)
+			throws Exception {
 		if (localRPC != null) {
-			getLocal().createTask(arg0, arg1, arg2, arg3, arg4);
+			getLocal().sendObjectsMessage(arg0, arg1, arg2, arg3, arg4);
 			return;
 		}
-		disp.callSync(dest, client, targetID, "createTask", new Object[] {
-				arg0, arg1, arg2, arg3, arg4 });
+		disp.callSync(dest, client, targetID, "sendObjectsMessage",
+				new Object[] { arg0, arg1, arg2, arg3, arg4 });
+	}
+
+	public void sendBroadcastMessageSubgraph(final String arg0,
+			final String arg1, final long arg2, final Object arg3,
+			final int arg4) throws Exception {
+		if (localRPC != null) {
+			getLocal().sendBroadcastMessageSubgraph(arg0, arg1, arg2, arg3,
+					arg4);
+			return;
+		}
+		disp.callSync(dest, client, targetID, "sendBroadcastMessageSubgraph",
+				new Object[] { arg0, arg1, arg2, arg3, arg4 });
+	}
+
+	public void sendBroadcastMessage(final String arg0, final long arg1,
+			final Object arg2, final int arg3) throws Exception {
+		if (localRPC != null) {
+			getLocal().sendBroadcastMessage(arg0, arg1, arg2, arg3);
+			return;
+		}
+		disp.callSync(dest, client, targetID, "sendBroadcastMessage",
+				new Object[] { arg0, arg1, arg2, arg3 });
+	}
+
+	public void nextSuperstep(
+			final int arg0,
+			final int arg1,
+			final SplitFunction arg2,
+			final Map<java.lang.String, edu.jlime.pregel.coordinator.Aggregator> arg3)
+			throws Exception {
+		if (localRPC != null) {
+			getLocal().nextSuperstep(arg0, arg1, arg2, arg3);
+			return;
+		}
+		disp.callSync(dest, client, targetID, "nextSuperstep", new Object[] {
+				arg0, arg1, arg2, arg3 });
 	}
 
 	public void sendMessage(final String arg0, final long arg1,
@@ -201,14 +230,15 @@ public class WorkerServerImpl extends RPCClient implements Worker, Transferible 
 				arg0, arg1, arg2, arg3, arg4 });
 	}
 
-	public void nextSuperstep(final int arg0, final int arg1,
-			final SplitFunction arg2) throws Exception {
+	public void createTask(final int arg0, final Peer arg1,
+			final VertexFunction<?> arg2, final long[] arg3,
+			final PregelConfig arg4) throws Exception {
 		if (localRPC != null) {
-			getLocal().nextSuperstep(arg0, arg1, arg2);
+			getLocal().createTask(arg0, arg1, arg2, arg3, arg4);
 			return;
 		}
-		disp.callSync(dest, client, targetID, "nextSuperstep", new Object[] {
-				arg0, arg1, arg2 });
+		disp.callSync(dest, client, targetID, "createTask", new Object[] {
+				arg0, arg1, arg2, arg3, arg4 });
 	}
 
 	@Override

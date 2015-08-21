@@ -1,10 +1,10 @@
 package edu.jlime.graphly.traversal;
 
-import gnu.trove.list.array.TLongArrayList;
+import gnu.trove.set.hash.TLongHashSet;
 
 public class FilterStep implements Step {
 
-	private TLongArrayList filter;
+	private TLongHashSet filter;
 	protected GraphlyTraversal g;
 	private boolean neg;
 
@@ -14,7 +14,7 @@ public class FilterStep implements Step {
 
 	public FilterStep(long[] filter, GraphlyTraversal graphlyTraversal,
 			boolean b) {
-		this.filter = TLongArrayList.wrap(filter);
+		this.filter = new TLongHashSet(filter);
 		this.g = graphlyTraversal;
 		this.neg = b;
 	}
@@ -24,8 +24,7 @@ public class FilterStep implements Step {
 		return filter(before, filter);
 	}
 
-	protected TraversalResult filter(TraversalResult before,
-			TLongArrayList filter) {
+	protected TraversalResult filter(TraversalResult before, TLongHashSet filter) {
 		if (neg)
 			before.removeAll(filter);
 		else

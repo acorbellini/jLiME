@@ -1,4 +1,4 @@
-package edu.jlime.graphly.storenode;
+package edu.jlime.graphly.storenode.rpc;
 
 import java.util.HashMap;
 import java.util.List;
@@ -6,10 +6,14 @@ import java.util.Map;
 import java.util.Set;
 
 import edu.jlime.core.rpc.Sync;
+import edu.jlime.graphly.rec.hits.DivideUpdateProperty;
+import edu.jlime.graphly.storenode.GraphlyCount;
 import edu.jlime.graphly.traversal.Dir;
 import edu.jlime.graphly.util.Gather;
 import gnu.trove.list.array.TLongArrayList;
+import gnu.trove.map.hash.TLongFloatHashMap;
 import gnu.trove.map.hash.TLongObjectHashMap;
+import gnu.trove.set.hash.TLongHashSet;
 
 public interface GraphlyStoreNodeI {
 	@Sync
@@ -55,7 +59,7 @@ public interface GraphlyStoreNodeI {
 			long[] vids) throws Exception;
 
 	public abstract GraphlyCount countEdges(String graph, Dir dir,
-			int max_edges, long[] vids) throws Exception;
+			int max_edges, TLongFloatHashMap data) throws Exception;
 
 	public abstract long getRandomEdge(String graph, long v, long[] subset,
 			Dir d) throws Exception;
@@ -67,8 +71,8 @@ public interface GraphlyStoreNodeI {
 	public abstract TLongObjectHashMap<Object> getProperties(String graph,
 			String k, int top, TLongArrayList value) throws Exception;
 
-	public abstract int getEdgeCount(String graph, long vid, Dir dir, long[] at)
-			throws Exception;
+	public abstract int getEdgeCount(String graph, long vid, Dir dir,
+			TLongHashSet at) throws Exception;
 
 	@Sync
 	public abstract void setTempProperties(String graph,
@@ -115,10 +119,30 @@ public interface GraphlyStoreNodeI {
 			float currentVal) throws Exception;
 
 	@Sync
-	void setDefaultFloat(String graph, String k, float v) throws Exception;
+	public void setDefaultFloat(String graph, String k, float v)
+			throws Exception;
 
-	float getDefaultFloat(String graph, String k) throws Exception;
+	public float getDefaultFloat(String graph, String k) throws Exception;
 
 	public Object gather(String graph, Gather<?> g) throws Exception;
 
+	@Sync
+	public void setTempFloats(String graph, String k, boolean add,
+			TLongFloatHashMap subProp) throws Exception;
+
+	@Sync
+	public void commitFloatUpdates(String graph, String... props)
+			throws Exception;
+
+	@Sync
+	public void updateFloatProperty(String graph, String prop,
+			DivideUpdateProperty upd) throws Exception;
+
+	@Sync
+	public abstract float getFloat(String graph, long v, String k, float alt)
+			throws Exception;
+
+	@Sync
+	public abstract void setFloats(String graph, String k,
+			TLongFloatHashMap subProp) throws Exception;
 }

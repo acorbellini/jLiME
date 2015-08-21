@@ -64,4 +64,7 @@ public class CoordinatorServer {
 		return coord;
 
 	}
+
+	public void stop() {
+	}
 }

@@ -1,8 +1,10 @@
 package edu.jlime.graphly.traversal;
 
-import gnu.trove.list.array.TLongArrayList;
+import gnu.trove.set.hash.TLongHashSet;
 
 import java.util.Arrays;
+
+import org.apache.log4j.Logger;
 
 public class VarFilterStep implements Step {
 
@@ -18,15 +20,18 @@ public class VarFilterStep implements Step {
 
 	@Override
 	public TraversalResult exec(TraversalResult before) throws Exception {
+		Logger log = Logger.getLogger(VarFilterStep.class);
 		TraversalResult res = before;
+		int size = new TLongHashSet(before.vertices()).size();
 		for (String k : kList) {
-			TLongArrayList filter = ((TraversalResult) g.get(k)).vertices();
+			TLongHashSet filter = ((TraversalResult) g.get(k)).vertices();
 
 			if (neg)
 				res = res.removeAll(filter);
 			else
 				res = res.retainAll(filter);
 		}
+		log.info("Filtered " + size + ", left with : "+ res.vertices().size());
 		return res;
 	}
 

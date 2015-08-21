@@ -39,8 +39,13 @@ public class GraphlyTraversal implements Serializable {
 	private String graphID;
 
 	public GraphlyTraversal(long[] ids, GraphlyGraph g) {
-		this.currres = new VertexResult(new TLongHashSet(ids));
+		this.currres = new VertexResult(ids);
 		this.g = g;
+	}
+
+	public GraphlyTraversal(TLongHashSet ids, GraphlyGraph graph) {
+		this.currres = new VertexResult(ids);
+		this.g = graph;
 	}
 
 	public GraphlyTraversal setPrintSteps(boolean printSteps) {
@@ -63,7 +68,8 @@ public class GraphlyTraversal implements Serializable {
 					+ (System.currentTimeMillis() - lastexec) / 1000
 					+ " sec. ):" + step.toString());
 		}
-		return this.currres = step.exec(currres);
+		this.currres = step.exec(currres);
+		return this.currres;
 	}
 
 	public TraversalResult exec() throws Exception {
@@ -108,17 +114,17 @@ public class GraphlyTraversal implements Serializable {
 		return this;
 	}
 
-	public GraphlyTraversal count(Dir dir, int top, int max_edges) {
-		addStep(new CountStep(dir, top, max_edges, this));
+	public GraphlyTraversal count(Dir dir, int max_edges) {
+		addStep(new CountStep(dir, max_edges, this));
 		return this;
 	}
 
-	public GraphlyTraversal countOut(int top) {
-		return countOut(top, Integer.MAX_VALUE);
+	public GraphlyTraversal countOut() {
+		return countOut(Integer.MAX_VALUE);
 	}
 
-	public GraphlyTraversal countOut(int top, int max_edges) {
-		return count(Dir.OUT, top, max_edges);
+	public GraphlyTraversal countOut(int max_edges) {
+		return count(Dir.OUT, max_edges);
 	}
 
 	public <T extends CustomTraversal> T as(Class<T> c) throws Exception {
@@ -152,6 +158,20 @@ public class GraphlyTraversal implements Serializable {
 		for (int i = 0; i < dirs.length; i++) {
 			to(dirs[i], max_edges);
 			filterBy(filters);
+		}
+		return this;
+	}
+
+	public GraphlyTraversal traverseCount(Dir... dirs) {
+		return traverseCount(new String[] {}, Integer.MAX_VALUE, dirs);
+	}
+
+	public GraphlyTraversal traverseCount(String[] filters, int max_edges,
+			Dir... dirs) {
+		for (int i = 0; i < dirs.length; i++) {
+			count(dirs[i], max_edges);
+			if (filters.length > 0)
+				filterBy(filters);
 		}
 		return this;
 	}
@@ -210,4 +230,38 @@ public class GraphlyTraversal implements Serializable {
 
 	}
 
+	public GraphlyTraversal add(int i) {
+		addStep(new AddVertexStep(i, this));
+		return this;
+	}
+
+	public GraphlyTraversal intersect(Dir dir) {
+		addStep(new IntersectStep(dir, this));
+		return this;
+	}
+
+	public GraphlyTraversal size() {
+		addStep(new SizeStep());
+		return this;
+	}
+
+	public GraphlyTraversal expand(Dir dir, int max_edges) {
+		addStep(new VertexStep(dir, max_edges, true, this));
+		return this;
+	}
+
+	public GraphlyTraversal traverseGraphCount(String countk, String[] filters,
+			int max_edges, Dir... dirs) {
+		for (int i = 0; i < dirs.length; i++) {
+			graphcount(countk, dirs[i], max_edges);
+			if (filters.length > 0)
+				filterBy(filters);
+		}
+		return this;
+	}
+
+	public GraphlyTraversal graphcount(String countk, Dir dir, int max_edges) {
+		addStep(new GraphCountStep(dir, max_edges, this, countk));
+		return this;
+	}
 }

@@ -11,8 +11,8 @@ import edu.jlime.pregel.graph.rpc.Graph;
 import edu.jlime.pregel.worker.VertexData;
 import gnu.trove.decorator.TLongSetDecorator;
 import gnu.trove.iterator.TLongObjectIterator;
-import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.map.hash.TLongObjectHashMap;
+import gnu.trove.set.hash.TLongHashSet;
 
 public class PregelGraphLocal implements Serializable, Graph {
 
@@ -134,10 +134,10 @@ public class PregelGraphLocal implements Serializable, Graph {
 	 * @see edu.jlime.pregel.graph.PregelGraphAbstract#getOutgoing(Long)
 	 */
 	@Override
-	public TLongArrayList getOutgoing(long vertex) {
+	public TLongHashSet getOutgoing(long vertex) {
 		VertexData data = getVertexData(vertex);
 		if (data == null)
-			return new TLongArrayList();
+			return new TLongHashSet();
 		return data.outgoing();
 	}
 
@@ -330,11 +330,11 @@ public class PregelGraphLocal implements Serializable, Graph {
 	 * @see edu.jlime.pregel.graph.PregelGraphAbstract#getIncoming(Long)
 	 */
 	@Override
-	public TLongArrayList getIncoming(long v) {
+	public TLongHashSet getIncoming(long v) {
 
 		VertexData data = getVertexData(v);
 		if (data == null)
-			return new TLongArrayList();
+			return new TLongHashSet();
 
 		return data.incoming();
 		// ByteBuffer from = new ByteBuffer(16);
@@ -492,6 +492,24 @@ public class PregelGraphLocal implements Serializable, Graph {
 
 	@Override
 	public float getDefaultFloat(String prop) throws Exception {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public float getFloat(String string, long v, float f) throws Exception {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public TLongHashSet getNeighbours(long v) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public int getNeighbourhoodSize(long v) throws Exception {
 		// TODO Auto-generated method stub
 		return 0;
 	}

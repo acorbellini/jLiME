@@ -11,10 +11,10 @@ import java.util.TreeMap;
 
 import org.springframework.context.support.FileSystemXmlApplicationContext;
 
-import edu.jlime.graphly.client.Graphly;
+import edu.jlime.graphly.client.GraphlyClient;
 import edu.jlime.graphly.client.GraphlyGraph;
 import edu.jlime.graphly.jobs.Mapper;
-import edu.jlime.graphly.server.GraphlyServer;
+import edu.jlime.graphly.server.LocalGraphlyServer;
 import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.profiler.ClusterProfiler;
 import edu.jlime.jd.profiler.MetricExtractor;
@@ -47,7 +47,7 @@ public class RecommendationTest {
 
 	private String execType;
 
-	private List<GraphlyServer> localServers;
+	private List<LocalGraphlyServer> localServers;
 
 	private String graphID;
 
@@ -135,13 +135,13 @@ public class RecommendationTest {
 					.execCommand("bash graphly.sh start eight.txt acorbellini");
 		else {
 			String localdir = ctxt.getBean("localdir", String.class);
-			this.localServers = GraphlyServer.createServers(localdir,
+			this.localServers = LocalGraphlyServer.createServers(localdir,
 					this.servers, true, this.servers, null, null);
 		}
 		System.out.println("Creating client, waiting for " + servers
 				+ " execution nodes.");
 
-		Graphly graph = Graphly.build(servers);
+		GraphlyClient graph = GraphlyClient.build(servers);
 		GraphlyGraph g = graph.getGraph(graphID);
 		ClusterProfiler profiler = new ClusterProfiler(graph.getJobClient()
 				.getCluster(), 2000);
@@ -214,7 +214,7 @@ public class RecommendationTest {
 			CommandLineUtils
 					.execCommand("bash graphly.sh stop eight.txt acorbellini");
 		else {
-			for (GraphlyServer l : this.localServers) {
+			for (LocalGraphlyServer l : this.localServers) {
 				l.stop();
 			}
 		}

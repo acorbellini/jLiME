@@ -8,7 +8,7 @@ import org.apache.commons.lang3.NotImplementedException;
 import edu.jlime.graphly.client.GraphlyGraph;
 import edu.jlime.pregel.client.GraphConnectionFactory;
 import edu.jlime.pregel.graph.rpc.Graph;
-import gnu.trove.list.array.TLongArrayList;
+import gnu.trove.set.hash.TLongHashSet;
 
 public class GraphlyPregelAdapter implements Graph {
 	private GraphlyGraph g;
@@ -63,13 +63,13 @@ public class GraphlyPregelAdapter implements Graph {
 	}
 
 	@Override
-	public TLongArrayList getOutgoing(final long vertex) throws Exception {
-		return TLongArrayList.wrap(g.getEdgesFiltered(Dir.OUT, vertex, null));
+	public TLongHashSet getOutgoing(final long vertex) throws Exception {
+		return new TLongHashSet(g.getEdgesFiltered(Dir.OUT, vertex, null));
 	}
 
 	@Override
-	public TLongArrayList getIncoming(final long vertex) throws Exception {
-		return TLongArrayList.wrap(g.getEdgesFiltered(Dir.IN, vertex, null));
+	public TLongHashSet getIncoming(final long vertex) throws Exception {
+		return new TLongHashSet(g.getEdgesFiltered(Dir.IN, vertex, null));
 	}
 
 	@Override
@@ -171,4 +171,21 @@ public class GraphlyPregelAdapter implements Graph {
 	public float getDefaultFloat(String prop) throws Exception {
 		return g.getDefaultFloat(prop);
 	}
+
+	@Override
+	public float getFloat(String string, long v, float f) throws Exception {
+		return g.getFloat(v, string, f);
+	}
+
+	@Override
+	public TLongHashSet getNeighbours(long v) {
+		return new TLongHashSet(g.getEdgesFiltered(Dir.BOTH, v, null));
+
+	}
+
+	@Override
+	public int getNeighbourhoodSize(long v) throws Exception {
+		return g.getEdgesCount(Dir.BOTH, v, null);
+	}
+
 }

@@ -45,7 +45,8 @@ public class FloatArrayMessageQueue implements PregelMessageQueue {
 	}
 
 	@Override
-	public void flush(String msgType, WorkerTask workerTask) throws Exception {
+	public void flush(String msgType, String subgraph, WorkerTask workerTask)
+			throws Exception {
 		TObjectIntHashMap<Worker> sizes = new TObjectIntHashMap<>();
 		{
 			final TLongObjectIterator<float[]> it = readOnly.iterator();
@@ -111,5 +112,10 @@ public class FloatArrayMessageQueue implements PregelMessageQueue {
 		else
 			merger.merge(val, found, found);
 
+	}
+
+	@Override
+	public long[] keys() {
+		return readOnly.keys();
 	}
 }

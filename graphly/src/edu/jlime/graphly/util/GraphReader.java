@@ -1,7 +1,5 @@
 package edu.jlime.graphly.util;
 
-import gnu.trove.list.array.TLongArrayList;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -9,6 +7,9 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Iterator;
+
+import edu.jlime.util.Pair;
+import gnu.trove.list.array.TLongArrayList;
 
 final class GraphReader implements Iterator<Pair<Long, long[]>> {
 	private final BufferedReader reader;

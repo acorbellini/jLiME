@@ -9,11 +9,11 @@ import org.apache.log4j.Logger;
 
 import edu.jlime.core.cluster.Peer;
 import edu.jlime.graphly.util.GraphlyUtil;
-import edu.jlime.graphly.util.Pair;
 import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.client.JobContext;
 import edu.jlime.metrics.metric.CompositeMetrics;
 import edu.jlime.metrics.sysinfo.filter.SysInfoFilter;
+import edu.jlime.util.Pair;
 import gnu.trove.list.array.TLongArrayList;
 
 public class CriteriaMapper implements Mapper {
@@ -139,7 +139,7 @@ public class CriteriaMapper implements Mapper {
 	}
 
 	@Override
-	public int hash(long v) {
+	public int hash(long v, JobContext ctx) {
 		return (int) (v % VNODES);
 	}
 }

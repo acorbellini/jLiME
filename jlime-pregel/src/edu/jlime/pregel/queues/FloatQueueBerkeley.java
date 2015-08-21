@@ -3,12 +3,9 @@ package edu.jlime.pregel.queues;
 import java.util.HashMap;
 import java.util.Iterator;
 
-import com.sleepycat.je.DatabaseException;
-
 import edu.jlime.pregel.messages.FloatPregelMessage;
 import edu.jlime.pregel.messages.PregelMessage;
 import edu.jlime.pregel.worker.FloatData;
-import edu.jlime.pregel.worker.FloatTroveMessageMerger;
 import edu.jlime.pregel.worker.WorkerTask;
 import edu.jlime.pregel.worker.rpc.Worker;
 import gnu.trove.iterator.TLongFloatIterator;
@@ -49,7 +46,8 @@ public class FloatQueueBerkeley implements FloatMessageQueue {
 	}
 
 	@Override
-	public void flush(String msgType, WorkerTask workerTask) throws Exception {
+	public void flush(String msgType, String subgraph, WorkerTask workerTask)
+			throws Exception {
 		TObjectIntHashMap<Worker> sizes = new TObjectIntHashMap<>();
 		{
 			final TLongFloatIterator it = readOnly.iterator();
@@ -119,6 +117,11 @@ public class FloatQueueBerkeley implements FloatMessageQueue {
 				this.current.put(to, merger.merge(found, msg));
 			}
 		}
+	}
+
+	@Override
+	public long[] keys() {
+		return readOnly.keys();
 	}
 
 }

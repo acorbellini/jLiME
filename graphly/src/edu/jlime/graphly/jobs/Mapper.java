@@ -4,9 +4,9 @@ import java.io.Serializable;
 import java.util.List;
 
 import edu.jlime.core.cluster.Peer;
-import edu.jlime.graphly.util.Pair;
 import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.client.JobContext;
+import edu.jlime.util.Pair;
 import gnu.trove.list.array.TLongArrayList;
 
 public interface Mapper extends Serializable {
@@ -24,6 +24,6 @@ public interface Mapper extends Serializable {
 
 	public Peer[] getPeers();
 
-	public int hash(long to);
+	public int hash(long to, JobContext ctx);
 
 }

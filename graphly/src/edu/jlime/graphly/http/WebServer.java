@@ -55,26 +55,33 @@ public class WebServer {
 		while (true)
 			try {
 				httpserver = httpserver();
-				// ExecutorService asyncExec = Executors
-				// .newCachedThreadPool(new ThreadFactory() {
-				//
-				// @Override
-				// public Thread newThread(Runnable r) {
-				// Thread t = Executors.defaultThreadFactory()
-				// .newThread(r);
-				// t.setName("Admin Console Thread");
-				// t.setDaemon(true);
-				// return t;
-				// }
-				// });
-				// httpserver.setExecutor(asyncExec);
+				ExecutorService asyncExec = Executors
+						.newCachedThreadPool(new ThreadFactory() {
+
+							@Override
+							public Thread newThread(Runnable r) {
+								Thread t = Executors.defaultThreadFactory()
+										.newThread(r);
+								t.setName("Admin Console Thread");
+								t.setDaemon(true);
+								return t;
+							}
+						});
+
+				httpserver.setExecutor(asyncExec);
 				httpserver.start();
+				Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+					@Override
+					public void run() {
+						WebServer.this.stop();
+					}
+				}, "shutdownHook"));
 				return;
 			} catch (BindException e) {
 				if (httpserver != null)
 					httpserver.stop(0);
 				if (cont == PORT_RANGE)
-					throw e; 
+					throw e;
 				port++;
 				cont++;
 			}

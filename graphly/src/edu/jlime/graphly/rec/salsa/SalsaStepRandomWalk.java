@@ -7,6 +7,7 @@ import edu.jlime.graphly.rec.Recommendation;
 import edu.jlime.graphly.traversal.Dir;
 import edu.jlime.graphly.traversal.GraphlyTraversal;
 import edu.jlime.graphly.traversal.TraversalResult;
+import gnu.trove.set.hash.TLongHashSet;
 
 public class SalsaStepRandomWalk implements CustomFunction {
 	private String auth;
@@ -25,7 +26,7 @@ public class SalsaStepRandomWalk implements CustomFunction {
 	@Override
 	public TraversalResult execute(TraversalResult before, GraphlyTraversal tr)
 			throws Exception {
-		long[] res = before.vertices().toArray();
+		TLongHashSet res = before.vertices();
 
 		GraphlyGraph g = tr.getGraph();
 

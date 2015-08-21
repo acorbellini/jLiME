@@ -23,7 +23,7 @@ public class DoubleDifferenceAggregator implements DoubleAggregator {
 	}
 
 	@Override
-	public double get() {
+	public double getDouble() {
 		System.out.println("Returning difference " + currentDiff + "");
 		return currentDiff;
 	}
@@ -42,4 +42,10 @@ public class DoubleDifferenceAggregator implements DoubleAggregator {
 	public void merge(Aggregator value) {
 		newVal += ((DoubleAggregator) value).get();
 	}
+
+	@Override
+	public float get() {
+		return 0f;
+	}
+
 }

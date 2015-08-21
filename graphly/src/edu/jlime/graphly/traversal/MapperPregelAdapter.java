@@ -5,7 +5,7 @@ import java.util.List;
 import edu.jlime.core.cluster.Peer;
 import edu.jlime.core.rpc.RPCDispatcher;
 import edu.jlime.core.rpc.Transferible;
-import edu.jlime.graphly.client.Graphly;
+import edu.jlime.graphly.client.GraphlyClient;
 import edu.jlime.graphly.jobs.Mapper;
 import edu.jlime.jd.JobDispatcher;
 import edu.jlime.jd.client.JobContext;
@@ -25,7 +25,7 @@ public class MapperPregelAdapter implements SplitFunction, Transferible {
 
 	@Override
 	public void setRPC(RPCDispatcher rpc) throws Exception {
-		Graphly g = (Graphly) ((JobDispatcher) rpc
+		GraphlyClient g = (GraphlyClient) ((JobDispatcher) rpc
 				.getTarget(JobDispatcher.JOB_DISPATCHER)).getGlobal("graphly");
 
 		JobDispatcher cli = g.getJobClient();
@@ -50,6 +50,6 @@ public class MapperPregelAdapter implements SplitFunction, Transferible {
 
 	@Override
 	public int hash(long to) {
-		return mapper.hash(to);
+		return mapper.hash(to, ctx);
 	}
 }

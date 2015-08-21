@@ -45,4 +45,9 @@ public class FloatDifferenceAggregator implements FloatAggregator {
 	public void merge(Aggregator value) {
 		newVal += ((FloatAggregator) value).get();
 	}
+
+	@Override
+	public float getCurrent() {
+		return newVal;
+	}
 }

@@ -8,9 +8,9 @@ import org.apache.log4j.Logger;
 
 import edu.jlime.core.cluster.Peer;
 import edu.jlime.graphly.util.GraphlyUtil;
-import edu.jlime.graphly.util.Pair;
 import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.client.JobContext;
+import edu.jlime.util.Pair;
 import gnu.trove.list.array.TLongArrayList;
 
 //Simple Round Robin
@@ -95,7 +95,7 @@ public class RoundRobinMapper implements Mapper {
 
 	@Override
 	public ClientNode getNode(long v, JobContext ctx) {
-		return nodes[hash(v)];
+		return nodes[hash(v, ctx)];
 
 	}
 
@@ -109,7 +109,7 @@ public class RoundRobinMapper implements Mapper {
 	}
 
 	@Override
-	public int hash(long v) {
+	public int hash(long v, JobContext ctx) {
 		return (int) (v % nodes.length);
 	}
 }

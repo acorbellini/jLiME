@@ -3,6 +3,7 @@ package edu.jlime.graphly.rec.hits;
 import edu.jlime.graphly.client.GraphlyGraph;
 import edu.jlime.graphly.jobs.SubGraphClean;
 import edu.jlime.graphly.traversal.RepeatStep.RepeatSync;
+import gnu.trove.set.hash.TLongHashSet;
 
 public class HITSSync implements RepeatSync<long[]> {
 
@@ -18,7 +19,12 @@ public class HITSSync implements RepeatSync<long[]> {
 	public void exec(long[] before, GraphlyGraph g) throws Exception {
 		g.getJobClient().getCluster()
 				.broadcast(new SubGraphClean(g, "hits-sub"));
-		g.commitUpdates(auth, hub);
-	}
+		g.commitFloatUpdates(auth, hub);
+		TLongHashSet set = new TLongHashSet(before);
+		float sum_hub = g.sumFloat(hub, set);
+		float sum_auth = g.sumFloat(auth, set);
+		g.updateFloatProperty(hub, new DivideUpdateProperty(sum_hub));
+		g.updateFloatProperty(auth, new DivideUpdateProperty(sum_auth));
 
+	}
 }

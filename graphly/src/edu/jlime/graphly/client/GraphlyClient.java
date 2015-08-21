@@ -23,29 +23,30 @@ import edu.jlime.core.marshalling.TypeConverter;
 import edu.jlime.core.marshalling.TypeConverters;
 import edu.jlime.core.rpc.ClientManager;
 import edu.jlime.core.rpc.RPCDispatcher;
+import edu.jlime.graphly.rec.hits.DivideUpdateProperty;
 import edu.jlime.graphly.server.GraphlyCoordinator;
 import edu.jlime.graphly.server.GraphlyCoordinatorBroadcast;
 import edu.jlime.graphly.server.GraphlyCoordinatorFactory;
 import edu.jlime.graphly.storenode.GraphlyCount;
-import edu.jlime.graphly.storenode.GraphlyStoreNodeI;
+import edu.jlime.graphly.storenode.rpc.GraphlyStoreNodeI;
 import edu.jlime.graphly.storenode.rpc.GraphlyStoreNodeIBroadcast;
 import edu.jlime.graphly.storenode.rpc.GraphlyStoreNodeIFactory;
 import edu.jlime.graphly.traversal.Dir;
 import edu.jlime.graphly.traversal.GraphlyTraversal;
 import edu.jlime.graphly.util.Gather;
-import edu.jlime.graphly.util.GraphlyUtil;
 import edu.jlime.jd.JobDispatcher;
 import edu.jlime.pregel.client.PregelClient;
 import edu.jlime.rpc.JLiMEFactory;
 import edu.jlime.util.ByteBuffer;
-import gnu.trove.iterator.TLongIntIterator;
+import gnu.trove.iterator.TLongFloatIterator;
+import gnu.trove.iterator.TLongIterator;
 import gnu.trove.iterator.TLongObjectIterator;
 import gnu.trove.list.array.TLongArrayList;
-import gnu.trove.map.hash.TLongIntHashMap;
+import gnu.trove.map.hash.TLongFloatHashMap;
 import gnu.trove.map.hash.TLongObjectHashMap;
 import gnu.trove.set.hash.TLongHashSet;
 
-public class Graphly implements Closeable {
+public class GraphlyClient implements Closeable {
 
 	private static final int MAX_VERTEX_ITERATOR = 1000;
 
@@ -61,13 +62,13 @@ public class Graphly implements Closeable {
 
 	private Map<String, SubGraph> subgraphs = new HashMap<>();
 
-	private Logger log = Logger.getLogger(Graphly.class);
+	private Logger log = Logger.getLogger(GraphlyClient.class);
 
 	private PregelClient pregel_client;
 
 	private long[] EMPTY_LONG_ARRAY = new long[] {};
 
-	private Graphly(GraphlyCoordinator coord, PregelClient pregel_client,
+	private GraphlyClient(GraphlyCoordinator coord, PregelClient pregel_client,
 			ClientManager<GraphlyStoreNodeI, GraphlyStoreNodeIBroadcast> mgr,
 			JobDispatcher jd) throws Exception {
 		this.pregel_client = pregel_client;
@@ -136,7 +137,7 @@ public class Graphly implements Closeable {
 		return new GraphlyEdge(id, id2, getGraph(graph));
 	}
 
-	public static Graphly build(int min) throws Exception {
+	public static GraphlyClient build(int min) throws Exception {
 		Map<String, String> d = new HashMap<>();
 		d.put("app", "graphly-client," + JobDispatcher.CLIENT);
 
@@ -152,7 +153,7 @@ public class Graphly implements Closeable {
 
 		jd.setGlobal("pregel", pregel_client);
 
-		Graphly build = build(rpc, pregel_client, jd, min);
+		GraphlyClient build = build(rpc, pregel_client, jd, min);
 
 		jd.setGlobal("graphly", build);
 
@@ -160,11 +161,12 @@ public class Graphly implements Closeable {
 
 	}
 
-	public static Graphly build(RPCDispatcher rpc, PregelClient pregel_client,
-			JobDispatcher jd, int min) throws Exception {
+	public static GraphlyClient build(RPCDispatcher rpc,
+			PregelClient pregel_client, JobDispatcher jd, int min)
+			throws Exception {
 
 		TypeConverters tc = rpc.getMarshaller().getTc();
-		tc.registerTypeConverter((byte) 4, Dir.class, new TypeConverter() {
+		tc.registerTypeConverter(Dir.class, new TypeConverter() {
 
 			@Override
 			public void toArray(Object o, ByteBuffer buffer, Peer cliID)
@@ -191,7 +193,7 @@ public class Graphly implements Closeable {
 
 		mgr.waitForClient(min);
 		coordMgr.waitFirst();
-		return new Graphly(coordMgr.getFirst(), pregel_client, mgr, jd);
+		return new GraphlyClient(coordMgr.getFirst(), pregel_client, mgr, jd);
 	}
 
 	public JobDispatcher getJobClient() {
@@ -212,7 +214,6 @@ public class Graphly implements Closeable {
 
 		ExecutorService svc = Executors.newCachedThreadPool();
 
-		final TLongHashSet ret = new TLongHashSet();
 		Map<GraphlyStoreNodeI, TLongArrayList> map = new HashMap<>();
 		for (long l : vids) {
 			GraphlyStoreNodeI node = getClientFor(l);
@@ -233,6 +234,7 @@ public class Graphly implements Closeable {
 			}
 		}
 
+		final TLongHashSet ret = new TLongHashSet();
 		for (final Entry<GraphlyStoreNodeI, TLongArrayList> e : map.entrySet()) {
 			svc.execute(new Runnable() {
 
@@ -274,19 +276,19 @@ public class Graphly implements Closeable {
 	}
 
 	public GraphlyCount countEdges(final String graph, final Dir dir,
-			final int max_edges, long[] vids) throws Exception {
+			final int max_edges, final TLongFloatHashMap data) throws Exception {
 		ExecutorService svc = Executors.newCachedThreadPool();
-
-		final TLongIntHashMap ret = new TLongIntHashMap();
 
 		log.info("Hashing keys to count edges");
 
-		Map<GraphlyStoreNodeI, TLongArrayList> map = hashKeys(vids);
+		Map<GraphlyStoreNodeI, TLongArrayList> map = hashKeys(data.keys());
 
 		if (map.size() == 1) {
 			GraphlyStoreNodeI node = map.entrySet().iterator().next().getKey();
-			return node.countEdges(graph, dir, max_edges, vids);
+			return node.countEdges(graph, dir, max_edges, data);
 		}
+
+		final TLongFloatHashMap ret = new TLongFloatHashMap();
 
 		log.info("Sending count edge requests.");
 
@@ -295,10 +297,16 @@ public class Graphly implements Closeable {
 				@Override
 				public void run() {
 					try {
+						TLongFloatHashMap prevCounts = new TLongFloatHashMap();
+						TLongIterator itV = e.getValue().iterator();
+						while (itV.hasNext()) {
+							long v = itV.next();
+							prevCounts.put(v, data.get(v));
+						}
 						GraphlyCount count = e.getKey().countEdges(graph, dir,
-								max_edges, e.getValue().toArray());
+								max_edges, prevCounts);
 						synchronized (ret) {
-							TLongIntIterator it = count.iterator();
+							TLongFloatIterator it = count.getRes().iterator();
 							while (it.hasNext()) {
 								it.advance();
 								ret.adjustOrPutValue(it.key(), it.value(),
@@ -320,7 +328,7 @@ public class Graphly implements Closeable {
 			e1.printStackTrace();
 		}
 
-		return new GraphlyCount(ret.keys(), ret.values());
+		return new GraphlyCount(ret);
 	}
 
 	public Map<GraphlyStoreNodeI, TLongArrayList> hashKeys(long[] data) {
@@ -428,7 +436,7 @@ public class Graphly implements Closeable {
 		}
 	}
 
-	public int getEdgesCount(String graph, Dir dir, long vid, long[] at)
+	public int getEdgesCount(String graph, Dir dir, long vid, TLongHashSet at)
 			throws Exception {
 		return getClientFor(vid).getEdgeCount(graph, vid, dir, at);
 	}
@@ -483,15 +491,22 @@ public class Graphly implements Closeable {
 		return getSubGraph(graph, string, null);
 	}
 
-	public long[] getEdgesFiltered(String graph, Dir in, long vid, long[] all) {
+	public long[] getEdgesFiltered(String graph, Dir in, long vid,
+			TLongHashSet all) {
 		try {
 			long[] edges = getEdges(graph, in, vid);
 
 			if (edges != null)
-				if (all == null || all.length == 0)
+				if (all == null || all.size() == 0)
 					return edges;
-				else
-					return GraphlyUtil.filter(edges, all);
+				else {
+					TLongHashSet ret = new TLongHashSet();
+					for (long l : edges) {
+						if (all.contains(l))
+							ret.add(l);
+					}
+					return ret.toArray();
+				}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -597,4 +612,79 @@ public class Graphly implements Closeable {
 		return mgr.getFirst().getDefaultFloat(graph, prop);
 	}
 
+	public GraphlyTraversal v(String graph, TLongHashSet ids) {
+		return new GraphlyTraversal(ids, getGraph(graph));
+	}
+
+	public void setTempFloats(final String graph, final String k,
+			final boolean add, final TLongFloatHashMap v) {
+		ExecutorService exec = Executors.newFixedThreadPool(Runtime
+				.getRuntime().availableProcessors());
+
+		Map<GraphlyStoreNodeI, TLongArrayList> map = hashKeys(v.keys());
+		for (final Entry<GraphlyStoreNodeI, TLongArrayList> entry : map
+				.entrySet()) {
+			exec.execute(new Runnable() {
+
+				@Override
+				public void run() {
+					final GraphlyStoreNodeI node = entry.getKey();
+					final long[] current = entry.getValue().toArray();
+					TLongFloatHashMap subProp = new TLongFloatHashMap();
+					for (long l : current) {
+						subProp.put(l, v.get(l));
+					}
+					try {
+						node.setTempFloats(graph, k, add, subProp);
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+			});
+
+		}
+
+		exec.shutdown();
+		try {
+			exec.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
+	}
+
+	public void commitFloatUpdates(String graph, String... props)
+			throws Exception {
+		mgr.broadcast().commitFloatUpdates(graph, props);
+
+	}
+
+	public void updateFloatProperty(String graph, String prop,
+			DivideUpdateProperty upd) throws Exception {
+		mgr.broadcast().updateFloatProperty(graph, prop, upd);
+
+	}
+
+	public float getFloat(String graph, long v, String k, float alt)
+			throws Exception {
+		return getClientFor(v).getFloat(graph, v, k, alt);
+
+	}
+
+	public void setFloat(String graph, String k, TLongFloatHashMap auth2) {
+		Map<GraphlyStoreNodeI, TLongArrayList> map = hashKeys(auth2.keys());
+		for (Entry<GraphlyStoreNodeI, TLongArrayList> entry : map.entrySet()) {
+			final GraphlyStoreNodeI node = entry.getKey();
+			final long[] current = entry.getValue().toArray();
+			TLongFloatHashMap subProp = new TLongFloatHashMap();
+			for (long l : current) {
+				subProp.put(l, auth2.get(l));
+			}
+			try {
+				node.setFloats(graph, k, subProp);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
 }

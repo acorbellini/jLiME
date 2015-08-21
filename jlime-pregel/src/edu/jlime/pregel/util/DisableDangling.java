@@ -7,7 +7,7 @@ import edu.jlime.pregel.graph.VertexFunction;
 import edu.jlime.pregel.graph.rpc.Graph;
 import edu.jlime.pregel.messages.PregelMessage;
 import gnu.trove.iterator.TLongIterator;
-import gnu.trove.list.array.TLongArrayList;
+import gnu.trove.set.hash.TLongHashSet;
 
 public class DisableDangling implements VertexFunction<PregelMessage> {
 
@@ -23,7 +23,7 @@ public class DisableDangling implements VertexFunction<PregelMessage> {
 		}
 
 		if (graph.getOutgoingSize(v) == 0) {
-			TLongArrayList incoming = graph.getIncoming(v);
+			TLongHashSet incoming = graph.getIncoming(v);
 			TLongIterator it = incoming.iterator();
 			while (it.hasNext()) {
 				ctx.send("dangling", it.next(), "DELETED");

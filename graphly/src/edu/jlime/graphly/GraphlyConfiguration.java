@@ -24,7 +24,7 @@ public class GraphlyConfiguration {
 	public GraphlyConfiguration(Configuration newConfig) {
 		this.config = newConfig;
 		this.persistfloats = newConfig.getBoolean(
-				"graphly.store.persistfloats", true);
+				"graphly.store.persistfloats", false);
 
 		this.edgeCacheType = newConfig.getString("graphly.store.edgecachetype",
 				"no-cache");// fixed-size, mem-based, no-cache

@@ -1,6 +1,6 @@
 package edu.jlime.graphly.util;
 
-import edu.jlime.graphly.client.Graphly;
+import edu.jlime.graphly.client.GraphlyClient;
 import edu.jlime.graphly.client.GraphlyGraph;
 import edu.jlime.graphly.jobs.MapperFactory;
 import edu.jlime.graphly.rec.Recommendation;
@@ -9,7 +9,7 @@ import edu.jlime.graphly.traversal.Pregel;
 public class QueryTest {
 
 	public static void main(String[] args) throws Exception {
-		Graphly graphly = Graphly.build(4);
+		GraphlyClient graphly = GraphlyClient.build(4);
 
 		// System.out.println(graphly.listGraphs());
 		//

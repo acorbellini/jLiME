@@ -18,7 +18,7 @@ public class ExploratoryCountQC implements QueryContainer {
 
 		g.v(users).setPrintSteps(true).set("mapper", mapper)
 				.as(Recommendation.class)
-				.exploratoryCount(size, 10, Dir.OUT, Dir.IN, Dir.OUT)
+				.exploratoryCount(size, 10, "count", Dir.OUT, Dir.IN, Dir.OUT)
 				.submit(g.getJobClient().getCluster().getExecutors().get(0));
 	}
 
@@ -26,5 +26,4 @@ public class ExploratoryCountQC implements QueryContainer {
 	public String getID() {
 		return "exploratory";
 	}
-
 }

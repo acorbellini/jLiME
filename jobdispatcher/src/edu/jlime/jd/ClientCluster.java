@@ -29,6 +29,8 @@ public class ClientCluster implements Iterable<ClientNode> {
 
 	private ClientNode localPeer;
 
+	private Map<String, ClientNode> byName = new ConcurrentHashMap<String, ClientNode>();
+
 	private Map<Peer, ClientNode> clis = new ConcurrentHashMap<Peer, ClientNode>();
 
 	public ClientCluster(JobDispatcher jobDispatcher, Peer clientID) {
@@ -47,6 +49,20 @@ public class ClientCluster implements Iterable<ClientNode> {
 		return execCli;
 	}
 
+	public ClientNode getByName(String jobNode) {
+		ClientNode ret = byName.get(jobNode);
+		if (ret == null) {
+			synchronized (this) {
+				ret = byName.get(jobNode);
+				if (ret == null) {
+					getPeers();
+					ret = byName.get(jobNode);
+				}
+			}
+		}
+		return ret;
+	}
+
 	public ClientNode getClientFor(Peer jobNode) {
 		ClientNode ret = clis.get(jobNode);
 		if (ret == null)
@@ -55,6 +71,7 @@ public class ClientCluster implements Iterable<ClientNode> {
 				if (ret == null) {
 					ret = new ClientNode(jobNode, client, disp);
 					clis.put(jobNode, ret);
+					byName.put(jobNode.getName(), ret);
 				}
 			}
 		return ret;

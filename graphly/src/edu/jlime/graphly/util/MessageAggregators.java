@@ -4,7 +4,12 @@ import edu.jlime.pregel.aggregators.FloatDifferenceAggregator;
 
 public class MessageAggregators {
 
-	public static FloatSumAggregator FLOAT_SUM = new FloatSumAggregator();
-	public static FloatDifferenceAggregator FLOAT_DIFF = new FloatDifferenceAggregator();
+	public static FloatSumAggregator floatSum() {
+		return new FloatSumAggregator();
+	}
+
+	public static FloatDifferenceAggregator floatDiff() {
+		return new FloatDifferenceAggregator();
+	}
 
 }

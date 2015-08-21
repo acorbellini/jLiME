@@ -1,20 +1,19 @@
 package edu.jlime.graphly.client;
 
-import java.util.Arrays;
+import edu.jlime.graphly.traversal.Dir;
+import gnu.trove.set.hash.TLongHashSet;
+
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 
-import edu.jlime.graphly.traversal.Dir;
-import edu.jlime.graphly.util.GraphlyUtil;
-
 public class SubGraph {
 
 	private static final int LOCKS = 1021;
 	private GraphlyGraph g;
-	private long[] vertices;
+	private TLongHashSet vertices;
 
 	private ConcurrentHashMap<Long, Map<String, Object>> props = new ConcurrentHashMap<>(
 			1000, 0.9f, 8);
@@ -43,8 +42,7 @@ public class SubGraph {
 		// long[] vs = all;
 		// Arrays.sort(vs);
 
-		vertices = Arrays.copyOf(all, all.length);
-		Arrays.sort(vertices);
+		vertices = new TLongHashSet(all);
 	}
 
 	public long[] getEdges(final Dir dir, final Long vid)
@@ -66,9 +64,12 @@ public class SubGraph {
 
 					try {
 						long[] e = g.getEdges(dir, vid);
-						Arrays.sort(e);
-						res = GraphlyUtil.filter(e, vertices);
-
+						TLongHashSet ret = new TLongHashSet();
+						for (long l : e) {
+							if (vertices.contains(l))
+								ret.add(l);
+						}
+						res = ret.toArray();
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
@@ -170,8 +171,8 @@ public class SubGraph {
 	public void loadProperties(String authKey, Object defaultauth)
 			throws Exception {
 		synchronized (this) {
-			Map<Long, Map<String, Object>> props = g.getProperties(vertices,
-					authKey);
+			Map<Long, Map<String, Object>> props = g.getProperties(
+					vertices.toArray(), authKey);
 			for (Entry<Long, Map<String, Object>> e : props.entrySet()) {
 				Long l = e.getKey();
 				Map<String, Object> value = e.getValue();

@@ -16,4 +16,12 @@ public interface CacheManagerI {
 
 	void sendDouble(String type, long v, long to, double val) throws Exception;
 
+	void stop();
+
+	void sendAllSubGraph(String msgType, String subgraph, long v, Object val)
+			throws Exception;
+
+	void sendAllFloatSubGraph(String msgType, String subgraph, long v, float val)
+			throws Exception;
+
 }

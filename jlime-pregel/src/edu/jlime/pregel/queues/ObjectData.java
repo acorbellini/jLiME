@@ -4,6 +4,7 @@ public class ObjectData {
 
 	public Object[] objects;
 	public long[] vids;
+	public long[] from;
 
 	int dCont = 0;
 	int vCont = 0;

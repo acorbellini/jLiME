@@ -47,4 +47,22 @@ public class NoCache implements CacheManagerI {
 		task.outputDouble(msgType, from, to, val);
 	}
 
+	@Override
+	public void stop() {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void sendAllSubGraph(String msgType, String subGraph, long v,
+			Object val) throws Exception {
+		task.outputObjectSubgraph(msgType, subGraph, v, val);
+	}
+
+	@Override
+	public void sendAllFloatSubGraph(String msgType, String subgraph, long v,
+			float val) throws Exception {
+		task.outputFloatSubgraph(msgType, subgraph, v, val);
+	}
+
 }

@@ -6,6 +6,7 @@ import java.util.HashMap;
 import edu.jlime.pregel.coordinator.Aggregator;
 import edu.jlime.pregel.coordinator.HaltCondition;
 import edu.jlime.pregel.mergers.MessageMerger;
+import gnu.trove.set.hash.TLongHashSet;
 
 public class PregelConfig implements Serializable {
 
@@ -28,9 +29,13 @@ public class PregelConfig implements Serializable {
 
 	private HaltCondition condition = null;
 
-	private int queue_size = 100000;
+	private int queue_size = 5000000;
 
 	private CacheFactory cacheFactory = CacheFactory.SIMPLE;
+
+	private HashMap<String, TLongHashSet> sg = new HashMap<>();
+
+	private boolean parallelcache = true;
 
 	public PregelConfig graph(GraphConnectionFactory graph) {
 		this.graph = graph;
@@ -177,5 +182,22 @@ public class PregelConfig implements Serializable {
 	public PregelConfig cache(CacheFactory cf) {
 		cacheFactory = cf;
 		return this;
+	}
+
+	public PregelConfig subgraph(String name, TLongHashSet all) {
+		this.sg.put(name, all);
+		return this;
+	}
+
+	public TLongHashSet getSubgraph(String name) {
+		return sg.get(name);
+	}
+
+	public HashMap<String, TLongHashSet> getSubgraphs() {
+		return sg;
+	}
+
+	public boolean isParallelCache() {
+		return parallelcache;
 	}
 }

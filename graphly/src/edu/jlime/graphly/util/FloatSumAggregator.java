@@ -1,11 +1,14 @@
 package edu.jlime.graphly.util;
 
+import com.google.common.util.concurrent.AtomicDouble;
+
 import edu.jlime.pregel.coordinator.Aggregator;
 import edu.jlime.pregel.worker.FloatAggregator;
 
 public class FloatSumAggregator implements FloatAggregator {
 
-	float sum = 0f;
+	AtomicDouble curr = new AtomicDouble(0d);
+	AtomicDouble old = new AtomicDouble(0d);
 
 	@Override
 	public void superstep(int s) {
@@ -14,27 +17,39 @@ public class FloatSumAggregator implements FloatAggregator {
 
 	@Override
 	public Aggregator copy() {
-		return new FloatSumAggregator();
+		FloatSumAggregator floatSumAggregator = new FloatSumAggregator();
+		floatSumAggregator.curr = new AtomicDouble(curr.get());
+		floatSumAggregator.old = new AtomicDouble(old.get());
+		return floatSumAggregator;
 	}
 
 	@Override
-	public void reset() {
-		sum = 0f;
+	public synchronized void reset() {
+		AtomicDouble aux = old;
+		old = curr;
+		curr = aux;
+		curr.set(0d);
 	}
 
 	@Override
 	public void merge(Aggregator value) {
-		sum += ((FloatAggregator) value).get();
+		old.addAndGet(((FloatAggregator) value).get());
+		curr.addAndGet(((FloatAggregator) value).getCurrent());
 	}
 
 	@Override
 	public void add(long from, long to, float val) {
-		sum += val;
+		curr.addAndGet(val);
 	}
 
 	@Override
 	public float get() {
-		return sum;
+		return (float) old.get();
+	}
+
+	@Override
+	public float getCurrent() {
+		return (float) curr.get();
 	}
 
 }

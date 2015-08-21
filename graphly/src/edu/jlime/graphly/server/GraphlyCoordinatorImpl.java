@@ -5,7 +5,7 @@ import edu.jlime.core.rpc.ClientManager;
 import edu.jlime.core.rpc.RPCDispatcher;
 import edu.jlime.core.rpc.RPCDispatcher.RPCStatus;
 import edu.jlime.graphly.client.ConsistentHashing;
-import edu.jlime.graphly.storenode.GraphlyStoreNodeI;
+import edu.jlime.graphly.storenode.rpc.GraphlyStoreNodeI;
 import edu.jlime.graphly.storenode.rpc.GraphlyStoreNodeIBroadcast;
 import edu.jlime.graphly.storenode.rpc.GraphlyStoreNodeIFactory;
 
@@ -37,5 +37,8 @@ public class GraphlyCoordinatorImpl implements GraphlyCoordinator {
 
 	public ConsistentHashing getHash() {
 		return this.hash;
+	}
+
+	public void stop() {		
 	}
 }

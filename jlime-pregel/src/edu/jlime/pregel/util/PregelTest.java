@@ -40,7 +40,7 @@ public class PregelTest {
 				new PageRankFloat("pagerank", g.vertexSize()),
 				null,
 				new PregelConfig().split(SplitFunctions.rr())
-						.merger("pr", MessageMergers.FLOAT_SUM)
+						.merger("pr", MessageMergers.floatSum())
 						.graph(InMemoryGraph.getFactory("graph")).steps(30)
 						.threads(10).executeOnAll(true));
 

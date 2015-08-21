@@ -1,8 +1,5 @@
 package edu.jlime.graphly.rec.hits;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
@@ -14,13 +11,12 @@ import edu.jlime.graphly.client.GraphlyGraph;
 import edu.jlime.graphly.client.SubGraph;
 import edu.jlime.graphly.rec.Repeat;
 import edu.jlime.graphly.traversal.Dir;
+import gnu.trove.map.hash.TLongFloatHashMap;
 
 public class HITSRepeat implements Repeat<long[]> {
-	private static final int MAX_THREADS = 64;
 	private String authKey;
 	private String hubKey;
 	private long[] current;
-	static transient volatile ExecutorService exec;
 
 	public HITSRepeat(String authKey, String hubKey, long[] current) {
 		this.authKey = authKey;
@@ -29,30 +25,25 @@ public class HITSRepeat implements Repeat<long[]> {
 	}
 
 	@Override
-	public Object exec(long[] before, GraphlyGraph g) throws Exception {
-		if (exec == null) {
-			synchronized (this) {
-				if (exec == null)
-					exec = Executors.newFixedThreadPool(MAX_THREADS,
-							new ThreadFactory() {
+	public Object exec(long[] before, final GraphlyGraph g) throws Exception {
+		ExecutorService exec = Executors.newFixedThreadPool(Runtime
+				.getRuntime().availableProcessors(), new ThreadFactory() {
 
-								@Override
-								public Thread newThread(Runnable r) {
-									Thread t = Executors.defaultThreadFactory()
-											.newThread(r);
-									t.setName("Salsa Repeat Step");
-									return t;
-								}
-							});
+			@Override
+			public Thread newThread(Runnable r) {
+				Thread t = Executors.defaultThreadFactory().newThread(r);
+				t.setName("Salsa Repeat Step");
+				return t;
 			}
-		}
-		final Semaphore max = new Semaphore(MAX_THREADS * 2);
+		});
+		final Semaphore max = new Semaphore(Runtime.getRuntime()
+				.availableProcessors());
 
 		Logger log = Logger.getLogger(HITSRepeat.class);
 
 		final SubGraph sg = g.getSubGraph("hits-sub", current);
-
-		final Map<Long, Map<String, Object>> temps = new ConcurrentHashMap<>();
+		final TLongFloatHashMap auth = new TLongFloatHashMap();
+		final TLongFloatHashMap hub = new TLongFloatHashMap();
 		final Semaphore sem = new Semaphore(-before.length + 1);
 
 		log.info("Executing HITS function on " + before.length);
@@ -63,8 +54,22 @@ public class HITSRepeat implements Repeat<long[]> {
 				@Override
 				public void run() {
 					try {
-						Map<String, Object> ret = hitsforvid(sg, vid);
-						temps.put(vid, ret);
+						float sumAuth = 0f;
+						long[] incomingEdges = sg.getEdges(Dir.IN, vid);
+						for (long in : incomingEdges)
+							sumAuth += g.getFloat(in, hubKey,
+									1f / current.length);
+
+						float sumHub = 0f;
+						long[] outgoingEdges = sg.getEdges(Dir.OUT, vid);
+						for (long out : outgoingEdges)
+							sumHub += g.getFloat(out, authKey,
+									1f / current.length);
+
+						synchronized (auth) {
+							auth.put(vid, sumAuth);
+							hub.put(vid, sumHub);
+						}
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
@@ -75,45 +80,11 @@ public class HITSRepeat implements Repeat<long[]> {
 		}
 		sem.acquire();
 		log.info("Setting temp properties for " + before.length);
-		g.setTempProperties(before, temps);
 
+		g.setTempFloats(hubKey, false, hub);
+		g.setTempFloats(authKey, false, auth);
+
+		exec.shutdown();
 		return before;
-	}
-
-	private Map<String, Object> hitsforvid(SubGraph sg, long vid)
-			throws Exception {
-		Map<String, Object> ret = new HashMap<>();
-		float sumAuth = 0f;
-		float sumAuthQuad = 0f;
-		int contAuth = 0;
-		for (long in : sg.getEdges(Dir.IN, vid)) {
-			final long curr = in;
-
-			Float currHub = (Float) sg.getProperty(curr, hubKey,
-					(float) Math.sqrt(1f / current.length));
-			float quad = currHub * currHub;
-			sumAuth += currHub;
-			sumAuthQuad += quad;
-			contAuth++;
-		}
-
-		float sumHub = 0f;
-		float sumHubQuad = 0f;
-		int contHub = 0;
-		for (long out : sg.getEdges(Dir.OUT, vid)) {
-			final long curr = out;
-
-			Float currAuth = (Float) sg.getProperty(curr, authKey,
-					(float) Math.sqrt(1f / current.length));
-			float quad = currAuth * currAuth;
-			sumHub += currAuth;
-			sumHubQuad += quad;
-			contHub++;
-		}
-		ret.put(authKey,
-				contAuth == 0 ? 0 : sumAuth / (float) Math.sqrt(sumAuthQuad));
-		ret.put(hubKey,
-				contHub == 0 ? 0 : sumHub / (float) Math.sqrt(sumHubQuad));
-		return ret;
 	}
 }

@@ -11,4 +11,6 @@ public interface Aggregator extends Serializable {
 	public void reset();
 
 	public void merge(Aggregator value);
+
+	public float get();
 }

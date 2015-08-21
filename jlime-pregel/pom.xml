@@ -48,11 +48,6 @@
 			<version>7.0.2</version>
 		</dependency>
 		<dependency>
-			<groupId>BigTextFormat</groupId>
-			<artifactId>BigTextFormat</artifactId>
-			<version>1.0</version>
-		</dependency>
-		<dependency>
 			<groupId>berkeleydb</groupId>
 			<artifactId>je</artifactId>
 			<version>3.2.76</version>

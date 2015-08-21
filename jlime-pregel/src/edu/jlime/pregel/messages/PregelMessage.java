@@ -13,10 +13,20 @@ public abstract class PregelMessage implements Comparable<PregelMessage>,
 
 	private String type;
 
+	private String subgraph;
+
 	public PregelMessage(String msgType, long from, long to) {
 		this.type = msgType;
 		this.from = from;
 		this.to = to;
+	}
+
+	public void setSubgraph(String subgraph) {
+		this.subgraph = subgraph;
+	}
+
+	public String getSubgraph() {
+		return subgraph;
 	}
 
 	public void setBroadcast(boolean broadcast) {

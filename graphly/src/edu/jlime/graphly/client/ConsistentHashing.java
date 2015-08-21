@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import edu.jlime.core.cluster.Peer;
-import edu.jlime.graphly.storenode.GraphlyStoreNodeI;
+import edu.jlime.graphly.storenode.rpc.GraphlyStoreNodeI;
 import gnu.trove.list.array.TLongArrayList;
 
 public class ConsistentHashing implements Serializable {

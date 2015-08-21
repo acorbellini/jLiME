@@ -19,4 +19,14 @@ public class Pregel extends CustomTraversal {
 		CustomStep last = (CustomStep) tr.steps.get(tr.steps.size() - 1);
 		return ((PregelCustomFunction) last.getFunction()).getConfig();
 	}
+
+	public Pregel aggregatorValue(String string) {
+		tr.customStep(new AggregatorStep(string));
+		return this;
+	}
+
+	public Pregel aggregatorSet(String string) {
+		tr.customStep(new AggregatorSetStep(string));
+		return this;
+	}
 }

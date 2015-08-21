@@ -1,5 +1,6 @@
 package edu.jlime.pregel.worker.rpc;
 
+import java.util.Map;
 import java.util.UUID;
 
 import edu.jlime.core.cluster.Peer;
@@ -7,13 +8,15 @@ import edu.jlime.core.rpc.Cache;
 import edu.jlime.core.rpc.Sync;
 import edu.jlime.pregel.client.PregelConfig;
 import edu.jlime.pregel.client.SplitFunction;
+import edu.jlime.pregel.coordinator.Aggregator;
 import edu.jlime.pregel.graph.VertexFunction;
 
 public interface Worker {
 
 	@Sync
 	public void nextSuperstep(int superstep, int taskID,
-			SplitFunction currentSplit) throws Exception;
+			SplitFunction currentSplit, Map<String, Aggregator> aggregator)
+			throws Exception;
 
 	@Cache
 	public UUID getID() throws Exception;
@@ -72,6 +75,14 @@ public interface Worker {
 			float[] value, int taskid) throws Exception;
 
 	@Sync
-	public void sendObjectsMessage(String msgType, long l, long[] vids,
+	public void sendObjectsMessage(String msgType, long[] from, long[] vids,
 			Object[] objects, int taskid) throws Exception;
+
+	@Sync
+	public void sendBroadcastMessageSubgraph(String msgType, String subGraph,
+			long v, Object val, int taskid) throws Exception;
+
+	@Sync
+	public void sendBroadcastMessageSubgraphFloat(String msgType,
+			String subgraph, long v, float val, int taskid) throws Exception;
 }

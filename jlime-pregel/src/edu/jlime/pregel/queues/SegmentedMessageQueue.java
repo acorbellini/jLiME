@@ -44,6 +44,7 @@ public class SegmentedMessageQueue {
 				Thread t = Executors.defaultThreadFactory().newThread(r);
 				t.setName("SegmentedQueue Sender Pool for Task "
 						+ task.toString() + ", id:" + task.getTaskid());
+				t.setDaemon(true);
 				return t;
 			}
 		});
@@ -101,7 +102,7 @@ public class SegmentedMessageQueue {
 				@Override
 				public void run() {
 					try {
-						cache.flush(msgType, task);
+						cache.flush(msgType, null, task);
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
@@ -145,7 +146,7 @@ public class SegmentedMessageQueue {
 				@Override
 				public void run() {
 					try {
-						pregelMessageQueue.flush(msgType, workerTask);
+						pregelMessageQueue.flush(msgType, null, workerTask);
 					} catch (Exception e) {
 						e.printStackTrace();
 					}

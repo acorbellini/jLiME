@@ -1,7 +1,7 @@
 package edu.jlime.graphly;
 
 import edu.jlime.graphly.util.GraphlySintetic;
-import edu.jlime.graphly.util.Pair;
+import edu.jlime.util.Pair;
 import gnu.trove.list.array.TLongArrayList;
 
 import java.io.IOException;

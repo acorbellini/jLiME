@@ -1,7 +1,7 @@
 package edu.jlime.pregel.worker;
 
-import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.set.TLongSet;
+import gnu.trove.set.hash.TLongHashSet;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -11,15 +11,15 @@ import java.util.Map;
 
 public class VertexData implements Serializable {
 
-	TLongArrayList incoming = null;
+	TLongHashSet incoming = null;
 
-	TLongArrayList outgoing = null;
+	TLongHashSet outgoing = null;
 
 	private List<Object> data = null;
 
-	private TLongArrayList disabledOut = null;
+	private TLongHashSet disabledOut = null;
 
-	private TLongArrayList disabledIn = null;
+	private TLongHashSet disabledIn = null;
 
 	public void put(String k, Object val) {
 		createData();
@@ -66,9 +66,9 @@ public class VertexData implements Serializable {
 			incoming.add(from);
 	}
 
-	public TLongArrayList outgoing() {
+	public TLongHashSet outgoing() {
 		if (outgoing == null)
-			return new TLongArrayList();
+			return new TLongHashSet();
 		return outgoing;
 	}
 
@@ -91,9 +91,9 @@ public class VertexData implements Serializable {
 		return 0;
 	}
 
-	public TLongArrayList incoming() {
+	public TLongHashSet incoming() {
 		if (incoming == null)
-			return new TLongArrayList();
+			return new TLongHashSet();
 		return incoming;
 	}
 
@@ -104,7 +104,7 @@ public class VertexData implements Serializable {
 
 	private void createOutgoing() {
 		if (outgoing == null)
-			outgoing = new TLongArrayList();
+			outgoing = new TLongHashSet();
 	}
 
 	public void incoming(TLongSet other) {
@@ -114,7 +114,7 @@ public class VertexData implements Serializable {
 
 	private void createIncoming() {
 		if (incoming == null)
-			incoming = new TLongArrayList();
+			incoming = new TLongHashSet();
 	}
 
 	// public void putAll(HashMap<String, Object> vertexData) {
@@ -131,7 +131,7 @@ public class VertexData implements Serializable {
 		if (outgoing.contains(to)) {
 			outgoing.remove(to);
 			if (disabledOut == null)
-				disabledOut = new TLongArrayList();
+				disabledOut = new TLongHashSet();
 			disabledOut.add(to);
 		}
 	}
@@ -140,7 +140,7 @@ public class VertexData implements Serializable {
 		if (incoming.contains(from)) {
 			incoming.remove(from);
 			if (disabledIn == null)
-				disabledIn = new TLongArrayList();
+				disabledIn = new TLongHashSet();
 			disabledIn.add(from);
 		}
 	}

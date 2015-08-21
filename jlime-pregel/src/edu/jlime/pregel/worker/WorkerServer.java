@@ -22,10 +22,12 @@ public class WorkerServer {
 	private ClientManager<Worker, WorkerBroadcast> workers;
 
 	private Logger log = Logger.getLogger(WorkerServer.class);
+	private WorkerImpl worker;
 
 	public WorkerServer(RPCDispatcher disp) throws Exception {
 		this.disp = disp;
-		disp.registerTarget(WORKER_KEY, new WorkerImpl(disp), true);
+		this.worker = new WorkerImpl(disp);
+		disp.registerTarget(WORKER_KEY, worker, true);
 	}
 
 	public static WorkerServer main(String[] args) throws Exception {
@@ -47,6 +49,6 @@ public class WorkerServer {
 	}
 
 	public void stop() {
-
+		worker.stop();
 	}
 }

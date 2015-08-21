@@ -1,5 +1,13 @@
 package edu.jlime.core.marshalling;
 
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+
+import javax.lang.model.type.NullType;
+
+import org.apache.log4j.Logger;
+
 import edu.jlime.core.cluster.Peer;
 import edu.jlime.core.marshalling.converters.AddressConverter;
 import edu.jlime.core.marshalling.converters.BooleanConverter;
@@ -19,28 +27,12 @@ import edu.jlime.core.rpc.RPCObject;
 import edu.jlime.core.transport.Address;
 import edu.jlime.metrics.metric.Metrics;
 import edu.jlime.util.ByteBuffer;
-import gnu.trove.map.hash.TObjectByteHashMap;
-
-import java.util.ArrayList;
-import java.util.UUID;
-
-import javax.lang.model.type.NullType;
-
-import org.apache.log4j.Logger;
 
 public class TypeConverters {
 
 	// private HashMap<String, TypeConverter> convs = new HashMap<>();
 
-	private ArrayList<TypeConverter> convs = new ArrayList<>();
-
-	private TObjectByteHashMap<String> ids = new TObjectByteHashMap<String>();
-
-	private ArrayList<String> types = new ArrayList<>();
-
-	private byte count = 0;
-
-	private byte start = (byte) 128;
+	private Map<String, TypeConverter> convs = new ConcurrentHashMap<>();
 
 	RPCDispatcher rpc;
 
@@ -96,70 +88,38 @@ public class TypeConverters {
 	/**
 	 * 
 	 * @param class of the object to be marshalled/unmarshalled
-	 * @param converter to be used
+	 * @param converter
+	 *            to be used
 	 */
-	private void registerTypeConverter(Class<?> classObj, TypeConverter conv) {
-		byte id = count++;
+	public void registerTypeConverter(Class<?> classObj, TypeConverter conv) {
 		String className = classObj.getName();
-
-		types.add(className);
-		convs.add(conv);
-
-		ids.put(className, id);
-
-	}
-	
-	/**
-	 * 
-	 * @param id of the class
-	 * @param classObj class to be marshalled/unmarshalled
-	 * @param conv converter
-	 */
-	public void registerTypeConverter(byte id, Class<?> classObj,
-			TypeConverter conv) {
-		String className = classObj.getName();
-
-		types.add(className);
-		convs.add(conv);
-
-		ids.put(className, (byte) (start + id));
+		convs.put(className, conv);
 
 	}
 
 	public TypeConverter getTypeConverter(Class<?> classObj) {
 		String className = classObj.getName();
-		byte index = ids.get(className);
-		if (index == ids.getNoEntryValue())
-			return null;
-		return convs.get(index);
-	}
-
-	public byte getTypeId(Class<?> classObj) {
-		String className = classObj.getName();
-		return ids.get(className);
+		return convs.get(className);
 	}
 
 	Logger log = Logger.getLogger(TypeConverters.class);
 
 	public void objectToByteArray(Object o, ByteBuffer buffer, Peer client)
 			throws Exception {
-
-		int size = buffer.size();
 		Class<?> classOfObject = o == null ? NullType.class : o.getClass();
 		// Default converter
 		TypeConverter converter = getTypeConverter(classOfObject);
-		byte type = getTypeId(classOfObject);
+		String name = classOfObject.getName();
 		if (converter == null) {
-
 			if (RPCObject.class.isAssignableFrom(classOfObject)) {
 				converter = getTypeConverter(RPCObject.class);
-				type = getTypeId(RPCObject.class);
+				name = RPCObject.class.getName();
 			} else {
 				converter = getTypeConverter(Object.class);
-				type = getTypeId(Object.class);
+				name = Object.class.getName();
 			}
 		}
-		buffer.put(type);
+		buffer.putString(name);
 		converter.toArray(o, buffer, client);
 
 		// if (log.isDebugEnabled())
@@ -169,9 +129,8 @@ public class TypeConverters {
 	}
 
 	public Object getObjectFromArray(ByteBuffer buff) throws Exception {
-		byte type = buff.get();
-		// String className = types.get(type);
-		if (convs.size() <= type) {
+		String type = buff.getString();
+		if (!convs.containsKey(type)) {
 			log.error("Converter for type " + type + " not found.");
 		}
 		TypeConverter converter = convs.get(type);

@@ -1,70 +1,27 @@
 package edu.jlime.graphly.server;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.log4j.Logger;
-
-import edu.jlime.core.rpc.RPCDispatcher;
 import edu.jlime.graphly.GraphlyConfiguration;
-import edu.jlime.graphly.client.Graphly;
-import edu.jlime.graphly.http.WebServer;
-import edu.jlime.graphly.storenode.GraphlyStoreNode;
-import edu.jlime.jd.JobDispatcher;
-import edu.jlime.jd.server.ClusterProvider;
-import edu.jlime.metrics.jmx.MetricsJMX;
-import edu.jlime.metrics.metric.Metrics;
-import edu.jlime.metrics.sysinfo.InfoProvider;
-import edu.jlime.metrics.sysinfo.SysInfoProvider;
-import edu.jlime.pregel.client.PregelClient;
-import edu.jlime.pregel.coordinator.CoordinatorServer;
-import edu.jlime.pregel.worker.WorkerServer;
+import edu.jlime.graphly.client.GraphlyClient;
 import edu.jlime.rpc.Configuration;
-import edu.jlime.rpc.JLiMEFactory;
 import edu.jlime.rpc.NetworkConfiguration;
 
-public class GraphlyServer {
+public abstract class GraphlyServer {
+	public abstract void start() throws Exception;
 
-	protected Logger log = Logger.getLogger(GraphlyServer.class);
+	public abstract void stop() throws Exception;
 
-	private JobDispatcher jobs;
-	private RPCDispatcher rpc;
-	private String storeLoc;
-	private Boolean isCoord;
-	private GraphlyCoordinatorImpl coord;
-	private Integer rs;
+	public abstract GraphlyClient getGraphlyClient() throws Exception;
 
-	private CoordinatorServer pregel_coord;
-	private WorkerServer pregel_worker;
-	private Graphly graphly;
-
-	private WebServer ws;
-
-	public GraphlyServer(String storeLoc, Boolean isCoord, Integer rs) {
-		this.storeLoc = storeLoc;
-		this.isCoord = isCoord;
-		this.rs = rs;
-	}
-
-	public static void main(final String[] args) throws Exception {
-
-		final String storeDir = args[0];
-		final Integer localServers = Integer.valueOf(args[1]);
-		Boolean coord = Boolean.valueOf(args[2]);
-		final Integer remoteServers = Integer.valueOf(args[3]);
-
-		createServers(storeDir, localServers, coord, remoteServers, null, null);
-
-	}
-
-	public static ArrayList<GraphlyServer> createServers(final String storeDir,
-			final Integer localServers, final Boolean coord,
-			final Integer remoteServers, String netConfigFile,
-			String graphlyConfigFile) throws Exception, InterruptedException {
+	public static ArrayList<LocalGraphlyServer> createServers(
+			final String storeDir, final Integer localServers,
+			final Boolean coord, final Integer remoteServers,
+			String netConfigFile, String graphlyConfigFile) throws Exception,
+			InterruptedException {
 
 		// LogManager.getLogManager().reset();
 		// SLF4JBridgeHandler.install();
@@ -72,7 +29,7 @@ public class GraphlyServer {
 		// java.util.logging.Logger.getLogger("com.sun.jersey.api.core.PackagesResourceConfig").log(Level.FINEST,
 		// "");
 
-		final ArrayList<GraphlyServer> ret = new ArrayList<>();
+		final ArrayList<LocalGraphlyServer> ret = new ArrayList<>();
 
 		final NetworkConfiguration networkConfiguration = new NetworkConfiguration(
 				Configuration.newConfig(netConfigFile));
@@ -95,8 +52,8 @@ public class GraphlyServer {
 							boolean isCoord = false;
 							if (curr == 0 && coord)
 								isCoord = true;
-							GraphlyServer srv = createServer(storeDir, curr,
-									isCoord, remoteServers,
+							LocalGraphlyServer srv = createServer(storeDir,
+									curr, isCoord, remoteServers,
 									networkConfiguration, graphlyConfiguration);
 							synchronized (ret) {
 								ret.add(srv);
@@ -114,141 +71,27 @@ public class GraphlyServer {
 		return ret;
 	}
 
-	public static GraphlyServer createServer(String sdir, int i,
+	public static LocalGraphlyServer createServer(String sdir, int i,
 			Boolean isCoord, Integer remoteServers,
 			NetworkConfiguration config, GraphlyConfiguration gConfig)
 			throws Exception {
-		GraphlyServer g = new GraphlyServer(sdir.replaceAll("\\$i", i + ""),
-				isCoord, remoteServers);
-		g.start(config, gConfig);
-		return g;
+		return new LocalGraphlyServer(config, gConfig, sdir.replaceAll("\\$i",
+				i + ""), isCoord, remoteServers);
 	}
 
-	public void start(NetworkConfiguration config, GraphlyConfiguration gConfig)
-			throws Exception {
+	public static void main(final String[] args) throws Exception {
 
-		log.info("Starting Graphly Server (remotes:" + rs + ", coord:"
-				+ isCoord + ", store:" + storeLoc + ")");
+		final String storeDir = args[0];
+		final Integer localServers = Integer.valueOf(args[1]);
+		Boolean coord = Boolean.valueOf(args[2]);
+		final Integer remoteServers = Integer.valueOf(args[3]);
 
-		Map<String, String> data = new HashMap<>();
-		// data.put("app", "graphly");
-		// data.put("type", "server");
-		data.put("app", "graphly-server,"
-				+ WorkerServer.WORKER_KEY
-				+ ","
-				+ JobDispatcher.SERVER
-				+ (isCoord ? "," + GraphlyCoordinatorImpl.COORDINATOR + ","
-						+ CoordinatorServer.COORDINATOR_KEY : ""));
-		log.info("Creating RPC");
-		rpc = new JLiMEFactory(config, data, null).build();
-
-		try {
-			if (isCoord)
-				new Thread("Coordinator Thread") {
-					public void run() {
-						try {
-							// if (log.isDebugEnabled())
-							log.info("Initializing Graphly Coordinator");
-							GraphlyServer.this.coord = new GraphlyCoordinatorImpl(
-									rpc, rs);
-
-							log.info("Initializing Pregel Coordinator");
-							GraphlyServer.this.pregel_coord = new CoordinatorServer(
-									rpc);
-
-							// if (log.isDebugEnabled())
-							log.info("Finished starting coordinators");
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
-					};
-				}.start();
-
-			log.info("Creating Graphly Store Node");
-			GraphlyStoreNode storeNode = new GraphlyStoreNode(storeLoc,
-					gConfig, rpc);
-			rpc.registerTarget("graphly", storeNode, false);
-
-			log.info("Creating Pregel Worker Node");
-			pregel_worker = new WorkerServer(rpc);
-
-			log.info("Creating Job Node");
-			jobs = JobDispatcher.build(0, rpc);
-
-			jobs.start();
-
-			rpc.start();
-
-			Metrics mgr = new Metrics(rpc.getCluster().getLocalPeer()
-					.toString());
-			for (InfoProvider sysinfo : SysInfoProvider.get())
-				sysinfo.load(mgr);
-
-			new ClusterProvider(jobs).load(mgr);
-
-			MetricsJMX jmx = new MetricsJMX(mgr);
-			jmx.start();
-			if (log.isDebugEnabled())
-				log.debug("Finshed Starting metrics");
-
-			jobs.setMetrics(mgr);
-
-			log.info("Creating Global Pregel Client");
-			PregelClient pregelClient = new PregelClient(rpc, rs);
-			jobs.setGlobal("pregel", pregelClient);
-
-			log.info("Creating Global Graphly Client");
-			this.setGraphly(Graphly.build(rpc, pregelClient, jobs, rs));
-			jobs.setGlobal("graphly", getGraphly());
-
-			if (log.isDebugEnabled())
-				log.debug("Starting metrics");
-
-			log.info("Graphly Server Fully Started on peer "
-					+ rpc.getCluster().getLocalPeer());
-
-			log.info("Starting Web Server");
-			try {
-				this.ws = new WebServer().port(8080);
-				ws.start();
-				log.info("Started Web Server on port " + ws.getPort());
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-
-		} catch (Exception e) {
-			if (rpc != null)
-				rpc.stop();
-			throw e;
+		ArrayList<LocalGraphlyServer> s = GraphlyServer.createServers(storeDir,
+				localServers, coord, remoteServers, null, null);
+		for (LocalGraphlyServer localGraphlyServer : s) {
+			localGraphlyServer.start();
 		}
+
 	}
 
-	public void stop() throws Exception {
-
-		jobs.stop();
-
-		rpc.stop();
-
-		pregel_worker.stop();
-
-		ws.stop();
-	}
-
-	public Graphly getGraphly() {
-		return graphly;
-	}
-
-	public void setGraphly(Graphly graphly) {
-		this.graphly = graphly;
-	}
-
-	public static GraphlyServer buildLocalServer(String path) throws Exception {
-		NetworkConfiguration net = new NetworkConfiguration();
-		GraphlyConfiguration gconfig = new GraphlyConfiguration();
-
-		net.protocol = "local";
-		GraphlyServer server = GraphlyServer.createServer(path, 0, true, 1,
-				net, gconfig);
-		return server;
-	}
 }

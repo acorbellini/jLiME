@@ -28,7 +28,7 @@ import edu.jlime.pregel.graph.rpc.Graph;
 import edu.jlime.pregel.graph.rpc.GraphBroadcast;
 import edu.jlime.pregel.graph.rpc.GraphFactory;
 import edu.jlime.pregel.util.SplitFunctions;
-import gnu.trove.list.array.TLongArrayList;
+import gnu.trove.set.hash.TLongHashSet;
 
 public class InMemoryGraph implements Graph, Transferible {
 
@@ -202,12 +202,12 @@ public class InMemoryGraph implements Graph, Transferible {
 	}
 
 	@Override
-	public TLongArrayList getOutgoing(long vertex) throws Exception {
+	public TLongHashSet getOutgoing(long vertex) throws Exception {
 		return getGraph(vertex).getOutgoing(vertex);
 	}
 
 	@Override
-	public TLongArrayList getIncoming(long v) throws Exception {
+	public TLongHashSet getIncoming(long v) throws Exception {
 		return getGraph(v).getIncoming(v);
 	}
 
@@ -433,6 +433,24 @@ public class InMemoryGraph implements Graph, Transferible {
 
 	@Override
 	public float getDefaultFloat(String prop) throws Exception {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public float getFloat(String string, long v, float f) throws Exception {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public TLongHashSet getNeighbours(long v) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public int getNeighbourhoodSize(long v) throws Exception {
 		// TODO Auto-generated method stub
 		return 0;
 	}

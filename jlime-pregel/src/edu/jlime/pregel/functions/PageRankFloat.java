@@ -3,18 +3,40 @@ package edu.jlime.pregel.functions;
 import java.util.Iterator;
 
 import edu.jlime.pregel.client.WorkerContext;
+import edu.jlime.pregel.coordinator.CoordinatorTask;
+import edu.jlime.pregel.coordinator.HaltCondition;
 import edu.jlime.pregel.graph.VertexFunction;
 import edu.jlime.pregel.graph.rpc.Graph;
 import edu.jlime.pregel.messages.FloatPregelMessage;
 import edu.jlime.pregel.worker.FloatAggregator;
 import gnu.trove.iterator.TLongIterator;
-import gnu.trove.list.array.TLongArrayList;
+import gnu.trove.set.hash.TLongHashSet;
 
 public class PageRankFloat implements VertexFunction<FloatPregelMessage> {
 	private static final String PAGERANK_MESSAGE = "pr";
 
 	private int vertexSize;
 	private String prop;
+
+	public static final class PageRankHaltCondition implements HaltCondition {
+
+		private float cut;
+
+		public PageRankHaltCondition(float cut) {
+			this.cut = cut;
+		}
+
+		@Override
+		public boolean eval(CoordinatorTask coordinatorTask, int step) {
+			if (step <= 1)
+				return false;
+
+			FloatAggregator ag = (FloatAggregator) coordinatorTask
+					.getAggregator("pr");
+			float f = ag.get();
+			return f < cut;
+		}
+	}
 
 	public PageRankFloat(String pagerankProp, int vSize) {
 		this.prop = pagerankProp;
@@ -45,7 +67,7 @@ public class PageRankFloat implements VertexFunction<FloatPregelMessage> {
 
 		graph.setFloat(v, prop, currentVal);
 
-		TLongArrayList outgoing = graph.getOutgoing(v);
+		TLongHashSet outgoing = graph.getOutgoing(v);
 
 		// Dangling nodes distribute pagerank across the whole graph.
 		if (outgoing.size() == 0) {

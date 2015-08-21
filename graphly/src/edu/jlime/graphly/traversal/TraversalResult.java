@@ -1,22 +1,23 @@
 package edu.jlime.graphly.traversal;
 
 import gnu.trove.impl.hash.TLongLongHash;
-import gnu.trove.list.array.TLongArrayList;
+import gnu.trove.map.hash.TLongFloatHashMap;
 import gnu.trove.map.hash.TLongLongHashMap;
+import gnu.trove.set.hash.TLongHashSet;
 
 import java.io.Serializable;
 
 public abstract class TraversalResult implements Serializable {
 
-	public abstract TLongArrayList vertices();
+	public abstract TLongHashSet vertices();
 
 	public TLongLongHash edges() {
 		return new TLongLongHashMap();
 	}
 
-	public abstract TraversalResult removeAll(TLongArrayList v);
+	public abstract TraversalResult removeAll(TLongHashSet v);
 
-	public abstract TraversalResult retainAll(TLongArrayList v);
+	public abstract TraversalResult retainAll(TLongHashSet v);
 
 	public void set(long k, Object val) {
 
@@ -33,7 +34,11 @@ public abstract class TraversalResult implements Serializable {
 	public void setValue(long k, float v) {
 	}
 
-	public TraversalResult top(int top) {
+	public TraversalResult top(int top) throws Exception {
 		return this;
 	}
+
+	public abstract float getCount(long key) throws Exception;
+
+	public abstract TLongFloatHashMap getCounts() throws Exception;
 }

@@ -2,6 +2,7 @@ package edu.jlime.graphly.store;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 
@@ -10,9 +11,10 @@ import org.fusesource.leveldbjni.JniDBFactory;
 import org.iq80.leveldb.DB;
 import org.iq80.leveldb.DBIterator;
 import org.iq80.leveldb.Options;
-import org.iq80.leveldb.ReadOptions;
 
 import com.google.common.primitives.UnsignedBytes;
+
+import edu.jlime.util.Pair;
 
 public class LocalStore {
 
@@ -62,9 +64,10 @@ public class LocalStore {
 					if (!dirDB.exists())
 						dirDB.mkdirs();
 					db = JniDBFactory.factory.open(dirDB, options);
-					// db.compactRange(null, null);
+					db.compactRange(null, null);
 					if (log.isDebugEnabled())
 						log.debug("Opened.");
+					isClosed = false;
 				}
 			}
 		}
@@ -98,6 +101,7 @@ public class LocalStore {
 			// Test for being open
 			load(new byte[] { 'a' });
 			db.close();
+			db = null;
 			isClosed = true;
 		} catch (Exception e) {
 			log.error("Error closing LevelDB database", e);
@@ -106,7 +110,7 @@ public class LocalStore {
 	}
 
 	public int count(byte[] from, byte[] to) throws Exception {
-		int cont = 0;		
+		int cont = 0;
 		DBIterator iterator = getDb().iterator();
 		Entry<byte[], byte[]> e = null;
 		boolean inclFirst = true;
@@ -143,14 +147,14 @@ public class LocalStore {
 		return cont;
 	}
 
-	public List<byte[]> getRangeOfLength(boolean includeFirst, byte[] from,
-			byte[] to, int max) throws Exception {
-		List<byte[]> ret = new ArrayList<byte[]>();
-		byte[] curr = from;
+	public void remove(byte[] from, byte[] to) throws Exception {
 		int cont = 0;
-		DBIterator iterator = getDb().iterator();
+		DB db = getDb();
+		DBIterator iterator = db.iterator();
 		Entry<byte[], byte[]> e = null;
+		boolean inclFirst = true;
 		boolean first = true;
+		byte[] curr = from;
 		try {
 			boolean done = false;
 			while (!done)
@@ -161,29 +165,44 @@ public class LocalStore {
 						curr = key;
 						if (UnsignedBytes.lexicographicalComparator().compare(
 								to, key) > 0) {
-							if (!first || (first && includeFirst)) {
-								ret.add(e.getValue());
+							if (!first || (first && inclFirst)) {
+								db.delete(key);
 								cont++;
 							}
 							first = false;
-							if (cont >= max)
-								return ret;
 						} else
-							return ret;
+							done = true;
 					}
 					done = true;
 				} catch (Exception e1) {
 					if (!e1.getMessage().contains("code: 32"))
 						throw e1;
 					iterator.close();
-					iterator = getDb().iterator();
+					iterator = db.iterator();
 					first = true;
-					includeFirst = ret.isEmpty() && includeFirst;
+					inclFirst = (cont == 0 && inclFirst);
 				}
-
 		} finally {
 			iterator.close();
 		}
+		log.info("Deleted " + cont + " records.");
+	}
+
+	public List<byte[]> getRangeOfLength(boolean includeFirst, byte[] from,
+			byte[] to, int max) throws Exception {
+		List<byte[]> ret = new ArrayList<byte[]>();
+
+		Iterator<Pair<byte[], byte[]>> it = getRangeIterator(includeFirst,
+				from, to, max);
+		while (it.hasNext())
+			ret.add(it.next().right);
 		return ret;
+
+	}
+
+	public Iterator<Pair<byte[], byte[]>> getRangeIterator(
+			boolean includeFirst, byte[] from, byte[] to, int max)
+			throws Exception {
+		return new RangeIterator(includeFirst, from, to, max, getDb());
 	}
 }

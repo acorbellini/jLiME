@@ -1,5 +1,6 @@
 package edu.jlime.jd;
 
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.log4j.Logger;
@@ -37,5 +38,12 @@ public class ExecEnvironment {
 		JobContext cliEnv = clientEnvs.remove(srv.getAddress());
 		if (cliEnv != null)
 			cliEnv.stop();
+	}
+
+	public void stop() {
+		for (Entry<Peer, JobContextImpl> e : clientEnvs.entrySet()) {
+			e.getValue().stop();
+		}
+
 	}
 }

@@ -8,18 +8,18 @@ import java.util.Map.Entry;
 import org.apache.log4j.Logger;
 
 import edu.jlime.core.cluster.Peer;
-import edu.jlime.graphly.client.Graphly;
+import edu.jlime.graphly.client.GraphlyClient;
 import edu.jlime.graphly.util.GraphlyUtil;
-import edu.jlime.graphly.util.Pair;
 import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.client.JobContext;
+import edu.jlime.util.Pair;
 import gnu.trove.list.array.TLongArrayList;
 
 public class LocationMapper implements Mapper {
 
 	private static final long serialVersionUID = 1634522852310272015L;
 
-	private transient volatile Graphly g;
+	private transient volatile GraphlyClient g;
 	private ClientNode[] nodes;
 
 	private transient volatile Logger log;
@@ -30,8 +30,8 @@ public class LocationMapper implements Mapper {
 	public List<Pair<ClientNode, TLongArrayList>> map(int max, long[] data,
 			JobContext ctx) throws Exception {
 
-		if (log.isDebugEnabled())
-			log.debug("Mapping " + data.length + " keys by location.");
+		// if (log.isDebugEnabled())
+		// log.debug("Mapping " + data.length + " keys by location.");
 
 		Map<Peer, TLongArrayList> map = getGraph(ctx).getHash().hashKeys(data);
 
@@ -70,12 +70,12 @@ public class LocationMapper implements Mapper {
 		return nodes[getGraph(ctx).getHash().hash(v)];
 	}
 
-	private Graphly getGraph(JobContext ctx) {
+	private GraphlyClient getGraph(JobContext ctx) {
 		if (g == null) {
 			synchronized (this) {
 				if (g == null) {
 					this.log = Logger.getLogger(LocationMapper.class);
-					this.g = (Graphly) ctx.getGlobal("graphly");
+					this.g = (GraphlyClient) ctx.getGlobal("graphly");
 				}
 			}
 		}
@@ -94,7 +94,7 @@ public class LocationMapper implements Mapper {
 	}
 
 	@Override
-	public int hash(long v) {
-		return g.getHash().hash(v);
+	public int hash(long v, JobContext ctx) {
+		return getGraph(ctx).getHash().hash(v);
 	}
 }

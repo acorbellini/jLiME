@@ -7,6 +7,7 @@ import edu.jlime.pregel.worker.FloatTroveMessageMerger;
 import edu.jlime.pregel.worker.WorkerTask;
 import edu.jlime.pregel.worker.rpc.Worker;
 import gnu.trove.iterator.TLongFloatIterator;
+import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.map.hash.TLongFloatHashMap;
 import gnu.trove.map.hash.TObjectIntHashMap;
 
@@ -15,17 +16,19 @@ import java.util.Iterator;
 
 public class FloatMessageQueueImpl implements FloatMessageQueue {
 
-	private static final int SIZE = 16;
+	private static final float NO_VALUE = Float.MIN_VALUE;
+	private static final long NO_KEY = Long.MIN_VALUE;
+	private static final int SIZE = Runtime.getRuntime().availableProcessors();
+
 	private volatile TLongFloatHashMap[] readOnly = new TLongFloatHashMap[16];
 	private volatile TLongFloatHashMap[] current = new TLongFloatHashMap[16];
+
 	private FloatTroveMessageMerger merger;
 
 	public FloatMessageQueueImpl(FloatTroveMessageMerger merger) {
 		for (int i = 0; i < current.length; i++) {
-			current[i] = new TLongFloatHashMap(8, .75f, Long.MAX_VALUE,
-					Float.MAX_VALUE);
-			readOnly[i] = new TLongFloatHashMap(8, .75f, Long.MAX_VALUE,
-					Float.MAX_VALUE);
+			current[i] = new TLongFloatHashMap(8, .75f, NO_KEY, NO_VALUE);
+			readOnly[i] = new TLongFloatHashMap(8, .75f, NO_KEY, NO_VALUE);
 		}
 		this.merger = merger;
 	}
@@ -44,12 +47,6 @@ public class FloatMessageQueueImpl implements FloatMessageQueue {
 
 	@Override
 	public synchronized void switchQueue() {
-		// readOnly.clear();
-		// TLongFloatIterator it = current.iterator();
-		// while (it.hasNext()) {
-		// it.advance();
-		// readOnly.put(it.key(), it.value());
-		// }
 		for (int i = 0; i < current.length; i++) {
 			TLongFloatHashMap aux = readOnly[i];
 			readOnly[i] = current[i];
@@ -78,8 +75,8 @@ public class FloatMessageQueueImpl implements FloatMessageQueue {
 	}
 
 	@Override
-	public void flush(String msgType, final WorkerTask workerTask)
-			throws Exception {
+	public void flush(String msgType, String subgraph,
+			final WorkerTask workerTask) throws Exception {
 
 		TObjectIntHashMap<Worker> sizes = new TObjectIntHashMap<>();
 		{
@@ -103,7 +100,11 @@ public class FloatMessageQueueImpl implements FloatMessageQueue {
 				it.advance();
 				long to = it.key();
 				if (to == -1) {
-					workerTask.outputFloat(msgType, -1l, -1l, it.value());
+					if (subgraph == null)
+						workerTask.outputFloat(msgType, -1l, -1l, it.value());
+					else
+						workerTask.outputFloatSubgraph(msgType, subgraph, -1l,
+								it.value());
 				} else {
 					Worker w = workerTask.getWorker(to);
 					FloatData data = ret.get(w);
@@ -142,6 +143,15 @@ public class FloatMessageQueueImpl implements FloatMessageQueue {
 					return first;
 				}
 			};
+	}
+
+	@Override
+	public long[] keys() {
+		TLongArrayList ret = new TLongArrayList();
+		for (TLongFloatHashMap tLongFloatHashMap : readOnly) {
+			ret.addAll(tLongFloatHashMap.keys());
+		}
+		return ret.toArray();
 	}
 
 }

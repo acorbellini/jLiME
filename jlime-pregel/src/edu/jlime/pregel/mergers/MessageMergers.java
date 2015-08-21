@@ -38,30 +38,17 @@ public class MessageMergers {
 
 	public static final MessageMerger FLOAT_ARRAY_SUM = new FloatArrayMerger();
 
-	// public static final MessageMerger FLOAT_SUM_PERSISTED = new
-	// FloatMapDBMerger();
-	public static FloatTroveMessageMerger FLOAT_SUM = new FloatTroveMessageMerger() {
+	public static FloatTroveMessageMerger floatSum() {
+		return new FloatTroveMessageMerger() {
 
-		@Override
-		public void merge(long to, float msg2, TLongFloatHashMap map) {
-			map.adjustOrPutValue(to, msg2, msg2);
-			// return msg1 + msg2;
-		}
+			@Override
+			public void merge(long to, float msg2, TLongFloatHashMap map) {
+				map.adjustOrPutValue(to, msg2, msg2);
+			}
 
-	};
-	// public static class SumMerger implements MessageMerger {
-	//
-	// @Override
-	// public void merge(PregelMessage v1, PregelMessage v2, PregelMessage into)
-	// {
-	// into.setV((Double) v1.getV() + (Double) v2.getV());
-	// }
-	//
-	// }
-	//
-	// public static MessageMerger sum() {
-	// return new SumMerger();
-	// }
+		};
+	}
+
 	public static DoubleMessageMerger DOUBLE_SUM = new DoubleMessageMerger() {
 
 		@Override

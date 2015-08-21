@@ -10,8 +10,13 @@ public class RemoteReference<T> implements Serializable {
 
 	private String key;
 	private ClientNode node;
+	private boolean removeOnGet = false;
 
 	public RemoteReference(T adyacents, JobContext ctx) {
+		this(adyacents, ctx, false);
+	}
+
+	public RemoteReference(T adyacents, JobContext ctx, boolean removeOnGet) {
 		this.node = ctx.getCluster().getLocalNode();
 		this.key = "RemoteReference-" + UUID.randomUUID();
 		ctx.put(this.key, adyacents);
@@ -33,9 +38,10 @@ public class RemoteReference<T> implements Serializable {
 
 	public T get() throws Exception {
 		return node.exec(new Job<T>() {
-
 			@Override
 			public T call(JobContext env, ClientNode peer) throws Exception {
+				if (removeOnGet)
+					return (T) env.remove(key);
 				return (T) env.get(key);
 			}
 

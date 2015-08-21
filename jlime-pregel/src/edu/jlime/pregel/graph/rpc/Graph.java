@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Set;
 
 import edu.jlime.core.rpc.Sync;
-import gnu.trove.list.array.TLongArrayList;
+import gnu.trove.set.hash.TLongHashSet;
 
 public interface Graph extends Serializable {
 
@@ -29,9 +29,9 @@ public interface Graph extends Serializable {
 
 	public abstract int getAdyacencySize(long v) throws Exception;
 
-	public abstract TLongArrayList getOutgoing(long vertex) throws Exception;
+	public abstract TLongHashSet getOutgoing(long vertex) throws Exception;
 
-	public abstract TLongArrayList getIncoming(long v) throws Exception;
+	public abstract TLongHashSet getIncoming(long v) throws Exception;
 
 	@Sync
 	public abstract void setDefaultValue(String k, Object d) throws Exception;
@@ -83,5 +83,12 @@ public interface Graph extends Serializable {
 			throws Exception;
 
 	public abstract float getDefaultFloat(String prop) throws Exception;
+
+	public abstract float getFloat(String string, long v, float f)
+			throws Exception;
+
+	public abstract TLongHashSet getNeighbours(long v) throws Exception;
+
+	public abstract int getNeighbourhoodSize(long v) throws Exception;
 
 }

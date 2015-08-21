@@ -20,6 +20,7 @@ import java.util.TreeMap;
 import edu.jlime.jd.ClientCluster;
 import edu.jlime.jd.ClientNode;
 import edu.jlime.metrics.metric.CompositeMetrics;
+import edu.jlime.metrics.metric.Metrics;
 import edu.jlime.util.CSV;
 
 public class ClusterProfiler implements Profiler {
@@ -45,6 +46,10 @@ public class ClusterProfiler implements Profiler {
 
 	private ClientCluster c;
 
+	private volatile boolean stopTimer;
+
+	private volatile boolean timer_stopped;
+
 	public ClusterProfiler(ClientCluster c, long freq) {
 		super();
 		this.freq = freq;
@@ -63,6 +68,14 @@ public class ClusterProfiler implements Profiler {
 			@Override
 			public void run() {
 				try {
+					if (stopTimer) {
+						timer_stopped = true;
+						synchronized (timer) {
+							timer.notifyAll();
+						}
+						this.cancel();
+						return;
+					}
 					CompositeMetrics<ClientNode> clusterMetrics = c.getInfo();
 					// System.out.println(clusterMetrics);
 					info.put(Calendar.getInstance().getTime(), clusterMetrics);
@@ -125,7 +138,16 @@ public class ClusterProfiler implements Profiler {
 	 */
 	@Override
 	public void stop() {
-		timer.cancel();
+		stopTimer = true;
+		synchronized (timer) {
+			while (!timer_stopped) {
+				try {
+					timer.wait();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		}
 	}
 
 	public static void main(String[] args) {
@@ -204,5 +226,58 @@ public class ClusterProfiler implements Profiler {
 					profilerFunction.call(toCalcEntry.getValue()));
 		}
 		return ret;
+	}
+
+	public float getNetworkConsumption() {
+		Map<ClientNode, Float> diffs = calcPerNode(
+				new ProfilerFunctionPerNode<Float>() {
+
+					@Override
+					public Float call(TreeMap<Date, Float> value) {
+						Float first = Float.valueOf(value.firstEntry()
+								.getValue());
+						Float last = Float.valueOf(value.lastEntry().getValue());
+						return last - first;
+					}
+				}, new MetricExtractor<Float>() {
+					@Override
+					public Float get(Metrics m) {
+						return Float.valueOf(m.list("sysinfo.net")
+								.findFirst("eth|p7p1").get("sent_total").get());
+					}
+				});
+		float netSum = 0f;
+		for (Entry<ClientNode, Float> netentry : diffs.entrySet()) {
+			netSum += netentry.getValue();
+		}
+		return netSum;
+	}
+
+	public float getMemoryConsumption() {
+		Map<Date, Float> memSums = calcPerDate(
+				new ProfilerFunctionPerDate<Float>() {
+
+					@Override
+					public Float call(TreeMap<ClientNode, Float> value) {
+						float sum = 0f;
+						for (Entry<ClientNode, Float> e : value.entrySet()) {
+							sum += Float.valueOf(e.getValue());
+						}
+						return sum;
+					}
+				}, new MetricExtractor<Float>() {
+
+					@Override
+					public Float get(Metrics m) {
+						return Float.valueOf(m.get("jvminfo.mem.used").get());
+					}
+				});
+
+		float memMax = 0f;
+		for (Entry<Date, Float> memEntry : memSums.entrySet()) {
+			if (memEntry.getValue() > memMax)
+				memMax = memEntry.getValue();
+		}
+		return memMax;
 	}
 }

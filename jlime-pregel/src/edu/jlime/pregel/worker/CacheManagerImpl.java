@@ -13,12 +13,15 @@ import edu.jlime.pregel.queues.DoubleMessageQueue;
 import edu.jlime.pregel.queues.FloatMessageQueue;
 import edu.jlime.pregel.queues.ObjectMessageQueue;
 import edu.jlime.pregel.queues.PregelMessageQueue;
+import edu.jlime.util.Pair;
 
-public class CacheManagerImpl implements CacheManagerI{
+public class CacheManagerImpl implements CacheManagerI {
 
 	private Map<String, PregelMessageQueue> cache;
 
 	private Map<String, PregelMessageQueue> cacheBroadcast;
+
+	private Map<Pair<String, String>, PregelMessageQueue> cacheBroadcastSubGraph;
 
 	private WorkerTask task;
 	private PregelConfig config;
@@ -29,39 +32,54 @@ public class CacheManagerImpl implements CacheManagerI{
 
 	private int max_size;
 
+	private boolean parallel;
+
 	public CacheManagerImpl(WorkerTask workerTask, PregelConfig config) {
 		this.task = workerTask;
 		this.max_size = config.getQueueSize();
 		this.config = config;
 		this.cache = new ConcurrentHashMap<>();
 		this.cacheBroadcast = new ConcurrentHashMap<>();
-		this.futures = new ConcurrentHashMap<>();
+		this.cacheBroadcastSubGraph = new ConcurrentHashMap<>();
 
-		this.pool = Executors.newFixedThreadPool(config.getThreads(),
-				new ThreadFactory() {
-					@Override
-					public Thread newThread(Runnable r) {
-						Thread t = Executors.defaultThreadFactory()
-								.newThread(r);
-						t.setName("SegmentedQueue Sender Pool for Task "
-								+ task.toString() + ", id:" + task.getTaskid());
-						return t;
-					}
-				});
+		this.parallel = config.isParallelCache();
+		if (parallel) {
+			this.futures = new ConcurrentHashMap<>();
+			this.pool = Executors.newFixedThreadPool(config.getThreads(),
+					new ThreadFactory() {
+						@Override
+						public Thread newThread(Runnable r) {
+							Thread t = Executors.defaultThreadFactory()
+									.newThread(r);
+							t.setName("Cache Sender Pool for Task "
+									+ task.toString() + ", id:"
+									+ task.getTaskid());
+							t.setDaemon(true);
+							return t;
+						}
+					});
+		}
 	}
 
 	public void flush() throws Exception {
-		for (Future<?> f : futures.values()) {
-			if (f != null)
-				f.get();
-		}
+		if (parallel)
+			for (Future<?> f : futures.values()) {
+				if (f != null)
+					f.get();
+			}
 		for (Entry<String, PregelMessageQueue> e : cache.entrySet()) {
 			e.getValue().switchQueue();
-			e.getValue().flush(e.getKey(), task);
+			e.getValue().flush(e.getKey(), null, task);
 		}
 		for (Entry<String, PregelMessageQueue> e : cacheBroadcast.entrySet()) {
 			e.getValue().switchQueue();
-			e.getValue().flush(e.getKey(), task);
+			e.getValue().flush(e.getKey(), null, task);
+		}
+
+		for (Entry<Pair<String, String>, PregelMessageQueue> e : cacheBroadcastSubGraph
+				.entrySet()) {
+			e.getValue().switchQueue();
+			e.getValue().flush(e.getKey().left, e.getKey().right, task);
 		}
 	}
 
@@ -73,6 +91,20 @@ public class CacheManagerImpl implements CacheManagerI{
 				if (ret == null) {
 					ret = task.getQueueFactory(type).getMQ();
 					cacheBroadcast.put(type, ret);
+				}
+			}
+		}
+		return ret;
+	}
+
+	private PregelMessageQueue getBroadcastSubgraphCache(Pair<String, String> p) {
+		PregelMessageQueue ret = cacheBroadcastSubGraph.get(p);
+		if (ret == null) {
+			synchronized (cacheBroadcastSubGraph) {
+				ret = cacheBroadcastSubGraph.get(p);
+				if (ret == null) {
+					ret = task.getQueueFactory(p.left).getMQ();
+					cacheBroadcastSubGraph.put(p, ret);
 				}
 			}
 		}
@@ -123,26 +155,29 @@ public class CacheManagerImpl implements CacheManagerI{
 	private void checkSize(final String type, final PregelMessageQueue cache)
 			throws Exception {
 		if (cache.currentSize() == max_size) {
+			if (parallel) {
+				Future<?> fut = futures.remove(type);
+				if (fut != null)
+					fut.get();
+				cache.switchQueue();
+				fut = pool.submit(new Runnable() {
 
-			Future<?> fut = futures.remove(type);
-			if (fut != null)
-				fut.get();
-
-			cache.switchQueue();
-
-			fut = pool.submit(new Runnable() {
-
-				@Override
-				public void run() {
-					try {
-						cache.flush(type, task);
-					} catch (Exception e) {
-						e.printStackTrace();
+					@Override
+					public void run() {
+						try {
+							cache.flush(type, null, task);
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
 					}
-				}
-			});
+				});
 
-			futures.put(type, fut);
+				futures.put(type, fut);
+			} else {
+				cache.switchQueue();
+				cache.flush(type, null, task);
+			}
+
 		}
 	}
 
@@ -176,8 +211,43 @@ public class CacheManagerImpl implements CacheManagerI{
 			throws Exception {
 		if (q.currentSize() == config.getBroadcastQueue()) {
 			q.switchQueue();
-			q.flush(type, task);
+			q.flush(type, null, task);
 		}
 	}
 
+	@Override
+	public void stop() {
+		if (pool != null)
+			pool.shutdown();
+	}
+
+	@Override
+	public void sendAllSubGraph(String msgType, String subgraph, long v,
+			Object val) throws Exception {
+		Pair<String, String> p = new Pair<>(msgType, subgraph);
+		ObjectMessageQueue q = (ObjectMessageQueue) getBroadcastSubgraphCache(p);
+		synchronized (q) {
+			checkBroadCacheSubgraphSize(p, q);
+			q.put(v, -1l, val);
+		}
+	}
+
+	private void checkBroadCacheSubgraphSize(Pair<String, String> p,
+			PregelMessageQueue q) throws Exception {
+		if (q.currentSize() == config.getBroadcastQueue()) {
+			q.switchQueue();
+			q.flush(p.left, p.right, task);
+		}
+	}
+
+	@Override
+	public void sendAllFloatSubGraph(String msgType, String subgraph, long v,
+			float val) throws Exception {
+		Pair<String, String> p = new Pair<>(msgType, subgraph);
+		FloatMessageQueue q = (FloatMessageQueue) getBroadcastSubgraphCache(p);
+		synchronized (q) {
+			checkBroadCacheSubgraphSize(p, q);
+			q.putFloat(v, -1l, val);
+		}
+	}
 }

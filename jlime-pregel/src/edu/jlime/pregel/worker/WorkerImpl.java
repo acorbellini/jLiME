@@ -1,12 +1,14 @@
 package edu.jlime.pregel.worker;
 
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.UUID;
 
 import edu.jlime.core.cluster.Peer;
 import edu.jlime.core.rpc.RPCDispatcher;
 import edu.jlime.pregel.client.PregelConfig;
 import edu.jlime.pregel.client.SplitFunction;
+import edu.jlime.pregel.coordinator.Aggregator;
 import edu.jlime.pregel.graph.VertexFunction;
 import edu.jlime.pregel.graph.rpc.Graph;
 import edu.jlime.pregel.worker.rpc.Worker;
@@ -29,9 +31,9 @@ public class WorkerImpl implements Worker {
 	}
 
 	@Override
-	public void nextSuperstep(int superstep, int taskID, SplitFunction func)
-			throws Exception {
-		contexts.get(taskID).nextStep(superstep, func);
+	public void nextSuperstep(int superstep, int taskID, SplitFunction func,
+			Map<String, Aggregator> aggregators) throws Exception {
+		contexts.get(taskID).nextStep(superstep, func, aggregators);
 	}
 
 	@Override
@@ -114,7 +116,7 @@ public class WorkerImpl implements Worker {
 	}
 
 	@Override
-	public void sendObjectsMessage(String msgtype, long from, long[] to,
+	public void sendObjectsMessage(String msgtype, long[] from, long[] to,
 			Object[] objects, int taskid) throws Exception {
 		WorkerTask workerTask = contexts.get(taskid);
 
@@ -151,5 +153,23 @@ public class WorkerImpl implements Worker {
 				workerTask.queueDoubleVertexData(msgType, from, to[i], vals[i]);
 			}
 		}
+	}
+
+	public void stop() {
+	}
+
+	@Override
+	public void sendBroadcastMessageSubgraph(String msgType, String subGraph,
+			long v, Object val, int taskid) {
+		contexts.get(taskid).queueBroadcastSubgraphVertexData(msgType,
+				subGraph, val);
+
+	}
+
+	@Override
+	public void sendBroadcastMessageSubgraphFloat(String msgType,
+			String subgraph, long v, float val, int taskid) throws Exception {
+		contexts.get(taskid)
+				.queueBroadcastSubgraphFloat(msgType, subgraph, val);
 	}
 }

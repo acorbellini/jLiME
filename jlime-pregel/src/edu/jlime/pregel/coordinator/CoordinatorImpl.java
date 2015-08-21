@@ -1,7 +1,7 @@
 package edu.jlime.pregel.coordinator;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import edu.jlime.core.cluster.Peer;
@@ -29,12 +29,11 @@ public class CoordinatorImpl implements Coordinator {
 
 	public void start() throws Exception {
 		rpc.start();
-
 	}
 
 	@Override
 	public void finished(int taskID, UUID workerID, Boolean didWork,
-			HashMap<String, Aggregator> ags) throws Exception {
+			Map<String, Aggregator> ags) throws Exception {
 		tasks.get(taskID).finished(workerID, didWork, ags);
 	}
 

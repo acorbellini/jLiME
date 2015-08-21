@@ -13,11 +13,14 @@ public interface PregelMessageQueue {
 
 	public abstract int readOnlySize();
 
-	public abstract void flush(String msgType, WorkerTask workerTask)
-			throws Exception;
+	public abstract void flush(String msgType, String subgraph,
+			WorkerTask workerTask) throws Exception;
 
 	public abstract Iterator<PregelMessage> getMessages(String msgType,
 			long currentVertex);
+
+	public abstract long[] keys();
+
 	// public abstract Iterator<List<PregelMessage>> iterator();
 
 	// public abstract void put(long vid, long to, Object msg) throws Exception;

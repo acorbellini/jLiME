@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.util.UUID;
 
 import edu.jlime.util.DataTypeUtils;
-import gnu.trove.list.array.TByteArrayList;
 
 public class PersistedVertexList implements VertexList {
 	public static class PersistedLongIterator implements LongIterator {

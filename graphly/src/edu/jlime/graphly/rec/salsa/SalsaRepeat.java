@@ -14,27 +14,19 @@ import edu.jlime.graphly.client.GraphlyGraph;
 import edu.jlime.graphly.client.SubGraph;
 import edu.jlime.graphly.rec.Repeat;
 import edu.jlime.graphly.traversal.Dir;
-import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.set.hash.TLongHashSet;
 
 public class SalsaRepeat implements Repeat<long[]> {
-	private static final int MAX_THREADS = 32;
 	private String authKey;
 	private String hubKey;
-	private TLongArrayList authSet;
-	private TLongArrayList hubSet;
 	private long[] all;
 	private Object defaultauth;
 	private Object defaulthub;
 
-	static transient volatile ExecutorService exec;
-
-	public SalsaRepeat(String authKey, String hubKey, TLongArrayList authSet,
-			TLongArrayList hubSet) {
+	public SalsaRepeat(String authKey, String hubKey, TLongHashSet authSet,
+			TLongHashSet hubSet) {
 		this.authKey = authKey;
 		this.hubKey = hubKey;
-		this.authSet = authSet;
-		this.hubSet = hubSet;
 		this.defaultauth = 1f / authSet.size();
 		this.defaulthub = 1f / hubSet.size();
 		TLongHashSet sub = new TLongHashSet(authSet);
@@ -47,24 +39,20 @@ public class SalsaRepeat implements Repeat<long[]> {
 	public Object exec(long[] before, GraphlyGraph g) throws Exception {
 		final SubGraph sg = g.getSubGraph("salsa-sub", all);
 
-		if (exec == null) {
-			synchronized (this) {
-				if (exec == null)
-					exec = Executors.newFixedThreadPool(MAX_THREADS,
-							new ThreadFactory() {
+		ExecutorService exec = Executors.newFixedThreadPool(Runtime
+				.getRuntime().availableProcessors(), new ThreadFactory() {
 
-								@Override
-								public Thread newThread(Runnable r) {
-									Thread t = Executors.defaultThreadFactory()
-											.newThread(r);
-									t.setName("Salsa Repeat Step");
-									return t;
-								}
-							});
+			@Override
+			public Thread newThread(Runnable r) {
+				Thread t = Executors.defaultThreadFactory().newThread(r);
+				t.setName("Salsa Repeat Step");
+				t.setDaemon(true);
+				return t;
 			}
-		}
+		});
 
-		final Semaphore max = new Semaphore(MAX_THREADS);
+		final Semaphore max = new Semaphore(Runtime.getRuntime()
+				.availableProcessors());
 
 		sg.loadProperties(authKey, defaultauth);
 		sg.loadProperties(hubKey, defaulthub);
@@ -93,6 +81,8 @@ public class SalsaRepeat implements Repeat<long[]> {
 		}
 
 		sem.acquire();
+
+		exec.shutdown();
 
 		g.setTempProperties(before, temps);
 

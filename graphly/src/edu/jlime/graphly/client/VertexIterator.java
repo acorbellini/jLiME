@@ -8,7 +8,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
 
-import edu.jlime.graphly.storenode.GraphlyStoreNodeI;
+import edu.jlime.graphly.storenode.rpc.GraphlyStoreNodeI;
 import gnu.trove.list.array.TLongArrayList;
 
 public class VertexIterator implements Iterator<Long> {
@@ -23,7 +23,7 @@ public class VertexIterator implements Iterator<Long> {
 		}
 	});
 
-	private Graphly g;
+	// private Graphly g;
 
 	private GraphlyStoreNodeI[] nodes;
 
@@ -39,35 +39,30 @@ public class VertexIterator implements Iterator<Long> {
 
 	private String gID;
 
-	public VertexIterator(String graph, Graphly graphly, int cached) {
-		this.g = graphly;
+	public VertexIterator(String graph, List<GraphlyStoreNodeI> nodes,
+			int cached) {
+		// this.g = graphly;
 		this.gID = graph;
-		List<GraphlyStoreNodeI> all = g.mgr.getAll();
-
-		this.nodes = new GraphlyStoreNodeI[all.size()];
+		this.nodes = new GraphlyStoreNodeI[nodes.size()];
 		int nodeIndex = 0;
-		for (GraphlyStoreNodeI graphlyStoreNodeI : all) {
+		for (GraphlyStoreNodeI graphlyStoreNodeI : nodes) {
 			this.nodes[nodeIndex++] = graphlyStoreNodeI;
 		}
 
 		this.max = cached;
 
-		fut = new Future[all.size()];
+		fut = new Future[nodes.size()];
 		for (int i = 0; i < fut.length; i++) {
 			final GraphlyStoreNodeI node = this.nodes[i];
 			fut[i] = exec.submit(new Callable<TLongArrayList>() {
-
 				@Override
 				public TLongArrayList call() throws Exception {
 					return node.getVertices(gID, Long.MIN_VALUE, max, true);
 				}
-
 			});
 		}
-
 	}
 
-	@Override
 	public boolean hasNext() {
 		try {
 			if (cached != null && current < cached.size())
@@ -109,7 +104,6 @@ public class VertexIterator implements Iterator<Long> {
 		return true;
 	}
 
-	@Override
 	public Long next() {
 		return cached.get(current++);
 	}

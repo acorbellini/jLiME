@@ -12,15 +12,16 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import edu.jlime.graphly.client.Graphly;
+import edu.jlime.graphly.client.GraphlyClient;
 import edu.jlime.graphly.client.GraphlyGraph;
 import edu.jlime.graphly.traversal.Dir;
+import gnu.trove.set.hash.TLongHashSet;
 
 public class TopUsersExtractor {
 
 	public static void main(String[] args) throws Exception {
 
-		final Graphly graphly = Graphly.build(8);
+		final GraphlyClient graphly = GraphlyClient.build(8);
 
 		final GraphlyGraph g = graphly.getGraph(args[0]);
 
@@ -34,7 +35,7 @@ public class TopUsersExtractor {
 
 		String line = "";
 		final AtomicInteger count = new AtomicInteger(0);
-		final long[] at = new long[] {};
+		final TLongHashSet at = new TLongHashSet();
 		final Float maxIS = new Float(args[2]);
 		final Integer min = new Integer(args[3]);
 		final Semaphore sem = new Semaphore(15);

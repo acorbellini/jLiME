@@ -10,9 +10,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import edu.jlime.graphly.client.Graphly;
+import edu.jlime.graphly.client.GraphlyClient;
 import edu.jlime.graphly.client.GraphlyGraph;
 import edu.jlime.graphly.traversal.Dir;
+import edu.jlime.util.Pair;
 
 public class GraphlyLoader {
 
@@ -26,7 +27,7 @@ public class GraphlyLoader {
 
 		Integer serverInt = Integer.valueOf(servers);
 
-		Graphly graphly = Graphly.build(serverInt);
+		GraphlyClient graphly = GraphlyClient.build(serverInt);
 
 		GraphlyGraph g = graphly.getGraph(graph);
 

@@ -2,14 +2,15 @@ package edu.jlime.graphly.rec;
 
 import edu.jlime.graphly.client.GraphlyGraph;
 import edu.jlime.graphly.traversal.Dir;
+import gnu.trove.set.hash.TLongHashSet;
 
 public class MinEdgeFilter implements VertexFilter {
 
 	private Dir dir;
 	private int min;
-	private long[] at;
+	private TLongHashSet at;
 
-	public MinEdgeFilter(Dir dir, int min, long[] amongThese) {
+	public MinEdgeFilter(Dir dir, int min, TLongHashSet amongThese) {
 		this.dir = dir;
 		this.min = min;
 		this.at = amongThese;

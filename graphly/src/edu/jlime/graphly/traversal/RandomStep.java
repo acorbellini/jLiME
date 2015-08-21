@@ -1,7 +1,7 @@
 package edu.jlime.graphly.traversal;
 
 import gnu.trove.iterator.TLongIterator;
-import gnu.trove.set.hash.TLongHashSet;
+import gnu.trove.list.array.TLongArrayList;
 
 public class RandomStep implements Step {
 
@@ -18,13 +18,13 @@ public class RandomStep implements Step {
 	@Override
 	public TraversalResult exec(TraversalResult before) throws Exception {
 		TLongIterator it = before.vertices().iterator();
-		TLongHashSet ret = new TLongHashSet();
+		TLongArrayList ret = new TLongArrayList();
 		while (it.hasNext()) {
 			long v = it.next();
 			Long r = tr.getGraph().getRandomEdge(v, subset, dir);
 			if (r != null)
 				ret.add(r);
 		}
-		return new VertexResult(ret);
+		return new VertexResult(ret.toArray());
 	}
 }

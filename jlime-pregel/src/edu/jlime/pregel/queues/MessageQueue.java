@@ -1,6 +1,7 @@
 package edu.jlime.pregel.queues;
 
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.SortedMap;
@@ -11,6 +12,9 @@ import edu.jlime.pregel.mergers.ObjectMessageMerger;
 import edu.jlime.pregel.messages.GenericPregelMessage;
 import edu.jlime.pregel.messages.PregelMessage;
 import edu.jlime.pregel.worker.WorkerTask;
+import edu.jlime.pregel.worker.rpc.Worker;
+import gnu.trove.list.array.TLongArrayList;
+import gnu.trove.map.hash.TObjectIntHashMap;
 
 public class MessageQueue implements ObjectMessageQueue {
 	private static final int MAX = 5000000;
@@ -128,12 +132,41 @@ public class MessageQueue implements ObjectMessageQueue {
 	}
 
 	@Override
-	public void flush(String msgType, WorkerTask workerTask) throws Exception {
-		// final Iterator<PregelMessage> it = readOnly.iterator();
-		// while (it.hasNext()) {
-		// PregelMessage msg = it.next();
-		// workerTask.send(msg.getFrom(), msg.getTo(), msg.getV());
-		// }
+	public void flush(String msgType, String subgraph, WorkerTask workerTask)
+			throws Exception {
+		TObjectIntHashMap<Worker> sizes = new TObjectIntHashMap<>();
+		{
+			for (Entry<long[], Object> e : readOnly.entrySet()) {
+				long to = e.getKey()[0];
+				if (to != -1) {
+					Worker w = workerTask.getWorker(to);
+					sizes.adjustOrPutValue(w, 1, 1);
+				}
+			}
+		}
+
+		HashMap<Worker, ObjectData> ret = new HashMap<>();
+		for (Entry<long[], Object> e : readOnly.entrySet()) {
+			long to = e.getKey()[0];
+			if (to == -1) {
+				if (subgraph == null)
+					workerTask.outputObject(msgType, -1l, -1l, e.getValue());
+				else
+					workerTask.outputObjectSubgraph(msgType, subgraph, -1l,
+							e.getValue());
+			} else {
+				Worker w = workerTask.getWorker(to);
+				ObjectData data = ret.get(w);
+				if (data == null) {
+					data = new ObjectData(sizes.get(w));
+					ret.put(w, data);
+				}
+				data.addL(to);
+				data.addObj(e.getValue());
+			}
+		}
+		readOnly.clear();
+		workerTask.sendObjects(msgType, ret);
 	}
 
 	@Override
@@ -156,5 +189,14 @@ public class MessageQueue implements ObjectMessageQueue {
 				return it.hasNext();
 			}
 		};
+	}
+
+	@Override
+	public long[] keys() {
+		TLongArrayList ret = new TLongArrayList();
+		for (long[] k : readOnly.keySet()) {
+			ret.add(k[0]);
+		}
+		return ret.toArray();
 	}
 }

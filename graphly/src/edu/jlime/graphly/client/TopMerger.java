@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import edu.jlime.graphly.util.Pair;
+import edu.jlime.util.Pair;
 
 public class TopMerger implements GatherMerger<Set<Pair<Long, Float>>> {
 
@@ -15,7 +15,7 @@ public class TopMerger implements GatherMerger<Set<Pair<Long, Float>>> {
 			Comparator<Pair<Long, Float>>, Serializable {
 		@Override
 		public int compare(Pair<Long, Float> o1, Pair<Long, Float> o2) {
-			int comp = o1.right.compareTo(o2.right);
+			int comp = o1.right.compareTo(o2.right) * -1;
 			if (comp == 0)
 				return o1.left.compareTo(o2.left);
 			return comp;
@@ -40,9 +40,9 @@ public class TopMerger implements GatherMerger<Set<Pair<Long, Float>>> {
 				if (sorted.size() < top) {
 					sorted.add(pair);
 				} else {
-					Pair<Long, Float> first = sorted.first();
-					if (first.right < pair.right) {
-						sorted.remove(first);
+					Pair<Long, Float> last = sorted.last();
+					if (last.right < pair.right) {
+						sorted.remove(last);
 						sorted.add(pair);
 					}
 				}

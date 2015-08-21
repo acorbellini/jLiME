@@ -121,7 +121,7 @@
 		<module>../util</module>
 		<module>../graphly</module>
 		<module>../jlime-pregel</module>
-		<module>../../java-repl</module>
+		
 	</modules>
 	<repositories>
 		<repository>

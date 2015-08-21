@@ -1,11 +1,12 @@
 package edu.jlime.graphly.traversal;
 
 import gnu.trove.iterator.TLongFloatIterator;
+import gnu.trove.iterator.TLongIterator;
 import gnu.trove.iterator.TLongObjectIterator;
-import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.map.hash.TLongFloatHashMap;
 import gnu.trove.map.hash.TLongObjectHashMap;
 import gnu.trove.procedure.TLongFloatProcedure;
+import gnu.trove.set.hash.TLongHashSet;
 
 import java.util.Comparator;
 import java.util.Map;
@@ -38,8 +39,8 @@ public class CountResult extends TraversalResult {
 	}
 
 	@Override
-	public TLongArrayList vertices() {
-		return TLongArrayList.wrap(vals.keys());
+	public TLongHashSet vertices() {
+		return new TLongHashSet(vals.keys());
 	}
 
 	@Override
@@ -48,19 +49,16 @@ public class CountResult extends TraversalResult {
 	}
 
 	@Override
-	public TraversalResult removeAll(final TLongArrayList v) {
-		vals.retainEntries(new TLongFloatProcedure() {
-
-			@Override
-			public boolean execute(long k, float val) {
-				return !v.contains(k);
-			}
-		});
+	public TraversalResult removeAll(final TLongHashSet v) {
+		TLongIterator it = v.iterator();
+		while (it.hasNext()) {
+			vals.remove(it.next());
+		}
 		return new CountResult(vals);
 	}
 
 	@Override
-	public TraversalResult retainAll(final TLongArrayList v) {
+	public TraversalResult retainAll(final TLongHashSet v) {
 		vals.retainEntries(new TLongFloatProcedure() {
 
 			@Override
@@ -127,5 +125,15 @@ public class CountResult extends TraversalResult {
 			res.put(k, vals.get(k));
 		}
 		return new CountResult(res);
+	}
+
+	@Override
+	public float getCount(long key) {
+		return vals.get(key);
+	}
+
+	@Override
+	public TLongFloatHashMap getCounts() {
+		return vals;
 	}
 }

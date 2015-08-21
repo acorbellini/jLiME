@@ -2,7 +2,6 @@ package edu.jlime.pregel.queues;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.nio.file.Files;
 import java.util.UUID;
 
 import com.sleepycat.je.Cursor;
@@ -167,5 +166,9 @@ public class BerkeleyKV {
 
 	public float getNoEntryValue() {
 		return NO_ENTRY;
+	}
+
+	public long[] keys() {
+		return null;
 	}
 }

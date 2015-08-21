@@ -1,20 +1,23 @@
 package edu.jlime.graphly.traversal;
 
+import gnu.trove.iterator.TLongIterator;
 import gnu.trove.list.array.TLongArrayList;
+import gnu.trove.map.hash.TLongFloatHashMap;
 import gnu.trove.map.hash.TLongObjectHashMap;
 import gnu.trove.set.hash.TLongHashSet;
 
-import java.util.Arrays;
-
 public class VertexResult extends TraversalResult {
 
-	long[] ids = new long[] {};
+	TLongHashSet ids = new TLongHashSet();
 
 	TLongObjectHashMap<Object> values = new TLongObjectHashMap<Object>();
 
-	public VertexResult(TLongHashSet rem) {
-		this.ids = rem.toArray();
-		Arrays.sort(ids);
+	public VertexResult(long[] vids) {
+		ids.addAll(vids);
+	}
+
+	public VertexResult(TLongHashSet ids) {
+		this.ids.addAll(ids);
 	}
 
 	/*
@@ -23,8 +26,9 @@ public class VertexResult extends TraversalResult {
 	 * @see edu.jlime.graphly.traversal.TraversalResultI#vertices()
 	 */
 	@Override
-	public TLongArrayList vertices() {
-		return new TLongArrayList(ids);
+	public TLongHashSet vertices() {
+		TLongHashSet tLongArrayList = new TLongHashSet(ids);
+		return tLongArrayList;
 	}
 
 	/*
@@ -53,22 +57,39 @@ public class VertexResult extends TraversalResult {
 	}
 
 	@Override
-	public TraversalResult removeAll(TLongArrayList v) {
+	public TraversalResult removeAll(TLongHashSet v) {
 		TLongHashSet rem = new TLongHashSet(ids);
-		rem.removeAll(v);
+		TLongIterator it = v.iterator();
+		while (it.hasNext()) {
+			rem.remove(it.next());
+		}
 		return new VertexResult(rem);
 	}
 
 	@Override
-	public TraversalResult retainAll(TLongArrayList v) {
+	public TraversalResult retainAll(TLongHashSet v) {
 		TLongHashSet ret = new TLongHashSet(ids);
-		ret.removeAll(v);
+		ret.retainAll(v);
 		return new VertexResult(ret);
 	}
 
 	@Override
 	public String toString() {
-		return Arrays.toString(ids);
+		return ids.toString();
+	}
+
+	@Override
+	public float getCount(long key) throws Exception {
+		return ids.contains(key) ? 1f : 0f;
+	}
+
+	@Override
+	public TLongFloatHashMap getCounts() throws Exception {
+		TLongFloatHashMap ret = new TLongFloatHashMap();
+		TLongIterator it = ids.iterator();
+		while (it.hasNext())
+			ret.put(it.next(), 1);
+		return ret;
 	}
 
 }

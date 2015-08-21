@@ -4,70 +4,34 @@ import java.io.Serializable;
 
 import edu.jlime.core.rpc.RPCObject;
 import edu.jlime.util.ByteBuffer;
-import gnu.trove.iterator.TLongIntIterator;
+import gnu.trove.iterator.TLongFloatIterator;
+import gnu.trove.map.hash.TLongFloatHashMap;
 
 public class GraphlyCount implements Serializable, RPCObject {
-	long[] vids;
-	int[] counts;
+	TLongFloatHashMap res;
 
 	public GraphlyCount() {
 	}
 
-	public GraphlyCount(long[] vids, int[] counts) {
-		this.vids = vids;
-		this.counts = counts;
+	public GraphlyCount(TLongFloatHashMap res) {
+		this.res = res;
 	}
 
-	public TLongIntIterator iterator() {
-		return new TLongIntIterator() {
-			int c = -1;
-
-			@Override
-			public void remove() {
-				// TODO Auto-generated method stub
-
-			}
-
-			@Override
-			public boolean hasNext() {
-				return (c + 1) < vids.length;
-			}
-
-			@Override
-			public void advance() {
-				c++;
-			}
-
-			@Override
-			public int value() {
-				return counts[c];
-			}
-
-			@Override
-			public int setValue(int val) {
-				// TODO Auto-generated method stub
-				return 0;
-			}
-
-			@Override
-			public long key() {
-				return vids[c];
-			}
-		};
+	public TLongFloatHashMap getRes() {
+		return res;
 	}
 
 	@Override
 	public byte[] getByteArray() {
 		ByteBuffer buff = new ByteBuffer();
-		buff.putLongArray(vids);
-		buff.putIntArray(counts);
+		buff.putLongArray(res.keys());
+		buff.putFloatArray(res.values());
 		return buff.build();
 	}
 
 	@Override
 	public RPCObject fromByteArray(ByteBuffer buff) {
-		vids = buff.getLongArray();
-		counts = buff.getIntArray();
+		res = new TLongFloatHashMap(buff.getLongArray(), buff.getFloatArray());
 		return this;
 	}
 }

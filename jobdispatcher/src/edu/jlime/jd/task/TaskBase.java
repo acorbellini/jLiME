@@ -1,5 +1,6 @@
 package edu.jlime.jd.task;
 
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.Semaphore;
@@ -26,8 +27,10 @@ public abstract class TaskBase<T> implements Task<T> {
 		final Semaphore sem = new Semaphore(-map.keySet().size() + 1);
 
 		final Semaphore max = new Semaphore(maxjobs);
-
-		for (Entry<Job<T>, ClientNode> entry : map.entrySet()) {
+		Iterator<Entry<Job<T>, ClientNode>> it = map.entrySet().iterator();
+		while (it.hasNext()) {
+			Entry<Job<T>, ClientNode> entry = it.next();
+			it.remove();
 			try {
 				max.acquire();
 			} catch (InterruptedException e1) {

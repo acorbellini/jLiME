@@ -66,7 +66,8 @@ public class DoubleMessageQueue implements PregelMessageQueue {
 	}
 
 	@Override
-	public void flush(String msgType, WorkerTask workerTask) throws Exception {
+	public void flush(String msgType, String subgraph, WorkerTask workerTask)
+			throws Exception {
 		TObjectIntHashMap<Worker> sizes = new TObjectIntHashMap<>();
 		{
 			final TLongDoubleIterator it = readOnly.iterator();
@@ -123,6 +124,11 @@ public class DoubleMessageQueue implements PregelMessageQueue {
 					return first;
 				}
 			};
+	}
+
+	@Override
+	public long[] keys() {
+		return readOnly.keys();
 	}
 
 }

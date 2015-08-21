@@ -5,11 +5,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.log4j.Logger;
 
-import edu.jlime.graphly.client.Graphly;
+import edu.jlime.graphly.client.GraphlyClient;
 import edu.jlime.graphly.client.GraphlyGraph;
 import edu.jlime.graphly.jobs.Mapper;
 import edu.jlime.graphly.rec.Repeat;
-import edu.jlime.graphly.util.Pair;
 import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.JobDispatcher;
 import edu.jlime.jd.client.JobContext;
@@ -17,6 +16,7 @@ import edu.jlime.jd.client.JobContextImpl;
 import edu.jlime.jd.job.RunJob;
 import edu.jlime.jd.task.ForkJoinTask;
 import edu.jlime.jd.task.ResultListener;
+import edu.jlime.util.Pair;
 import gnu.trove.list.array.TLongArrayList;
 
 public class RepeatStep implements Step {
@@ -70,12 +70,12 @@ public class RepeatStep implements Step {
 
 		long[] array = before.vertices().toArray();
 
-		List<Pair<ClientNode, TLongArrayList>> div = map.map(Graphly.NUM_JOBS,
+		List<Pair<ClientNode, TLongArrayList>> div = map.map(GraphlyClient.NUM_JOBS,
 				array, ctx);
 		if (!div.isEmpty())
 			for (int i = 0; i < steps; i++) {
 				if (map.isDynamic())
-					div = map.map(Graphly.NUM_JOBS, array, ctx);
+					div = map.map(GraphlyClient.NUM_JOBS, array, ctx);
 				final int divSize = div.size();
 				log.info("Current Repeat Step: " + i + "/" + steps
 						+ ". Executing " + div.size() + " jobs.");

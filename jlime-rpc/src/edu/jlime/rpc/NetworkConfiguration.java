@@ -77,12 +77,12 @@ public class NetworkConfiguration {
 	public NetworkConfiguration(Configuration config) {
 		this.config = config;
 
-		this.protocol = config.getString("protocol", "udpnio");
+		this.protocol = config.getString("protocol", "tcp");
 
 		this.port = config.getInt("port", 3550);
 		this.port_range = config.getInt("port_range", 1000);
 
-		this.compression = config.getString("compression", "none");
+		this.compression = config.getString("compression", "SNAPPY");
 
 		this.rcvBuffer = config.getInt("udp.rcv_buffer", 25 * 1024 * 1024);
 		this.sendBuffer = config.getInt("udp.send_buffer", 25 * 1024 * 1024);
