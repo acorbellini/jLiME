@@ -1,15 +1,12 @@
 package edu.jlime.graphly.traversal;
 
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.log4j.Logger;
 
 import edu.jlime.graphly.client.GraphlyClient;
 import edu.jlime.graphly.jobs.Mapper;
-import edu.jlime.graphly.jobs.MapperFactory;
 import edu.jlime.graphly.rec.VertexFilter;
 import edu.jlime.graphly.traversal.count.CountStep;
 import edu.jlime.jd.ClientNode;

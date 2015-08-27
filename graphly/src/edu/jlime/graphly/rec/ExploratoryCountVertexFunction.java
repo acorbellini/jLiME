@@ -60,7 +60,7 @@ public class ExploratoryCountVertexFunction implements
 				}
 			} // Target Group
 			else if (ctx.getSuperStep() == 3) {
-				graph.setFloat(v, "count", sum);
+				graph.setFloat(v, "ec", sum);
 			}
 		}
 	}

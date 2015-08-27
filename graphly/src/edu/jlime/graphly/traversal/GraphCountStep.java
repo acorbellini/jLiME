@@ -22,12 +22,17 @@ public class GraphCountStep implements Step {
 	private int max;
 	private GraphlyTraversal tr;
 	private String k;
+	private String[] filters;
+	private boolean returnVertices;
 
-	public GraphCountStep(Dir dir, int max_edges, GraphlyTraversal tr, String k) {
+	public GraphCountStep(Dir dir, String[] filters, int max_edges,
+			GraphlyTraversal tr, String k, boolean returnVertices) {
+		this.filters = filters;
 		this.dir = dir;
 		this.max = max_edges;
 		this.tr = tr;
 		this.k = k;
+		this.returnVertices = returnVertices;
 	}
 
 	@Override
@@ -42,25 +47,27 @@ public class GraphCountStep implements Step {
 				jobClient.getLocalPeer());
 
 		TLongHashSet vertices = before.vertices();
+
 		log.info("Graph count for " + vertices.size());
+
 		final List<Pair<ClientNode, TLongArrayList>> mapped = map.map(1,
 				vertices.toArray(), ctx);
 
-		ForkJoinTask<TLongHashSet> fj = new ForkJoinTask<>();
+		ForkJoinTask<long[]> fj = new ForkJoinTask<>();
 
 		for (Pair<ClientNode, TLongArrayList> e : mapped) {
-			fj.putJob(new GraphCount(tr.getGraph(), k, dir, max, e.getValue()
-					.toArray()), e.getKey());
+			fj.putJob(new GraphCount(filters, tr.getGraph(), k, dir, max, e
+					.getValue().toArray(), returnVertices), e.getKey());
 		}
 
-		vertices = fj.execute(CountStep.JOBS,
-				new ResultListener<TLongHashSet, TLongHashSet>() {
+		TLongHashSet res = fj.execute(CountStep.JOBS,
+				new ResultListener<long[], TLongHashSet>() {
 					TLongHashSet temp = new TLongHashSet();
 
 					@Override
-					public void onSuccess(TLongHashSet sr) {
-						log.info("Received count set.");
-						if (!sr.isEmpty())
+					public void onSuccess(long[] sr) {
+						log.info("Received count set of size " + sr.length);
+						if (sr.length != 0)
 							synchronized (temp) {
 								temp.addAll(sr);
 							}
@@ -68,7 +75,7 @@ public class GraphCountStep implements Step {
 
 					@Override
 					public TLongHashSet onFinished() {
-						log.info("Finished count task.");
+						log.info("Finished count task of " + temp.size());
 						return temp;
 					}
 
@@ -79,7 +86,6 @@ public class GraphCountStep implements Step {
 
 		tr.getGraph().commitFloatUpdates(k);
 
-		return new GraphCountResult(vertices, tr.getGraph(), k);
+		return new GraphCountResult(res, tr.getGraph(), k);
 	}
-
 }

@@ -263,7 +263,7 @@ public class WorkerTask {
 	}
 
 	public void execute() throws Exception {
-
+		long init = System.currentTimeMillis();
 		final VertexList vList = this.config.isPersitentCurrentSplitList() ? new PersistedVertexList()
 				: new InMemVertexList();
 
@@ -320,41 +320,55 @@ public class WorkerTask {
 					+ " on Worker " + this.worker.getID());
 			this.coordMgr.getFirst().finished(getTaskid(), this.worker.getID(),
 					false, aggregators);
-			return;
-		}
+		} else {
 
-		this.log.info("Starting Execution on worker " + worker.getID()
-				+ " for " + size + " messages.");
+			this.log.info("Starting Execution on worker " + worker.getID()
+					+ " for " + size + " messages.");
 
-		final int threads = this.config.getThreads();
+			final int threads = this.config.getThreads();
 
-		final AtomicInteger count = new AtomicInteger(0);
-		for (int i = 0; i < this.config.getThreads(); i++) {
-			final int currentIndex = i;
-			this.vertexCounter.incrementAndGet();
-			this.vertexPool.execute(new Runnable() {
-				@Override
-				public void run() {
-					try {
-						executeVertex(size, threads, count, currentIndex, vList);
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-
-					int vc = vertexCounter.decrementAndGet();
-					if (vc == 0)
-						synchronized (vertexCounter) {
-							vertexCounter.notify();
+			final AtomicInteger count = new AtomicInteger(0);
+			for (int i = 0; i < this.config.getThreads(); i++) {
+				final int currentIndex = i;
+				this.vertexCounter.incrementAndGet();
+				this.vertexPool.execute(new Runnable() {
+					@Override
+					public void run() {
+						try {
+							executeVertex(size, threads, count, currentIndex,
+									vList);
+						} catch (Exception e) {
+							e.printStackTrace();
 						}
-				}
-			});
+
+						int vc = vertexCounter.decrementAndGet();
+						if (vc == 0)
+							synchronized (vertexCounter) {
+								vertexCounter.notify();
+							}
+					}
+				});
+			}
+
+			synchronized (vertexCounter) {
+				while (vertexCounter.get() != 0)
+					vertexCounter.wait();
+			}
+			if (!config.isBSPMode()) {
+				flushCaches();
+			}
+			log.info("Finished work for step " + currentStep + " on Worker "
+					+ worker.getID());
+			coordMgr.getFirst().finished(getTaskid(), this.worker.getID(),
+					true, aggregators);
+
+			vList.delete();
 		}
 
-		synchronized (vertexCounter) {
-			while (vertexCounter.get() != 0)
-				vertexCounter.wait();
-		}
+		log.info("Completed step in " + (System.currentTimeMillis() - init));
+	}
 
+	private void flushCaches() throws Exception, InterruptedException {
 		log.info("Flushing cache on step " + currentStep + " on Worker "
 				+ worker.getID());
 		for (CacheManagerI cache : cacheMgr.values()) {
@@ -365,13 +379,6 @@ public class WorkerTask {
 			while (sendCount.get() != 0)
 				sendCount.wait();
 		}
-
-		log.info("Finished work for step " + currentStep + " on Worker "
-				+ worker.getID());
-		coordMgr.getFirst().finished(getTaskid(), this.worker.getID(), true,
-				aggregators);
-
-		vList.delete();
 	}
 
 	private int broadcastSize() {
@@ -755,5 +762,14 @@ public class WorkerTask {
 
 	public boolean isLocal(long to) {
 		return getWorker(to).equals(workerMgr.get(workerMgr.getLocalPeer()));
+	}
+
+	public void finishedProcessing() throws Exception {
+		if (config.isBSPMode()) {
+			long init = System.currentTimeMillis();
+			flushCaches();
+			log.info("Finished flushing in BSP mode: "
+					+ (System.currentTimeMillis() - init) + " ms");
+		}
 	}
 }

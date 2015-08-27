@@ -1,8 +1,8 @@
 package edu.jlime.graphly.rec.salsa;
 
-import java.io.Serializable;
-
 import gnu.trove.map.hash.TLongFloatHashMap;
+
+import java.io.Serializable;
 
 public class AuthHubSubResult implements Serializable {
 	public AuthHubSubResult(TLongFloatHashMap auth2, TLongFloatHashMap hub2) {

@@ -20,7 +20,6 @@ public abstract class GraphlyServerFactory {
 				net.protocol = "local";
 				GraphlyServer server = LocalGraphlyServer.createServer(path, 0,
 						true, 1, net, gconfig);
-				server.start();
 				return server;
 			}
 		};

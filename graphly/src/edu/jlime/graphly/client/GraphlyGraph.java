@@ -15,6 +15,8 @@ import edu.jlime.graphly.util.TopGatherer;
 import edu.jlime.jd.JobDispatcher;
 import edu.jlime.pregel.client.PregelClient;
 import edu.jlime.util.Pair;
+import gnu.trove.list.array.TLongArrayList;
+import gnu.trove.map.TLongFloatMap;
 import gnu.trove.map.hash.TLongFloatHashMap;
 import gnu.trove.map.hash.TLongObjectHashMap;
 import gnu.trove.set.hash.TLongHashSet;
@@ -65,8 +67,8 @@ public class GraphlyGraph implements Transferible {
 	}
 
 	public GraphlyCount countEdges(final Dir dir, final int max_edges,
-			TLongFloatHashMap data) throws Exception {
-		return graphly.countEdges(graph, dir, max_edges, data);
+			TLongFloatMap data, TLongHashSet toFilter) throws Exception {
+		return graphly.countEdges(graph, dir, max_edges, data, toFilter);
 	}
 
 	public long getRandomEdge(long before, long[] subset, Dir d)
@@ -280,5 +282,9 @@ public class GraphlyGraph implements Transferible {
 			throws Exception {
 		return this.gather(new FloatGather(k, vertices)).merge(
 				new FloatMerger());
+	}
+
+	public void setProperty(TLongHashSet vertices, String k, String val) {
+		this.graphly.setProperty(graph, vertices, k, val);
 	}
 }

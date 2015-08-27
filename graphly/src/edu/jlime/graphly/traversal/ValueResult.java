@@ -38,4 +38,9 @@ public class ValueResult extends TraversalResult {
 	public TLongFloatHashMap getCounts() {
 		return null;
 	}
+
+	@Override
+	public String toString() {
+		return getRes().toString();
+	}
 }

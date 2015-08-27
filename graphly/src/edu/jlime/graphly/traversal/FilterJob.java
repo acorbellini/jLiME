@@ -8,11 +8,9 @@ import java.util.concurrent.Future;
 
 import edu.jlime.graphly.client.GraphlyGraph;
 import edu.jlime.graphly.rec.VertexFilter;
-import edu.jlime.graphly.rec.salsa.AuthHubSubResult;
 import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.Job;
-import gnu.trove.iterator.TLongIterator;
 import gnu.trove.set.hash.TLongHashSet;
 
 public class FilterJob implements Job<TLongHashSet> {

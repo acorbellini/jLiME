@@ -3,6 +3,7 @@ package edu.jlime.rpc;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.log4j.Logger;
 
@@ -23,10 +24,14 @@ public class jLiMETransport extends Transport implements DataListener {
 
 	private ExecutorService handleExecutor = Executors
 			.newCachedThreadPool(new ThreadFactory() {
+				AtomicInteger cont = new AtomicInteger(0);
+
 				@Override
 				public Thread newThread(Runnable r) {
 					Thread t = Executors.defaultThreadFactory().newThread(r);
-					t.setName("jLiME Transport Thread");
+					t.setName("jLiME Transport Thread "
+							+ cont.getAndIncrement());
+					t.setDaemon(true);
 					return t;
 				}
 			});

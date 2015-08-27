@@ -36,7 +36,7 @@ public class CacheManagerImpl implements CacheManagerI {
 
 	public CacheManagerImpl(WorkerTask workerTask, PregelConfig config) {
 		this.task = workerTask;
-		this.max_size = config.getQueueSize();
+		this.max_size = config.getCacheSize();
 		this.config = config;
 		this.cache = new ConcurrentHashMap<>();
 		this.cacheBroadcast = new ConcurrentHashMap<>();

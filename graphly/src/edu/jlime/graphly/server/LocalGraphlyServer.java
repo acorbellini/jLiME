@@ -44,6 +44,8 @@ public class LocalGraphlyServer extends GraphlyServer {
 
 	private GraphlyStoreNode storeNode;
 
+	private Metrics mgr;
+
 	public LocalGraphlyServer(NetworkConfiguration net,
 			GraphlyConfiguration graphly, String storeLoc, Boolean isCoord,
 			Integer rs) {
@@ -94,8 +96,7 @@ public class LocalGraphlyServer extends GraphlyServer {
 				}.start();
 
 			log.info("Creating Graphly Store Node");
-			this.storeNode = new GraphlyStoreNode(storeLoc,
-					graphlyConfig, rpc);
+			this.storeNode = new GraphlyStoreNode(storeLoc, graphlyConfig, rpc);
 			rpc.registerTarget("graphly", storeNode, false);
 
 			log.info("Creating Pregel Worker Node");
@@ -108,8 +109,7 @@ public class LocalGraphlyServer extends GraphlyServer {
 
 			rpc.start();
 
-			Metrics mgr = new Metrics(rpc.getCluster().getLocalPeer()
-					.toString());
+			this.mgr = new Metrics(rpc.getCluster().getLocalPeer().toString());
 			for (InfoProvider sysinfo : SysInfoProvider.get())
 				sysinfo.load(mgr);
 
@@ -157,17 +157,19 @@ public class LocalGraphlyServer extends GraphlyServer {
 		jobs.stop();
 
 		rpc.stop();
-		
+
 		coord.stop();
-		
+
 		pregel_coord.stop();
 
 		pregel_worker.stop();
 
 		ws.stop();
-		
+
 		storeNode.stop();
-		
+
+		mgr.stop();
+
 	}
 
 	public GraphlyClient getGraphlyClient() {

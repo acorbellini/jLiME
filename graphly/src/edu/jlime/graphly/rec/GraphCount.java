@@ -15,28 +15,38 @@ import edu.jlime.jd.job.Job;
 import gnu.trove.map.hash.TLongFloatHashMap;
 import gnu.trove.set.hash.TLongHashSet;
 
-public class GraphCount implements Job<TLongHashSet> {
+public class GraphCount implements Job<long[]> {
 
 	private GraphlyGraph g;
 	private Dir dir;
 	private int max;
 	private long[] data;
 	private String k;
+	private String[] filters;
+	private boolean returnVertices;
 
-	public GraphCount(GraphlyGraph graph, String k, Dir dir, int max, long[] ls) {
+	public GraphCount(String[] filters, GraphlyGraph graph, String k, Dir dir,
+			int max, long[] ls, boolean returnVertices) {
+		this.filters = filters;
 		this.g = graph;
 		this.dir = dir;
 		this.max = max;
 		this.data = ls;
 		this.k = k;
+		this.returnVertices = returnVertices;
 	}
 
 	@Override
-	public TLongHashSet call(JobContext env, ClientNode peer) throws Exception {
+	public long[] call(JobContext env, ClientNode peer) throws Exception {
 		final Logger log = Logger.getLogger(CountJob.class);
 		log.info("Executing graph count job for " + data.length);
 		final int threads = Runtime.getRuntime().availableProcessors();
 		ExecutorService exec = Executors.newFixedThreadPool(threads);
+
+		final long[] keys = data;
+		int size = keys.length;
+		final float chunks = (size / (float) threads);
+
 		final TLongHashSet finalRes = new TLongHashSet();
 		for (int i = 0; i < threads; i++) {
 			final int tID = i;
@@ -44,11 +54,28 @@ public class GraphCount implements Job<TLongHashSet> {
 				@Override
 				public void run() {
 					try {
-						TLongFloatHashMap sub = new TLongFloatHashMap();
-						int cont = 0;
-						for (long v : data) {
-							cont++;
-							if (cont % threads == tID) {
+						int from = (int) (chunks * tID);
+						int to = (int) (chunks * (tID + 1));
+
+						if (tID == threads - 1)
+							to = keys.length;
+
+						TLongFloatHashMap sub = new TLongFloatHashMap(10000000);
+						int cont = from;
+
+						while (cont < to) {
+							long v = keys[cont++];
+							boolean filtered = false;
+							if (filters != null && filters.length > 0) {
+								Object mark = g.getProperty("mark", v);
+								if (mark != null)
+									for (String f : filters) {
+										if (f.equals(mark))
+											filtered = true;
+									}
+							}
+
+							if (!filtered) {
 								float prevCount = g.getFloat(v, k, 1f);
 								long[] edges = g.getEdgesMax(dir, max, v);
 								for (int j = 0; j < edges.length; j++) {
@@ -56,17 +83,24 @@ public class GraphCount implements Job<TLongHashSet> {
 											prevCount);
 								}
 							}
+
 						}
 
 						log.info("Finished counting vertices for thread " + tID);
-
-						g.setTempFloats(k, true, sub);
+						if (!sub.isEmpty())
+							g.setTempFloats(k, true, sub);
 
 						log.info("Finished sending results to graph for thread "
 								+ tID);
-						synchronized (finalRes) {
-							finalRes.addAll(sub.keys());
+						if (returnVertices) {
+							log.info("merging vertices processed");
+							synchronized (finalRes) {
+								finalRes.addAll(sub.keys());
+							}
+							log.info("Finished merging results on thread "
+									+ tID);
 						}
+
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
@@ -77,7 +111,7 @@ public class GraphCount implements Job<TLongHashSet> {
 		exec.shutdown();
 		exec.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
 
-		return finalRes;
+		return finalRes.toArray();
 
 	}
 }

@@ -172,4 +172,9 @@ public class WorkerImpl implements Worker {
 		contexts.get(taskid)
 				.queueBroadcastSubgraphFloat(msgType, subgraph, val);
 	}
+
+	@Override
+	public void finishedProcessing(int taskID) throws Exception {
+		contexts.get(taskID).finishedProcessing();
+	}
 }

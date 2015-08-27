@@ -1,61 +1,171 @@
 package edu.jlime.graphly.util;
 
-import java.util.Date;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.Map.Entry;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
-import org.apache.mina.proxy.utils.StringUtilities;
 
 import edu.jlime.graphly.client.GraphlyClient;
 import edu.jlime.graphly.client.GraphlyGraph;
 import edu.jlime.graphly.server.GraphlyServer;
-import edu.jlime.jd.ClientNode;
+import edu.jlime.graphly.traversal.GraphlyTraversal;
+import edu.jlime.graphly.traversal.TraversalResult;
 import edu.jlime.jd.profiler.ClusterProfiler;
-import edu.jlime.jd.profiler.MetricExtractor;
-import edu.jlime.jd.profiler.ProfilerFunctionPerNode;
-import edu.jlime.metrics.metric.Metrics;
 
 public class GraphlyExperiment {
 
-	private String name;
-	private String graphName;
-	private GraphlyRun run;
-	private GraphlyServerFactory fact;
+	public class ExperimentResult {
+
+		public class Experiment {
+			long time;
+			float net;
+			float mem;
+
+			public Experiment(long time, float net, float mem) {
+				this.time = time;
+				this.net = net;
+				this.mem = mem;
+			}
+
+		}
+
+		List<Experiment> exps = new ArrayList<>();
+
+		public void addExperiment(long time, float net, float mem) {
+			exps.add(new Experiment(time, net, mem));
+		}
+
+		public float time() {
+			float prom = 0;
+			for (Experiment e : exps) {
+				prom += e.time;
+			}
+			return prom / (float) exps.size();
+		}
+
+		public float net() {
+			float prom = 0;
+			for (Experiment e : exps) {
+				prom += e.net;
+			}
+			return prom / (float) exps.size();
+		}
+
+		public float mem() {
+			float prom = 0;
+			for (Experiment e : exps) {
+				prom += e.mem;
+			}
+			return prom / (float) exps.size();
+		}
+
+		public float time_desv() {
+			float prom = 0;
+			float prom_2 = 0;
+			for (Experiment e : exps) {
+				prom += e.time;
+				prom_2 += e.time * e.time;
+			}
+			prom = prom / exps.size();
+			return (float) Math.sqrt(prom_2 / exps.size() - prom * prom);
+		}
+
+		public float net_desv() {
+			float prom = 0;
+			float prom_2 = 0;
+			for (Experiment e : exps) {
+				prom += e.net;
+				prom_2 += e.net * e.net;
+			}
+			prom = prom / exps.size();
+			return (float) Math.sqrt(prom_2 / exps.size() - prom * prom);
+		}
+
+		public float mem_desv() {
+			float prom = 0;
+			float prom_2 = 0;
+			for (Experiment e : exps) {
+				prom += e.mem;
+				prom_2 += e.mem * e.mem;
+			}
+			prom = prom / exps.size();
+			return (float) Math.sqrt(prom_2 / exps.size() - prom * prom);
+		}
+
+	}
+
 	Logger log = Logger.getLogger(GraphlyExperiment.class);
 
-	public GraphlyExperiment(String name, GraphlyRun run,
-			GraphlyServerFactory fact, String graph) {
-		this.name = name;
+	private String graphName;
+	private String start;
+
+	private GraphlyRun run;
+	private GraphlyServerFactory fact;
+
+	private boolean print_res;
+	private long[] users;
+
+	private int reps;
+
+	public GraphlyExperiment(int reps, long[] users, GraphlyRun run,
+			GraphlyServerFactory fact, String graph, boolean print_results,
+			String startNode) {
+		this.reps = reps;
 		this.run = run;
 		this.fact = fact;
 		this.graphName = graph;
+		this.print_res = print_results;
+		this.start = startNode;
+		this.users = users;
 	}
 
-	public void execute() throws Exception {
-		long start = System.currentTimeMillis();
-		GraphlyServer server = fact.build();
-		server.start();
+	public ExperimentResult execute() throws Exception {
+		ExperimentResult expRes = new ExperimentResult();
+		// prof.getNetworkConsumption(), prof.getMemoryConsumption(),
+		// (System.currentTimeMillis() - start));
 
-		GraphlyClient graphly = server.getGraphlyClient();
+		for (int i = 0; i < reps; i++) {
 
-		GraphlyGraph graph = graphly.getGraph(graphName);
+			long start = System.currentTimeMillis();
+			GraphlyServer server = fact.build();
+			server.start();
 
-		ClusterProfiler prof = new ClusterProfiler(graphly.getJobClient()
-				.getCluster(), 1000);
-		prof.start();
-		run.run(graph);
-		prof.stop();
-		System.out.println(name + StringUtils.repeat(" ", 24 - name.length())
-				+ prof.getNetworkConsumption() + "\t"
-				+ prof.getMemoryConsumption() + "\t"
-				+ (System.currentTimeMillis() - start) / 1000);
+			GraphlyClient graphly = server.getGraphlyClient();
 
-		graphly.close();
-		server.stop();
+			GraphlyGraph graph = graphly.getGraph(graphName);
+
+			ClusterProfiler prof = new ClusterProfiler(graphly.getJobClient()
+					.getCluster(), 1000);
+			prof.start();
+			GraphlyTraversal tr = run.run(users, graph);
+			TraversalResult res = null;
+			if (this.start != null)
+				res = tr.submit(graphly.getJobClient().getCluster()
+						.getByName(this.start));
+			else
+				res = tr.exec();
+
+			prof.stop();
+
+			if (print_res)
+				System.out.println(run.printResult(res, graph));
+
+			expRes.addExperiment((System.currentTimeMillis() - start),
+					prof.getNetworkConsumption(), prof.getMemoryConsumption());
+
+			graphly.close();
+			server.stop();
+		}
+		return expRes;
 
 	}
 
+	public static ExperimentResult exec(int reps, long[] users, String graph,
+			GraphlyServerFactory fact, GraphlyRun run, boolean print_results,
+			String startNode) throws Exception {
+		return new GraphlyExperiment(reps, users, run, fact, graph,
+				print_results, startNode).execute();
+
+	}
 }

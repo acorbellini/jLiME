@@ -7,7 +7,6 @@ import org.apache.log4j.Logger;
 import edu.jlime.graphly.client.GraphlyGraph;
 import edu.jlime.util.Pair;
 import gnu.trove.iterator.TLongIterator;
-import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.map.hash.TLongFloatHashMap;
 import gnu.trove.set.hash.TLongHashSet;
 

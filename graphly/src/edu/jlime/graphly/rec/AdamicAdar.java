@@ -18,7 +18,6 @@ import edu.jlime.jd.client.JobContextImpl;
 import edu.jlime.jd.task.ForkJoinTask;
 import edu.jlime.jd.task.ResultListener;
 import edu.jlime.util.Pair;
-import gnu.trove.iterator.TLongIterator;
 import gnu.trove.list.array.TLongArrayList;
 
 public class AdamicAdar implements CustomFunction {

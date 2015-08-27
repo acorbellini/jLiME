@@ -1,6 +1,5 @@
 package edu.jlime.graphly.rec.hits;
 
-import java.util.Arrays;
 import java.util.List;
 
 import org.apache.log4j.Logger;

@@ -1,13 +1,10 @@
 package edu.jlime.graphly.rec;
 
-import java.lang.ref.Reference;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.log4j.Logger;
 
 import edu.jlime.graphly.client.GraphlyClient;
-import edu.jlime.graphly.client.GraphlyGraph;
 import edu.jlime.graphly.jobs.Mapper;
 import edu.jlime.graphly.rec.CustomStep.CustomFunction;
 import edu.jlime.graphly.storenode.GraphlyCount;
@@ -27,6 +24,7 @@ import edu.jlime.util.Pair;
 import gnu.trove.iterator.TLongFloatIterator;
 import gnu.trove.iterator.TLongIterator;
 import gnu.trove.list.array.TLongArrayList;
+import gnu.trove.map.TLongFloatMap;
 import gnu.trove.map.hash.TLongFloatHashMap;
 
 public class BetaCountStep implements CustomFunction {
@@ -45,7 +43,7 @@ public class BetaCountStep implements CustomFunction {
 	@Override
 	public TraversalResult execute(TraversalResult before, GraphlyTraversal tr)
 			throws Exception {
-		final TLongFloatHashMap adj = before.getCounts();
+		final TLongFloatMap adj = before.getCounts();
 		final TLongFloatHashMap res = new TLongFloatHashMap();
 
 		final Logger log = Logger.getLogger(CountStep.class);
@@ -64,11 +62,11 @@ public class BetaCountStep implements CustomFunction {
 			final List<Pair<ClientNode, TLongArrayList>> mapped = map.map(
 					GraphlyClient.NUM_JOBS, adj.keys(), ctx);
 
-			ForkJoinTask<RemoteReference<GraphlyCount>> fj = new ForkJoinTask<>();
+			ForkJoinTask<GraphlyCount> fj = new ForkJoinTask<>();
 
 			if (mapped.size() == 1) {
 				fj.putJob(new CountJob(tr.getGraph(), dir, Integer.MAX_VALUE,
-						adj), mapped.get(0).left);
+						adj, null), mapped.get(0).left);
 			} else {
 				for (Pair<ClientNode, TLongArrayList> e : mapped) {
 					TLongFloatHashMap prevCounts = new TLongFloatHashMap();
@@ -81,16 +79,15 @@ public class BetaCountStep implements CustomFunction {
 					log.info("Creating job of " + prevCounts.size()
 							+ " vertices with counts.");
 					fj.putJob(new CountJob(tr.getGraph(), dir,
-							Integer.MAX_VALUE, prevCounts), e.getKey());
+							Integer.MAX_VALUE, prevCounts, null), e.getKey());
 				}
 			}
 
 			fj.execute(CountStep.JOBS,
-					new ResultListener<RemoteReference<GraphlyCount>, Void>() {
+					new ResultListener<GraphlyCount, Void>() {
 
 						@Override
-						public void onSuccess(
-								RemoteReference<GraphlyCount> graphlyCount) {
+						public void onSuccess(GraphlyCount graphlyCount) {
 							float currbeta = beta.calc(current_depth + 1);// (float)
 
 							log.info("Finished adding to result.");
@@ -99,7 +96,7 @@ public class BetaCountStep implements CustomFunction {
 
 							TLongFloatIterator it = null;
 							try {
-								it = graphlyCount.get().getRes().iterator();
+								it = graphlyCount.iterator();
 							} catch (Exception e) {
 								e.printStackTrace();
 							}

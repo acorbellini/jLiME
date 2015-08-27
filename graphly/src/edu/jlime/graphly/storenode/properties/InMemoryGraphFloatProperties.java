@@ -1,7 +1,6 @@
 package edu.jlime.graphly.storenode.properties;
 
 import gnu.trove.iterator.TLongFloatIterator;
-import gnu.trove.map.TLongFloatMap;
 import gnu.trove.map.hash.TLongFloatHashMap;
 
 import java.util.Map;
@@ -83,5 +82,13 @@ public class InMemoryGraphFloatProperties {
 
 	public TLongFloatHashMap getAll(String graph, String string) {
 		return getGraphProps(graph, string);
+	}
+
+	public void removeAll(String graph, String string) {
+		TLongFloatHashMap map = getGraphProps(graph, string);
+		synchronized (map) {
+			map.clear();
+		}
+
 	}
 }

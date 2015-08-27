@@ -37,6 +37,8 @@ public class PregelConfig implements Serializable {
 
 	private boolean parallelcache = true;
 
+	private boolean bsp = false;
+
 	public PregelConfig graph(GraphConnectionFactory graph) {
 		this.graph = graph;
 		return this;
@@ -132,8 +134,8 @@ public class PregelConfig implements Serializable {
 		return bQueue;
 	}
 
-	public int getQueueSize() {
-		return queue_size;
+	public int getCacheSize() {
+		return bsp ? Integer.MAX_VALUE : queue_size;
 	}
 
 	public int getSendThreads() {
@@ -199,5 +201,14 @@ public class PregelConfig implements Serializable {
 
 	public boolean isParallelCache() {
 		return parallelcache;
+	}
+
+	public boolean isBSPMode() {
+		return bsp;
+	}
+
+	public PregelConfig setPureBSP(boolean b) {
+		this.bsp = b;
+		return this;
 	}
 }

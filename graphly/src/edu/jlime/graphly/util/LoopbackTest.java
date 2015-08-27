@@ -1,5 +1,7 @@
 package edu.jlime.graphly.util;
 
+import java.text.NumberFormat;
+
 import edu.jlime.graphly.client.GraphlyClient;
 import edu.jlime.graphly.client.GraphlyGraph;
 import edu.jlime.graphly.jobs.MapperFactory;
@@ -8,13 +10,16 @@ import edu.jlime.graphly.traversal.Pregel;
 import edu.jlime.pregel.client.CacheFactory;
 import edu.jlime.pregel.client.PregelConfig;
 import edu.jlime.pregel.functions.PageRankFloat;
-import edu.jlime.pregel.functions.PageRankFloat.PageRankHaltCondition;
 import edu.jlime.pregel.mergers.MessageMergers;
+import gnu.trove.iterator.TLongFloatIterator;
+import gnu.trove.map.hash.TLongFloatHashMap;
 
 public class LoopbackTest {
 	public static void main(String[] args) throws Exception {
 		GraphlyServer server = GraphlyServerFactory.loopback(args[0]).build();
-
+		
+		server.start();
+		
 		GraphlyClient g = server.getGraphlyClient();
 
 		GraphlyGraph test = g.getGraph(args[1]);
@@ -39,9 +44,9 @@ public class LoopbackTest {
 						new PageRankFloat("pagerank", vertexCount),
 						PregelConfig
 								.create()
-								.haltCondition(
-										new PageRankHaltCondition(0.000005f))
-								.steps(50)
+								// .haltCondition(
+								// new PageRankHaltCondition(0.000005f))
+								.steps(10)
 								.persistVList(false)
 								.executeOnAll(true)
 								.queue(100)
@@ -50,8 +55,16 @@ public class LoopbackTest {
 								.merger("pr", MessageMergers.floatSum()))
 				.exec();
 		System.out.println((System.currentTimeMillis() - init) / 1000f);
-		float sum = test.sumFloat("pagerank");
 
+		TLongFloatHashMap res = test.getFloats("pagerank");
+		TLongFloatIterator it = res.iterator();
+		while (it.hasNext()) {
+			it.advance();
+			System.out.println(it.key() + ","
+					+ NumberFormat.getNumberInstance().format(it.value()));
+		}
+
+		float sum = test.sumFloat("pagerank");
 		System.out.println(sum);
 
 		server.stop();

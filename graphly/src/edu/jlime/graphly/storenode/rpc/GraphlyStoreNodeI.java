@@ -11,6 +11,7 @@ import edu.jlime.graphly.storenode.GraphlyCount;
 import edu.jlime.graphly.traversal.Dir;
 import edu.jlime.graphly.util.Gather;
 import gnu.trove.list.array.TLongArrayList;
+import gnu.trove.map.TLongFloatMap;
 import gnu.trove.map.hash.TLongFloatHashMap;
 import gnu.trove.map.hash.TLongObjectHashMap;
 import gnu.trove.set.hash.TLongHashSet;
@@ -59,7 +60,8 @@ public interface GraphlyStoreNodeI {
 			long[] vids) throws Exception;
 
 	public abstract GraphlyCount countEdges(String graph, Dir dir,
-			int max_edges, TLongFloatHashMap data) throws Exception;
+			int max_edges, TLongFloatMap data, TLongHashSet toFilter)
+			throws Exception;
 
 	public abstract long getRandomEdge(String graph, long v, long[] subset,
 			Dir d) throws Exception;
@@ -145,4 +147,8 @@ public interface GraphlyStoreNodeI {
 	@Sync
 	public abstract void setFloats(String graph, String k,
 			TLongFloatHashMap subProp) throws Exception;
+
+	@Sync
+	public abstract void setProperty(String graph, String k, String val,
+			TLongArrayList value) throws Exception;
 }

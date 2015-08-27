@@ -5,6 +5,8 @@ import edu.jlime.graphly.rec.CustomStep.CustomFunction;
 import edu.jlime.graphly.traversal.CountResult;
 import edu.jlime.graphly.traversal.GraphlyTraversal;
 import edu.jlime.graphly.traversal.TraversalResult;
+import gnu.trove.iterator.TLongObjectIterator;
+import gnu.trove.map.hash.TLongFloatHashMap;
 import gnu.trove.map.hash.TLongObjectHashMap;
 
 public class WhoToFollowStep implements CustomFunction {
@@ -30,8 +32,16 @@ public class WhoToFollowStep implements CustomFunction {
 		GraphlyGraph g = tr.getGraph();
 		g.v(target).set("mapper", tr.get("mapper")).as(Recommendation.class)
 				.salsa(auth, hub, steps).exec();
-		TLongObjectHashMap<Object> res = g.collect(auth, 100, target);
-		return new CountResult(res);
+		TLongObjectHashMap<Object> collected = g.collect(auth, 100, target);
+
+		TLongFloatHashMap ret = new TLongFloatHashMap();
+
+		TLongObjectIterator<Object> it = collected.iterator();
+		while (it.hasNext()) {
+			it.advance();
+			ret.put(it.key(), (Float) it.value());
+		}
+		return new CountResult(ret);
 	}
 
 }

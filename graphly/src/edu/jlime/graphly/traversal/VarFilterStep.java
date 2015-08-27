@@ -20,6 +20,7 @@ public class VarFilterStep implements Step {
 
 	@Override
 	public TraversalResult exec(TraversalResult before) throws Exception {
+		long init = System.currentTimeMillis();
 		Logger log = Logger.getLogger(VarFilterStep.class);
 		TraversalResult res = before;
 		int size = new TLongHashSet(before.vertices()).size();
@@ -31,7 +32,8 @@ public class VarFilterStep implements Step {
 			else
 				res = res.retainAll(filter);
 		}
-		log.info("Filtered " + size + ", left with : "+ res.vertices().size());
+		log.info("Filtered " + size + ", left with : " + res.vertices().size()
+				+ " in " + (System.currentTimeMillis() - init) + "ms");
 		return res;
 	}
 

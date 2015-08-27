@@ -1,7 +1,6 @@
 package edu.jlime.graphly.traversal;
 
 import gnu.trove.iterator.TLongIterator;
-import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.map.hash.TLongFloatHashMap;
 import gnu.trove.map.hash.TLongObjectHashMap;
 import gnu.trove.set.hash.TLongHashSet;

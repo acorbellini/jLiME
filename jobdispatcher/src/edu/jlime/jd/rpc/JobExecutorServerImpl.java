@@ -22,20 +22,24 @@ public class JobExecutorServerImpl extends RPCClient implements JobExecutor,
 	}
 
 	public void execute(final JobContainer arg0) throws Exception {
-		if (localRPC != null) {
-			async.execute(new Runnable() {
-				public void run() {
+
+		async.execute(new Runnable() {
+			public void run() {
+				if (localRPC != null) {
 					try {
 						getLocal().execute(arg0);
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
-				}
-			});
-			;
-			return;
-		}
-		disp.callAsync(dest, client, targetID, "execute", new Object[] { arg0 });
+				} else
+					try {
+						disp.callAsync(dest, client, targetID, "execute",
+								new Object[] { arg0 });
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+			}
+		});
 	}
 
 	public void result(final Object arg0, final UUID arg1, final ClientNode arg2)

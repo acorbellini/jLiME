@@ -11,8 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import com.google.common.collect.Lists;
-
 public class GraphlyUtil {
 
 	public static boolean in(Long v, long[] first) {

@@ -1,7 +1,8 @@
 package edu.jlime.graphly.traversal;
 
 import gnu.trove.impl.hash.TLongLongHash;
-import gnu.trove.map.hash.TLongFloatHashMap;
+
+import gnu.trove.map.TLongFloatMap;
 import gnu.trove.map.hash.TLongLongHashMap;
 import gnu.trove.set.hash.TLongHashSet;
 
@@ -40,5 +41,5 @@ public abstract class TraversalResult implements Serializable {
 
 	public abstract float getCount(long key) throws Exception;
 
-	public abstract TLongFloatHashMap getCounts() throws Exception;
+	public abstract TLongFloatMap getCounts() throws Exception;
 }

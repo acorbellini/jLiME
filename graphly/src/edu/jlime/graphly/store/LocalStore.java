@@ -64,7 +64,7 @@ public class LocalStore {
 					if (!dirDB.exists())
 						dirDB.mkdirs();
 					db = JniDBFactory.factory.open(dirDB, options);
-					db.compactRange(null, null);
+					// db.compactRange(null, null);
 					if (log.isDebugEnabled())
 						log.debug("Opened.");
 					isClosed = false;

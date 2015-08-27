@@ -146,6 +146,8 @@ public class CoordinatorTask {
 			}
 
 			log.info("Finished superstep " + step);
+			
+			workerMgr.broadcast().finishedProcessing(taskID);
 
 			log.info("Updating aggregators.");
 			for (Entry<String, Aggregator> e : aggregators.entrySet()) {

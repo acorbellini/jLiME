@@ -16,6 +16,7 @@ import edu.jlime.graphly.rec.Repeat;
 import edu.jlime.graphly.rec.VertexFilter;
 import edu.jlime.graphly.traversal.RepeatStep.RepeatSync;
 import edu.jlime.graphly.traversal.count.CountStep;
+import edu.jlime.graphly.traversal.count.ParallelStep;
 import edu.jlime.graphly.traversal.each.EachStep;
 import edu.jlime.graphly.traversal.each.ForEach;
 import edu.jlime.jd.ClientNode;
@@ -88,8 +89,9 @@ public class GraphlyTraversal implements Serializable {
 		return this;
 	}
 
-	private void addStep(Step vertexStep) {
+	public GraphlyTraversal addStep(Step vertexStep) {
 		steps.add(vertexStep);
+		return this;
 	}
 
 	public Object get(String k) {
@@ -114,8 +116,11 @@ public class GraphlyTraversal implements Serializable {
 		return this;
 	}
 
-	public GraphlyTraversal count(Dir dir, int max_edges) {
-		addStep(new CountStep(dir, max_edges, this));
+	public GraphlyTraversal count(Dir dir, int max_edges, String[] filters) {
+		// addStep(new ParallelStep(new CountStep(dir, max_edges, this), this,
+		// 2,
+		// new CountMerger()));
+		addStep(new CountStep(dir, max_edges, filters, this));
 		return this;
 	}
 
@@ -125,6 +130,10 @@ public class GraphlyTraversal implements Serializable {
 
 	public GraphlyTraversal countOut(int max_edges) {
 		return count(Dir.OUT, max_edges);
+	}
+
+	private GraphlyTraversal count(Dir dir, int max_edges) {
+		return this.count(dir, max_edges, new String[] {});
 	}
 
 	public <T extends CustomTraversal> T as(Class<T> c) throws Exception {
@@ -169,9 +178,7 @@ public class GraphlyTraversal implements Serializable {
 	public GraphlyTraversal traverseCount(String[] filters, int max_edges,
 			Dir... dirs) {
 		for (int i = 0; i < dirs.length; i++) {
-			count(dirs[i], max_edges);
-			if (filters.length > 0)
-				filterBy(filters);
+			count(dirs[i], max_edges, filters);
 		}
 		return this;
 	}
@@ -253,15 +260,21 @@ public class GraphlyTraversal implements Serializable {
 	public GraphlyTraversal traverseGraphCount(String countk, String[] filters,
 			int max_edges, Dir... dirs) {
 		for (int i = 0; i < dirs.length; i++) {
-			graphcount(countk, dirs[i], max_edges);
-			if (filters.length > 0)
-				filterBy(filters);
+			graphcount(countk, i == 0 ? null : filters, dirs[i], max_edges,
+					i != dirs.length - 1);
 		}
 		return this;
 	}
 
-	public GraphlyTraversal graphcount(String countk, Dir dir, int max_edges) {
-		addStep(new GraphCountStep(dir, max_edges, this, countk));
+	public GraphlyTraversal graphcount(String countk, String[] filters,
+			Dir dir, int max_edges, boolean returnVertices) {
+		addStep(new GraphCountStep(dir, filters, max_edges, this, countk,
+				returnVertices));
+		return this;
+	}
+
+	public GraphlyTraversal mark(String string) {
+		addStep(new MarkStep(string, this));
 		return this;
 	}
 }

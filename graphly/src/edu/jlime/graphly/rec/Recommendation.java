@@ -29,31 +29,28 @@ public class Recommendation extends CustomTraversal {
 		super(tr);
 	}
 
-	public Recommendation exploratoryCount(int max_edges, int top,
+	public Recommendation exploratoryCountHybrid(int max_edges, int top,
 			String countK, Dir... dirs) throws Exception {
-		// tr.customStep(new ExploratoryCountStep(max_edges, dirs));
+		
+		tr.customStep(new ExploratoryCountHybrid(max_edges, top,
+				countK, dirs));
+	
+		return this;
+	}
+
+	public Recommendation exploratoryCount(int max_edges, int top, Dir... dirs) throws Exception {
 
 		tr.save("target")
 				.to(dirs[0], max_edges)
 				.save("first")
-				.traverseGraphCount(countK, new String[] { "first", "target" },
-						max_edges, Arrays.copyOfRange(dirs, 1, dirs.length))
-				.top(top);
+				.traverseCount(new String[] { "first", "target" }, max_edges,
+						Arrays.copyOfRange(dirs, 1, dirs.length)).top(top);
 
 		return this;
 	}
 
-	public Recommendation exploratoryCountPregel() throws Exception {
-
-		PregelConfig config = PregelConfig.create()
-				.merger("ec", MessageMergers.floatSum()).steps(4);
-
-		tr.as(Pregel.class).vertexFunction(
-				new ExploratoryCountVertexFunction(), config);
-
-		// Set<Pair<Long, Float>> top_count = tr.getGraph().topFloat("count",
-		// 10);
-
+	public Recommendation exploratoryCountPregel(int top) throws Exception {
+		tr.customStep(new ExploratoryCountPregel(top));
 		return this;
 	}
 
@@ -252,11 +249,11 @@ public class Recommendation extends CustomTraversal {
 		return this;
 	}
 
-	public CustomTraversal friendLinkFJ(int top) throws Exception {
+	public CustomTraversal friendLinkFJ(int top, int depth) throws Exception {
 		long vertices = tr.getGraph().getVertexCount();
 
 		tr.customStep(
-				new BetaCountStep(new FriendLinkBeta(vertices), 3, Dir.OUT))
+				new BetaCountStep(new FriendLinkBeta(vertices), depth, Dir.OUT))
 				.top(top);
 
 		return this;

@@ -26,6 +26,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.log4j.Logger;
 
@@ -45,6 +46,7 @@ import edu.jlime.graphly.storenode.properties.InMemoryGraphFloatProperties;
 import edu.jlime.graphly.storenode.properties.InMemoryGraphProperties;
 import edu.jlime.graphly.storenode.rpc.GraphlyStoreNodeI;
 import edu.jlime.graphly.traversal.Dir;
+import edu.jlime.graphly.traversal.ParallelLongFloatMap;
 import edu.jlime.graphly.util.Gather;
 import edu.jlime.util.ByteBuffer;
 import edu.jlime.util.DataTypeUtils;
@@ -53,6 +55,7 @@ import gnu.trove.iterator.TLongFloatIterator;
 import gnu.trove.iterator.TLongIterator;
 import gnu.trove.iterator.TLongObjectIterator;
 import gnu.trove.list.array.TLongArrayList;
+import gnu.trove.map.TLongFloatMap;
 import gnu.trove.map.hash.TLongFloatHashMap;
 import gnu.trove.map.hash.TLongObjectHashMap;
 import gnu.trove.map.hash.TObjectDoubleHashMap;
@@ -426,52 +429,81 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 
 	@Override
 	public GraphlyCount countEdges(final String graph, final Dir dir,
-			final int max_edges, final TLongFloatHashMap vids) throws Exception {
+			final int max_edges, final TLongFloatMap vids,
+			final TLongHashSet toFilter) throws Exception {
 		log.info("Counting edges in dir " + dir + " with max " + max_edges
 				+ " and vertices " + vids.size() + ".");
-
-		int cores = Runtime.getRuntime().availableProcessors();
+		long init = System.currentTimeMillis();
+		final int cores = Runtime.getRuntime().availableProcessors();
 
 		ExecutorService exec = Executors.newFixedThreadPool(cores);
+		final long[] keys = vids.keys();
+		int size = keys.length;
+		final float chunks = (size / (float) cores);
 
-		final Semaphore sem = new Semaphore(cores);
+		final TLongFloatMap finalResult = new TLongFloatHashMap(10000000);
+		// final TLongFloatMap finalResult = new ParallelLongFloatMap();
+		final AtomicInteger count = new AtomicInteger(0);
+		for (int i = 0; i < cores; i++) {
+			final int tID = i;
 
-		final TLongFloatHashMap map = new TLongFloatHashMap();
-		long count = 0;
-		TLongFloatIterator it = vids.iterator();
-		while (it.hasNext()) {
-			it.advance();
-			final long l = it.key();
-			final float mult = it.value();
-			sem.acquire();
 			exec.execute(new Runnable() {
 				@Override
 				public void run() {
-					try {
-						long[] curr = getEdges(graph, dir, max_edges,
-								new long[] { l });
-						synchronized (map) {
+
+					int from = (int) (chunks * tID);
+					int to = (int) (chunks * (tID + 1));
+
+					if (tID == cores - 1)
+						to = keys.length;
+
+					TLongFloatMap map = new TLongFloatHashMap(10000000);
+					int cont = from;
+
+					while (cont < to) {
+						final long l = keys[cont++];
+						try {
+							final float mult = vids.get(l);
+							long[] curr = getEdges(graph, dir, max_edges,
+									new long[] { l });
+							// synchronized (map) {
 							for (long m : curr)
-								map.adjustOrPutValue(m, mult, mult);
+								if (toFilter != null && !toFilter.contains(m))
+									map.adjustOrPutValue(m, mult, mult);
+							// }
+						} catch (ExecutionException e) {
+							e.printStackTrace();
 						}
-					} catch (ExecutionException e) {
-						e.printStackTrace();
-					} finally {
-						sem.release();
+						int res = count.incrementAndGet();
+						try {
+							printCompleted(vids.size(), res);
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+
+					}
+
+					synchronized (finalResult) {
+						TLongFloatIterator itMap = map.iterator();
+						while (itMap.hasNext()) {
+							itMap.advance();
+							finalResult.adjustOrPutValue(itMap.key(),
+									itMap.value(), itMap.value());
+						}
 					}
 				}
 			});
-			count++;
-			printCompleted(vids.size(), count);
 		}
 
 		exec.shutdown();
 		exec.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
 
-		GraphlyCount c = new GraphlyCount(map);
+		GraphlyCount c = new GraphlyCount(finalResult.keys(),
+				finalResult.values());
 		log.info("Finished count of " + vids.size()
-				+ " (different) vertices resulting in " + map.size()
-				+ " vertices with counts.");
+				+ " (different) vertices resulting in " + finalResult.size()
+				+ " vertices with counts in "
+				+ (System.currentTimeMillis() - init) + " ms");
 		return c;
 	}
 
@@ -827,7 +859,10 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	public void commitFloatUpdates(String graph, String... props) {
 		for (String string : props) {
 			TLongFloatHashMap prop_vals = tempFloatProps.getAll(graph, string);
-			floatProps.putAll(graph, string, prop_vals);
+			synchronized (prop_vals) {
+				floatProps.putAll(graph, string, prop_vals);
+			}
+			tempFloatProps.removeAll(graph, string);
 		}
 	}
 
@@ -923,6 +958,15 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 			it.advance();
 			setFloat(graph, it.key(), k, it.value());
 		}
+
+	}
+
+	@Override
+	public void setProperty(String graph, String k, String val,
+			TLongArrayList value) throws Exception {
+		TLongIterator it = value.iterator();
+		while (it.hasNext())
+			setProperty(graph, it.next(), k, val);
 
 	}
 }

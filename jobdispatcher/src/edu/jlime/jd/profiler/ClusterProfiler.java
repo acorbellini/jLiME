@@ -73,7 +73,7 @@ public class ClusterProfiler implements Profiler {
 						synchronized (timer) {
 							timer.notifyAll();
 						}
-						this.cancel();
+						timer.cancel();
 						return;
 					}
 					CompositeMetrics<ClientNode> clusterMetrics = c.getInfo();
