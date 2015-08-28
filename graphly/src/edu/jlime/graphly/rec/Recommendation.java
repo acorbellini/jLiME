@@ -29,22 +29,18 @@ public class Recommendation extends CustomTraversal {
 		super(tr);
 	}
 
-	public Recommendation exploratoryCountHybrid(int max_edges, int top,
-			String countK, Dir... dirs) throws Exception {
-		
-		tr.customStep(new ExploratoryCountHybrid(max_edges, top,
-				countK, dirs));
-	
+	public Recommendation exploratoryCountHybrid(int max_edges, int top, String countK, Dir... dirs) throws Exception {
+
+		tr.customStep(new ExploratoryCountHybrid(max_edges, top, countK, dirs));
+
 		return this;
 	}
 
 	public Recommendation exploratoryCount(int max_edges, int top, Dir... dirs) throws Exception {
 
-		tr.save("target")
-				.to(dirs[0], max_edges)
-				.save("first")
-				.traverseCount(new String[] { "first", "target" }, max_edges,
-						Arrays.copyOfRange(dirs, 1, dirs.length)).top(top);
+		tr.save("target").to(dirs[0], max_edges).save("first")
+				.traverseCount(new String[] { "first", "target" }, max_edges, Arrays.copyOfRange(dirs, 1, dirs.length))
+				.top(top);
 
 		return this;
 	}
@@ -54,41 +50,35 @@ public class Recommendation extends CustomTraversal {
 		return this;
 	}
 
-	public Recommendation randomwalk(String key, int steps, float max,
-			long[] subset, Dir... out) {
+	public Recommendation randomwalk(String key, int steps, float max, long[] subset, Dir... out) {
 		tr.each(steps, key, new RandomWalkForeach(max, subset, out));
 		tr.join(key, key, new RandomWalkJoin());
 		return this;
 	}
 
-	public Recommendation randomwalk(String key, int steps, float max,
-			Dir... out) {
+	public Recommendation randomwalk(String key, int steps, float max, Dir... out) {
 		return randomwalk(key, steps, max, new long[] {}, out);
 	}
 
-	public Recommendation hits(String auth, String hub, int steps)
-			throws Exception {
+	public Recommendation hits(String auth, String hub, int steps) throws Exception {
 		tr.customStep(new HITSStep(auth, hub, steps));
 		return this;
 	}
 
-	public Recommendation salsa(String auth, String hub, int steps)
-			throws Exception {
+	public Recommendation salsa(String auth, String hub, int steps) throws Exception {
 		tr.customStep(new SalsaStep(auth, hub, steps * 3));
 		return this;
 	}
 
-	public Recommendation salsaRW(String auth, String hub, int steps,
-			float max_depth) throws Exception {
+	public Recommendation salsaRW(String auth, String hub, int steps, float max_depth) throws Exception {
 		tr.customStep(new SalsaStepRandomWalk(auth, hub, steps, max_depth));
 		return this;
 	}
 
-	public Recommendation whotofollow(String a, String h, int steps,
-			float max_depth, int topCircle, int salsasteps,
+	public Recommendation whotofollow(String a, String h, int steps, float max_depth, int topCircle, int salsasteps,
 			float maxsalsadepth, int topAuth) {
-		circleOfTrust(steps, max_depth, topCircle).asTraversal().customStep(
-				new WhoToFollowStep(a, h, salsasteps, maxsalsadepth, topAuth));
+		circleOfTrust(steps, max_depth, topCircle).asTraversal()
+				.customStep(new WhoToFollowStep(a, h, salsasteps, maxsalsadepth, topAuth));
 		return this;
 	}
 
@@ -102,36 +92,30 @@ public class Recommendation extends CustomTraversal {
 		return this;
 	}
 
-	public Recommendation pagerank(String pagerankProp, int steps, float cut)
-			throws Exception {
+	public Recommendation pagerank(String pagerankProp, int steps, float cut) throws Exception {
 		GraphlyGraph g = tr.getGraph();
 		int vertexCount = g.getVertexCount();
 
 		g.setDefaultFloat(pagerankProp, 1f / vertexCount);
 		g.setDefaultFloat("ranksource", .85f);
 
-		PregelConfig config = PregelConfig.create().steps(steps)
-				.aggregator("pr", MessageAggregators.floatSum())
-				.merger("pr", MessageMergers.floatSum())
-				.haltCondition(new PageRankHaltCondition(cut))
+		PregelConfig config = PregelConfig.create().steps(steps).aggregator("pr", MessageAggregators.floatSum())
+				.merger("pr", MessageMergers.floatSum()).haltCondition(new PageRankHaltCondition(cut, "pr"))
 				.executeOnAll(true);
 
-		tr.as(Pregel.class).vertexFunction(
-				new PageRankFloat(pagerankProp, vertexCount), config);
+		tr.as(Pregel.class).vertexFunction(new PageRankFloat(pagerankProp, vertexCount), config);
 
 		return this;
 	}
 
-	public Recommendation hitsPregel(String auth, String hub, int steps)
-			throws Exception {
+	public Recommendation hitsPregel(String auth, String hub, int steps) throws Exception {
 
 		tr.customStep(new HITSPregelStep(auth, hub, steps));
 
 		return this;
 	}
 
-	public Recommendation salsaPregel(String auth, String hub, int steps)
-			throws Exception {
+	public Recommendation salsaPregel(String auth, String hub, int steps) throws Exception {
 
 		tr.customStep(new SALSAPregelStep(auth, hub, 3 * steps));
 
@@ -154,21 +138,17 @@ public class Recommendation extends CustomTraversal {
 	// return this;
 	// }
 
-	public CustomTraversal katz(String val, int steps, float beta)
-			throws Exception {
+	public CustomTraversal katz(String val, int steps, float beta) throws Exception {
 		// plus 1 to activate origin
-		PregelConfig config = PregelConfig.create().steps(steps + 1)
-				.merger("katz", MessageMergers.floatSum());
+		PregelConfig config = PregelConfig.create().steps(steps + 1).merger("katz", MessageMergers.floatSum());
 
-		tr.as(Pregel.class).vertexFunction(new KatzPregel(val, beta, steps),
-				config);
+		tr.as(Pregel.class).vertexFunction(new KatzRootedPregel(val, beta, steps), config);
 
 		return this;
 	}
 
 	public CustomTraversal katzFJ(float beta, int depth, int top) {
-		tr.customStep(new BetaCountStep(new KatzBeta(beta), depth, Dir.OUT))
-				.top(top);
+		tr.customStep(new BetaCountStep(new KatzBeta(beta), depth, Dir.OUT)).top(top);
 		return this;
 	}
 
@@ -176,12 +156,9 @@ public class Recommendation extends CustomTraversal {
 
 		int res = tr.exec().vertices().size();
 
-		PregelConfig config = PregelConfig.create().steps(1)
-				.aggregator("cm", new IntersectAggregator());
+		PregelConfig config = PregelConfig.create().steps(1).aggregator("cm", new IntersectAggregator());
 
-		tr.as(Pregel.class)
-				.vertexFunction(new CommonNeighboursPregel(res), config)
-				.aggregatorValue("cm");
+		tr.as(Pregel.class).vertexFunction(new CommonNeighboursPregel(res), config).aggregatorValue("cm");
 
 		return this;
 	}
@@ -199,12 +176,9 @@ public class Recommendation extends CustomTraversal {
 	public CustomTraversal jaccardPregel() throws Exception {
 		int res = tr.exec().vertices().size();
 
-		PregelConfig config = PregelConfig.create().steps(1)
-				.aggregator("cm", new JaccardAggregator());
+		PregelConfig config = PregelConfig.create().steps(1).aggregator("cm", new JaccardAggregator());
 
-		tr.as(Pregel.class)
-				.vertexFunction(new CommonNeighboursPregel(res), config)
-				.aggregatorValue("cm");
+		tr.as(Pregel.class).vertexFunction(new CommonNeighboursPregel(res), config).aggregatorValue("cm");
 
 		return this;
 	}
@@ -217,29 +191,23 @@ public class Recommendation extends CustomTraversal {
 	public CustomTraversal adamicPregel() throws Exception {
 		int res = tr.exec().vertices().size();
 
-		PregelConfig config = PregelConfig.create().steps(1)
-				.aggregator("cm", new IntersectAggregator())
+		PregelConfig config = PregelConfig.create().steps(1).aggregator("cm", new IntersectAggregator())
 				.aggregator("adamic", new FloatSumAggregator());
 
-		tr.as(Pregel.class)
-				.vertexFunction(new CommonNeighboursPregel(res), config)
-				.aggregatorSet("cm")
-				.vertexFunction(new AdamicAdarPregel(), config)
-				.aggregatorValue("adamic");
+		tr.as(Pregel.class).vertexFunction(new CommonNeighboursPregel(res), config).aggregatorSet("cm")
+				.vertexFunction(new AdamicAdarPregel(), config).aggregatorValue("adamic");
 
 		return this;
 	}
 
 	public CustomTraversal localPathFJ(float alpha, int top) {
 
-		tr.customStep(new BetaCountStep(new LPBeta(alpha), 3, Dir.OUT))
-				.top(top);
+		tr.customStep(new BetaCountStep(new LPBeta(alpha), 3, Dir.OUT)).top(top);
 
 		return this;
 	}
 
-	public CustomTraversal localPathPregel(String key, float alpha)
-			throws Exception {
+	public CustomTraversal localPathPregel(String key, float alpha) throws Exception {
 		PregelConfig config = PregelConfig.create().steps(4)// +1 para poder
 															// guardar los datos
 				.merger("lp", MessageMergers.floatSum());
@@ -252,24 +220,20 @@ public class Recommendation extends CustomTraversal {
 	public CustomTraversal friendLinkFJ(int top, int depth) throws Exception {
 		long vertices = tr.getGraph().getVertexCount();
 
-		tr.customStep(
-				new BetaCountStep(new FriendLinkBeta(vertices), depth, Dir.OUT))
-				.top(top);
+		tr.customStep(new BetaCountStep(new FriendLinkBeta(vertices), depth, Dir.OUT)).top(top);
 
 		return this;
 
 	}
 
-	public CustomTraversal friendLinkPregel(String k, int depth)
-			throws Exception {
+	public CustomTraversal friendLinkPregel(String k, int depth) throws Exception {
 		long vertices = tr.getGraph().getVertexCount();
 		PregelConfig config = PregelConfig.create().steps(depth + 1)// +1 para
 				// poder
 				// guardar los datos
 				.merger("fl", MessageMergers.floatSum());
 
-		tr.as(Pregel.class).vertexFunction(new FriendLink(k, vertices, depth),
-				config);
+		tr.as(Pregel.class).vertexFunction(new FriendLink(k, vertices, depth), config);
 
 		return this;
 	}

@@ -621,38 +621,38 @@ public class GraphlyClient implements Closeable {
 
 	public void setTempFloats(final String graph, final String k,
 			final boolean add, final TLongFloatHashMap v) {
-		ExecutorService exec = Executors.newFixedThreadPool(Runtime
-				.getRuntime().availableProcessors());
+		// ExecutorService exec = Executors.newFixedThreadPool(Runtime
+		// .getRuntime().availableProcessors());
 
 		Map<GraphlyStoreNodeI, TLongArrayList> map = hashKeys(v.keys());
 		for (final Entry<GraphlyStoreNodeI, TLongArrayList> entry : map
 				.entrySet()) {
-			exec.execute(new Runnable() {
-
-				@Override
-				public void run() {
-					final GraphlyStoreNodeI node = entry.getKey();
-					final long[] current = entry.getValue().toArray();
-					TLongFloatHashMap subProp = new TLongFloatHashMap();
-					for (long l : current) {
-						subProp.put(l, v.get(l));
-					}
-					try {
-						node.setTempFloats(graph, k, add, subProp);
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-				}
-			});
+			// exec.execute(new Runnable() {
+			//
+			// @Override
+			// public void run() {
+			final GraphlyStoreNodeI node = entry.getKey();
+			final long[] current = entry.getValue().toArray();
+			TLongFloatHashMap subProp = new TLongFloatHashMap();
+			for (long l : current) {
+				subProp.put(l, v.get(l));
+			}
+			try {
+				node.setTempFloats(graph, k, add, subProp);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			// }
+			// });
 
 		}
 
-		exec.shutdown();
-		try {
-			exec.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
+		// exec.shutdown();
+		// try {
+		// exec.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
+		// } catch (InterruptedException e) {
+		// e.printStackTrace();
+		// }
 
 	}
 

@@ -47,7 +47,7 @@ public class GraphCount implements Job<long[]> {
 		int size = keys.length;
 		final float chunks = (size / (float) threads);
 
-		final TLongHashSet finalRes = new TLongHashSet(10000000);
+		final TLongHashSet finalRes = new TLongHashSet(100000);
 		for (int i = 0; i < threads; i++) {
 			final int tID = i;
 			exec.execute(new Runnable() {
@@ -60,7 +60,7 @@ public class GraphCount implements Job<long[]> {
 						if (tID == threads - 1)
 							to = keys.length;
 
-						TLongFloatHashMap sub = new TLongFloatHashMap(10000000);
+						TLongFloatHashMap sub = new TLongFloatHashMap(100000);
 						int cont = from;
 
 						while (cont < to) {

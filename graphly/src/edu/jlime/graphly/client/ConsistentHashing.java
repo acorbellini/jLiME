@@ -54,7 +54,7 @@ public class ConsistentHashing implements Serializable {
 			Peer gs = nodes.get(i % nodes.size());
 			// int j = range * i;
 			circle[i] = gs;
-			stores[range] = map.get(gs);
+			stores[i] = map.get(gs);
 			map.get(gs).addRange(i);
 		}
 	}

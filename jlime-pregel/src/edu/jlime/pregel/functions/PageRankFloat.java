@@ -21,9 +21,11 @@ public class PageRankFloat implements VertexFunction<FloatPregelMessage> {
 	public static final class PageRankHaltCondition implements HaltCondition {
 
 		private float cut;
+		private String msgKey;
 
-		public PageRankHaltCondition(float cut) {
+		public PageRankHaltCondition(float cut, String msgK) {
 			this.cut = cut;
+			this.msgKey = msgK;
 		}
 
 		@Override
@@ -31,8 +33,7 @@ public class PageRankFloat implements VertexFunction<FloatPregelMessage> {
 			if (step <= 1)
 				return false;
 
-			FloatAggregator ag = (FloatAggregator) coordinatorTask
-					.getAggregator("pr");
+			FloatAggregator ag = (FloatAggregator) coordinatorTask.getAggregator(msgKey);
 			float f = ag.get();
 			return f < cut;
 		}
@@ -44,8 +45,7 @@ public class PageRankFloat implements VertexFunction<FloatPregelMessage> {
 	}
 
 	@Override
-	public void execute(long v, Iterator<FloatPregelMessage> in,
-			WorkerContext ctx) throws Exception {
+	public void execute(long v, Iterator<FloatPregelMessage> in, WorkerContext ctx) throws Exception {
 		Graph graph = ctx.getGraph();
 
 		// Jacobi iterative method: (1-d) + d * function
@@ -60,8 +60,7 @@ public class PageRankFloat implements VertexFunction<FloatPregelMessage> {
 			float d = graph.getFloat(v, "ranksource");
 			currentVal = (float) ((1 - d) / vertexSize + d * sum);
 			float diff = Math.abs(currentVal - oldval);
-			FloatAggregator ag = (FloatAggregator) ctx
-					.getAggregator(PAGERANK_MESSAGE);
+			FloatAggregator ag = (FloatAggregator) ctx.getAggregator(PAGERANK_MESSAGE);
 			ag.add(-1, -1, diff);
 		}
 
