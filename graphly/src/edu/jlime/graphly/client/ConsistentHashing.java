@@ -15,6 +15,8 @@ public class ConsistentHashing implements Serializable {
 
 	Peer[] circle;
 
+	GraphlyStoreNodeI[] stores;
+
 	Peer firstPeer;
 
 	private int vnodes;
@@ -26,6 +28,7 @@ public class ConsistentHashing implements Serializable {
 		this.vnodes = vNodes;
 		this.range = keySpace / vNodes;
 		circle = new Peer[vnodes];
+		stores = new GraphlyStoreNodeI[vnodes];
 		if (!initCircle(nodes)) {
 			createCircle(nodes);
 		}
@@ -37,6 +40,7 @@ public class ConsistentHashing implements Serializable {
 		for (Peer gn : nodes.keySet()) {
 			for (Integer range : nodes.get(gn).getRanges()) {
 				circle[range] = gn;
+				stores[range] = nodes.get(gn);
 				mod = true;
 			}
 		}
@@ -50,12 +54,17 @@ public class ConsistentHashing implements Serializable {
 			Peer gs = nodes.get(i % nodes.size());
 			// int j = range * i;
 			circle[i] = gs;
+			stores[range] = map.get(gs);
 			map.get(gs).addRange(i);
 		}
 	}
 
 	public Peer getNode(long k) {
 		return circle[hash(k)];
+	}
+
+	public GraphlyStoreNodeI getStore(long k) {
+		return stores[hash(k)];
 	}
 
 	public int hash(long k) {

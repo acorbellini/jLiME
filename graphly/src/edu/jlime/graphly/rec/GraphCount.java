@@ -47,7 +47,7 @@ public class GraphCount implements Job<long[]> {
 		int size = keys.length;
 		final float chunks = (size / (float) threads);
 
-		final TLongHashSet finalRes = new TLongHashSet();
+		final TLongHashSet finalRes = new TLongHashSet(10000000);
 		for (int i = 0; i < threads; i++) {
 			final int tID = i;
 			exec.execute(new Runnable() {
@@ -95,7 +95,7 @@ public class GraphCount implements Job<long[]> {
 						if (returnVertices) {
 							log.info("merging vertices processed");
 							synchronized (finalRes) {
-								finalRes.addAll(sub.keys());
+								finalRes.addAll(sub.keySet());
 							}
 							log.info("Finished merging results on thread "
 									+ tID);

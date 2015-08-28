@@ -6,7 +6,7 @@ import java.util.concurrent.ThreadFactory;
 
 import edu.jlime.core.cluster.Peer;
 
-public class RPCClient {
+public class RPCClient implements Transferible {
 
 	protected static ExecutorService async = Executors
 			.newCachedThreadPool(new ThreadFactory() {
@@ -20,11 +20,14 @@ public class RPCClient {
 				}
 			});
 
-	protected RPCDispatcher disp;
+	transient protected RPCDispatcher disp;
 	protected Peer local;
 	protected Peer dest;
 	protected Peer client;
 	protected String targetID;
+
+	public RPCClient() {
+	}
 
 	public RPCClient(RPCDispatcher disp, Peer dest, Peer client, String targetID) {
 		this.disp = disp;
@@ -63,6 +66,11 @@ public class RPCClient {
 		} else if (!targetID.equals(other.targetID))
 			return false;
 		return true;
+	}
+
+	@Override
+	public void setRPC(RPCDispatcher rpc) throws Exception {
+		this.disp = rpc;
 	}
 
 }
