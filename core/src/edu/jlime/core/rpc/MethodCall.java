@@ -57,8 +57,15 @@ public class MethodCall implements Serializable {
 
 	@Override
 	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		for (Object object : objects) {
+			String obj = object.toString();
+			if (obj.length() > 100)
+				obj = obj.substring(0, 100) + "...";
+			builder.append((builder.length() > 0 ? "," : "") + obj);
+		}
 		return "MethodCall [objectKey=" + objectKey + ", name=" + name
-				+ ", objects=" + Arrays.toString(objects) + "]";
+				+ ", objects=" + builder.toString() + "]";
 	}
 
 	public void unwrapArgument(int i) {

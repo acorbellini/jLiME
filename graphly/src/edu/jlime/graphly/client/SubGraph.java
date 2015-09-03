@@ -168,7 +168,7 @@ public class SubGraph {
 		temps.clear();
 	}
 
-	public void loadProperties(String authKey, Object defaultauth)
+	public void getProperty(String authKey, Object defaultauth)
 			throws Exception {
 		synchronized (this) {
 			Map<Long, Map<String, Object>> props = g.getProperties(

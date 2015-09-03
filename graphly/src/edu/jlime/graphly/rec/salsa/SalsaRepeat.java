@@ -54,8 +54,8 @@ public class SalsaRepeat implements Repeat<long[]> {
 		final Semaphore max = new Semaphore(Runtime.getRuntime()
 				.availableProcessors());
 
-		sg.loadProperties(authKey, defaultauth);
-		sg.loadProperties(hubKey, defaulthub);
+		sg.getProperty(authKey, defaultauth);
+		sg.getProperty(hubKey, defaulthub);
 
 		final Semaphore sem = new Semaphore(-before.length + 1);
 		final Map<Long, Map<String, Object>> temps = new ConcurrentHashMap<Long, Map<String, Object>>();

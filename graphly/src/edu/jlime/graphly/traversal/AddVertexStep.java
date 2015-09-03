@@ -4,16 +4,16 @@ import gnu.trove.set.hash.TLongHashSet;
 
 public class AddVertexStep implements Step {
 
-	private int v;
+	private long[] v;
 
-	public AddVertexStep(int i, GraphlyTraversal graphlyTraversal) {
-		this.v = i;
+	public AddVertexStep(GraphlyTraversal graphlyTraversal, long... users) {
+		this.v = users;
 	}
 
 	@Override
 	public TraversalResult exec(TraversalResult before) throws Exception {
 		TLongHashSet res = before.vertices();
-		res.add(v);
+		res.addAll(v);
 		return new VertexResult(res);
 	}
 

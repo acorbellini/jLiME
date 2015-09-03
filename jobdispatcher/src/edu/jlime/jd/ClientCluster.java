@@ -204,4 +204,9 @@ public class ClientCluster implements Iterable<ClientNode> {
 	public String toString() {
 		return disp.getPeers().toString();
 	}
+
+	public void clear() {
+		byName.clear();
+		clis.clear();
+	}
 }

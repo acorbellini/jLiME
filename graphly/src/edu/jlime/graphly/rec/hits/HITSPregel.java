@@ -52,11 +52,11 @@ public class HITSPregel implements VertexFunction<FloatPregelMessage> {
 			g.setFloat(v, hubKey, hub);
 		}
 
-		long[] inc = sg.loadIn(v);
+		long[] inc = sg.getIncoming(v);
 		for (long l : inc)
 			ctx.sendFloat("hits-auth", l, auth);
 
-		long[] out = sg.loadOut(v);
+		long[] out = sg.getOutgoing(v);
 		for (long l : out)
 			ctx.sendFloat("hits-hub", l, hub);
 

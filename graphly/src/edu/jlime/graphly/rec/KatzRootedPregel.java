@@ -28,15 +28,20 @@ public class KatzRootedPregel implements VertexFunction<FloatPregelMessage> {
 
 		float adj = 0f;
 		if (ctx.getSuperStep() > 0) {
+			float sum = 0f;
 			while (in.hasNext()) {
 				FloatPregelMessage msg = in.next();
-				adj += msg.getFloat();
+				sum += msg.getFloat();
 			}
-			float katz = g.getFloat(prop, v, 0f)
-					+ (float) Math.pow(beta, ctx.getSuperStep()) * adj;
+
+			float oldKatz = g.getFloat(prop, v, 0f);
+			float katz = oldKatz + sum;
 			g.setFloat(v, prop, katz);
+
+			adj = sum * beta;
+
 		} else
-			adj = 1f;
+			adj = beta;
 
 		if (ctx.getSuperStep() < lastStep) {
 			TLongHashSet out = g.getOutgoing(v);

@@ -30,9 +30,11 @@ public class KatzTest {
 
 		GraphlyGraph test = g.getGraph(args[1]);
 
-		GraphlyLoader loader = new GraphlyLoader(test);
-		loader.load("C:/Users/Alejandro/Desktop/grafo-carlos/in", ",", Dir.IN);
-		loader.load("C:/Users/Alejandro/Desktop/grafo-carlos/out", ",", Dir.OUT);
+		// GraphlyLoader loader = new GraphlyLoader(test);
+		// loader.load("C:/Users/Alejandro/Desktop/grafo-carlos/in", ",",
+		// Dir.IN);
+		// loader.load("C:/Users/Alejandro/Desktop/grafo-carlos/out", ",",
+		// Dir.OUT);
 
 		// int vertexCount = test.getVertexCount();
 		// System.out.println("Number of vertices: " + vertexCount);
@@ -41,25 +43,41 @@ public class KatzTest {
 		// test.setDefaultFloat("pagerank", 1f / vertexCount);
 		// test.setDefaultFloat("ranksource", .85f);
 
-		test.v().set("mapper", MapperFactory.rr()).as(Pregel.class).vertexFunction(new KatzPregel("pagerank", 0.1f),
-				PregelConfig.create().haltCondition(new PageRankHaltCondition(0.000001f, "katz")).steps(50)
-						.persistVList(false).executeOnAll(true).queue(100).cache(CacheFactory.NO_CACHE)
-						.aggregator("katz", MessageAggregators.floatSum()).merger("katz", MessageMergers.floatSum()))
+		test.v()
+				.set("mapper", MapperFactory.rr())
+				.as(Pregel.class)
+				.vertexFunction(
+						new KatzPregel("katz", 0.0001f),
+						PregelConfig
+								.create()
+								.haltCondition(
+										new PageRankHaltCondition(0.000001f,
+												"katz"))
+								.steps(50)
+								.persistVList(false)
+								.executeOnAll(true)
+								.queue(100)
+								.cache(CacheFactory.NO_CACHE)
+								.aggregator("katz",
+										MessageAggregators.floatSum())
+								.merger("katz", MessageMergers.floatSum()))
 				.exec();
 		System.out.println((System.currentTimeMillis() - init) / 1000f);
 		NumberFormat numberInstance = NumberFormat.getNumberInstance(Locale.US);
 		numberInstance.setMaximumFractionDigits(10);
 
-		BufferedWriter writer = new BufferedWriter(new FileWriter(new File(args[2])));
+		BufferedWriter writer = new BufferedWriter(new FileWriter(new File(
+				args[2])));
 
-		TLongFloatHashMap res = test.getFloats("pagerank");
+		TLongFloatHashMap res = test.getFloats("katz");
 		TLongFloatIterator it = res.iterator();
 		while (it.hasNext()) {
 			it.advance();
-			writer.append(it.key() + "," + numberInstance.format(it.value()) + "\n");
+			writer.append(it.key() + "," + numberInstance.format(it.value())
+					+ "\n");
 		}
 		writer.close();
-		float sum = test.sumFloat("pagerank");
+		float sum = test.sumFloat("katz");
 		System.out.println(sum);
 
 		server.stop();

@@ -12,11 +12,13 @@ import edu.jlime.graphly.traversal.count.CountJob;
 import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.Job;
+import edu.jlime.pregel.PregelSubgraph;
 import gnu.trove.map.hash.TLongFloatHashMap;
 import gnu.trove.set.hash.TLongHashSet;
 
 public class GraphCount implements Job<long[]> {
 
+	private static final int MAX = 10000;
 	private GraphlyGraph g;
 	private Dir dir;
 	private int max;
@@ -56,6 +58,9 @@ public class GraphCount implements Job<long[]> {
 					try {
 						int from = (int) (chunks * tID);
 						int to = (int) (chunks * (tID + 1));
+
+						// GraphCache cache = new GraphCache(data, from, to, g,
+						// MAX);
 
 						if (tID == threads - 1)
 							to = keys.length;

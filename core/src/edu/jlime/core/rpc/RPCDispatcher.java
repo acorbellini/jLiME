@@ -539,4 +539,10 @@ public class RPCDispatcher implements TransportListener {
 	public Transport getTransport() {
 		return tr;
 	}
+
+	public void unregisterTarget(String key, Object obj) {
+		targets.remove(key);
+		targetsStatuses.remove(key);
+		targetsMethods.remove(key);
+	}
 }

@@ -191,4 +191,10 @@ public class Cluster implements Iterable<Peer> {
 		}
 	}
 
+	public void removeChangeListener(ClusterChangeListener jobDispatcher) {
+		synchronized (listeners) {
+			listeners.remove(jobDispatcher);
+		}
+	}
+
 }

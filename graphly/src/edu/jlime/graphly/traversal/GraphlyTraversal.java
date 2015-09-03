@@ -237,8 +237,8 @@ public class GraphlyTraversal implements Serializable {
 
 	}
 
-	public GraphlyTraversal add(int i) {
-		addStep(new AddVertexStep(i, this));
+	public GraphlyTraversal add(long... users) {
+		addStep(new AddVertexStep(this, users));
 		return this;
 	}
 

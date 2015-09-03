@@ -112,6 +112,7 @@ public class GraphlyClient implements Closeable {
 		try {
 			this.rpc.stop();
 			this.jobCli.stop();
+			this.pregel_client.stop();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

@@ -18,7 +18,7 @@ public class PregelSubgraph {
 		this.graph = graph;
 	}
 
-	public long[] loadOut(long v) throws Exception {
+	public long[] getOutgoing(long v) throws Exception {
 		long[] list = out.get(v);
 		if (list == null) {
 			synchronized (out) {
@@ -40,7 +40,7 @@ public class PregelSubgraph {
 		return list;
 	}
 
-	public long[] loadIn(long v) throws Exception {
+	public long[] getIncoming(long v) throws Exception {
 		long[] list = in.get(v);
 		if (list == null) {
 			synchronized (in) {

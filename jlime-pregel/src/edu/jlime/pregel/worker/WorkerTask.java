@@ -62,7 +62,7 @@ public class WorkerTask {
 
 	private int taskid;
 
-	private VertexFunction f;
+	private VertexFunction<PregelMessage> f;
 
 	private WorkerImpl worker;
 
@@ -88,11 +88,7 @@ public class WorkerTask {
 
 	private AtomicInteger sendCount = new AtomicInteger(0);
 
-	// private VertexList vList;
-
 	private VertexList graphVertexList;
-
-	// private VertexList currentSplit;
 
 	private AtomicInteger vertexCounter = new AtomicInteger(0);
 
@@ -335,8 +331,8 @@ public class WorkerTask {
 					@Override
 					public void run() {
 						try {
-							executeVertex(size, threads, count, currentIndex,
-									vList);
+							executeVertexRange(size, threads, count,
+									currentIndex, vList);
 						} catch (Exception e) {
 							e.printStackTrace();
 						}
@@ -395,10 +391,9 @@ public class WorkerTask {
 		return ret;
 	}
 
-	private void executeVertex(final int size, final int threads,
+	private void executeVertexRange(final int size, final int threads,
 			final AtomicInteger count, final int threadID, VertexList vList)
 			throws Exception {
-		int vertexCursor = 0;
 
 		LongIterator it = vList.iterator();
 
@@ -407,9 +402,18 @@ public class WorkerTask {
 		WorkerContext ctx = new WorkerContext(WorkerTask.this,
 				cacheMgr.get(threadID), -1);
 
+		int range = vList.size() / threads;
+		int from = threadID * range;
+		int to = threadID == threads - 1 ? vList.size() : from + range;
+
+		int vertexCursor = 0;
 		while (it.hasNext()) {
+
+			if (vertexCursor >= to)
+				break;
+
 			long currentVertex = it.next();
-			if (vertexCursor % threads == threadID) {
+			if (vertexCursor >= from) {
 				ctx.setCurrVertex(currentVertex);
 				currList.clear();
 				for (Entry<String, PregelMessageQueue> e : queue.entrySet()) {
@@ -444,7 +448,6 @@ public class WorkerTask {
 						log.debug("Finished executing function on vertex "
 								+ currentVertex);
 				}
-
 			}
 			vertexCursor++;
 		}

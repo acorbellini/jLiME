@@ -8,6 +8,7 @@ import org.apache.log4j.Logger;
 
 import edu.jlime.graphly.client.GraphlyClient;
 import edu.jlime.graphly.client.GraphlyGraph;
+import edu.jlime.graphly.jobs.Mapper;
 import edu.jlime.graphly.server.GraphlyServer;
 import edu.jlime.graphly.traversal.GraphlyTraversal;
 import edu.jlime.graphly.traversal.TraversalResult;
@@ -72,14 +73,17 @@ public class GraphlyExperiment {
 		}
 
 		public float net_desv() {
-			float prom = 0;
-			float prom_2 = 0;
+			double prom = 0;
 			for (Experiment e : exps) {
-				prom += e.net;
-				prom_2 += e.net * e.net;
+				prom += e.net / exps.size();
 			}
-			prom = prom / exps.size();
-			return (float) Math.sqrt(prom_2 / exps.size() - prom * prom);
+
+			double prom_2 = 0;
+			for (Experiment e : exps) {
+				prom_2 += (e.net - prom) * (e.net - prom);
+			}
+			
+			return (float) Math.sqrt(prom_2 / exps.size());
 		}
 
 		public float mem_desv() {
@@ -108,9 +112,11 @@ public class GraphlyExperiment {
 
 	private int reps;
 
+	private Mapper mapper;
+
 	public GraphlyExperiment(int reps, long[] users, GraphlyRun run,
 			GraphlyServerFactory fact, String graph, boolean print_results,
-			String startNode) {
+			String startNode, Mapper mapper) {
 		this.reps = reps;
 		this.run = run;
 		this.fact = fact;
@@ -118,6 +124,7 @@ public class GraphlyExperiment {
 		this.print_res = print_results;
 		this.start = startNode;
 		this.users = users;
+		this.mapper = mapper;
 	}
 
 	public ExperimentResult execute() throws Exception {
@@ -138,7 +145,7 @@ public class GraphlyExperiment {
 			ClusterProfiler prof = new ClusterProfiler(graphly.getJobClient()
 					.getCluster(), 1000);
 			prof.start();
-			GraphlyTraversal tr = run.run(users, graph);
+			GraphlyTraversal tr = run.run(users, graph, mapper);
 			TraversalResult res = null;
 			if (this.start != null)
 				res = tr.submit(graphly.getJobClient().getCluster()
@@ -163,9 +170,9 @@ public class GraphlyExperiment {
 
 	public static ExperimentResult exec(int reps, long[] users, String graph,
 			GraphlyServerFactory fact, GraphlyRun run, boolean print_results,
-			String startNode) throws Exception {
+			String startNode, Mapper mapper) throws Exception {
 		return new GraphlyExperiment(reps, users, run, fact, graph,
-				print_results, startNode).execute();
+				print_results, startNode, mapper).execute();
 
 	}
 }

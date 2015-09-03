@@ -22,7 +22,7 @@ public class CriteriaMapper implements Mapper {
 
 	private static final int SLOTS = 20001;
 
-	private static final int VNODES = 2048;
+	private static final int VNODES = 100;
 
 	private SysInfoFilter<ClientNode> filter;
 
@@ -31,12 +31,9 @@ public class CriteriaMapper implements Mapper {
 	// private Map<Integer, ClientNode> division = new HashMap<>();
 	ClientNode[] division;
 
-	private int range;
-
 	public CriteriaMapper(SysInfoFilter<ClientNode> ext, boolean dynamic) {
 		this.filter = ext;
 		this.dynamic = dynamic;
-		this.range = SLOTS / VNODES;
 	}
 
 	@Override
@@ -75,10 +72,6 @@ public class CriteriaMapper implements Mapper {
 			init = end;
 		}
 
-		// for (Entry<ClientNode, TLongArrayList> e : div.entrySet()) {
-		// log.info(e.getKey() + " -> " + e.getValue().size());
-		// }
-
 		return GraphlyUtil.divide(div, max);
 	}
 
@@ -99,9 +92,9 @@ public class CriteriaMapper implements Mapper {
 		CompositeMetrics<ClientNode> info = ctx.getCluster().getInfo();
 
 		HashMap<ClientNode, Float> infoValues = filter.extract(info);
-		if (log.isDebugEnabled())
-			log.debug("Obtained Info for Criteria Mapper  : " + this
-					+ " - values " + infoValues);
+		// if (log.isDebugEnabled())
+		log.info("Obtained Info for Criteria Mapper  : " + this + " - values "
+				+ infoValues);
 
 		// Normalize sum to [0,1)
 		float sum = 0;
@@ -111,11 +104,22 @@ public class CriteriaMapper implements Mapper {
 		for (Entry<ClientNode, Float> entry : infoValues.entrySet()) {
 			entry.setValue(entry.getValue() / sum);
 		}
-		int i = 0;
+
+		int acc = 0;
 		division = new ClientNode[VNODES];
-		for (Entry<ClientNode, Float> entry : infoValues.entrySet()) {
-			for (; i < VNODES * entry.getValue(); i++) {
-				division[i] = entry.getKey();
+
+		Entry<ClientNode, Float>[] array = infoValues.entrySet().toArray(
+				new Entry[] {});
+		for (int i = 0; i < array.length; i++) {
+			Entry<ClientNode, Float> entry = array[i];
+			int to = 0;
+			if (i == array.length - 1)
+				to = division.length;
+			else
+				to = (int) (acc + VNODES * entry.getValue());
+
+			for (; acc < to; acc++) {
+				division[acc] = entry.getKey();
 			}
 		}
 	}
@@ -124,9 +128,6 @@ public class CriteriaMapper implements Mapper {
 	public ClientNode getNode(long v, JobContext ctx) {
 		int hash = (int) (v % VNODES);
 		return division[hash];
-		// if (ret == null)
-		// return division.get(0);
-		// return ret;
 	}
 
 	@Override

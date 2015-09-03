@@ -441,7 +441,7 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 		int size = keys.length;
 		final float chunks = (size / (float) cores);
 
-		final TLongFloatMap finalResult = new TLongFloatHashMap(10000000);
+		final TLongFloatMap finalResult = new TLongFloatHashMap();
 		// final TLongFloatMap finalResult = new ParallelLongFloatMap();
 		final AtomicInteger count = new AtomicInteger(0);
 		for (int i = 0; i < cores; i++) {
@@ -457,7 +457,7 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 					if (tID == cores - 1)
 						to = keys.length;
 
-					TLongFloatMap map = new TLongFloatHashMap(10000000);
+					TLongFloatMap map = new TLongFloatHashMap();
 					int cont = from;
 
 					while (cont < to) {
@@ -468,7 +468,7 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 									new long[] { l });
 							// synchronized (map) {
 							for (long m : curr)
-								if (toFilter != null && !toFilter.contains(m))
+								if (toFilter == null || !toFilter.contains(m))
 									map.adjustOrPutValue(m, mult, mult);
 							// }
 						} catch (ExecutionException e) {

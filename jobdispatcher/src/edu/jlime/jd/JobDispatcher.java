@@ -23,7 +23,6 @@ import edu.jlime.core.cluster.BroadcastException;
 import edu.jlime.core.cluster.Cluster;
 import edu.jlime.core.cluster.ClusterChangeListener;
 import edu.jlime.core.cluster.Peer;
-import edu.jlime.core.marshalling.TypeConverter;
 import edu.jlime.core.marshalling.TypeConverters;
 import edu.jlime.core.rpc.RPCDispatcher;
 import edu.jlime.core.stream.RemoteInputStream;
@@ -34,7 +33,6 @@ import edu.jlime.jd.rpc.JobExecutor;
 import edu.jlime.jd.rpc.JobExecutorBroadcast;
 import edu.jlime.jd.rpc.JobExecutorFactory;
 import edu.jlime.metrics.metric.Metrics;
-import edu.jlime.util.ByteBuffer;
 
 public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 
@@ -109,67 +107,11 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 		factory = new JobExecutorFactory(rpc, JOB_DISPATCHER);
 
 		final TypeConverters tc = rpc.getMarshaller().getTc();
-		tc.registerTypeConverter(JobContainer.class, new TypeConverter() {
-			@Override
-			public void toArray(Object o, ByteBuffer buffer, Peer cliID)
-					throws Exception {
-				JobContainer jc = (JobContainer) o;
-				tc.objectToByteArray(jc.getRequestor(), buffer, cliID);
-				tc.objectToByteArray(jc.getJob(), buffer, cliID);
-				buffer.putUUID(jc.getJobID());
-				buffer.putBoolean(jc.isNoresponse());
-			}
-
-			@Override
-			public Object fromArray(ByteBuffer buff) throws Exception {
-
-				ClientNode p = (ClientNode) tc.getObjectFromArray(buff);
-
-				ClientJob<?> job = (ClientJob<?>) tc.getObjectFromArray(buff);
-				UUID id = buff.getUUID();
-				boolean isNoResponse = buff.getBoolean();
-				JobContainer jc = new JobContainer(job, p);
-				jc.setID(id);
-				jc.setNoResponse(isNoResponse);
-				return jc;
-			}
-		});
-
-		tc.registerTypeConverter(ClientNode.class, new TypeConverter() {
-			@Override
-			public void toArray(Object o, ByteBuffer buffer, Peer cliID)
-					throws Exception {
-				ClientNode jc = (ClientNode) o;
-				tc.objectToByteArray(jc.getPeer(), buffer, cliID);
-				tc.objectToByteArray(jc.getClient(), buffer, cliID);
-			}
-
-			@Override
-			public Object fromArray(ByteBuffer buff) throws Exception {
-				Peer p = (Peer) tc.getObjectFromArray(buff);
-				Peer client = (Peer) tc.getObjectFromArray(buff);
-				ClientNode jn = new ClientNode(p, client, JobDispatcher.this);
-				return jn;
-			}
-		});
-
-		tc.registerTypeConverter(RemoteReference.class, new TypeConverter() {
-			@Override
-			public void toArray(Object o, ByteBuffer buffer, Peer cliID)
-					throws Exception {
-				RemoteReference rr = (RemoteReference) o;
-				tc.objectToByteArray(rr.getNode(), buffer, cliID);
-				buffer.putString(rr.getKey());
-			}
-
-			@Override
-			public Object fromArray(ByteBuffer buff) throws Exception {
-				ClientNode p = (ClientNode) tc.getObjectFromArray(buff);
-				String key = buff.getString();
-				RemoteReference rr = new RemoteReference(p, key);
-				return rr;
-			}
-		});
+		tc.registerTypeConverter(JobContainer.class, new JobContainerConverter(
+				tc));
+		tc.registerTypeConverter(ClientNode.class, new ClientNodeConverter(tc));
+		tc.registerTypeConverter(RemoteReference.class,
+				new RemoteReferenceConverter(tc));
 
 	}
 
@@ -525,6 +467,14 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 		DispatcherManager.unregisterJD(this);
 		// rpc.stop();
 		// exec.shutdown();
+		this.cluster.removeChangeListener(this);
+		
+		this.cliCluster.clear();
+		
+		this.byTag.clear();
+		
+		rpc.unregisterTarget(JOB_DISPATCHER, this);
+		
 		for (CloseListener cl : closeListeners) {
 			cl.onStop();
 		}

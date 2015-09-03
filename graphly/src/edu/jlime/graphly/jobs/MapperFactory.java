@@ -24,4 +24,8 @@ public class MapperFactory {
 	public static Mapper rr() {
 		return new RoundRobinMapper();
 	}
+
+	public static Mapper hybrid(float[] divs, Mapper... mappers) {
+		return new HybridMapper(mappers, divs);
+	}
 }

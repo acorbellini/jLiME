@@ -75,8 +75,8 @@ public class SALSAPregel implements VertexFunction<FloatPregelMessage> {
 
 		// Send auth data
 		if (auth > 0) {
-			long[] toSendAuth = superstep % 2 == 0 ? subgraph.loadIn(v)
-					: subgraph.loadOut(v);
+			long[] toSendAuth = superstep % 2 == 0 ? subgraph.getIncoming(v)
+					: subgraph.getOutgoing(v);
 			if (toSendAuth.length > 0) {
 				float toSend = auth / toSendAuth.length;
 				for (long inV : toSendAuth) {
@@ -87,8 +87,8 @@ public class SALSAPregel implements VertexFunction<FloatPregelMessage> {
 
 		// Send hub data.
 		if (hub > 0) {
-			long[] toSendHub = superstep % 2 == 0 ? subgraph.loadOut(v)
-					: subgraph.loadIn(v);
+			long[] toSendHub = superstep % 2 == 0 ? subgraph.getOutgoing(v)
+					: subgraph.getIncoming(v);
 			if (toSendHub.length > 0) {
 				float toSend = hub / toSendHub.length;
 				for (long outV : toSendHub) {
