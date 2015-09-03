@@ -231,4 +231,11 @@ public class DataProcessor extends SimpleMessageProcessor implements
 
 		responses.remove(id);
 	}
+
+	@Override
+	protected void onStop() throws Exception {
+		listeners.clear();
+		responses.clear();
+		waiting.clear();
+	}
 }

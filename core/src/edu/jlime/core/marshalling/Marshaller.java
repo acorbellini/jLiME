@@ -52,4 +52,8 @@ public class Marshaller {
 		return tc;
 	}
 
+	public void clear() {
+		tc.clear();
+	}
+
 }

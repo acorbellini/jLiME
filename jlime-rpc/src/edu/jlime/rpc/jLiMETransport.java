@@ -44,7 +44,8 @@ public class jLiMETransport extends Transport implements DataListener {
 	}
 
 	@Override
-	public void stop() throws Exception {
+	public void onStop() throws Exception {
+		handleExecutor.shutdown();
 		commStack.stop();
 		// handleExecutor.shutdown();
 	}

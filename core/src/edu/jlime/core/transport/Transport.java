@@ -99,7 +99,13 @@ public abstract class Transport implements DiscoveryListener, FailureListener {
 
 	public abstract void start() throws Exception;
 
-	public abstract void stop() throws Exception;
+	public final void stop() throws Exception {
+		onStop();
+		this.rcvr = null;
+		cluster.clear();
+	};
+
+	public abstract void onStop() throws Exception;
 
 	public abstract Object getRealAddress();
 

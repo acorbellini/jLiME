@@ -55,6 +55,7 @@ public class MultiCastDiscovery extends Discovery {
 
 	@Override
 	public void stop() throws Exception {
+		super.stop();
 		stopped = true;
 	}
 

@@ -197,4 +197,10 @@ public class Cluster implements Iterable<Peer> {
 		}
 	}
 
+	public void clear() {
+		synchronized (listeners) {
+			listeners.clear();
+		}
+	}
+
 }

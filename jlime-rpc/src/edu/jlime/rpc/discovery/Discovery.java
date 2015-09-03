@@ -218,6 +218,7 @@ public abstract class Discovery implements DiscoveryProvider, StackElement {
 
 	@Override
 	public void stop() throws Exception {
+		listeners.clear();
 	}
 
 	protected abstract void startDiscovery(List<SelectedInterface> added);

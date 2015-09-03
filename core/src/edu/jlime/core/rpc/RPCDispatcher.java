@@ -161,6 +161,12 @@ public class RPCDispatcher implements TransportListener {
 
 	public void stop() throws Exception {
 		// asyncExec.shutdown();
+		targets.clear();
+		targetsMethods.clear();
+		targetsStatuses.clear();
+		
+		this.marshaller.clear();
+		
 		this.stopped = true;
 		broadcastExec.shutdown();
 		tr.stop();

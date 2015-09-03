@@ -136,4 +136,8 @@ public class TypeConverters {
 		TypeConverter converter = convs.get(type);
 		return converter.fromArray(buff);
 	}
+
+	public void clear() {
+		convs.clear();
+	}
 }

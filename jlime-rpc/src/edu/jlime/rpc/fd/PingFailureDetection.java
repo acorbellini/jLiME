@@ -124,6 +124,7 @@ public class PingFailureDetection implements StackElement, FailureProvider {
 	@Override
 	public void stop() throws Exception {
 		this.stopped = true;
+		list.clear();
 	}
 
 	private void pongArrived(Message m) {
