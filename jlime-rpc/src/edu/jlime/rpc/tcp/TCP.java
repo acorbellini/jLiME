@@ -39,8 +39,7 @@ public class TCP extends NetworkProtocol implements DataReceiver {
 	private ConcurrentHashMap<Address, HashMap<UUID, InputStream>> streams = new ConcurrentHashMap<>();
 
 	public TCP(Address id, String addr, int port, int range, TCPConfig config) {
-		super(addr, port, range, new TCPSocketFactory(config.tcp_rcv_buffer),
-				id);
+		super(addr, port, range, new TCPSocketFactory(config.tcp_rcv_buffer), id);
 		this.config = config;
 	}
 
@@ -52,8 +51,7 @@ public class TCP extends NetworkProtocol implements DataReceiver {
 	}
 
 	SocketAddress getAddress() {
-		InetSocketAddress sockAddr = (InetSocketAddress) getServerSocket()
-				.getLocalSocketAddress();
+		InetSocketAddress sockAddr = (InetSocketAddress) getServerSocket().getLocalSocketAddress();
 		return new SocketAddress(sockAddr, getType());
 	}
 
@@ -67,8 +65,7 @@ public class TCP extends NetworkProtocol implements DataReceiver {
 						acceptConnection();
 					} catch (Exception e) {
 						if (log.isDebugEnabled())
-							log.debug("Could not accept connection: "
-									+ e.getMessage());
+							log.debug("Could not accept connection: " + e.getMessage());
 					}
 			}
 		};
@@ -92,13 +89,11 @@ public class TCP extends NetworkProtocol implements DataReceiver {
 		if (type.equals(StreamType.PACKET)) {
 			TCPConnectionManager connList = getConnManager(new Address(id));
 			if (log.isDebugEnabled())
-				log.debug("Received connection request from "
-						+ conn.getRemoteSocketAddress() + " with id " + id);
+				log.debug("Received connection request from " + conn.getRemoteSocketAddress() + " with id " + id);
 			connList.addConnection(conn);
 		} else if (type.equals(StreamType.STREAM)) {
 			if (log.isDebugEnabled())
-				log.debug("Received stream request from "
-						+ conn.getRemoteSocketAddress() + " with id " + id);
+				log.debug("Received stream request from " + conn.getRemoteSocketAddress() + " with id " + id);
 			UUID streamID = TCPConnectionManager.getID(inputStream);
 			Address id2 = new Address(id);
 			addStream(streamID, inputStream, id2);
@@ -133,11 +128,10 @@ public class TCP extends NetworkProtocol implements DataReceiver {
 	}
 
 	@Override
-	public void sendBytes(final byte[] built, final Address to,
-			final SocketAddress realSockAddr) throws Exception {
+	public void sendBytes(final byte[] built, final Address to, final SocketAddress realSockAddr) throws Exception {
 
 		// if (log.isDebugEnabled())
-		// log.debug("Sending " + built.length + " bytes to  " + to);
+		// log.debug("Sending " + built.length + " bytes to " + to);
 		final TCPConnectionManager mgr = getConnManager(to);
 		SocketAddress toSend = null;
 		if (realSockAddr != null) {
@@ -147,8 +141,7 @@ public class TCP extends NetworkProtocol implements DataReceiver {
 		}
 
 		if (toSend == null)
-			throw new Exception("Can't find address for " + to
-					+ " given realsockaddr is " + realSockAddr);
+			throw new Exception("Can't find address for " + to + " given realsockaddr is " + realSockAddr);
 
 		// if (!isEqualToLocalType(toSend.getSockTo())) {
 		// if (log.isDebugEnabled())
@@ -188,8 +181,7 @@ public class TCP extends NetworkProtocol implements DataReceiver {
 	}
 
 	@Override
-	public void dataReceived(byte[] array, InetSocketAddress addr)
-			throws Exception {
+	public void dataReceived(byte[] array, InetSocketAddress addr) throws Exception {
 		// if (log.isDebugEnabled())
 		// log.debug("Data (" + array.length + "b) received from " + addr);
 		// if (!isEqualToLocalType(addr)) {
@@ -201,13 +193,9 @@ public class TCP extends NetworkProtocol implements DataReceiver {
 	}
 
 	@Override
-	protected void beforeProcess(ByteBuffer pkt, InetSocketAddress addr,
-			Address from, Address to) {
-		if (lastAddress.get(from) != null
-				&& lastAddress.get(from).getSockTo().getAddress()
-						.equals(addr.getAddress())
-				&& lastAddress.get(from).getSockTo().getPort() == addr
-						.getPort())
+	protected void beforeProcess(ByteBuffer pkt, InetSocketAddress addr, Address from, Address to) {
+		if (lastAddress.get(from) != null && lastAddress.get(from).getSockTo().getAddress().equals(addr.getAddress())
+				&& lastAddress.get(from).getSockTo().getPort() == addr.getPort())
 			return;
 		List<SocketAddress> possibleAddressList = backup.get(from);
 		if (possibleAddressList != null)
@@ -215,8 +203,7 @@ public class TCP extends NetworkProtocol implements DataReceiver {
 				if (addr.getAddress().equals(add.getSockTo().getAddress())
 						&& addr.getPort() == add.getSockTo().getPort()) {
 					if (log.isDebugEnabled())
-						log.debug("Changing last address of  " + from + " to "
-								+ addr);
+						log.debug("Changing last address of  " + from + " to " + addr);
 					lastAddress.put(from, new SocketAddress(addr, getType()));
 				}
 
@@ -272,8 +259,7 @@ public class TCP extends NetworkProtocol implements DataReceiver {
 					}
 
 					@Override
-					public void write(byte[] b, int off, int len)
-							throws IOException {
+					public void write(byte[] b, int off, int len) throws IOException {
 						bos.write(b, off, len);
 					}
 
@@ -294,11 +280,9 @@ public class TCP extends NetworkProtocol implements DataReceiver {
 			try {
 				SocketAddress addr = getBestAddress(to);
 				// A new connection but using it as a stream.
-				Socket sock = new Socket(addr.getSockTo().getAddress(), addr
-						.getSockTo().getPort());
+				Socket sock = new Socket(addr.getSockTo().getAddress(), addr.getSockTo().getPort());
 				if (log.isDebugEnabled())
-					log.debug("Created Streaming Socket " + sock + " to "
-							+ addr);
+					log.debug("Created Streaming Socket " + sock + " to " + addr);
 
 				// TODO Careful
 
@@ -327,8 +311,7 @@ public class TCP extends NetworkProtocol implements DataReceiver {
 	}
 
 	@Override
-	public void onStop() throws Exception {
-		super.onStop();
+	public void stopNP() throws Exception {
 		getServerSocket().close();
 		for (TCPConnectionManager e : connections.values()) {
 			e.stop();

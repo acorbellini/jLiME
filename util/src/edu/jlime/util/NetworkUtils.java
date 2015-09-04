@@ -22,6 +22,7 @@ public class NetworkUtils {
 			.synchronizedList(new ArrayList<NetworkChangeListener>());
 
 	static List<SelectedInterface> last;
+
 	static {
 		Thread t = new Thread() {
 
@@ -43,14 +44,11 @@ public class NetworkUtils {
 
 					List<SelectedInterface> added = new ArrayList<>(local);
 					List<SelectedInterface> removed = new ArrayList<>(last);
-					for (Iterator<SelectedInterface> currListIt = added
-							.iterator(); currListIt.hasNext();) {
+					for (Iterator<SelectedInterface> currListIt = added.iterator(); currListIt.hasNext();) {
 						SelectedInterface currIface = currListIt.next();
-						for (Iterator<SelectedInterface> lastListIt = removed
-								.iterator(); lastListIt.hasNext();) {
+						for (Iterator<SelectedInterface> lastListIt = removed.iterator(); lastListIt.hasNext();) {
 							SelectedInterface lastIface = lastListIt.next();
-							if (currIface.getNif().getName()
-									.equals(lastIface.getNif().getName())) {
+							if (currIface.getNif().getName().equals(lastIface.getNif().getName())) {
 								lastListIt.remove();
 								currListIt.remove();
 								break;
@@ -127,8 +125,7 @@ public class NetworkUtils {
 				while (inet.hasMoreElements()) {
 					InetAddress inetAddress = inet.nextElement();
 
-					if (!inetAddress.isLoopbackAddress()
-							&& !inetAddress.isLinkLocalAddress()
+					if (!inetAddress.isLoopbackAddress() && !inetAddress.isLinkLocalAddress()
 							&& (!onlyipv4 || !(inetAddress instanceof Inet6Address)))
 						available.add(new SelectedInterface(nif, inetAddress));
 				}
@@ -139,8 +136,7 @@ public class NetworkUtils {
 		}
 		if (available.size() == 0)
 			try {
-				available.add(new SelectedInterface(NetworkInterface
-						.getByInetAddress(InetAddress.getLocalHost()),
+				available.add(new SelectedInterface(NetworkInterface.getByInetAddress(InetAddress.getLocalHost()),
 						InetAddress.getLocalHost()));
 			} catch (SocketException | UnknownHostException e) {
 				e.printStackTrace();
@@ -153,7 +149,7 @@ public class NetworkUtils {
 		// for (SelectedInterface selectedInterface : available) {
 		// ifaces.append("," + selectedInterface.getNif().getName());
 		// }
-		// log.info("More than one available interface, using  "
+		// log.info("More than one available interface, using "
 		// + available.get(0).getNif().getName() + " from list :"
 		// + ifaces.substring(1));
 		// }else
@@ -226,5 +222,9 @@ public class NetworkUtils {
 
 	public static String getFirstHostAddress(boolean ipv4) {
 		return getLocalAddress(ipv4).get(0).getInet().getHostAddress();
+	}
+
+	public static void removeNetChangeListener(NetworkChangeListener list) {
+		listeners.remove(list);
 	}
 }

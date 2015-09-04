@@ -140,8 +140,7 @@ public class UDP extends NetworkProtocol implements PacketReceiver {
 	}
 
 	@Override
-	public void onStop() throws Exception {
-		super.onStop();
+	public void stopNP() throws Exception {
 		getDatagramSocket().close();
 		packetsTx.put(new DatagramPacket(new byte[] {}, 0));
 		rx.setStopped();

@@ -21,8 +21,7 @@ import edu.jlime.rpc.message.SimpleMessageProcessor;
 import edu.jlime.rpc.message.SocketAddress;
 import edu.jlime.util.ByteBuffer;
 
-public abstract class NetworkProtocol extends SimpleMessageProcessor implements
-		AddressListProvider, Streamer {
+public abstract class NetworkProtocol extends SimpleMessageProcessor implements AddressListProvider, Streamer {
 
 	private Logger log = Logger.getLogger(NetworkProtocol.class);
 
@@ -46,8 +45,7 @@ public abstract class NetworkProtocol extends SimpleMessageProcessor implements
 
 	private Metrics metrics;
 
-	public NetworkProtocol(String addr, int port, int range,
-			SocketFactory fact, Address id) {
+	public NetworkProtocol(String addr, int port, int range, SocketFactory fact, Address id) {
 		super(null, "Network Protocol");
 		this.setLocal(id);
 		this.fact = fact;
@@ -75,14 +73,12 @@ public abstract class NetworkProtocol extends SimpleMessageProcessor implements
 		// t.start();
 	}
 
-	public void notifyPacketRvcd(ByteBuffer buff, InetSocketAddress addr)
-			throws Exception {
+	public void notifyPacketRvcd(ByteBuffer buff, InetSocketAddress addr) throws Exception {
 		// packetsRx.put(pkt);
 		processPacket(buff, addr);
 	};
 
-	private void processPacket(ByteBuffer buff, InetSocketAddress addr)
-			throws Exception {
+	private void processPacket(ByteBuffer buff, InetSocketAddress addr) throws Exception {
 		Address from = new Address(buff.getUUID());
 		Address to = new Address(buff.getUUID());
 
@@ -105,8 +101,7 @@ public abstract class NetworkProtocol extends SimpleMessageProcessor implements
 
 	}
 
-	protected abstract void beforeProcess(ByteBuffer data,
-			InetSocketAddress addr, Address from, Address to);
+	protected abstract void beforeProcess(ByteBuffer data, InetSocketAddress addr, Address from, Address to);
 
 	public void onStart() throws Exception {
 
@@ -124,22 +119,19 @@ public abstract class NetworkProtocol extends SimpleMessageProcessor implements
 		if (socket == null) {
 			if (last != null)
 				last.printStackTrace();
-			throw new Exception("Could not set port from " + port + " to "
-					+ (port + portrange), last);
+			throw new Exception("Could not set port from " + port + " to " + (port + portrange), last);
 		}
 
 		if (metrics != null)
-			this.metrics.set("jlime.interface").update(
-					this.socket.getAddr() + ":" + this.socket.getPort());
+			this.metrics.set("jlime.interface").update(this.socket.getAddr() + ":" + this.socket.getPort());
 
 		port = port + tries;
 
 		if (log.isDebugEnabled())
-			log.debug("Socket TYPE " + getType() + " Created : " + getAddr()
-					+ " with port " + port + " on peer " + local);
+			log.debug("Socket TYPE " + getType() + " Created : " + getAddr() + " with port " + port + " on peer "
+					+ local);
 
-		localAddr = new SocketAddress(new InetSocketAddress(
-				InetAddress.getByName(getAddr()), port), getType());
+		localAddr = new SocketAddress(new InetSocketAddress(InetAddress.getByName(getAddr()), port), getType());
 
 		onStart(getSocket().getJavaSocket());
 	}
@@ -192,8 +184,7 @@ public abstract class NetworkProtocol extends SimpleMessageProcessor implements
 
 	public abstract void onStart(Object sock);
 
-	public abstract void sendBytes(byte[] built, Address to,
-			SocketAddress realSockAddr) throws Exception;
+	public abstract void sendBytes(byte[] built, Address to, SocketAddress realSockAddr) throws Exception;
 
 	public jLimeSocket getSocket() {
 		return socket;
@@ -208,16 +199,20 @@ public abstract class NetworkProtocol extends SimpleMessageProcessor implements
 	}
 
 	@Override
-	public void onStop() throws Exception {
+	public final void onStop() throws Exception {
 		if (log.isDebugEnabled())
-			log.debug("Stopping network protocol type " + getType()
-					+ " and socket " + socket);
+			log.debug("Stopping network protocol type " + getType() + " and socket " + socket);
 
 		// packetsRx.put(new DataPacket(null, null));
 		if (metrics != null)
-			metrics.set("jlime.interface").remove(
-					this.socket.getAddr() + ":" + this.socket.getPort());
+			metrics.set("jlime.interface").remove(this.socket.getAddr() + ":" + this.socket.getPort());
+
+		
+		
+		stopNP();
 	}
+
+	protected abstract void stopNP() throws Exception;
 
 	protected boolean isEqualToLocalType(InetSocketAddress addr) {
 		String toAddr = addr.getAddress().getHostAddress();
@@ -231,8 +226,7 @@ public abstract class NetworkProtocol extends SimpleMessageProcessor implements
 	@Override
 	public void updateAddress(Address id, List<SocketAddress> addresses) {
 		if (log.isDebugEnabled())
-			log.info("Updating addresses for address " + id + " with "
-					+ addresses);
+			log.info("Updating addresses for address " + id + " with " + addresses);
 		List<SocketAddress> update = new ArrayList<>();
 		for (SocketAddress socketAddress : addresses) {
 			if (isEqualToLocalType(socketAddress.getSockTo()))

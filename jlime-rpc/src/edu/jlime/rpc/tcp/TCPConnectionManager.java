@@ -38,16 +38,15 @@ class TCPConnectionManager {
 	// }
 	// });
 
-	private ExecutorService connection_exec = Executors
-			.newCachedThreadPool(new ThreadFactory() {
+	private ExecutorService connection_exec = Executors.newCachedThreadPool(new ThreadFactory() {
 
-				@Override
-				public Thread newThread(Runnable r) {
-					Thread t = Executors.defaultThreadFactory().newThread(r);
-					t.setName("TCP Connection Reader");
-					return t;
-				}
-			});
+		@Override
+		public Thread newThread(Runnable r) {
+			Thread t = Executors.defaultThreadFactory().newThread(r);
+			t.setName("TCP Connection Reader");
+			return t;
+		}
+	});
 
 	private Logger log = Logger.getLogger(TCPConnectionManager.class);
 
@@ -77,8 +76,7 @@ class TCPConnectionManager {
 
 	private Thread reader;
 
-	public TCPConnectionManager(Address addr, Address localID, TCP rcvr,
-			TCPConfig config) {
+	public TCPConnectionManager(Address addr, Address localID, TCP rcvr, TCPConfig config) {
 		this.conn_limit = config.conn_limit;
 		this.time_limit = config.time_limit;
 		this.input_buffer = config.input_buffer;
@@ -198,8 +196,7 @@ class TCPConnectionManager {
 			if (bestConn == null) {
 				// writeQueue.put(pkt);
 				// writeToConn(pkt);
-				log.warn("Couldn't send packet " + pkt
-						+ " no available connections to destination.");
+				log.warn("Couldn't send packet " + pkt + " no available connections to destination.");
 				done = true;
 			} else {
 				// if (log.isDebugEnabled())
@@ -214,8 +211,7 @@ class TCPConnectionManager {
 					// PerfMeasure.takeTime("mgr");
 				} catch (Exception e) {
 					if (log.isDebugEnabled())
-						log.debug("Error sending to " + addr + " using "
-								+ bestConn
+						log.debug("Error sending to " + addr + " using " + bestConn
 								+ ". Removing connection and trying again.");
 					remove(bestConn);
 				}
@@ -259,8 +255,7 @@ class TCPConnectionManager {
 		}
 		if (connections.isEmpty())
 			return null;
-		TCPPacketConnection conn = connections
-				.get((int) (Math.random() * connections.size()));
+		TCPPacketConnection conn = connections.get((int) (Math.random() * connections.size()));
 		return conn;
 
 	}
@@ -276,8 +271,7 @@ class TCPConnectionManager {
 				// sock.setReuseAddress(true);
 
 				setFlags(sock);
-				sock.connect(new InetSocketAddress(addr.getSockTo()
-						.getAddress(), addr.getSockTo().getPort()));
+				sock.connect(new InetSocketAddress(addr.getSockTo().getAddress(), addr.getSockTo().getPort()));
 
 				if (log.isDebugEnabled())
 					log.debug("Created socket " + sock + " to " + addr);
@@ -290,12 +284,11 @@ class TCPConnectionManager {
 				return addConnection(sock);
 			} catch (ConnectException e) {
 				if (log.isDebugEnabled())
-					log.debug("Could not open socket to " + addr + " : "
-							+ e.getMessage());
+					log.debug("Could not open socket to " + addr + " : " + e.getMessage());
 				return null;
 			} catch (Exception e) {
-				log.info("Could not open socket to " + addr + " socket is "
-						+ sock + ", trying again in 1s : " + e.getMessage());
+				log.info("Could not open socket to " + addr + " socket is " + sock + ", trying again in 1s : "
+						+ e.getMessage());
 				tries++;
 				try {
 					Thread.sleep(1000);
@@ -313,10 +306,8 @@ class TCPConnectionManager {
 		sock.setSendBufferSize(rcvr.config.tcp_send_buffer);
 	}
 
-	public TCPPacketConnection addConnection(final Socket conn)
-			throws Exception {
-		final TCPPacketConnection c = new TCPPacketConnection(conn, time_limit,
-				this, input_buffer, output_buffer);
+	public TCPPacketConnection addConnection(final Socket conn) throws Exception {
+		final TCPPacketConnection c = new TCPPacketConnection(conn, time_limit, this, input_buffer, output_buffer);
 		connections.add(c);
 
 		connection_exec.execute(c);
@@ -353,6 +344,8 @@ class TCPConnectionManager {
 		packets.put(new TCPPacket(null, null));
 		for (TCPPacketConnection c : connections)
 			c.stop();
+
+		connections.clear();
 
 	}
 

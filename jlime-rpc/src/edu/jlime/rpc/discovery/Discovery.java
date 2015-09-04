@@ -31,8 +31,7 @@ public abstract class Discovery implements DiscoveryProvider, StackElement {
 
 	private Logger log = Logger.getLogger(Discovery.class);
 
-	protected List<DiscoveryListener> listeners = Collections
-			.synchronizedList(new ArrayList<DiscoveryListener>());
+	protected List<DiscoveryListener> listeners = Collections.synchronizedList(new ArrayList<DiscoveryListener>());
 
 	protected NetworkConfiguration config;
 
@@ -48,8 +47,10 @@ public abstract class Discovery implements DiscoveryProvider, StackElement {
 
 	private String localName;
 
-	public Discovery(Address localID, String name, NetworkConfiguration config,
-			MessageProcessor discoveryInit, MessageProcessor discoveryData) {
+	private NetworkChangeListener list;
+
+	public Discovery(Address localID, String name, NetworkConfiguration config, MessageProcessor discoveryInit,
+			MessageProcessor discoveryData) {
 		this.localID = localID;
 		this.localName = name;
 		this.config = config;
@@ -59,96 +60,80 @@ public abstract class Discovery implements DiscoveryProvider, StackElement {
 
 	@Override
 	public void start() throws Exception {
-		discoveryData.addMessageListener(MessageType.DISCOVERY_CONFIRM,
-				new MessageListener() {
-					@Override
-					public void rcv(Message message, MessageProcessor origin)
-							throws Exception {
-						if (log.isDebugEnabled())
-							log.debug("Discovery Confirm received from "
-									+ message.getFrom());
-						DiscoveryMessage disco = DiscoveryMessage
-								.fromMessage(message);
+		discoveryData.addMessageListener(MessageType.DISCOVERY_CONFIRM, new MessageListener() {
+			@Override
+			public void rcv(Message message, MessageProcessor origin) throws Exception {
+				if (log.isDebugEnabled())
+					log.debug("Discovery Confirm received from " + message.getFrom());
+				DiscoveryMessage disco = DiscoveryMessage.fromMessage(message);
 
-						notifyAddressList(disco.getId(), disco.getAddresses());
+				notifyAddressList(disco.getId(), disco.getAddresses());
 
-						discoveryMessageReceived(message.getFrom(),
-								disco.getName(), disco.getAdditional(),
-								disco.getAddresses());
-					}
-				});
-		discoveryData.addMessageListener(MessageType.DISCOVERY_RESPONSE,
-				new MessageListener() {
-					@Override
-					public void rcv(Message m, MessageProcessor origin)
-							throws Exception {
+				discoveryMessageReceived(message.getFrom(), disco.getName(), disco.getAdditional(),
+						disco.getAddresses());
+			}
+		});
+		discoveryData.addMessageListener(MessageType.DISCOVERY_RESPONSE, new MessageListener() {
+			@Override
+			public void rcv(Message m, MessageProcessor origin) throws Exception {
 
-						DiscoveryMessage disco = DiscoveryMessage
-								.fromMessage(m);
+				DiscoveryMessage disco = DiscoveryMessage.fromMessage(m);
 
-						if (log.isDebugEnabled())
-							log.debug("Discovery Response received from "
-									+ m.getFrom() + " with addresses "
-									+ disco.getAddresses());
+				if (log.isDebugEnabled())
+					log.debug("Discovery Response received from " + m.getFrom() + " with addresses "
+							+ disco.getAddresses());
 
-						notifyAddressList(disco.getId(), disco.getAddresses());
+				notifyAddressList(disco.getId(), disco.getAddresses());
 
-						discoveryMessageReceived(m.getFrom(), disco.getName(),
-								disco.getAdditional(), disco.getAddresses());
+				discoveryMessageReceived(m.getFrom(), disco.getName(), disco.getAdditional(), disco.getAddresses());
 
-						Message confirm = newDiscoveryConfirmMessage();
-						confirm.setTo(m.getFrom());
-						discoveryData.send(confirm);
+				Message confirm = newDiscoveryConfirmMessage();
+				confirm.setTo(m.getFrom());
+				discoveryData.send(confirm);
 
-					}
-				});
+			}
+		});
 
-		discoveryInit.addMessageListener(MessageType.DISCOVERY,
-				new MessageListener() {
-					@Override
-					public void rcv(Message m, MessageProcessor origin)
-							throws Exception {
-						DiscoveryMessage disco = DiscoveryMessage
-								.fromMessage(m);
+		discoveryInit.addMessageListener(MessageType.DISCOVERY, new MessageListener() {
+			@Override
+			public void rcv(Message m, MessageProcessor origin) throws Exception {
+				DiscoveryMessage disco = DiscoveryMessage.fromMessage(m);
 
-						if (new Address(disco.getId()).equals(localID))
-							return;
+				if (new Address(disco.getId()).equals(localID))
+					return;
 
-						if (log.isDebugEnabled())
-							log.debug("Discovery Message received from "
-									+ m.getFrom() + " with addresses "
-									+ disco.getAddresses());
+				if (log.isDebugEnabled())
+					log.debug("Discovery Message received from " + m.getFrom() + " with addresses "
+							+ disco.getAddresses());
 
-						notifyAddressList(disco.getId(), disco.getAddresses());
+				notifyAddressList(disco.getId(), disco.getAddresses());
 
-						for (SocketAddress sock : disco.getAddresses()) {
-							if (log.isDebugEnabled())
-								log.debug("Sending discovery response to "
-										+ m.getFrom() + " to socket " + sock);
-							Message response = newDiscoveryResponseMessage();
-							response.setTo(new Address(disco.getId()));
-							response.setInetSocketAddress(sock);
-							discoveryData.send(response);
-						}
-					}
+				for (SocketAddress sock : disco.getAddresses()) {
+					if (log.isDebugEnabled())
+						log.debug("Sending discovery response to " + m.getFrom() + " to socket " + sock);
+					Message response = newDiscoveryResponseMessage();
+					response.setTo(new Address(disco.getId()));
+					response.setInetSocketAddress(sock);
+					discoveryData.send(response);
+				}
+			}
 
-				});
+		});
 
 		startDiscovery(NetworkUtils.getLocalAddress(false));
 
-		NetworkUtils.addNetworkChangeListener(new NetworkChangeListener() {
+		this.list = new NetworkChangeListener() {
 			@Override
-			public void interfacesChanged(List<SelectedInterface> added,
-					List<SelectedInterface> removed) {
+			public void interfacesChanged(List<SelectedInterface> added, List<SelectedInterface> removed) {
 				log.info("Network Changed!! Restarting Discovery.");
 				// startDiscovery(added);
 			}
-		});
+		};
+		NetworkUtils.addNetworkChangeListener(list);
 	}
 
 	protected void notifyAddressList(UUID id, List<SocketAddress> addresses) {
-		for (Entry<AddressType, AddressListProvider> alul : addressProviders
-				.entrySet()) {
+		for (Entry<AddressType, AddressListProvider> alul : addressProviders.entrySet()) {
 			ArrayList<SocketAddress> byType = new ArrayList<>();
 			for (SocketAddress socketAddress : addresses) {
 				if (socketAddress.getType().equals(alul.getKey()))
@@ -183,8 +168,7 @@ public abstract class Discovery implements DiscoveryProvider, StackElement {
 	private Message newDiscoveryMessage(MessageType t) {
 		List<SocketAddress> addresses = buildAddressList();
 
-		Message discoMsg = DiscoveryMessage.createNew(t, localID, localName,
-				discAdditionData, addresses);
+		Message discoMsg = DiscoveryMessage.createNew(t, localID, localName, discAdditionData, addresses);
 
 		return discoMsg;
 	}
@@ -200,9 +184,8 @@ public abstract class Discovery implements DiscoveryProvider, StackElement {
 		addressProviders.put(alp.getType(), alp);
 	}
 
-	private void discoveryMessageReceived(Address from, String name,
-			Map<String, String> additional, List<SocketAddress> sockets)
-			throws Exception {
+	private void discoveryMessageReceived(Address from, String name, Map<String, String> additional,
+			List<SocketAddress> sockets) throws Exception {
 		for (DiscoveryListener l : new ArrayList<>(listeners)) {
 			try {
 				l.memberMessage(from, name, additional, sockets);
@@ -219,6 +202,7 @@ public abstract class Discovery implements DiscoveryProvider, StackElement {
 	@Override
 	public void stop() throws Exception {
 		listeners.clear();
+		NetworkUtils.removeNetChangeListener(list);
 	}
 
 	protected abstract void startDiscovery(List<SelectedInterface> added);

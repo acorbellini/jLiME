@@ -47,8 +47,8 @@ public class Stack implements Iterable<StackElement> {
 	}
 
 	public void cleanup(Address address) {
-		for (ListIterator<StackElement> iterator = stackElements
-				.listIterator(stackElements.size()); iterator.hasPrevious();) {
+		for (ListIterator<StackElement> iterator = stackElements.listIterator(stackElements.size()); iterator
+				.hasPrevious();) {
 			StackElement listElement = iterator.previous();
 			listElement.cleanupOnFailedPeer(address);
 		}
@@ -58,6 +58,9 @@ public class Stack implements Iterable<StackElement> {
 		for (StackElement m : stackElements) {
 			m.stop();
 		}
+
+		stackElements.clear();
+
 	}
 
 	public static Stack newStack(StackElement... elements) {
@@ -100,24 +103,19 @@ public class Stack implements Iterable<StackElement> {
 		return fail;
 	}
 
-	public static Stack tcpStack(NetworkConfiguration config, Address local,
-			String name) {
+	public static Stack tcpStack(NetworkConfiguration config, Address local, String name) {
 
 		String iface = NetworkUtils.getFirstHostAddress();
 
-		NetworkProtocol udp = NetworkProtocolFactory.udp(local, config)
-				.getProtocol(iface);
+		NetworkProtocol udp = NetworkProtocolFactory.udp(local, config).getProtocol(iface);
 
-		NetworkProtocol tcp = NetworkProtocolFactory.tcp(local, config)
-				.getProtocol(iface);
+		NetworkProtocol tcp = NetworkProtocolFactory.tcp(local, config).getProtocol(iface);
 
-		NetworkProtocol mcast = NetworkProtocolFactory.mcast(local, config)
-				.getProtocol(iface);
+		NetworkProtocol mcast = NetworkProtocolFactory.mcast(local, config).getProtocol(iface);
 
 		final DataProcessor data = new DataProcessor(tcp, config);
 
-		MultiCastDiscovery disco = new MultiCastDiscovery(local, name, config,
-				mcast, udp);
+		MultiCastDiscovery disco = new MultiCastDiscovery(local, name, config, mcast, udp);
 		disco.addAddressListProvider(tcp);
 		disco.addAddressListProvider(udp);
 
@@ -132,16 +130,13 @@ public class Stack implements Iterable<StackElement> {
 		return tcpStack;
 	}
 
-	public static Stack udpStack(NetworkConfiguration config, Address local,
-			String name) {
+	public static Stack udpStack(NetworkConfiguration config, Address local, String name) {
 
 		String iface = NetworkUtils.getFirstHostAddress();
 
-		NetworkProtocol udp = NetworkProtocolFactory.udp(local, config)
-				.getProtocol(iface);
+		NetworkProtocol udp = NetworkProtocolFactory.udp(local, config).getProtocol(iface);
 
-		NetworkProtocol mcast = NetworkProtocolFactory.mcast(local, config)
-				.getProtocol(iface);
+		NetworkProtocol mcast = NetworkProtocolFactory.mcast(local, config).getProtocol(iface);
 
 		MessageProcessor ack = null;
 		Fragmenter frag = null;
@@ -154,8 +149,7 @@ public class Stack implements Iterable<StackElement> {
 			frag = new Fragmenter(ack, max_size);
 		} else {
 
-			int max_size = config.max_msg_size - UDP.HEADER
-					- Acknowledge.HEADER;
+			int max_size = config.max_msg_size - UDP.HEADER - Acknowledge.HEADER;
 
 			ack = new Acknowledge(udp, max_size, config);
 
@@ -163,47 +157,39 @@ public class Stack implements Iterable<StackElement> {
 		}
 		DataProcessor data = new DataProcessor(frag, config);
 
-		MultiCastDiscovery disco = new MultiCastDiscovery(local, name, config,
-				mcast, udp);
+		MultiCastDiscovery disco = new MultiCastDiscovery(local, name, config, mcast, udp);
 		disco.addAddressListProvider(udp);
 
 		PingFailureDetection fail = new PingFailureDetection(udp, config);
-		Stack tcpStack = Stack.newStack(udp, ack, frag, mcast, data, disco,
-				fail);
+		Stack tcpStack = Stack.newStack(udp, ack, frag, mcast, data, disco, fail);
 		tcpStack.setFD(fail);
 		tcpStack.setDisco(disco);
 		tcpStack.setData(data);
 		return tcpStack;
 	}
 
-	public static Stack tcpNioStack(NetworkConfiguration config, Address local,
-			String name) {
+	public static Stack tcpNioStack(NetworkConfiguration config, Address local, String name) {
 
 		String iface = NetworkUtils.getFirstHostAddress();
 
-		NetworkProtocol udp = NetworkProtocolFactory.udp(local, config)
-				.getProtocol(iface);
+		NetworkProtocol udp = NetworkProtocolFactory.udp(local, config).getProtocol(iface);
 
 		TCPNIO tcp = new TCPNIO(local, config, iface);
 
-		NetworkProtocol mcast = NetworkProtocolFactory.mcast(local, config)
-				.getProtocol(iface);
+		NetworkProtocol mcast = NetworkProtocolFactory.mcast(local, config).getProtocol(iface);
 
-		Fragmenter frag = new Fragmenter(tcp, config.tcpnio_max_msg_size
-				- TCPNIO.HEADER);
+		Fragmenter frag = new Fragmenter(tcp, config.tcpnio_max_msg_size - TCPNIO.HEADER);
 
 		DataProcessor data = new DataProcessor(frag, config);
 
-		MultiCastDiscovery disco = new MultiCastDiscovery(local, name, config,
-				mcast, udp);
+		MultiCastDiscovery disco = new MultiCastDiscovery(local, name, config, mcast, udp);
 		disco.addAddressListProvider(udp);
 		disco.addAddressListProvider(tcp);
 
 		PingFailureDetection fail = new PingFailureDetection(udp, config);
 		fail.addPingProvider(tcp);
 
-		Stack tcpStack = Stack.newStack(tcp, udp, frag, mcast, data, disco,
-				fail);
+		Stack tcpStack = Stack.newStack(tcp, udp, frag, mcast, data, disco, fail);
 		tcpStack.setFD(fail);
 		tcpStack.setDisco(disco);
 		tcpStack.setData(data);
@@ -211,15 +197,13 @@ public class Stack implements Iterable<StackElement> {
 		return tcpStack;
 	}
 
-	public static Stack udpNioStack(NetworkConfiguration config, Address local,
-			String name) {
+	public static Stack udpNioStack(NetworkConfiguration config, Address local, String name) {
 
 		String iface = NetworkUtils.getFirstHostAddress(true);
 
 		UDPNIO udp = new UDPNIO(local, config, iface);
 
-		NetworkProtocol mcast = NetworkProtocolFactory.mcast(local, config)
-				.getProtocol(iface);
+		NetworkProtocol mcast = NetworkProtocolFactory.mcast(local, config).getProtocol(iface);
 
 		MessageProcessor ack = null;
 		Fragmenter frag = null;
@@ -232,8 +216,7 @@ public class Stack implements Iterable<StackElement> {
 			frag = new Fragmenter(ack, max_size);
 		} else {
 
-			int max_size = config.max_msg_size - UDPNIO.HEADER
-					- Acknowledge.HEADER;
+			int max_size = config.max_msg_size - UDPNIO.HEADER - Acknowledge.HEADER;
 
 			ack = new Acknowledge(udp, max_size, config);
 
@@ -249,34 +232,29 @@ public class Stack implements Iterable<StackElement> {
 
 		DataProcessor data = new DataProcessor(frag, config);
 
-		MultiCastDiscovery disco = new MultiCastDiscovery(local, name, config,
-				mcast, udp);
+		MultiCastDiscovery disco = new MultiCastDiscovery(local, name, config, mcast, udp);
 		disco.addAddressListProvider(udp);
 
 		PingFailureDetection fail = new PingFailureDetection(udp, config);
 
-		Stack tcpStack = Stack.newStack(udp, ack, frag, mcast, data, disco,
-				fail);
+		Stack tcpStack = Stack.newStack(udp, ack, frag, mcast, data, disco, fail);
 		tcpStack.setFD(fail);
 		tcpStack.setDisco(disco);
 		tcpStack.setData(data);
 		return tcpStack;
 	}
 
-	public static Stack zeroMqStack(NetworkConfiguration config, Address local,
-			String name) {
+	public static Stack zeroMqStack(NetworkConfiguration config, Address local, String name) {
 
 		String iface = NetworkUtils.getFirstHostAddress(true);
 
 		ZeroMQProcessor zmq = new ZeroMQProcessor(config, iface, local);
 
-		NetworkProtocol mcast = NetworkProtocolFactory.mcast(local, config)
-				.getProtocol(iface);
+		NetworkProtocol mcast = NetworkProtocolFactory.mcast(local, config).getProtocol(iface);
 
 		DataProcessor data = new DataProcessor(zmq, config);
 
-		MultiCastDiscovery disco = new MultiCastDiscovery(local, name, config,
-				mcast, zmq);
+		MultiCastDiscovery disco = new MultiCastDiscovery(local, name, config, mcast, zmq);
 		disco.addAddressListProvider(zmq);
 
 		PingFailureDetection fail = new PingFailureDetection(zmq, config);
@@ -288,34 +266,28 @@ public class Stack implements Iterable<StackElement> {
 		return tcpStack;
 	}
 
-	public static Stack jnetStack(NetworkConfiguration config, Address local,
-			String name) {
+	public static Stack jnetStack(NetworkConfiguration config, Address local, String name) {
 
 		String iface = NetworkUtils.getFirstHostAddress();
 
-		NetworkProtocol udp = NetworkProtocolFactory.udp(local, config)
-				.getProtocol(iface);
+		NetworkProtocol udp = NetworkProtocolFactory.udp(local, config).getProtocol(iface);
 
 		JNET tcp = new JNET(local, config, iface);
 
-		NetworkProtocol mcast = NetworkProtocolFactory.mcast(local, config)
-				.getProtocol(iface);
+		NetworkProtocol mcast = NetworkProtocolFactory.mcast(local, config).getProtocol(iface);
 		//
-		Fragmenter frag = new Fragmenter(tcp, config.max_msg_size
-				- TCPNIO.HEADER);
+		Fragmenter frag = new Fragmenter(tcp, config.max_msg_size - TCPNIO.HEADER);
 
 		DataProcessor data = new DataProcessor(frag, config);
 
-		MultiCastDiscovery disco = new MultiCastDiscovery(local, name, config,
-				mcast, udp);
+		MultiCastDiscovery disco = new MultiCastDiscovery(local, name, config, mcast, udp);
 		disco.addAddressListProvider(udp);
 		disco.addAddressListProvider(tcp);
 
 		PingFailureDetection fail = new PingFailureDetection(udp, config);
 		fail.addPingProvider(tcp);
 
-		Stack tcpStack = Stack.newStack(tcp, udp, frag, mcast, data, disco,
-				fail);
+		Stack tcpStack = Stack.newStack(tcp, udp, frag, mcast, data, disco, fail);
 		tcpStack.setFD(fail);
 		tcpStack.setDisco(disco);
 		tcpStack.setData(data);
@@ -329,19 +301,16 @@ public class Stack implements Iterable<StackElement> {
 		}
 	}
 
-	public static Stack rabbitStack(NetworkConfiguration config, Address local,
-			String name) {
+	public static Stack rabbitStack(NetworkConfiguration config, Address local, String name) {
 		String iface = NetworkUtils.getFirstHostAddress(true);
 
 		RabbitProcessor zmq = new RabbitProcessor(config, iface, local);
 
-		NetworkProtocol mcast = NetworkProtocolFactory.mcast(local, config)
-				.getProtocol(iface);
+		NetworkProtocol mcast = NetworkProtocolFactory.mcast(local, config).getProtocol(iface);
 
 		DataProcessor data = new DataProcessor(zmq, config);
 
-		MultiCastDiscovery disco = new MultiCastDiscovery(local, name, config,
-				mcast, zmq);
+		MultiCastDiscovery disco = new MultiCastDiscovery(local, name, config, mcast, zmq);
 		disco.addAddressListProvider(zmq);
 
 		PingFailureDetection fail = new PingFailureDetection(zmq, config);
@@ -353,12 +322,10 @@ public class Stack implements Iterable<StackElement> {
 		return tcpStack;
 	}
 
-	public static Stack localStack(NetworkConfiguration config,
-			Address address, String name) {
+	public static Stack localStack(NetworkConfiguration config, Address address, String name) {
 		LoopbackMP local = new LoopbackMP();
 		DataProcessor data = new DataProcessor(local, config);
-		MultiCastDiscovery disco = new MultiCastDiscovery(address, name,
-				config, local, local);
+		MultiCastDiscovery disco = new MultiCastDiscovery(address, name, config, local, local);
 		Stack tcpStack = Stack.newStack(local, disco, data);
 		tcpStack.setDisco(disco);
 		tcpStack.setData(data);

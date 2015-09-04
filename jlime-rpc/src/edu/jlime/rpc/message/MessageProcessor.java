@@ -49,6 +49,12 @@ public abstract class MessageProcessor implements StackElement {
 		if (stopped)
 			return;
 		stopped = true;
+
+		listeners.clear();
+		processors.clear();
+		secondaryMessage.clear();
+		all.clear();
+
 		onStop();
 	};
 
@@ -95,8 +101,7 @@ public abstract class MessageProcessor implements StackElement {
 	// send(msg);
 	// }
 
-	public synchronized void addMessageListener(MessageType type,
-			MessageListener packList) {
+	public synchronized void addMessageListener(MessageType type, MessageListener packList) {
 		List<MessageListener> list = listeners.get(type);
 		if (list == null) {
 			list = new CopyOnWriteArrayList<MessageListener>();

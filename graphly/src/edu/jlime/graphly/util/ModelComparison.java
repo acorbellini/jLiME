@@ -125,10 +125,10 @@ public class ModelComparison {
 		// @formatter:off
 		GraphlyRun[] exp = new GraphlyRun[] { 
 //				Algorithms.ecFJ(),
-				Algorithms.ecHybrid(),
-				Algorithms.ecPregel(),
-				Algorithms.friendLinkFJ(),
-				Algorithms.friendLinkPregel(),
+				// Algorithms.ecHybrid(),
+				// Algorithms.ecPregel(),
+				// Algorithms.friendLinkFJ(),
+				// Algorithms.friendLinkPregel(),
 				Algorithms.localPathFJ(),
 				Algorithms.localPathPregel(), 
 				Algorithms.katzFJ(),

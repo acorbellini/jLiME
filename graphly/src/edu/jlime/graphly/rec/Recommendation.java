@@ -200,9 +200,9 @@ public class Recommendation extends CustomTraversal {
 		return this;
 	}
 
-	public CustomTraversal localPathFJ(float alpha, int top) {
+	public CustomTraversal localPathFJ(float alpha, int top, Dir dir) {
 
-		tr.customStep(new BetaCountStep(new LPBeta(alpha), 3, Dir.OUT)).top(top);
+		tr.customStep(new BetaCountStep(new LPBeta(alpha), 3, dir)).top(top);
 
 		return this;
 	}

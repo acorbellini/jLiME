@@ -25,10 +25,8 @@ public class ExecEnvironment {
 		JobContextImpl env = clientEnvs.get(client);
 		if (env == null) {
 			if (log.isDebugEnabled())
-				log.debug("Creating new client environment for client "
-						+ client);
-			env = new JobContextImpl(srv, new ClientCluster(srv, client),
-					client);
+				log.debug("Creating new client environment for client " + client);
+			env = new JobContextImpl(srv, new ClientCluster(srv, client), client);
 			clientEnvs.put(client, env);
 		}
 		return env;
@@ -44,6 +42,8 @@ public class ExecEnvironment {
 		for (Entry<Peer, JobContextImpl> e : clientEnvs.entrySet()) {
 			e.getValue().stop();
 		}
+
+		clientEnvs.clear();
 
 	}
 }
