@@ -12,7 +12,6 @@ import edu.jlime.graphly.traversal.count.CountJob;
 import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.Job;
-import edu.jlime.pregel.PregelSubgraph;
 import gnu.trove.map.hash.TLongFloatHashMap;
 import gnu.trove.set.hash.TLongHashSet;
 

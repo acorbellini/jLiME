@@ -207,12 +207,12 @@ public class Recommendation extends CustomTraversal {
 		return this;
 	}
 
-	public CustomTraversal localPathPregel(String key, float alpha) throws Exception {
+	public CustomTraversal localPathPregel(String key, Dir dir, float alpha) throws Exception {
 		PregelConfig config = PregelConfig.create().steps(4)// +1 para poder
 															// guardar los datos
 				.merger("lp", MessageMergers.floatSum());
 
-		tr.as(Pregel.class).vertexFunction(new LocalPath(key, alpha), config);
+		tr.as(Pregel.class).vertexFunction(new LocalPath(key, alpha, dir), config);
 
 		return this;
 	}

@@ -64,12 +64,12 @@ public class GraphlyPregelAdapter implements Graph {
 
 	@Override
 	public TLongHashSet getOutgoing(final long vertex) throws Exception {
-		return new TLongHashSet(g.getEdgesFiltered(Dir.OUT, vertex, null));
+		return getAdjacents(vertex, Dir.OUT);
 	}
 
 	@Override
 	public TLongHashSet getIncoming(final long vertex) throws Exception {
-		return new TLongHashSet(g.getEdgesFiltered(Dir.IN, vertex, null));
+		return getAdjacents(vertex, Dir.IN);
 	}
 
 	@Override
@@ -179,13 +179,18 @@ public class GraphlyPregelAdapter implements Graph {
 
 	@Override
 	public TLongHashSet getNeighbours(long v) {
-		return new TLongHashSet(g.getEdgesFiltered(Dir.BOTH, v, null));
+		return getAdjacents(v, Dir.BOTH);
 
 	}
 
 	@Override
 	public int getNeighbourhoodSize(long v) throws Exception {
 		return g.getEdgesCount(Dir.BOTH, v, null);
+	}
+
+	@Override
+	public TLongHashSet getAdjacents(long v, Dir dir) {
+		return new TLongHashSet(g.getEdgesFiltered(dir, v, null));
 	}
 
 }

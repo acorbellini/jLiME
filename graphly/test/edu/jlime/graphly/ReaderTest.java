@@ -1,11 +1,11 @@
 package edu.jlime.graphly;
 
+import java.io.IOException;
+import java.util.Iterator;
+
 import edu.jlime.graphly.util.GraphlySintetic;
 import edu.jlime.util.Pair;
 import gnu.trove.list.array.TLongArrayList;
-
-import java.io.IOException;
-import java.util.Iterator;
 
 public class ReaderTest {
 	public static void main(String[] args) throws NumberFormatException,

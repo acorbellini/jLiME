@@ -7,10 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
-
 import edu.jlime.core.cluster.Peer;
-import edu.jlime.graphly.client.GraphlyClient;
 import edu.jlime.graphly.util.GraphlyUtil;
 import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.client.JobContext;

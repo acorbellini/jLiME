@@ -5,7 +5,6 @@ import java.util.List;
 import org.apache.log4j.Logger;
 
 import edu.jlime.graphly.jobs.Mapper;
-import edu.jlime.graphly.rec.CustomStep.CustomFunction;
 import edu.jlime.graphly.traversal.GraphlyTraversal;
 import edu.jlime.graphly.traversal.Step;
 import edu.jlime.graphly.traversal.TraversalResult;

@@ -1,8 +1,8 @@
 package edu.jlime.graphly.rec;
 
-import gnu.trove.set.hash.TLongHashSet;
-
 import java.io.Serializable;
+
+import gnu.trove.set.hash.TLongHashSet;
 
 public class JaccardSubResult implements Serializable {
 	TLongHashSet union;

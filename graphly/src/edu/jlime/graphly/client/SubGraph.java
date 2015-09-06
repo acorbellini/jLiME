@@ -1,13 +1,13 @@
 package edu.jlime.graphly.client;
 
-import edu.jlime.graphly.traversal.Dir;
-import gnu.trove.set.hash.TLongHashSet;
-
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
+
+import edu.jlime.graphly.traversal.Dir;
+import gnu.trove.set.hash.TLongHashSet;
 
 public class SubGraph {
 

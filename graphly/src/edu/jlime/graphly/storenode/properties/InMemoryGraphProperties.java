@@ -1,9 +1,9 @@
 package edu.jlime.graphly.storenode.properties;
 
-import gnu.trove.map.hash.TLongObjectHashMap;
-
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import gnu.trove.map.hash.TLongObjectHashMap;
 
 public class InMemoryGraphProperties {
 	ConcurrentHashMap<String, Map<String, TLongObjectHashMap<Object>>> props = new ConcurrentHashMap<>();

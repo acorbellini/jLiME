@@ -8,7 +8,6 @@ import edu.jlime.graphly.traversal.Dir;
 import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.Job;
-import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.map.TLongFloatMap;
 import gnu.trove.set.hash.TLongHashSet;
 

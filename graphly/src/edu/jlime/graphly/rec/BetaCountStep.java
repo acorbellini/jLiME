@@ -16,7 +16,6 @@ import edu.jlime.graphly.traversal.count.CountJob;
 import edu.jlime.graphly.traversal.count.CountStep;
 import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.JobDispatcher;
-import edu.jlime.jd.RemoteReference;
 import edu.jlime.jd.client.JobContextImpl;
 import edu.jlime.jd.task.ForkJoinTask;
 import edu.jlime.jd.task.ResultListener;

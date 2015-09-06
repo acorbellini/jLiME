@@ -13,29 +13,48 @@
 				</excludes>
 			</resource>
 		</resources>
-		
+		<plugins>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.1</version>
+				<configuration>
+					<source />
+					<target />
+				</configuration>
+			</plugin>
+			<plugin>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<configuration>
+							<tasks>
+								<fileset id="scripts" dir="./scripts" />
+								<copy todir="../jlime/dist/scripts">
+									<fileset refid="scripts" />
+								</copy>
+								<chmod dir="../jlime/dist" perm="ugo+rx" includes="**/*.sh" />
+							</tasks>
+						</configuration>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
 	</build>
-	<dependencies>		
+	<dependencies>
 		<dependency>
 			<groupId>de.ruedigermoeller</groupId>
 			<artifactId>fst</artifactId>
 			<version>1.55</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>commons-collections</groupId>
 			<artifactId>commons-collections</artifactId>
 			<version>3.2.1</version>
-		</dependency>
-		<dependency>
-			<groupId>edu.jlime</groupId>
-			<artifactId>metrics</artifactId>
-			<version>1.0</version>
-		</dependency>
-		<dependency>
-			<groupId>edu.jlime</groupId>
-			<artifactId>util</artifactId>
-			<version>1.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
@@ -46,6 +65,78 @@
 			<groupId>net.sf.trove4j</groupId>
 			<artifactId>trove4j</artifactId>
 			<version>3.0.3</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.mina</groupId>
+			<artifactId>mina-core</artifactId>
+			<version>2.0.7</version>
+		</dependency>
+		<dependency>
+			<groupId>edu.jlime</groupId>
+			<artifactId>core</artifactId>
+			<version>1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.lmax</groupId>
+			<artifactId>disruptor</artifactId>
+			<version>3.3.0</version>
+			<scope>system</scope>
+			<systemPath>${project.basedir}/lib/disruptor-3.3.0.jar</systemPath>
+		</dependency>
+		<dependency>
+			<groupId>com.github.mucaho</groupId>
+			<artifactId>jnetrobust</artifactId>
+			<version>0.0.2</version>
+			<scope>system</scope>
+			<systemPath>${project.basedir}/lib/jnetrobust-core-0.0.2.jar</systemPath>
+		</dependency>
+		<dependency>
+			<groupId>com.zeromq</groupId>
+			<artifactId>zmq</artifactId>
+			<version>4.0.4</version>
+			<scope>system</scope>
+			<systemPath>${project.basedir}/lib/zmq/zmq.jar</systemPath>
+		</dependency>
+		<dependency>
+			<groupId>com.esotericsoftware</groupId>
+			<artifactId>kryo</artifactId>
+			<version>3.0.0</version>
+		</dependency>
+		<dependency>
+			<groupId>net.sf.trove4j</groupId>
+			<artifactId>trove4j</artifactId>
+			<version>3.0.3</version>
+		</dependency>
+		<dependency>
+			<groupId>com.rabbitmq</groupId>
+			<artifactId>amqp-client</artifactId>
+			<version>3.5.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.iq80.snappy</groupId>
+			<artifactId>snappy</artifactId>
+			<version>0.3</version>
+			<classifier>bin</classifier>
+		</dependency>
+		<dependency>
+			<groupId>net.jpountz.lz4</groupId>
+			<artifactId>lz4</artifactId>
+			<version>1.2.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+			<version>18.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-compress</artifactId>
+			<version>1.8.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.tukaani</groupId>
+			<artifactId>xz</artifactId>
+			<version>1.5</version>
 		</dependency>
 	</dependencies>
 	<parent>

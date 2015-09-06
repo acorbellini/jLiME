@@ -2,6 +2,7 @@ package edu.jlime.graphly.rec;
 
 import java.util.Iterator;
 
+import edu.jlime.graphly.traversal.Dir;
 import edu.jlime.pregel.client.WorkerContext;
 import edu.jlime.pregel.graph.VertexFunction;
 import edu.jlime.pregel.graph.rpc.Graph;
@@ -13,15 +14,16 @@ public class LocalPath implements VertexFunction<FloatPregelMessage> {
 
 	private String k;
 	private float alpha;
+	private Dir dir;
 
-	public LocalPath(String key, float alpha) {
+	public LocalPath(String key, float alpha, Dir dir) {
 		this.k = key;
 		this.alpha = alpha;
+		this.dir =dir;
 	}
 
 	@Override
-	public void execute(long v, Iterator<FloatPregelMessage> in,
-			WorkerContext ctx) throws Exception {
+	public void execute(long v, Iterator<FloatPregelMessage> in, WorkerContext ctx) throws Exception {
 		Graph g = ctx.getGraph();
 		float adj = 0f;
 		if (ctx.getSuperStep() > 0) {
@@ -41,12 +43,15 @@ public class LocalPath implements VertexFunction<FloatPregelMessage> {
 			adj = 1f;
 
 		if (ctx.getSuperStep() < 3) {
-			TLongHashSet out = g.getOutgoing(v);
+			
+			TLongHashSet out = g.getAdjacents(v, dir);
 			TLongIterator it = out.iterator();
 			while (it.hasNext()) {
 				long next = it.next();
 				ctx.sendFloat("lp", next, adj);
 			}
+			
+			
 		}
 	}
 }

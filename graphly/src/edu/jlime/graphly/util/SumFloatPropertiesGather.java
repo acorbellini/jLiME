@@ -1,14 +1,14 @@
 package edu.jlime.graphly.util;
 
+import java.util.Iterator;
+
+import com.google.common.collect.Lists;
+
 import edu.jlime.graphly.client.VertexIterator;
 import edu.jlime.graphly.storenode.GraphlyStoreNode;
 import edu.jlime.graphly.storenode.rpc.GraphlyStoreNodeI;
 import gnu.trove.decorator.TLongSetDecorator;
 import gnu.trove.set.hash.TLongHashSet;
-
-import java.util.Iterator;
-
-import com.google.common.collect.Lists;
 
 public class SumFloatPropertiesGather implements Gather<Float> {
 	private String prop;

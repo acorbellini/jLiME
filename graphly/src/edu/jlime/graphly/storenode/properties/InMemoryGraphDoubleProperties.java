@@ -1,9 +1,9 @@
 package edu.jlime.graphly.storenode.properties;
 
-import gnu.trove.map.hash.TLongDoubleHashMap;
-
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import gnu.trove.map.hash.TLongDoubleHashMap;
 
 public class InMemoryGraphDoubleProperties {
 	public static final double NOT_FOUND = Double.MIN_VALUE;

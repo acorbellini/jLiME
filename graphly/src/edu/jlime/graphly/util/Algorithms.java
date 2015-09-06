@@ -4,7 +4,6 @@ import java.util.Set;
 
 import edu.jlime.graphly.client.GraphlyGraph;
 import edu.jlime.graphly.jobs.Mapper;
-import edu.jlime.graphly.jobs.MapperFactory;
 import edu.jlime.graphly.rec.Recommendation;
 import edu.jlime.graphly.traversal.Dir;
 import edu.jlime.graphly.traversal.GraphlyTraversal;
@@ -101,8 +100,8 @@ public class Algorithms {
 
 			@Override
 			GraphlyTraversal run(long[] users, GraphlyGraph graph, Mapper mapper) throws Exception {
-				return graph.v(users).set("mapper", mapper).as(Recommendation.class).localPathPregel("lp", 0.1f)
-						.asTraversal();
+				return graph.v(users).set("mapper", mapper).as(Recommendation.class)
+						.localPathPregel("lp", Dir.BOTH, 0.1f).asTraversal();
 			}
 
 			@Override

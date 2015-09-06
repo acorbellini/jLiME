@@ -1,8 +1,8 @@
 package edu.jlime.graphly.client;
 
-import gnu.trove.map.hash.TLongFloatHashMap;
-
 import java.util.List;
+
+import gnu.trove.map.hash.TLongFloatHashMap;
 
 public class FloatMerger implements GatherMerger<TLongFloatHashMap> {
 

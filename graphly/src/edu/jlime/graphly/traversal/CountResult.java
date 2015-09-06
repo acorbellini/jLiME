@@ -1,17 +1,14 @@
 package edu.jlime.graphly.traversal;
 
+import java.util.Comparator;
+import java.util.TreeSet;
+
 import gnu.trove.iterator.TLongFloatIterator;
 import gnu.trove.iterator.TLongIterator;
 import gnu.trove.map.TLongFloatMap;
 import gnu.trove.map.hash.TLongFloatHashMap;
 import gnu.trove.procedure.TLongFloatProcedure;
 import gnu.trove.set.hash.TLongHashSet;
-
-import java.util.Comparator;
-import java.util.TreeSet;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 public class CountResult extends TraversalResult {
 	TLongFloatMap map;

@@ -52,19 +52,9 @@
 			<version>4.1.4.RELEASE</version>
 		</dependency>
 		<dependency>
-			<groupId>edu.jlime</groupId>
-			<artifactId>jobdispatcher</artifactId>
-			<version>1.0</version>
-		</dependency>
-		<dependency>
 			<groupId>net.sf.trove4j</groupId>
 			<artifactId>trove4j</artifactId>
 			<version>3.0.3</version>
-		</dependency>
-		<dependency>
-			<groupId>edu.jlime</groupId>
-			<artifactId>jlime-pregel</artifactId>
-			<version>1.0</version>
 		</dependency>
 		<dependency>
 			<groupId>com.sun.jersey</groupId>
@@ -84,5 +74,11 @@
 			<scope>system</scope>
 			<systemPath>${project.basedir}/lib/leveldbjni-99.jar</systemPath>
 		</dependency>
+		        <dependency>
+            <groupId>berkeleydb</groupId>
+            <artifactId>je</artifactId>
+            <version>3.2.76</version>
+        </dependency>
+		
 	</dependencies>
 </project>

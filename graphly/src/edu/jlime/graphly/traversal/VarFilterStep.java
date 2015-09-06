@@ -1,10 +1,10 @@
 package edu.jlime.graphly.traversal;
 
-import gnu.trove.set.hash.TLongHashSet;
-
 import java.util.Arrays;
 
 import org.apache.log4j.Logger;
+
+import gnu.trove.set.hash.TLongHashSet;
 
 public class VarFilterStep implements Step {
 

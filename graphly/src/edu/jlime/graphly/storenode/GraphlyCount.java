@@ -5,8 +5,6 @@ import java.io.Serializable;
 import edu.jlime.core.rpc.RPCObject;
 import edu.jlime.util.ByteBuffer;
 import gnu.trove.iterator.TLongFloatIterator;
-import gnu.trove.map.TLongFloatMap;
-import gnu.trove.map.hash.TLongFloatHashMap;
 
 public class GraphlyCount implements Serializable, RPCObject {
 	// TLongFloatMap res;

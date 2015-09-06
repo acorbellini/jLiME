@@ -109,18 +109,18 @@
 	<modules>
 		<module>../core</module>
 
-		<module>../collections</module>
-		<module>../linkprediction</module>
+		
+		
 
 
-		<module>../jlime-rpc</module>
+		
 
-		<module>../jobdispatcher</module>
-		<module>../metrics</module>
+		
+		
 
-		<module>../util</module>
+		
 		<module>../graphly</module>
-		<module>../jlime-pregel</module>
+		
 		
 	</modules>
 	<repositories>

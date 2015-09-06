@@ -8,7 +8,6 @@ import edu.jlime.graphly.rec.CustomStep.CustomFunction;
 import edu.jlime.graphly.traversal.CountResult;
 import edu.jlime.graphly.traversal.Dir;
 import edu.jlime.graphly.traversal.GraphlyTraversal;
-import edu.jlime.graphly.traversal.Step;
 import edu.jlime.graphly.traversal.TraversalResult;
 import edu.jlime.util.Pair;
 import gnu.trove.map.hash.TLongFloatHashMap;

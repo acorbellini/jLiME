@@ -11,7 +11,6 @@ import edu.jlime.graphly.client.GraphlyGraph;
 import edu.jlime.graphly.jobs.MapperFactory;
 import edu.jlime.graphly.rec.KatzPregel;
 import edu.jlime.graphly.server.GraphlyServer;
-import edu.jlime.graphly.traversal.Dir;
 import edu.jlime.graphly.traversal.Pregel;
 import edu.jlime.pregel.client.CacheFactory;
 import edu.jlime.pregel.client.PregelConfig;

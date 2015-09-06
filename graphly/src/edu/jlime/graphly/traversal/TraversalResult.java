@@ -1,12 +1,11 @@
 package edu.jlime.graphly.traversal;
 
-import gnu.trove.impl.hash.TLongLongHash;
+import java.io.Serializable;
 
+import gnu.trove.impl.hash.TLongLongHash;
 import gnu.trove.map.TLongFloatMap;
 import gnu.trove.map.hash.TLongLongHashMap;
 import gnu.trove.set.hash.TLongHashSet;
-
-import java.io.Serializable;
 
 public abstract class TraversalResult implements Serializable {
 

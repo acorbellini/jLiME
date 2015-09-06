@@ -46,7 +46,6 @@ import edu.jlime.graphly.storenode.properties.InMemoryGraphFloatProperties;
 import edu.jlime.graphly.storenode.properties.InMemoryGraphProperties;
 import edu.jlime.graphly.storenode.rpc.GraphlyStoreNodeI;
 import edu.jlime.graphly.traversal.Dir;
-import edu.jlime.graphly.traversal.ParallelLongFloatMap;
 import edu.jlime.graphly.util.Gather;
 import edu.jlime.util.ByteBuffer;
 import edu.jlime.util.DataTypeUtils;

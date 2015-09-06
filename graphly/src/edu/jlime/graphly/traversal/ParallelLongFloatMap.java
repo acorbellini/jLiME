@@ -1,5 +1,9 @@
 package edu.jlime.graphly.traversal;
 
+import java.io.Serializable;
+import java.util.Map;
+import java.util.Map.Entry;
+
 import gnu.trove.TFloatCollection;
 import gnu.trove.function.TFloatFunction;
 import gnu.trove.iterator.TLongFloatIterator;
@@ -12,10 +16,6 @@ import gnu.trove.procedure.TLongFloatProcedure;
 import gnu.trove.procedure.TLongProcedure;
 import gnu.trove.set.TLongSet;
 import gnu.trove.set.hash.TLongHashSet;
-
-import java.io.Serializable;
-import java.util.Map;
-import java.util.Map.Entry;
 
 public class ParallelLongFloatMap implements TLongFloatMap, Serializable {
 	private TLongFloatHashMap[] vals = new TLongFloatHashMap[128];

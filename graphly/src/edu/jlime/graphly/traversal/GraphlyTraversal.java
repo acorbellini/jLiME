@@ -16,7 +16,6 @@ import edu.jlime.graphly.rec.Repeat;
 import edu.jlime.graphly.rec.VertexFilter;
 import edu.jlime.graphly.traversal.RepeatStep.RepeatSync;
 import edu.jlime.graphly.traversal.count.CountStep;
-import edu.jlime.graphly.traversal.count.ParallelStep;
 import edu.jlime.graphly.traversal.each.EachStep;
 import edu.jlime.graphly.traversal.each.ForEach;
 import edu.jlime.jd.ClientNode;

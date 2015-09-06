@@ -1,15 +1,15 @@
 package edu.jlime.graphly.util;
 
-import edu.jlime.jd.ClientNode;
-import edu.jlime.util.Pair;
-import gnu.trove.list.array.TLongArrayList;
-import gnu.trove.set.hash.TLongHashSet;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import edu.jlime.jd.ClientNode;
+import edu.jlime.util.Pair;
+import gnu.trove.list.array.TLongArrayList;
+import gnu.trove.set.hash.TLongHashSet;
 
 public class GraphlyUtil {
 

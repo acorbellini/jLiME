@@ -1,10 +1,10 @@
 package edu.jlime.graphly.storenode.properties;
 
-import gnu.trove.iterator.TLongFloatIterator;
-import gnu.trove.map.hash.TLongFloatHashMap;
-
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import gnu.trove.iterator.TLongFloatIterator;
+import gnu.trove.map.hash.TLongFloatHashMap;
 
 public class InMemoryGraphFloatProperties {
 	private static final long KEY_NOT_FOUND = Long.MIN_VALUE;

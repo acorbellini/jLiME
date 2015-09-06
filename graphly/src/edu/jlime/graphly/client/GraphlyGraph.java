@@ -15,7 +15,6 @@ import edu.jlime.graphly.util.TopGatherer;
 import edu.jlime.jd.JobDispatcher;
 import edu.jlime.pregel.client.PregelClient;
 import edu.jlime.util.Pair;
-import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.map.TLongFloatMap;
 import gnu.trove.map.hash.TLongFloatHashMap;
 import gnu.trove.map.hash.TLongObjectHashMap;
