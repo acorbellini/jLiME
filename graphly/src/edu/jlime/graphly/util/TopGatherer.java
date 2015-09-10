@@ -53,7 +53,6 @@ public class TopGatherer implements Gather<Set<Pair<Long, Float>>> {
 				}
 			}
 		} else {
-
 			TLongIterator it = v.iterator();
 			while (it.hasNext()) {
 				long vid = it.next();

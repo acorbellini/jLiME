@@ -1,12 +1,10 @@
-package edu.jlime.graphly.rec.hits;
+package edu.jlime.graphly.rec;
 
 import java.util.ArrayList;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-
-import org.springframework.util.SystemPropertyUtils;
 
 import edu.jlime.graphly.client.GraphlyGraph;
 import edu.jlime.graphly.client.SubGraph;
@@ -16,39 +14,45 @@ import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.Job;
 import gnu.trove.iterator.TLongFloatIterator;
-import gnu.trove.iterator.TLongIterator;
 import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.map.hash.TLongFloatHashMap;
+import gnu.trove.set.hash.TLongHashSet;
 
-public class HITSJob implements Job<AuthHubSubResult> {
+public class SalsaHybridJob implements Job<AuthHubSubResult> {
 
 	private GraphlyGraph g;
-	private TLongFloatHashMap auth;
-	private TLongFloatHashMap hub;
+	private int step;
 	private long[] subgraph;
 	private TLongArrayList vertices;
+	private String hub;
+	private String auth;
+	private int authSize;
+	private int hubSize;
 
-	public HITSJob(GraphlyGraph graph, TLongFloatHashMap auth,
-			TLongFloatHashMap hub, long[] subgraph, TLongArrayList value) {
+	public SalsaHybridJob(GraphlyGraph graph, int authSize, int hubSize,
+			String auth, String hub, int i, TLongHashSet subgraph,
+			TLongArrayList value) {
+		this.authSize = authSize;
+		this.hubSize = hubSize;
 		this.g = graph;
-		this.auth = new TLongFloatHashMap(auth);
-		this.hub = new TLongFloatHashMap(hub);
-		this.subgraph = subgraph;
+		this.step = i;
+		this.subgraph = subgraph.toArray();
 		this.vertices = value;
+		this.auth = auth;
+		this.hub = hub;
 	}
 
 	@Override
 	public AuthHubSubResult call(JobContext env, ClientNode peer)
 			throws Exception {
-		final SubGraph sg = g.getSubGraph("hitsg", this.subgraph);
 		ArrayList<Future<AuthHubSubResult>> futs = new ArrayList<>();
 		final int threads = Runtime.getRuntime().availableProcessors();
 		ExecutorService exec = Executors.newFixedThreadPool(threads);
+		final SubGraph sg = g.getSubGraph("salsasg", this.subgraph);
 		TLongFloatHashMap authRes = new TLongFloatHashMap();
 		TLongFloatHashMap hubRes = new TLongFloatHashMap();
 
 		int size = vertices.size();
-
 		final float chunks = (size / (float) threads);
 
 		for (int i = 0; i < threads; i++) {
@@ -69,23 +73,45 @@ public class HITSJob implements Job<AuthHubSubResult> {
 							int cont = from;
 							while (cont < to) {
 								long v = vertices.get(cont++);
-								long[] outgoing = sg.getEdges(Dir.OUT, v);
-								float value = hub.get(v);
-								if (value != hub.getNoEntryValue()) {
-									for (long out : outgoing) {
-										authRes.adjustOrPutValue(out, value,
-												value);
+
+								if (step % 2 == 0) {
+									// AUTH
+									long[] inW = sg.getEdges(Dir.IN, v);
+									if (inW.length > 0) {
+										float a = g.getFloat(v, auth,
+												1f / authSize);
+										float value = a / inW.length;
+										for (long w : inW)
+											authRes.adjustOrPutValue(w, value,
+													value);
 									}
+
+									// HUB
+									long[] outW = sg.getEdges(Dir.OUT, v);
+									if (outW.length > 0) {
+										float h = g.getFloat(v, hub,
+												1f / hubSize);
+										float f = h / outW.length;
+										for (long w : outW)
+											hubRes.adjustOrPutValue(w, f, f);
+									}
+
+								} else if (step % 2 == 1) {
+									long[] outV = sg.getEdges(Dir.OUT, v);
+									float authsum = g.getFloat(v, auth);
+									float value = authsum / outV.length;
+									for (long w : outV)
+										authRes.adjustOrPutValue(w, value,
+												value);
+
+									long[] inV = sg.getEdges(Dir.IN, v);
+									float hubSum = g.getFloat(v, hub);
+									float hubvalue = hubSum / inV.length;
+									for (long w : inV)
+										hubRes.adjustOrPutValue(w, hubvalue,
+												hubvalue);
 								}
 
-								long[] incoming = sg.getEdges(Dir.IN, v);
-								float value2 = auth.get(v);
-								if (value2 != auth.getNoEntryValue()) {
-									for (long in : incoming) {
-										hubRes.adjustOrPutValue(in, value2,
-												value2);
-									}
-								}
 							}
 							return new AuthHubSubResult(authRes, hubRes);
 						}
@@ -98,10 +124,7 @@ public class HITSJob implements Job<AuthHubSubResult> {
 			TLongFloatIterator it = authHubSubResult.auth.iterator();
 			while (it.hasNext()) {
 				it.advance();
-				long key = it.key();
-				float value = it.value();
-
-				authRes.adjustOrPutValue(key, value, value);
+				authRes.adjustOrPutValue(it.key(), it.value(), it.value());
 			}
 
 			TLongFloatIterator itHub = authHubSubResult.hub.iterator();
@@ -112,7 +135,11 @@ public class HITSJob implements Job<AuthHubSubResult> {
 			}
 		}
 
-		return new AuthHubSubResult(authRes, hubRes);
+		g.setTempFloats(auth, true, authRes);
+		g.setTempFloats(hub, true, hubRes);
+
+		// return new AuthHubSubResult(authRes, hubRes);
+		return null;
 	}
 
 }

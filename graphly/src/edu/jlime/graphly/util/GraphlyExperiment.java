@@ -81,7 +81,7 @@ public class GraphlyExperiment {
 			for (Experiment e : exps) {
 				prom_2 += (e.net - prom) * (e.net - prom);
 			}
-			
+
 			return (float) Math.sqrt(prom_2 / exps.size());
 		}
 
@@ -131,7 +131,7 @@ public class GraphlyExperiment {
 		// prof.getNetworkConsumption(), prof.getMemoryConsumption(),
 		// (System.currentTimeMillis() - start));
 
-		for (int i = 0; i < reps; i++) {
+		for (int i = 0; i < reps + 1; i++) {
 
 			long start = System.currentTimeMillis();
 			GraphlyServer server = fact.build();
@@ -141,8 +141,8 @@ public class GraphlyExperiment {
 
 			GraphlyGraph graph = graphly.getGraph(graphName);
 
-			ClusterProfiler prof = new ClusterProfiler(graphly.getJobClient()
-					.getCluster(), 1000);
+			ClusterProfiler prof = new ClusterProfiler(
+					graphly.getJobClient().getCluster(), 1000);
 			prof.start();
 			GraphlyTraversal tr = run.run(users, graph, mapper);
 			TraversalResult res = null;
@@ -151,15 +151,15 @@ public class GraphlyExperiment {
 						.getByName(this.start));
 			else
 				res = tr.exec();
-
+			long time = System.currentTimeMillis() - start;
 			prof.stop();
-
 			if (print_res)
 				System.out.println(run.printResult(res, graph));
 
-			expRes.addExperiment((System.currentTimeMillis() - start),
-					prof.getNetworkConsumption(), prof.getMemoryConsumption());
-
+			if (i > 0) {
+				expRes.addExperiment(time, prof.getNetworkConsumption(),
+						prof.getMemoryConsumption());
+			}
 			graphly.close();
 			server.stop();
 		}

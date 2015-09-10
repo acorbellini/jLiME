@@ -1,9 +1,12 @@
 package edu.jlime.graphly.rec;
 
+import java.util.Set;
+
 import org.apache.log4j.Logger;
 
 import edu.jlime.graphly.client.GraphlyGraph;
 import edu.jlime.graphly.rec.CustomStep.CustomFunction;
+import edu.jlime.graphly.rec.salsa.AuthHubResult;
 import edu.jlime.graphly.rec.salsa.SALSAPregel;
 import edu.jlime.graphly.traversal.Dir;
 import edu.jlime.graphly.traversal.GraphlyTraversal;
@@ -11,6 +14,8 @@ import edu.jlime.graphly.traversal.Pregel;
 import edu.jlime.graphly.traversal.TraversalResult;
 import edu.jlime.pregel.client.PregelConfig;
 import edu.jlime.pregel.mergers.MessageMergers;
+import edu.jlime.util.Pair;
+import gnu.trove.map.hash.TLongFloatHashMap;
 import gnu.trove.set.hash.TLongHashSet;
 
 public class SALSAPregelStep implements CustomFunction {
@@ -18,12 +23,14 @@ public class SALSAPregelStep implements CustomFunction {
 	private String auth;
 	private String hub;
 	private int steps;
+	private int top;
 
-	public SALSAPregelStep(String auth, String hub, int steps) {
+	public SALSAPregelStep(String auth, String hub, int steps, int top) {
 		super();
 		this.auth = auth;
 		this.hub = hub;
 		this.steps = steps;
+		this.top = top;
 	}
 
 	@Override
@@ -56,13 +63,26 @@ public class SALSAPregelStep implements CustomFunction {
 				.merger("salsa-hub", MessageMergers.floatSum()).steps(steps)
 				.subgraph("salsa-sg", subgraph);
 
-		g.v(subgraph)
-				.set("mapper", tr.get("mapper"))
-				.as(Pregel.class)
-				.vertexFunction(
-						new SALSAPregel(auth, hub, authSet.size(),
-								hubSet.size()), config).exec();
-		return before;
+		g.v(subgraph).set("mapper", tr.get("mapper")).as(Pregel.class)
+				.vertexFunction(new SALSAPregel(auth, hub, authSet.size(),
+						hubSet.size()), config)
+				.exec();
+
+		log.info("Counting top " + top);
+		Set<Pair<Long, Float>> set = g.topFloat(auth, top);
+
+		TLongFloatHashMap authRes = new TLongFloatHashMap();
+		for (Pair<Long, Float> pair : set) {
+			authRes.put(pair.left, pair.right);
+		}
+
+		Set<Pair<Long, Float>> setHub = g.topFloat(hub, top);
+
+		TLongFloatHashMap hubRes = new TLongFloatHashMap();
+		for (Pair<Long, Float> pair : setHub) {
+			hubRes.put(pair.left, pair.right);
+		}
+		return new AuthHubResult(authRes, hubRes);
 	}
 
 }

@@ -97,7 +97,8 @@ public class CacheManagerImpl implements CacheManagerI {
 		return ret;
 	}
 
-	private PregelMessageQueue getBroadcastSubgraphCache(Pair<String, String> p) {
+	private PregelMessageQueue getBroadcastSubgraphCache(
+			Pair<String, String> p) {
 		PregelMessageQueue ret = cacheBroadcastSubGraph.get(p);
 		if (ret == null) {
 			synchronized (cacheBroadcastSubGraph) {
@@ -154,7 +155,7 @@ public class CacheManagerImpl implements CacheManagerI {
 
 	private void checkSize(final String type, final PregelMessageQueue cache)
 			throws Exception {
-		if (cache.currentSize() == max_size) {
+		if (max_size < Integer.MAX_VALUE && cache.currentSize() == max_size) {
 			if (parallel) {
 				Future<?> fut = futures.remove(type);
 				if (fut != null)
@@ -225,7 +226,8 @@ public class CacheManagerImpl implements CacheManagerI {
 	public void sendAllSubGraph(String msgType, String subgraph, long v,
 			Object val) throws Exception {
 		Pair<String, String> p = new Pair<>(msgType, subgraph);
-		ObjectMessageQueue q = (ObjectMessageQueue) getBroadcastSubgraphCache(p);
+		ObjectMessageQueue q = (ObjectMessageQueue) getBroadcastSubgraphCache(
+				p);
 		synchronized (q) {
 			checkBroadCacheSubgraphSize(p, q);
 			q.put(v, -1l, val);

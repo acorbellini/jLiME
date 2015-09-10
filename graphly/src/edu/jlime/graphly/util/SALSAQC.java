@@ -18,7 +18,7 @@ public class SALSAQC implements QueryContainer {
 
 		g.v(users).set("mapper", mapper).to(Dir.BOTH, 500)
 				.as(Recommendation.class)
-				.salsa("salsa-auth", "salsa-hub", steps)
+				.salsaHybrid("salsa-auth", "salsa-hub", steps, 10)
 				.submit(g.getJobClient().getCluster().getExecutors().get(0));
 	}
 

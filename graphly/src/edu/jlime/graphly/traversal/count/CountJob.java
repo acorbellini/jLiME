@@ -14,24 +14,26 @@ import gnu.trove.set.hash.TLongHashSet;
 public class CountJob implements Job<GraphlyCount> {
 
 	private Dir dir;
-	private TLongFloatMap data;
 	int max_edges;
 	private GraphlyGraph g;
-	private TLongHashSet toFilter;
+	private long[] toFilter;
+	private long[] keys;
+	private float[] values;
 
-	public CountJob(GraphlyGraph g, Dir dir, int max_edges,
-			TLongFloatMap prevCounts, TLongHashSet toFilter2) {
+	public CountJob(GraphlyGraph g, Dir dir, int max_edges, long[] keys,
+			float[] values, long[] toFilter) {
 		this.dir = dir;
-		this.data = prevCounts;
+		this.keys = keys;
+		this.values = values;
 		this.max_edges = max_edges;
 		this.g = g;
-		this.toFilter = toFilter2;
+		this.toFilter = toFilter;
 	}
 
 	@Override
 	public GraphlyCount call(JobContext ctx, ClientNode peer) throws Exception {
 		Logger log = Logger.getLogger(CountJob.class);
-		log.info("Executing count job for " + data.size());
-		return g.countEdges(dir, max_edges, data, toFilter);
+		log.info("Executing count job for " + keys.length);
+		return g.countEdges(dir, max_edges, keys, values, toFilter);
 	}
 }

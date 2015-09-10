@@ -2,6 +2,7 @@ package edu.jlime.graphly.rec;
 
 import java.util.Iterator;
 
+import edu.jlime.graphly.traversal.Dir;
 import edu.jlime.pregel.client.WorkerContext;
 import edu.jlime.pregel.graph.VertexFunction;
 import edu.jlime.pregel.graph.rpc.Graph;
@@ -14,16 +15,17 @@ public class KatzRootedPregel implements VertexFunction<FloatPregelMessage> {
 	private String prop;
 	private float beta;
 	private int lastStep;
+	private Dir dir;
 
-	public KatzRootedPregel(String val, float beta2, int last) {
+	public KatzRootedPregel(String val, float beta2, int last, Dir dir) {
 		this.prop = val;
 		this.beta = beta2;
 		this.lastStep = last;
+		this.dir = dir;
 	}
 
 	@Override
-	public void execute(long v, Iterator<FloatPregelMessage> in,
-			WorkerContext ctx) throws Exception {
+	public void execute(long v, Iterator<FloatPregelMessage> in, WorkerContext ctx) throws Exception {
 		Graph g = ctx.getGraph();
 
 		float adj = 0f;
@@ -44,7 +46,7 @@ public class KatzRootedPregel implements VertexFunction<FloatPregelMessage> {
 			adj = beta;
 
 		if (ctx.getSuperStep() < lastStep) {
-			TLongHashSet out = g.getOutgoing(v);
+			TLongHashSet out = g.getAdjacents(v, dir);
 			TLongIterator it = out.iterator();
 			while (it.hasNext()) {
 				long next = it.next();

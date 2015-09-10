@@ -16,8 +16,7 @@ public class WhoToFollowStep implements CustomFunction {
 	private int steps;
 	private float max_depth;
 
-	public WhoToFollowStep(String a, String h, int steps, float maxsalsadepth,
-			int circleTop) {
+	public WhoToFollowStep(String a, String h, int steps, float maxsalsadepth, int circleTop) {
 		this.auth = a;
 		this.hub = h;
 		this.steps = steps;
@@ -26,12 +25,10 @@ public class WhoToFollowStep implements CustomFunction {
 	}
 
 	@Override
-	public TraversalResult execute(TraversalResult before, GraphlyTraversal tr)
-			throws Exception {
+	public TraversalResult execute(TraversalResult before, GraphlyTraversal tr) throws Exception {
 		long[] target = before.vertices().toArray();
 		GraphlyGraph g = tr.getGraph();
-		g.v(target).set("mapper", tr.get("mapper")).as(Recommendation.class)
-				.salsa(auth, hub, steps).exec();
+		g.v(target).set("mapper", tr.get("mapper")).as(Recommendation.class).salsaHybrid(auth, hub, steps, 10).exec();
 		TLongObjectHashMap<Object> collected = g.collect(auth, 100, target);
 
 		TLongFloatHashMap ret = new TLongFloatHashMap();

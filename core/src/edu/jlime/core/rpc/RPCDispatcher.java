@@ -62,16 +62,16 @@ public class RPCDispatcher implements TransportListener {
 
 	private Metrics metrics;
 
-	// private ExecutorService asyncExec = Executors
-	// .newCachedThreadPool(new ThreadFactory() {
-	//
-	// @Override
-	// public Thread newThread(Runnable r) {
-	// Thread t = Executors.defaultThreadFactory().newThread(r);
-	// t.setName("RPCAsyncThreads");
-	// return t;
-	// }
-	// });
+	private ExecutorService asyncExec = Executors
+			.newCachedThreadPool(new ThreadFactory() {
+
+				@Override
+				public Thread newThread(Runnable r) {
+					Thread t = Executors.defaultThreadFactory().newThread(r);
+					t.setName("RPCAsyncThreads");
+					return t;
+				}
+			});
 
 	private ExecutorService broadcastExec = Executors
 			.newCachedThreadPool(new ThreadFactory() {
@@ -101,21 +101,21 @@ public class RPCDispatcher implements TransportListener {
 
 	public void callAsync(final Peer dest, final Peer clientID,
 			final MethodCall call) throws Exception {
-		// if (asyncExec.isShutdown()) {
-		// log.warn("Async Executor is shutted down, maybe the rpc dispatcher was closed.");
-		// return;
-		// }
-		//
-		// asyncExec.execute(new Runnable() {
-		// @Override
-		// public void run() {
-		// try {
-		call(dest, clientID, call, false);
-		// } catch (Exception e) {
-		// e.printStackTrace();
-		// }
-		// }
-		// });
+		if (asyncExec.isShutdown()) {
+			log.warn("Async Executor is shutted down, maybe the rpc dispatcher was closed.");
+			return;
+		}
+
+		asyncExec.execute(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					call(dest, clientID, call, false);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
 
 	}
 
@@ -159,18 +159,22 @@ public class RPCDispatcher implements TransportListener {
 		this.marshaller = marshaller;
 	}
 
-	public void stop() throws Exception {
-		// asyncExec.shutdown();
+	public synchronized void stop() throws Exception {
+		if(stopped)
+			return;
+		asyncExec.shutdown();
 		targets.clear();
 		targetsMethods.clear();
 		targetsStatuses.clear();
-		
+
 		this.marshaller.clear();
+
 		
-		this.stopped = true;
 		broadcastExec.shutdown();
 		tr.stop();
 		localdispatchers.remove(localPeer);
+		
+		this.stopped = true;
 	};
 
 	protected Object callTarget(MethodCall mc) throws Exception {

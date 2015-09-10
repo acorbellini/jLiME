@@ -66,29 +66,22 @@ public class CountStep implements Step {
 
 		log.info("Creating Jobs.");
 
+		final long[] filter = toFilter.toArray();
 		if (mapped.size() == 1) {
-			fj.putJob(
-					new CountJob(tr.getGraph(), dir, max_edges, before
-							.getCounts(), toFilter), mapped.get(0).left);
+			TLongFloatMap counts = before.getCounts();
+			fj.putJob(new CountJob(tr.getGraph(), dir, max_edges,
+					counts.keys(), counts.values(), filter), mapped.get(0).left);
 		} else {
 			ExecutorService exec = Executors.newFixedThreadPool(Runtime
 					.getRuntime().availableProcessors());
 
 			for (final Pair<ClientNode, TLongArrayList> e : mapped) {
-				// fj.putJob(
-				// new CountJob(tr.getGraph(), dir, max_edges, before
-				// .getCounts(), toFilter), e.getKey());
 				exec.execute(new Runnable() {
 					@Override
 					public void run() {
 						try {
-							// TLongIterator it = e.getValue().iterator();
 							TLongFloatHashMap prevCounts = new TLongFloatHashMap(
 									100000);
-							// while (it.hasNext()) {
-							// long v = it.next();
-							// prevCounts.put(v, before.getCount(v));
-							// }
 
 							TLongArrayList value = e.getValue();
 							for (int i = 0; i < value.size(); i++) {
@@ -96,9 +89,11 @@ public class CountStep implements Step {
 								prevCounts.put(v, before.getCount(v));
 							}
 
-							fj.putJob(new CountJob(tr.getGraph(), dir,
-									max_edges, prevCounts, toFilter), e
-									.getKey());
+							fj.putJob(
+									new CountJob(tr.getGraph(), dir, max_edges,
+											prevCounts.keys(), prevCounts
+													.values(), filter), e
+											.getKey());
 
 						} catch (Exception e) {
 							e.printStackTrace();
@@ -117,30 +112,12 @@ public class CountStep implements Step {
 				new ResultListener<GraphlyCount, TLongFloatMap>() {
 					TLongFloatMap temp = null;
 
-					// ParallelLongFloatMap temp = new ParallelLongFloatMap();
-
 					@Override
 					public void onSuccess(GraphlyCount gc) {
 
-						// log.info("Received result with " + gc.getRes().size()
-						// + " vertices.");
-						//
-						// TLongFloatIterator it = gc.getRes().iterator();
-						//
-						// while (it.hasNext()) {
-						// it.advance();
-						// long key = it.key();
-						// float value = it.value();
-						// temp.adjustOrPutValue(key, value, value);
-						// }
-						// if (log.isDebugEnabled())
-						// log.debug("Finished adding to result.");
-
 						log.info("Received result with " + gc.size()
 								+ " vertices.");
-
-						// temp.mergeWith((ParallelLongFloatMap) gc.getRes());
-
+						long init = System.currentTimeMillis();
 						synchronized (this) {
 							if (temp == null)
 								temp = new TLongFloatHashMap(gc.keys(), gc
@@ -156,8 +133,8 @@ public class CountStep implements Step {
 								}
 							}
 						}
-						// if (log.isDebugEnabled())
-						log.info("Finished adding to result.");
+						log.info("Finished adding to result in "
+								+ (System.currentTimeMillis() - init));
 
 					}
 

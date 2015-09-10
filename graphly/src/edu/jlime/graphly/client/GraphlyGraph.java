@@ -66,8 +66,9 @@ public class GraphlyGraph implements Transferible {
 	}
 
 	public GraphlyCount countEdges(final Dir dir, final int max_edges,
-			TLongFloatMap data, TLongHashSet toFilter) throws Exception {
-		return graphly.countEdges(graph, dir, max_edges, data, toFilter);
+			long[] keys, float[] values, long[] toFilter) throws Exception {
+		return graphly.countEdges(graph, dir, max_edges, keys, values,
+				toFilter);
 	}
 
 	public long getRandomEdge(long before, long[] subset, Dir d)
@@ -97,7 +98,8 @@ public class GraphlyGraph implements Transferible {
 		return graphly.collect(graph, k, top, vids);
 	}
 
-	public void set(String to, TLongObjectHashMap<Object> map) throws Exception {
+	public void set(String to, TLongObjectHashMap<Object> map)
+			throws Exception {
 		graphly.set(graph, to, map);
 	}
 
@@ -147,7 +149,8 @@ public class GraphlyGraph implements Transferible {
 		graphly.setDefaultDouble(graph, k, v);
 	}
 
-	public void setDouble(long v, String k, double currentVal) throws Exception {
+	public void setDouble(long v, String k, double currentVal)
+			throws Exception {
 		graphly.setDouble(graph, v, k, currentVal);
 	}
 
@@ -214,13 +217,13 @@ public class GraphlyGraph implements Transferible {
 	}
 
 	public Float sumFloat(String string) throws Exception {
-		return this.gather(new SumFloatPropertiesGather(string)).merge(
-				new SumMerger());
+		return this.gather(new SumFloatPropertiesGather(string))
+				.merge(new SumMerger());
 	}
 
 	public Float quadSumFloat(String string) throws Exception {
-		return this.gather(new QuadSumFloatPropertiesGather(string)).merge(
-				new SumMerger());
+		return this.gather(new QuadSumFloatPropertiesGather(string))
+				.merge(new SumMerger());
 	}
 
 	public float getDefaultFloat(String prop) throws Exception {
@@ -234,8 +237,8 @@ public class GraphlyGraph implements Transferible {
 
 	public Set<Pair<Long, Float>> topFloat(String string, int i,
 			TLongHashSet vertices) throws Exception {
-		return this.gather(new TopGatherer(string, i, vertices)).merge(
-				new TopMerger(i));
+		return this.gather(new TopGatherer(string, i, vertices))
+				.merge(new TopMerger(i));
 	}
 
 	public float sumFloat(String string, TLongHashSet vertices)
@@ -250,7 +253,8 @@ public class GraphlyGraph implements Transferible {
 				.merge(new SumMerger());
 	}
 
-	public void setTempFloats(String k, boolean add, TLongFloatHashMap v) {
+	public void setTempFloats(String k, boolean add, TLongFloatHashMap v)
+			throws Exception {
 		graphly.setTempFloats(graph, k, add, v);
 
 	}
@@ -279,8 +283,8 @@ public class GraphlyGraph implements Transferible {
 
 	public TLongFloatHashMap getFloats(String k, TLongHashSet vertices)
 			throws Exception {
-		return this.gather(new FloatGather(k, vertices)).merge(
-				new FloatMerger());
+		return this.gather(new FloatGather(k, vertices))
+				.merge(new FloatMerger());
 	}
 
 	public void setProperty(TLongHashSet vertices, String k, String val) {

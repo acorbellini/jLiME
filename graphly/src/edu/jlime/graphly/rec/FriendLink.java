@@ -2,6 +2,7 @@ package edu.jlime.graphly.rec;
 
 import java.util.Iterator;
 
+import edu.jlime.graphly.traversal.Dir;
 import edu.jlime.pregel.client.WorkerContext;
 import edu.jlime.pregel.graph.VertexFunction;
 import edu.jlime.pregel.graph.rpc.Graph;
@@ -14,11 +15,13 @@ public class FriendLink implements VertexFunction<FloatPregelMessage> {
 	private String prop;
 	private long vcount;
 	private int lastStep;
+	private Dir dir;
 
-	public FriendLink(String k, long vcount, int lastStep) {
+	public FriendLink(String k, long vcount, int lastStep, Dir dir) {
 		this.prop = k;
 		this.vcount = vcount;
 		this.lastStep = lastStep;
+		this.dir = dir;
 	}
 
 	@Override
@@ -46,7 +49,7 @@ public class FriendLink implements VertexFunction<FloatPregelMessage> {
 			adj = 1f;
 
 		if (ctx.getSuperStep() < lastStep) {
-			TLongHashSet out = g.getOutgoing(v);
+			TLongHashSet out = g.getAdjacents(v, dir);
 			TLongIterator it = out.iterator();
 			while (it.hasNext()) {
 				long next = it.next();

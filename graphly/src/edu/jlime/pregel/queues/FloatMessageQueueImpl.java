@@ -16,12 +16,13 @@ import gnu.trove.map.hash.TObjectIntHashMap;
 
 public class FloatMessageQueueImpl implements FloatMessageQueue {
 
+	private static final int HASHES = Runtime.getRuntime()
+			.availableProcessors();
 	private static final float NO_VALUE = Float.MIN_VALUE;
 	private static final long NO_KEY = Long.MIN_VALUE;
-	private static final int SIZE = Runtime.getRuntime().availableProcessors();
 
-	private volatile TLongFloatHashMap[] readOnly = new TLongFloatHashMap[16];
-	private volatile TLongFloatHashMap[] current = new TLongFloatHashMap[16];
+	private volatile TLongFloatHashMap[] readOnly = new TLongFloatHashMap[HASHES];
+	private volatile TLongFloatHashMap[] current = new TLongFloatHashMap[HASHES];
 
 	private FloatTroveMessageMerger merger;
 
@@ -34,7 +35,7 @@ public class FloatMessageQueueImpl implements FloatMessageQueue {
 	}
 
 	private int getHash(long to) {
-		int hash = Math.abs((int) ((to * 2147483647l) % SIZE));
+		int hash = Math.abs((int) ((to * 2147483647l) % HASHES));
 		return hash;
 	}
 

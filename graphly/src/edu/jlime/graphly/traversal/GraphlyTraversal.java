@@ -10,6 +10,7 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 
 import edu.jlime.graphly.client.GraphlyGraph;
+import edu.jlime.graphly.rec.BetaCalc;
 import edu.jlime.graphly.rec.CustomStep;
 import edu.jlime.graphly.rec.CustomStep.CustomFunction;
 import edu.jlime.graphly.rec.Repeat;
@@ -191,7 +192,8 @@ public class GraphlyTraversal implements Serializable {
 		return this;
 	}
 
-	public <T> GraphlyTraversal each(int steps, String key, ForEach<T> forEach) {
+	public <T> GraphlyTraversal each(int steps, String key,
+			ForEach<T> forEach) {
 		addStep(new EachStep(key, steps, forEach, this));
 		return this;
 	}
@@ -256,19 +258,20 @@ public class GraphlyTraversal implements Serializable {
 		return this;
 	}
 
-	public GraphlyTraversal traverseGraphCount(String countk, String[] filters,
-			int max_edges, Dir... dirs) {
+	public GraphlyTraversal traverseGraphCount(String countk, String kBeta,
+			TLongHashSet vertices, int max_edges, BetaCalc calc, Dir... dirs) {
 		for (int i = 0; i < dirs.length; i++) {
-			graphcount(countk, i == 0 ? null : filters, dirs[i], max_edges,
-					i != dirs.length - 1);
+			graphcount(calc, countk, vertices, dirs[i], max_edges,
+					i != dirs.length - 1, kBeta);
 		}
 		return this;
 	}
 
-	public GraphlyTraversal graphcount(String countk, String[] filters,
-			Dir dir, int max_edges, boolean returnVertices) {
-		addStep(new GraphCountStep(dir, filters, max_edges, this, countk,
-				returnVertices));
+	public GraphlyTraversal graphcount(BetaCalc calc, String countk,
+			TLongHashSet vertices, Dir dir, int max_edges,
+			boolean returnVertices, String kBeta) {
+		addStep(new GraphCountStep(calc, dir, vertices, max_edges, this, countk,
+				returnVertices, kBeta));
 		return this;
 	}
 

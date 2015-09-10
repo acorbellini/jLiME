@@ -1,5 +1,7 @@
 package edu.jlime.graphly.jobs;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,7 +17,7 @@ import edu.jlime.jd.client.JobContext;
 import edu.jlime.util.Pair;
 import gnu.trove.list.array.TLongArrayList;
 
-public class LocationMapper implements Mapper {
+public class LocationMapper implements Mapper, Closeable {
 
 	private static final long serialVersionUID = 1634522852310272015L;
 
@@ -76,6 +78,7 @@ public class LocationMapper implements Mapper {
 				if (g == null) {
 					this.log = Logger.getLogger(LocationMapper.class);
 					this.g = (GraphlyClient) ctx.getGlobal("graphly");
+					ctx.put("location_mapper", this);
 				}
 			}
 		}
@@ -96,5 +99,13 @@ public class LocationMapper implements Mapper {
 	@Override
 	public int hash(long v, JobContext ctx) {
 		return getGraph(ctx).getHash().hash(v);
+	}
+
+	@Override
+	public void close() throws IOException {
+		synchronized (this) {
+			this.g = null;
+			this.nodes = null;
+		}
 	}
 }

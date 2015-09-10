@@ -60,7 +60,7 @@ public interface GraphlyStoreNodeI {
 			long[] vids) throws Exception;
 
 	public abstract GraphlyCount countEdges(String graph, Dir dir,
-			int max_edges, TLongFloatMap data, TLongHashSet toFilter)
+			int max_edges, long[] data, float[] values, long[] toFilter)
 			throws Exception;
 
 	public abstract long getRandomEdge(String graph, long v, long[] subset,

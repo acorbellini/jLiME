@@ -1,7 +1,6 @@
 package edu.jlime.core.rpc;
 
 import java.io.Serializable;
-import java.util.Arrays;
 
 public class MethodCall implements Serializable {
 

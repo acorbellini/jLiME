@@ -12,6 +12,8 @@ import edu.jlime.graphly.traversal.count.CountJob;
 import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.Job;
+import gnu.trove.iterator.TLongFloatIterator;
+import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.map.hash.TLongFloatHashMap;
 import gnu.trove.set.hash.TLongHashSet;
 
@@ -23,12 +25,12 @@ public class GraphCount implements Job<long[]> {
 	private int max;
 	private long[] data;
 	private String k;
-	private String[] filters;
+	private TLongHashSet filters;
 	private boolean returnVertices;
 
-	public GraphCount(String[] filters, GraphlyGraph graph, String k, Dir dir,
-			int max, long[] ls, boolean returnVertices) {
-		this.filters = filters;
+	public GraphCount(TLongHashSet filters2, GraphlyGraph graph, String k,
+			Dir dir, int max, long[] ls, boolean returnVertices) {
+		this.filters = filters2;
 		this.g = graph;
 		this.dir = dir;
 		this.max = max;
@@ -48,7 +50,8 @@ public class GraphCount implements Job<long[]> {
 		int size = keys.length;
 		final float chunks = (size / (float) threads);
 
-		final TLongHashSet finalRes = new TLongHashSet(100000);
+		final TLongFloatHashMap finalRes = new TLongFloatHashMap(10000000);
+		// final TLongHashSet finalRes = new TLongHashSet();
 		for (int i = 0; i < threads; i++) {
 			final int tID = i;
 			exec.execute(new Runnable() {
@@ -58,53 +61,49 @@ public class GraphCount implements Job<long[]> {
 						int from = (int) (chunks * tID);
 						int to = (int) (chunks * (tID + 1));
 
-						// GraphCache cache = new GraphCache(data, from, to, g,
-						// MAX);
-
 						if (tID == threads - 1)
 							to = keys.length;
 
 						TLongFloatHashMap sub = new TLongFloatHashMap(100000);
 						int cont = from;
-
 						while (cont < to) {
 							long v = keys[cont++];
-							boolean filtered = false;
-							if (filters != null && filters.length > 0) {
-								Object mark = g.getProperty("mark", v);
-								if (mark != null)
-									for (String f : filters) {
-										if (f.equals(mark))
-											filtered = true;
-									}
-							}
+							float prevCount = g.getFloat(v, k, 1f);
+							long[] edges = g.getEdgesMax(dir, max, v);
+							if (edges.length > 0)
 
-							if (!filtered) {
-								float prevCount = g.getFloat(v, k, 1f);
-								long[] edges = g.getEdgesMax(dir, max, v);
 								for (int j = 0; j < edges.length; j++) {
-									sub.adjustOrPutValue(edges[j], prevCount,
-											prevCount);
+									long key = edges[j];
+									if (filters == null
+											|| !filters.contains(key)) {
+										sub.adjustOrPutValue(key, prevCount,
+												prevCount);
+									}
 								}
-							}
 
 						}
 
-						log.info("Finished counting vertices for thread " + tID);
-						if (!sub.isEmpty())
-							g.setTempFloats(k, true, sub);
-
-						log.info("Finished sending results to graph for thread "
-								+ tID);
-						if (returnVertices) {
-							log.info("merging vertices processed");
-							synchronized (finalRes) {
-								finalRes.addAll(sub.keySet());
+						synchronized (finalRes) {
+							TLongFloatIterator itMap = sub.iterator();
+							while (itMap.hasNext()) {
+								itMap.advance();
+								finalRes.adjustOrPutValue(itMap.key(),
+										itMap.value(), itMap.value());
 							}
-							log.info("Finished merging results on thread "
-									+ tID);
 						}
 
+						// if (returnVertices)
+						// synchronized (finalRes) {
+						// finalRes.addAll(sub.keys());
+						// }
+
+						// if (!sub.isEmpty()) {
+						// log.info("Setting temp floats of size " + sub.size()
+						// + " on thread " + tID);
+						// g.setTempFloats(k, true, sub);
+						// }
+						log.info(
+								"Finished counting vertices for thread " + tID);
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
@@ -115,7 +114,13 @@ public class GraphCount implements Job<long[]> {
 		exec.shutdown();
 		exec.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
 
-		return finalRes.toArray();
+		if (!finalRes.isEmpty()) {
+			log.info("Sending results " + finalRes.size());
+			g.setTempFloats(k, true, finalRes);
+		}
+		if (!returnVertices)
+			return new long[] {};
+		return finalRes.keys();
 
 	}
 }

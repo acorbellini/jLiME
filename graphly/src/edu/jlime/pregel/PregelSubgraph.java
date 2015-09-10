@@ -7,6 +7,9 @@ import gnu.trove.iterator.TLongIterator;
 import gnu.trove.set.hash.TLongHashSet;
 
 public class PregelSubgraph {
+
+	private static final int LOCKS = 1021;
+	private Object[] edgesLocks = new Object[LOCKS];
 	ConcurrentHashMap<Long, long[]> in = new ConcurrentHashMap<>();
 	ConcurrentHashMap<Long, long[]> out = new ConcurrentHashMap<>();
 	private TLongHashSet subgraph;
@@ -16,12 +19,15 @@ public class PregelSubgraph {
 	public PregelSubgraph(TLongHashSet value, Graph graph) {
 		this.subgraph = value;
 		this.graph = graph;
+		for (int i = 0; i < edgesLocks.length; i++) {
+			edgesLocks[i] = new Object();
+		}
 	}
 
 	public long[] getOutgoing(long v) throws Exception {
 		long[] list = out.get(v);
 		if (list == null) {
-			synchronized (out) {
+			synchronized (edgesLocks[Math.abs((int) (v * 31) % LOCKS)]) {
 				list = out.get(v);
 				if (list == null) {
 					TLongHashSet s = new TLongHashSet(graph.getOutgoing(v));
@@ -43,7 +49,7 @@ public class PregelSubgraph {
 	public long[] getIncoming(long v) throws Exception {
 		long[] list = in.get(v);
 		if (list == null) {
-			synchronized (in) {
+			synchronized (edgesLocks[Math.abs((int) (v * 31) % LOCKS)]) {
 				list = in.get(v);
 				if (list == null) {
 					TLongHashSet s = new TLongHashSet(graph.getIncoming(v));

@@ -1,6 +1,9 @@
 package edu.jlime.graphly.rec;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 
@@ -40,8 +43,8 @@ public class BetaCountStep implements CustomFunction {
 	}
 
 	@Override
-	public TraversalResult execute(TraversalResult before, GraphlyTraversal tr)
-			throws Exception {
+	public TraversalResult execute(TraversalResult before,
+			final GraphlyTraversal tr) throws Exception {
 		final TLongFloatMap adj = before.getCounts();
 		final TLongFloatHashMap res = new TLongFloatHashMap();
 
@@ -53,6 +56,9 @@ public class BetaCountStep implements CustomFunction {
 
 		JobContextImpl ctx = jobClient.getEnv().getClientEnv(
 				jobClient.getLocalPeer());
+
+		long initCount = System.currentTimeMillis();
+
 		for (int j = 0; j < depth; j++) {
 			final int current_depth = j;
 
@@ -61,44 +67,58 @@ public class BetaCountStep implements CustomFunction {
 			final List<Pair<ClientNode, TLongArrayList>> mapped = map.map(
 					GraphlyClient.NUM_JOBS, adj.keys(), ctx);
 
-			ForkJoinTask<GraphlyCount> fj = new ForkJoinTask<>();
+			final ForkJoinTask<GraphlyCount> fj = new ForkJoinTask<>();
 
 			if (mapped.size() == 1) {
 				fj.putJob(new CountJob(tr.getGraph(), dir, Integer.MAX_VALUE,
-						adj, null), mapped.get(0).left);
+						adj.keys(), adj.values(), null), mapped.get(0).left);
 			} else {
-				for (Pair<ClientNode, TLongArrayList> e : mapped) {
-					TLongFloatHashMap prevCounts = new TLongFloatHashMap();
-					TLongArrayList value = e.getValue();
-					TLongIterator it = value.iterator();
-					while (it.hasNext()) {
-						long v = it.next();
-						prevCounts.put(v, adj.get(v));
-					}
-					log.info("Creating job of " + prevCounts.size()
-							+ " vertices with counts.");
-					fj.putJob(new CountJob(tr.getGraph(), dir,
-							Integer.MAX_VALUE, prevCounts, null), e.getKey());
-				}
-			}
+				ExecutorService exec = Executors.newFixedThreadPool(Runtime
+						.getRuntime().availableProcessors());
 
+				for (final Pair<ClientNode, TLongArrayList> e : mapped) {
+					exec.execute(new Runnable() {
+						@Override
+						public void run() {
+							try {
+								TLongFloatHashMap prevCounts = new TLongFloatHashMap();
+								TLongArrayList value = e.getValue();
+								TLongIterator it = value.iterator();
+								while (it.hasNext()) {
+									long v = it.next();
+									prevCounts.put(v, adj.get(v));
+								}
+								log.info("Creating job of " + prevCounts.size()
+										+ " vertices with counts.");
+								synchronized (fj) {
+									fj.putJob(
+											new CountJob(tr.getGraph(), dir,
+													Integer.MAX_VALUE,
+													prevCounts.keys(),
+													prevCounts.values(), null),
+											e.getKey());
+								}
+							} catch (Exception e) {
+								e.printStackTrace();
+							}
+						}
+					});
+				}
+				exec.shutdown();
+				exec.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
+			}
+			long initStep = System.currentTimeMillis();
 			fj.execute(CountStep.JOBS,
 					new ResultListener<GraphlyCount, Void>() {
 
 						@Override
 						public void onSuccess(GraphlyCount graphlyCount) {
-							float currbeta = beta.calc(current_depth + 1);// (float)
+							log.info("Received result of "
+									+ graphlyCount.size());
+							long init = System.currentTimeMillis();
+							float currbeta = beta.calc(current_depth + 1);
 
-							log.info("Finished adding to result.");
-							if (current_depth == depth - 1)
-								adj.clear();
-
-							TLongFloatIterator it = null;
-							try {
-								it = graphlyCount.iterator();
-							} catch (Exception e) {
-								e.printStackTrace();
-							}
+							TLongFloatIterator it = graphlyCount.iterator();
 							synchronized (res) {
 								while (it.hasNext()) {
 									it.advance();
@@ -113,8 +133,11 @@ public class BetaCountStep implements CustomFunction {
 												currentVal);
 									}
 								}
-								log.info("Finished adding to result.");
+
 							}
+							log.info("Finished adding to result in "
+									+ (System.currentTimeMillis() - init)
+									+ " ms.");
 						}
 
 						@Override
@@ -126,7 +149,13 @@ public class BetaCountStep implements CustomFunction {
 						public void onFailure(Exception res) {
 						}
 					});
+
+			log.info("Finished beta count STEP " + current_depth + " in "
+					+ (System.currentTimeMillis() - initStep) + " ms.");
 		}
+
+		log.info("Finished beta count in "
+				+ (System.currentTimeMillis() - initCount) + " ms.");
 		return new CountResult(res);
 	}
 }

@@ -265,9 +265,11 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	private long[] getEdges(String graph, Dir type, long id)
 			throws ExecutionException {
 		if (type.equals(Dir.BOTH)) {
-			TLongHashSet list = new TLongHashSet();
-			list.addAll(getEdges0(graph, id));
-			list.addAll(getEdges0(graph, -id - 1));
+			long[] out = getEdges0(graph, id);
+			long[] in = getEdges0(graph, -id - 1);
+			TLongHashSet list = new TLongHashSet(out.length + in.length);
+			list.addAll(out);
+			list.addAll(in);
 			return list.toArray();
 		}
 
@@ -295,7 +297,8 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 					@SuppressWarnings("rawtypes")
 					CacheBuilder builder = CacheBuilder.newBuilder();
 					if (config.edgeCacheType.equals("mem-based")) {
-						long size = (long) (Runtime.getRuntime().maxMemory() * config.cacheSize);
+						long size = (long) (Runtime.getRuntime().maxMemory()
+								* config.cacheSize);
 						builder = builder.maximumWeight(size)
 								.weigher(new Weigher<Long, long[]>() {
 
@@ -428,21 +431,23 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 
 	@Override
 	public GraphlyCount countEdges(final String graph, final Dir dir,
-			final int max_edges, final TLongFloatMap vids,
-			final TLongHashSet toFilter) throws Exception {
+			final int max_edges, final long[] keys, final float[] values,
+			final long[] f) throws Exception {
 		log.info("Counting edges in dir " + dir + " with max " + max_edges
-				+ " and vertices " + vids.size() + ".");
+				+ " and vertices " + keys.length + ".");
+
+		long[] toAdd = f == null ? new long[] {} : f;
+		final TLongHashSet toFilter = new TLongHashSet(toAdd);
+
 		long init = System.currentTimeMillis();
 		final int cores = Runtime.getRuntime().availableProcessors();
 
 		ExecutorService exec = Executors.newFixedThreadPool(cores);
-		final long[] keys = vids.keys();
+
 		int size = keys.length;
 		final float chunks = (size / (float) cores);
 
-		final TLongFloatMap finalResult = new TLongFloatHashMap();
-		// final TLongFloatMap finalResult = new ParallelLongFloatMap();
-		final AtomicInteger count = new AtomicInteger(0);
+		final TLongFloatMap finalResult = new TLongFloatHashMap(10000000);
 		for (int i = 0; i < cores; i++) {
 			final int tID = i;
 
@@ -455,33 +460,40 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 
 					if (tID == cores - 1)
 						to = keys.length;
-
-					TLongFloatMap map = new TLongFloatHashMap();
+					long initChunk = System.currentTimeMillis();
+					TLongFloatMap map = new TLongFloatHashMap(10000000);
 					int cont = from;
 
 					while (cont < to) {
-						final long l = keys[cont++];
+						final long l = keys[cont];
+						final float mult = values[cont];
+						cont++;
+						long[] curr = null;
 						try {
-							final float mult = vids.get(l);
-							long[] curr = getEdges(graph, dir, max_edges,
+							curr = getEdges(graph, dir, max_edges,
 									new long[] { l });
-							// synchronized (map) {
+						} catch (ExecutionException e1) {
+							e1.printStackTrace();
+						}
+						if (curr.length > 500000) {
+							synchronized (finalResult) {
+								for (long m : curr)
+									if (toFilter == null
+											|| !toFilter.contains(m))
+										finalResult.adjustOrPutValue(m, mult,
+												mult);
+							}
+						} else {
 							for (long m : curr)
 								if (toFilter == null || !toFilter.contains(m))
 									map.adjustOrPutValue(m, mult, mult);
-							// }
-						} catch (ExecutionException e) {
-							e.printStackTrace();
-						}
-						int res = count.incrementAndGet();
-						try {
-							printCompleted(vids.size(), res);
-						} catch (Exception e) {
-							e.printStackTrace();
 						}
 
 					}
+					log.info("Finished chunk of size " + (to - from) + " in "
+							+ (System.currentTimeMillis() - initChunk));
 
+					long initAdd = System.currentTimeMillis();
 					synchronized (finalResult) {
 						TLongFloatIterator itMap = map.iterator();
 						while (itMap.hasNext()) {
@@ -490,6 +502,8 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 									itMap.value(), itMap.value());
 						}
 					}
+					log.info("Finished adding results to final result in "
+							+ (System.currentTimeMillis() - initAdd));
 				}
 			});
 		}
@@ -499,20 +513,12 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 
 		GraphlyCount c = new GraphlyCount(finalResult.keys(),
 				finalResult.values());
-		log.info("Finished count of " + vids.size()
+		log.info("Finished count of " + keys.length
 				+ " (different) vertices resulting in " + finalResult.size()
 				+ " vertices with counts in "
 				+ (System.currentTimeMillis() - init) + " ms");
 		return c;
-	}
 
-	private void printCompleted(int total, double currentCount)
-			throws Exception {
-		int fraction = ((int) (total / (double) 10));
-		if ((currentCount % fraction) == 0) {
-			double completed = ((currentCount / total) * 100);
-			log.info("Completed : " + Math.ceil(completed) + " % ");
-		}
 	}
 
 	@Override
@@ -702,7 +708,8 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 				buildVertexKey(graph, from),
 				buildVertexKey(graph, Long.MAX_VALUE), lenght);
 
-		TLongArrayList ret = new TLongArrayList(Math.min(MAX_INIT_SIZE, lenght));
+		TLongArrayList ret = new TLongArrayList(
+				Math.min(MAX_INIT_SIZE, lenght));
 		for (byte[] bs : list)
 			ret.add(DataTypeUtils.byteArrayToLong(bs));
 		if (log.isDebugEnabled())
@@ -792,8 +799,8 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 			throws Exception {
 		if (config.persistfloats) {
 			byte[] key = buildFloatPropertyKey(graph, v, k);
-			store.store(key, DataTypeUtils.intToByteArray(Float
-					.floatToIntBits(currentVal)));
+			store.store(key, DataTypeUtils
+					.intToByteArray(Float.floatToIntBits(currentVal)));
 		} else {
 			floatProps.put(graph, v, k, currentVal);
 		}
@@ -802,8 +809,8 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 	private static byte[] buildFloatPropertyKey(String g, long id, String k) {
 		byte[] gName = g.getBytes();
 		byte[] keyBytes = k.getBytes();
-		ByteBuffer buff = new ByteBuffer(1 + 4 + gName.length + keyBytes.length
-				+ 8);
+		ByteBuffer buff = new ByteBuffer(
+				1 + 4 + gName.length + keyBytes.length + 8);
 		buff.put(FLOAT_PROPS);
 		buff.putByteArray(gName);
 		buff.putByteArray(keyBytes);
@@ -856,7 +863,10 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 
 	@Override
 	public void commitFloatUpdates(String graph, String... props) {
+
 		for (String string : props) {
+			floatProps.removeAll(graph, string);
+
 			TLongFloatHashMap prop_vals = tempFloatProps.getAll(graph, string);
 			synchronized (prop_vals) {
 				floatProps.putAll(graph, string, prop_vals);
@@ -901,8 +911,8 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 		if (config.persistfloats) {
 			byte[] from = buildFloatPropertyKey(graph, Long.MIN_VALUE, k);
 			byte[] to = buildFloatPropertyKey(graph, Long.MAX_VALUE, k);
-			final Iterator<Pair<byte[], byte[]>> it = store.getRangeIterator(
-					true, from, to, Integer.MAX_VALUE);
+			final Iterator<Pair<byte[], byte[]>> it = store
+					.getRangeIterator(true, from, to, Integer.MAX_VALUE);
 			return new TLongFloatIterator() {
 				float val = 0f;
 				private long key;
@@ -921,8 +931,8 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 					Pair<byte[], byte[]> next = it.next();
 					key = DataTypeUtils.byteArrayToLongOrdered(next.left,
 							next.left.length - 8);
-					val = Float.intBitsToFloat(DataTypeUtils
-							.byteArrayToInt(next.right));
+					val = Float.intBitsToFloat(
+							DataTypeUtils.byteArrayToInt(next.right));
 
 				}
 
@@ -943,8 +953,8 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 			};
 
 		} else {
-			TLongFloatHashMap tObjectDoubleHashMap = floatProps
-					.getAll(graph, k);
+			TLongFloatHashMap tObjectDoubleHashMap = floatProps.getAll(graph,
+					k);
 			return tObjectDoubleHashMap.iterator();
 		}
 	}
@@ -967,5 +977,17 @@ public class GraphlyStoreNode implements GraphlyStoreNodeI {
 		while (it.hasNext())
 			setProperty(graph, it.next(), k, val);
 
+	}
+
+	public void addFloat(String graph, long v, String k, float f)
+			throws Exception {
+		if (config.persistfloats) {
+			byte[] key = buildFloatPropertyKey(graph, v, k);
+			float curr = getFloat(graph, v, k, 0f);
+			store.store(key, DataTypeUtils
+					.intToByteArray(Float.floatToIntBits(curr + f)));
+		} else {
+			floatProps.add(graph, v, k, f);
+		}
 	}
 }

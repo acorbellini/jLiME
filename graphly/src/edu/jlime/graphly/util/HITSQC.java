@@ -16,7 +16,7 @@ public class HITSQC implements QueryContainer {
 			steps = 25;
 
 		g.v(users).set("mapper", mapper).as(Recommendation.class)
-				.hits("hits-auth", "hits-hub", steps)
+				.hits(steps, 10)
 				.submit(g.getJobClient().getCluster().getExecutors().get(0));
 	}
 

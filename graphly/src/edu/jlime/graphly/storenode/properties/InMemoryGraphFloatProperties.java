@@ -35,8 +35,7 @@ public class InMemoryGraphFloatProperties {
 			synchronized (gmap) {
 				map = gmap.get(k);
 				if (map == null) {
-					map = new TLongFloatHashMap(1000, 0.8f, KEY_NOT_FOUND,
-							VALUE_NOT_FOUND);
+					map = new TLongFloatHashMap(1000, 0.8f, KEY_NOT_FOUND, VALUE_NOT_FOUND);
 					gmap.put(k, map);
 				}
 			}
@@ -90,5 +89,12 @@ public class InMemoryGraphFloatProperties {
 			map.clear();
 		}
 
+	}
+
+	public void add(String graph, long v, String k, float f) {
+		TLongFloatHashMap map = getGraphProps(graph, k);
+		synchronized (map) {
+			map.adjustOrPutValue(v, f, f);
+		}
 	}
 }

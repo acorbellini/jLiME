@@ -12,23 +12,27 @@ import edu.jlime.graphly.traversal.ValueResult;
 import edu.jlime.util.Pair;
 
 public class Algorithms {
+	private static final int KATZ_DEPTH = 4;
+	private static final int FRIENDLINK_DEPTH = 4;
+	private static final int HITS_NEIGHBOURS = 100000;
+	private static final int SALSA_NEIGHBOURS = 100000;
+
 	public static GraphlyRun ecHybrid() {
 		return new GraphlyRun("ecHybrid") {
-			public GraphlyTraversal run(long[] users, GraphlyGraph graph, Mapper mapper) throws Exception {
-				return graph.v(users).set("mapper", mapper).as(Recommendation.class)
-						.exploratoryCountHybrid(Integer.MAX_VALUE, 10, "count", Dir.OUT, Dir.IN, Dir.OUT).asTraversal();
+			public GraphlyTraversal run(long[] users, GraphlyGraph graph,
+					Mapper mapper) throws Exception {
+				return graph.v(users).set("mapper", mapper)
+						.as(Recommendation.class)
+						.exploratoryCountHybrid(Integer.MAX_VALUE, 10, "count",
+								Dir.OUT, Dir.IN, Dir.OUT)
+						.asTraversal();
 			}
 
 			@Override
-			public String printResult(TraversalResult res, GraphlyGraph g) throws Exception {
+			public String printResult(TraversalResult res, GraphlyGraph g)
+					throws Exception {
 				StringBuilder builder = new StringBuilder();
 				builder.append("Exploratory Count Hybrid: \n" + res + "\n");
-				//
-				// builder.append("Exploratory Count FJ:");
-				// Set<Pair<Long, Float>> set = g.topFloat("count", 10);
-				// for (Pair<Long, Float> pair : set) {
-				// builder.append(pair.getKey() + "=" + pair.getValue() + "\n");
-				// }
 				return builder.toString();
 			}
 		};
@@ -38,14 +42,19 @@ public class Algorithms {
 		return new GraphlyRun("friendLinkFJ") {
 
 			@Override
-			GraphlyTraversal run(long[] users, GraphlyGraph graph, Mapper mapper) throws Exception {
-				return graph.v(users).set("mapper", mapper).as(Recommendation.class).friendLinkFJ(10, 3).asTraversal();
+			GraphlyTraversal run(long[] users, GraphlyGraph graph,
+					Mapper mapper) throws Exception {
+				return graph.v(users).set("mapper", mapper)
+						.as(Recommendation.class)
+						.friendLinkFJ(10, FRIENDLINK_DEPTH, Dir.OUT)
+						.asTraversal();
 			}
 
 			@Override
-			String printResult(TraversalResult res, GraphlyGraph g) throws Exception {
+			String printResult(TraversalResult res, GraphlyGraph g)
+					throws Exception {
 				StringBuilder builder = new StringBuilder();
-				builder.append("FriendLink Fork Join: ");
+				builder.append("FriendLink Fork Join: \n");
 				builder.append(res.toString() + "\n");
 				return builder.toString();
 			}
@@ -56,19 +65,24 @@ public class Algorithms {
 		return new GraphlyRun("friendLinkPregel") {
 
 			@Override
-			GraphlyTraversal run(long[] users, GraphlyGraph graph, Mapper mapper) throws Exception {
-				return graph.v(users).set("mapper", mapper).as(Recommendation.class).friendLinkPregel("fl", 3)
+			GraphlyTraversal run(long[] users, GraphlyGraph graph,
+					Mapper mapper) throws Exception {
+				return graph.v(users).set("mapper", mapper)
+						.as(Recommendation.class)
+						.friendLinkPregel("fl", FRIENDLINK_DEPTH, Dir.OUT)
 						.asTraversal();
 			}
 
 			@Override
-			String printResult(TraversalResult res, GraphlyGraph g) throws Exception {
+			String printResult(TraversalResult res, GraphlyGraph g)
+					throws Exception {
 				StringBuilder builder = new StringBuilder();
 				builder.append("FriendLink Pregel: \n");
 				{
 					Set<Pair<Long, Float>> set = g.topFloat("fl", 10);
 					for (Pair<Long, Float> pair : set) {
-						builder.append(pair.getKey() + "=" + pair.getValue() + "\n");
+						builder.append(
+								pair.getKey() + "=" + pair.getValue() + "\n");
 					}
 				}
 				return builder.toString();
@@ -80,13 +94,16 @@ public class Algorithms {
 		return new GraphlyRun("localPathFJ") {
 
 			@Override
-			GraphlyTraversal run(long[] users, GraphlyGraph graph, Mapper mapper) throws Exception {
-				return graph.v(users).set("mapper", mapper).as(Recommendation.class).localPathFJ(0.1f, 10, Dir.BOTH)
+			GraphlyTraversal run(long[] users, GraphlyGraph graph,
+					Mapper mapper) throws Exception {
+				return graph.v(users).set("mapper", mapper)
+						.as(Recommendation.class).localPathFJ(0.1f, 10, Dir.OUT)
 						.asTraversal();
 			}
 
 			@Override
-			String printResult(TraversalResult res, GraphlyGraph g) throws Exception {
+			String printResult(TraversalResult res, GraphlyGraph g)
+					throws Exception {
 				StringBuilder builder = new StringBuilder();
 				builder.append("Local Path Fork Join: \n");
 				builder.append(res.toString() + "\n");
@@ -99,19 +116,23 @@ public class Algorithms {
 		return new GraphlyRun("localPathPregel") {
 
 			@Override
-			GraphlyTraversal run(long[] users, GraphlyGraph graph, Mapper mapper) throws Exception {
-				return graph.v(users).set("mapper", mapper).as(Recommendation.class)
-						.localPathPregel("lp", Dir.BOTH, 0.1f).asTraversal();
+			GraphlyTraversal run(long[] users, GraphlyGraph graph,
+					Mapper mapper) throws Exception {
+				return graph.v(users).set("mapper", mapper)
+						.as(Recommendation.class)
+						.localPathPregel("lp", Dir.OUT, 0.1f).asTraversal();
 			}
 
 			@Override
-			String printResult(TraversalResult res, GraphlyGraph g) throws Exception {
+			String printResult(TraversalResult res, GraphlyGraph g)
+					throws Exception {
 				StringBuilder builder = new StringBuilder();
 				builder.append("Local Path Pregel: \n");
 				{
 					Set<Pair<Long, Float>> set = g.topFloat("lp", 10);
 					for (Pair<Long, Float> pair : set) {
-						builder.append(pair.getKey() + "=" + pair.getValue() + "\n");
+						builder.append(
+								pair.getKey() + "=" + pair.getValue() + "\n");
 					}
 				}
 				return builder.toString();
@@ -123,14 +144,18 @@ public class Algorithms {
 		return new GraphlyRun("adamicFJ") {
 
 			@Override
-			GraphlyTraversal run(long[] users, GraphlyGraph graph, Mapper mapper) throws Exception {
-				return graph.v(users).set("mapper", mapper).as(Recommendation.class).adamicFJ().asTraversal();
+			GraphlyTraversal run(long[] users, GraphlyGraph graph,
+					Mapper mapper) throws Exception {
+				return graph.v(users).set("mapper", mapper)
+						.as(Recommendation.class).adamicFJ().asTraversal();
 			}
 
 			@Override
-			String printResult(TraversalResult res, GraphlyGraph g) throws Exception {
+			String printResult(TraversalResult res, GraphlyGraph g)
+					throws Exception {
 				StringBuilder builder = new StringBuilder();
-				builder.append("AdamicAdar Fork Join:" + res.toString() + " \n");
+				builder.append(
+						"AdamicAdar Fork Join:" + res.toString() + " \n");
 				return builder.toString();
 			}
 		};
@@ -140,14 +165,18 @@ public class Algorithms {
 		return new GraphlyRun("adamicPregel") {
 
 			@Override
-			GraphlyTraversal run(long[] users, GraphlyGraph graph, Mapper mapper) throws Exception {
-				return graph.v(users).set("mapper", mapper).as(Recommendation.class).adamicPregel().asTraversal();
+			GraphlyTraversal run(long[] users, GraphlyGraph graph,
+					Mapper mapper) throws Exception {
+				return graph.v(users).set("mapper", mapper)
+						.as(Recommendation.class).adamicPregel().asTraversal();
 			}
 
 			@Override
-			String printResult(TraversalResult res, GraphlyGraph g) throws Exception {
+			String printResult(TraversalResult res, GraphlyGraph g)
+					throws Exception {
 				StringBuilder builder = new StringBuilder();
-				builder.append("AdamicAdar Pregel:" + ((ValueResult) res).getRes() + "\n");
+				builder.append("AdamicAdar Pregel:"
+						+ ((ValueResult) res).getRes() + "\n");
 				return builder.toString();
 			}
 		};
@@ -157,12 +186,15 @@ public class Algorithms {
 		return new GraphlyRun("jaccardFJ") {
 
 			@Override
-			GraphlyTraversal run(long[] users, GraphlyGraph graph, Mapper mapper) throws Exception {
-				return graph.v(users).set("mapper", mapper).as(Recommendation.class).jaccardFJ().asTraversal();
+			GraphlyTraversal run(long[] users, GraphlyGraph graph,
+					Mapper mapper) throws Exception {
+				return graph.v(users).set("mapper", mapper)
+						.as(Recommendation.class).jaccardFJ().asTraversal();
 			}
 
 			@Override
-			String printResult(TraversalResult res, GraphlyGraph g) throws Exception {
+			String printResult(TraversalResult res, GraphlyGraph g)
+					throws Exception {
 				StringBuilder builder = new StringBuilder();
 				builder.append("Jaccard Fork Join: " + res + "\n");
 				return builder.toString();
@@ -174,14 +206,18 @@ public class Algorithms {
 		return new GraphlyRun("jaccardPregel") {
 
 			@Override
-			GraphlyTraversal run(long[] users, GraphlyGraph graph, Mapper mapper) throws Exception {
-				return graph.v(users).set("mapper", mapper).as(Recommendation.class).jaccardPregel().asTraversal();
+			GraphlyTraversal run(long[] users, GraphlyGraph graph,
+					Mapper mapper) throws Exception {
+				return graph.v(users).set("mapper", mapper)
+						.as(Recommendation.class).jaccardPregel().asTraversal();
 			}
 
 			@Override
-			String printResult(TraversalResult res, GraphlyGraph g) throws Exception {
+			String printResult(TraversalResult res, GraphlyGraph g)
+					throws Exception {
 				StringBuilder builder = new StringBuilder();
-				builder.append("Jaccard Pregel:" + ((ValueResult) res).getRes() + "\n");
+				builder.append("Jaccard Pregel:" + ((ValueResult) res).getRes()
+						+ "\n");
 				return builder.toString();
 			}
 		};
@@ -191,13 +227,16 @@ public class Algorithms {
 		return new GraphlyRun("katzFJ") {
 
 			@Override
-			GraphlyTraversal run(long[] users, GraphlyGraph graph, Mapper mapper) throws Exception {
-				return graph.v(users).set("mapper", mapper).as(Recommendation.class).katzFJ(0.0001f, 4, 10)
-						.asTraversal();
+			GraphlyTraversal run(long[] users, GraphlyGraph graph,
+					Mapper mapper) throws Exception {
+				return graph.v(users).set("mapper", mapper)
+						.as(Recommendation.class)
+						.katzFJ(0.0001f, KATZ_DEPTH, 10, Dir.OUT).asTraversal();
 			}
 
 			@Override
-			String printResult(TraversalResult res, GraphlyGraph g) throws Exception {
+			String printResult(TraversalResult res, GraphlyGraph g)
+					throws Exception {
 				StringBuilder builder = new StringBuilder();
 				builder.append("Katz Fork Join: \n" + res + "\n");
 				return builder.toString();
@@ -209,19 +248,24 @@ public class Algorithms {
 		return new GraphlyRun("katzPregel") {
 
 			@Override
-			GraphlyTraversal run(long[] users, GraphlyGraph graph, Mapper mapper) throws Exception {
-				return graph.v(users).set("mapper", mapper).as(Recommendation.class).katz("katz", 4, 0.0001f)
+			GraphlyTraversal run(long[] users, GraphlyGraph graph,
+					Mapper mapper) throws Exception {
+				return graph.v(users).set("mapper", mapper)
+						.as(Recommendation.class)
+						.katz("katz", KATZ_DEPTH, 0.0001f, Dir.OUT)
 						.asTraversal();
 			}
 
 			@Override
-			String printResult(TraversalResult res, GraphlyGraph g) throws Exception {
+			String printResult(TraversalResult res, GraphlyGraph g)
+					throws Exception {
 				StringBuilder builder = new StringBuilder();
 				builder.append("Katz Pregel: \n");
 				{
 					Set<Pair<Long, Float>> set = g.topFloat("katz", 10);
 					for (Pair<Long, Float> pair : set) {
-						builder.append(pair.getKey() + "=" + pair.getValue() + "\n");
+						builder.append(
+								pair.getKey() + "=" + pair.getValue() + "\n");
 					}
 				}
 				return builder.toString();
@@ -233,12 +277,15 @@ public class Algorithms {
 		return new GraphlyRun("commonFJ") {
 
 			@Override
-			GraphlyTraversal run(long[] users, GraphlyGraph graph, Mapper mapper) throws Exception {
-				return graph.v(users).set("mapper", mapper).as(Recommendation.class).commonFJ().asTraversal();
+			GraphlyTraversal run(long[] users, GraphlyGraph graph,
+					Mapper mapper) throws Exception {
+				return graph.v(users).set("mapper", mapper)
+						.as(Recommendation.class).commonFJ().asTraversal();
 			}
 
 			@Override
-			String printResult(TraversalResult res, GraphlyGraph g) throws Exception {
+			String printResult(TraversalResult res, GraphlyGraph g)
+					throws Exception {
 				StringBuilder builder = new StringBuilder();
 				builder.append("Common Neighbours Fork Join: " + res + "\n");
 				return builder.toString();
@@ -250,13 +297,16 @@ public class Algorithms {
 		return new GraphlyRun("commonPregel") {
 
 			@Override
-			GraphlyTraversal run(long[] users, GraphlyGraph graph, Mapper mapper) throws Exception {
-				return graph.v(users).set("mapper", mapper).as(Recommendation.class).commonNeighboursPregel()
+			GraphlyTraversal run(long[] users, GraphlyGraph graph,
+					Mapper mapper) throws Exception {
+				return graph.v(users).set("mapper", mapper)
+						.as(Recommendation.class).commonNeighboursPregel()
 						.asTraversal();
 			}
 
 			@Override
-			String printResult(TraversalResult res, GraphlyGraph g) throws Exception {
+			String printResult(TraversalResult res, GraphlyGraph g)
+					throws Exception {
 				StringBuilder builder = new StringBuilder();
 				builder.append("Common Neighbours Pregel: " + res + "\n");
 				return builder.toString();
@@ -275,87 +325,46 @@ public class Algorithms {
 		return new GraphlyRun("hitsFJ") {
 
 			@Override
-			GraphlyTraversal run(long[] users, GraphlyGraph graph, Mapper mapper) throws Exception {
-				return graph.v(users).set("mapper", mapper).expand(Dir.BOTH, 100000).expand(Dir.BOTH, 1000)
-						.as(Recommendation.class).hits("hits-auth", "hits-hub", 10).asTraversal();
+			GraphlyTraversal run(long[] users, GraphlyGraph graph,
+					Mapper mapper) throws Exception {
+				return graph.v(users).set("mapper", mapper)
+						.expand(Dir.BOTH, HITS_NEIGHBOURS)
+						.expand(Dir.BOTH, HITS_NEIGHBOURS)
+						.as(Recommendation.class).hits(10, 10).asTraversal();
 			}
 
 			@Override
-			String printResult(TraversalResult res, GraphlyGraph graph) throws Exception {
+			String printResult(TraversalResult res, GraphlyGraph graph)
+					throws Exception {
 				StringBuilder builder = new StringBuilder();
-				builder.append("Hits Fork Join: ");
-				builder.append("Auth values");
-				{
-					Set<Pair<Long, Float>> topFloat = graph.topFloat("hits-auth", 10);
-					for (Pair<Long, Float> pair : topFloat) {
-						builder.append(pair.left + "=" + pair.right + "\n");
-					}
-				}
-
-				builder.append("Hub values");
-				{
-					Set<Pair<Long, Float>> topFloat = graph.topFloat("hits-hub", 10);
-					for (Pair<Long, Float> pair : topFloat) {
-						builder.append(pair.left + "=" + pair.right + "\n");
-					}
-				}
-
-				builder.append("\nSum");
-				{
-					float sum = graph.sumFloat("hits-auth");
-					builder.append("auth: " + sum + "\n");
-
-				}
-
-				{
-					float sum = graph.sumFloat("hits-hub");
-					builder.append("hub: " + sum + "\n");
-				}
+				builder.append("HITS Fork Join: \n");
+				builder.append(res + "\n");
 				return builder.toString();
 			}
 		};
+
 	}
 
 	protected static GraphlyRun hitsPregel() {
 		return new GraphlyRun("hitsPregel") {
 
 			@Override
-			GraphlyTraversal run(long[] users, GraphlyGraph graph, Mapper mapper) throws Exception {
-				return graph.v(users).set("mapper", mapper).expand(Dir.BOTH, 100000).expand(Dir.BOTH, 1000)
-						.as(Recommendation.class).hitsPregel("hits-auth", "hits-hub", 10).asTraversal();
+			GraphlyTraversal run(long[] users, GraphlyGraph graph,
+					Mapper mapper) throws Exception {
+				return graph.v(users).set("mapper", mapper)
+						.expand(Dir.BOTH, HITS_NEIGHBOURS)
+						.expand(Dir.BOTH, HITS_NEIGHBOURS)
+						.as(Recommendation.class)
+						.hitsPregel("hits-auth", "hits-hub", 10, 10)
+						.asTraversal();
 			}
 
 			@Override
-			String printResult(TraversalResult res, GraphlyGraph graph) throws Exception {
+			String printResult(TraversalResult res, GraphlyGraph graph)
+					throws Exception {
 				StringBuilder builder = new StringBuilder();
-				builder.append("Hits Pregel: ");
-				builder.append("Auth values");
-				{
-					Set<Pair<Long, Float>> topFloat = graph.topFloat("hits-auth", 10);
-					for (Pair<Long, Float> pair : topFloat) {
-						builder.append(pair.left + "=" + pair.right + "\n");
-					}
-				}
-
-				builder.append("Hub values");
-				{
-					Set<Pair<Long, Float>> topFloat = graph.topFloat("hits-hub", 10);
-					for (Pair<Long, Float> pair : topFloat) {
-						builder.append(pair.left + "=" + pair.right + "\n");
-					}
-				}
-
-				builder.append("\nSum");
-				{
-					float sum = graph.sumFloat("hits-auth");
-					builder.append("auth: " + sum + "\n");
-
-				}
-
-				{
-					float sum = graph.sumFloat("hits-hub");
-					builder.append("hub: " + sum + "\n");
-				}
+				builder.append("Hits Pregel: \n");
+				builder.append(res + "\n");
 				return builder.toString();
 			}
 		};
@@ -363,44 +372,21 @@ public class Algorithms {
 
 	protected static GraphlyRun salsaFJ() {
 		return new GraphlyRun("salsaFJ") {
-
 			@Override
-			GraphlyTraversal run(long[] users, GraphlyGraph graph, Mapper mapper) throws Exception {
-				return graph.v(users).set("mapper", mapper).expand(Dir.BOTH, 1000).expand(Dir.BOTH, 1000)
-						.as(Recommendation.class).salsa("salsa-auth", "salsa-hub", 10).asTraversal();
+			GraphlyTraversal run(long[] users, GraphlyGraph graph,
+					Mapper mapper) throws Exception {
+				return graph.v(users).set("mapper", mapper)
+						.expand(Dir.BOTH, SALSA_NEIGHBOURS)
+						.expand(Dir.BOTH, SALSA_NEIGHBOURS)
+						.as(Recommendation.class).salsa(10, 10).asTraversal();
 			}
 
 			@Override
-			String printResult(TraversalResult res, GraphlyGraph graph) throws Exception {
+			String printResult(TraversalResult res, GraphlyGraph graph)
+					throws Exception {
 				StringBuilder builder = new StringBuilder();
-				builder.append("Salsa Pregel: ");
-				builder.append("Auth values");
-				{
-					Set<Pair<Long, Float>> topFloat = graph.topFloat("salsa-auth", 10);
-					for (Pair<Long, Float> pair : topFloat) {
-						builder.append(pair.left + "=" + pair.right + "\n");
-					}
-				}
-
-				builder.append("Hub values");
-				{
-					Set<Pair<Long, Float>> topFloat = graph.topFloat("salsa-hub", 10);
-					for (Pair<Long, Float> pair : topFloat) {
-						builder.append(pair.left + "=" + pair.right + "\n");
-					}
-				}
-
-				builder.append("\nSum");
-				{
-					float sum = graph.sumFloat("salsa-auth");
-					builder.append("auth: " + sum + "\n");
-
-				}
-
-				{
-					float sum = graph.sumFloat("salsa-hub");
-					builder.append("hub: " + sum + "\n");
-				}
+				builder.append("Salsa Fork Join: \n");
+				builder.append(res + "\n");
 				return builder.toString();
 			}
 		};
@@ -410,42 +396,22 @@ public class Algorithms {
 		return new GraphlyRun("salsaPregel") {
 
 			@Override
-			GraphlyTraversal run(long[] users, GraphlyGraph graph, Mapper mapper) throws Exception {
-				return graph.v(users).set("mapper", mapper).expand(Dir.BOTH, 1000).expand(Dir.BOTH, 1000)
-						.as(Recommendation.class).salsaPregel("salsa-auth", "salsa-hub", 10).asTraversal();
+			GraphlyTraversal run(long[] users, GraphlyGraph graph,
+					Mapper mapper) throws Exception {
+				return graph.v(users).set("mapper", mapper)
+						.expand(Dir.BOTH, SALSA_NEIGHBOURS)
+						.expand(Dir.BOTH, SALSA_NEIGHBOURS)
+						.as(Recommendation.class)
+						.salsaPregel("salsa-auth", "salsa-hub", 10, 10)
+						.asTraversal();
 			}
 
 			@Override
-			String printResult(TraversalResult res, GraphlyGraph graph) throws Exception {
+			String printResult(TraversalResult res, GraphlyGraph graph)
+					throws Exception {
 				StringBuilder builder = new StringBuilder();
-				builder.append("Salsa Pregel: ");
-				builder.append("Auth values");
-				{
-					Set<Pair<Long, Float>> topFloat = graph.topFloat("salsa-auth", 10);
-					for (Pair<Long, Float> pair : topFloat) {
-						builder.append(pair.left + "=" + pair.right + "\n");
-					}
-				}
-
-				builder.append("Hub values");
-				{
-					Set<Pair<Long, Float>> topFloat = graph.topFloat("salsa-hub", 10);
-					for (Pair<Long, Float> pair : topFloat) {
-						builder.append(pair.left + "=" + pair.right + "\n");
-					}
-				}
-
-				builder.append("\nSum");
-				{
-					float sum = graph.sumFloat("salsa-auth");
-					builder.append("auth: " + sum + "\n");
-
-				}
-
-				{
-					float sum = graph.sumFloat("salsa-hub");
-					builder.append("hub: " + sum + "\n");
-				}
+				builder.append("Salsa Pregel: \n");
+				builder.append(res + "\n");
 				return builder.toString();
 			}
 		};
@@ -453,21 +419,20 @@ public class Algorithms {
 
 	public static GraphlyRun ecFJ() {
 		return new GraphlyRun("ecFJ") {
-			public GraphlyTraversal run(long[] users, GraphlyGraph graph, Mapper mapper) throws Exception {
-				return graph.v(users).set("mapper", mapper).as(Recommendation.class)
-						.exploratoryCount(Integer.MAX_VALUE, 10, Dir.OUT, Dir.IN, Dir.OUT).asTraversal();
+			public GraphlyTraversal run(long[] users, GraphlyGraph graph,
+					Mapper mapper) throws Exception {
+				return graph.v(users).set("mapper", mapper)
+						.as(Recommendation.class)
+						.exploratoryCount(Integer.MAX_VALUE, 10, Dir.OUT,
+								Dir.IN, Dir.OUT)
+						.asTraversal();
 			}
 
 			@Override
-			public String printResult(TraversalResult res, GraphlyGraph g) throws Exception {
+			public String printResult(TraversalResult res, GraphlyGraph g)
+					throws Exception {
 				StringBuilder builder = new StringBuilder();
 				builder.append("Exploratory Count: \n" + res + "\n");
-				//
-				// builder.append("Exploratory Count FJ:");
-				// Set<Pair<Long, Float>> set = g.topFloat("count", 10);
-				// for (Pair<Long, Float> pair : set) {
-				// builder.append(pair.getKey() + "=" + pair.getValue() + "\n");
-				// }
 				return builder.toString();
 			}
 		};
@@ -477,33 +442,137 @@ public class Algorithms {
 		return new GraphlyRun("ecPregel") {
 
 			@Override
-			GraphlyTraversal run(long[] users, GraphlyGraph graph, Mapper mapper) throws Exception {
-				return graph.v(users).set("mapper", mapper).as(Recommendation.class).exploratoryCountPregel(10)
+			GraphlyTraversal run(long[] users, GraphlyGraph graph,
+					Mapper mapper) throws Exception {
+				return graph.v(users).set("mapper", mapper)
+						.as(Recommendation.class).exploratoryCountPregel(10)
 						.asTraversal();
 			}
 
 			@Override
-			String printResult(TraversalResult res, GraphlyGraph g) throws Exception {
+			String printResult(TraversalResult res, GraphlyGraph g)
+					throws Exception {
 
 				StringBuilder builder = new StringBuilder();
 				builder.append("Exploratory Count Pregel: \n" + res + "\n");
-				//
-				// builder.append("Exploratory Count FJ:");
-				// Set<Pair<Long, Float>> set = g.topFloat("count", 10);
-				// for (Pair<Long, Float> pair : set) {
-				// builder.append(pair.getKey() + "=" + pair.getValue() + "\n");
-				// }
 				return builder.toString();
-				// StringBuilder builder = new StringBuilder();
-				// builder.append("Exploratory Count Pregel: \n");
-				// {
-				// Set<Pair<Long, Float>> set = g.topFloat("count", 10);
-				// for (Pair<Long, Float> pair : set) {
-				// builder.append(pair.getKey() + "=" + pair.getValue()
-				// + "\n");
-				// }
-				// }
-				// return builder.toString();
+			}
+		};
+	}
+
+	public static GraphlyRun friendLinkHybrid() {
+		return new GraphlyRun("friendLinkHybrid") {
+
+			@Override
+			GraphlyTraversal run(long[] users, GraphlyGraph graph,
+					Mapper mapper) throws Exception {
+				return graph.v(users).set("mapper", mapper)
+						.as(Recommendation.class)
+						.friendLinkHybrid(10, FRIENDLINK_DEPTH, Dir.OUT)
+						.asTraversal();
+			}
+
+			@Override
+			String printResult(TraversalResult res, GraphlyGraph g)
+					throws Exception {
+				StringBuilder builder = new StringBuilder();
+				builder.append("FriendLink Hybrid: \n");
+				builder.append(res.toString() + "\n");
+				return builder.toString();
+			}
+		};
+	}
+
+	public static GraphlyRun localPathHybrid() {
+		return new GraphlyRun("localPathHybrid") {
+
+			@Override
+			GraphlyTraversal run(long[] users, GraphlyGraph graph,
+					Mapper mapper) throws Exception {
+				return graph.v(users).set("mapper", mapper)
+						.as(Recommendation.class)
+						.localPathHybrid(0.1f, 10, Dir.OUT).asTraversal();
+			}
+
+			@Override
+			String printResult(TraversalResult res, GraphlyGraph g)
+					throws Exception {
+				StringBuilder builder = new StringBuilder();
+				builder.append("Local Path Hybrid: \n");
+				builder.append(res.toString() + "\n");
+				return builder.toString();
+			}
+		};
+	}
+
+	public static GraphlyRun katzHybrid() {
+		return new GraphlyRun("katzHybrid") {
+
+			@Override
+			GraphlyTraversal run(long[] users, GraphlyGraph graph,
+					Mapper mapper) throws Exception {
+				return graph.v(users).set("mapper", mapper)
+						.as(Recommendation.class)
+						.katzHybrid(0.0001f, KATZ_DEPTH, 10, Dir.OUT)
+						.asTraversal();
+			}
+
+			@Override
+			String printResult(TraversalResult res, GraphlyGraph g)
+					throws Exception {
+				StringBuilder builder = new StringBuilder();
+				builder.append("Katz Hybrid: \n");
+				builder.append(res.toString() + "\n");
+				return builder.toString();
+			}
+		};
+	}
+
+	public static GraphlyRun salsaHybrid() {
+		return new GraphlyRun("salsaHybrid") {
+			@Override
+			GraphlyTraversal run(long[] users, GraphlyGraph graph,
+					Mapper mapper) throws Exception {
+				return graph.v(users).set("mapper", mapper)
+						.expand(Dir.BOTH, SALSA_NEIGHBOURS)
+						.expand(Dir.BOTH, SALSA_NEIGHBOURS)
+						.as(Recommendation.class)
+						.salsaHybrid("salsa-auth", "salsa-hub", 10, 10)
+						.asTraversal();
+			}
+
+			@Override
+			String printResult(TraversalResult res, GraphlyGraph graph)
+					throws Exception {
+				StringBuilder builder = new StringBuilder();
+				builder.append("Salsa Hybrid: \n");
+				builder.append(res + "\n");
+				return builder.toString();
+			}
+		};
+	}
+
+	public static GraphlyRun hitsHybrid() {
+		return new GraphlyRun("hitsHybrid") {
+
+			@Override
+			GraphlyTraversal run(long[] users, GraphlyGraph graph,
+					Mapper mapper) throws Exception {
+				return graph.v(users).set("mapper", mapper)
+						.expand(Dir.BOTH, HITS_NEIGHBOURS)
+						.expand(Dir.BOTH, HITS_NEIGHBOURS)
+						.as(Recommendation.class)
+						.hitsHybrid("hits-auth", "hits-hub", 10, 10)
+						.asTraversal();
+			}
+
+			@Override
+			String printResult(TraversalResult res, GraphlyGraph graph)
+					throws Exception {
+				StringBuilder builder = new StringBuilder();
+				builder.append("Hits Hybrid: \n");
+				builder.append(res + "\n");
+				return builder.toString();
 			}
 		};
 	}

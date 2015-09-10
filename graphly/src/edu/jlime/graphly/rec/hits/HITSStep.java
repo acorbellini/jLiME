@@ -10,6 +10,7 @@ import edu.jlime.graphly.client.GraphlyClient;
 import edu.jlime.graphly.client.GraphlyGraph;
 import edu.jlime.graphly.jobs.Mapper;
 import edu.jlime.graphly.rec.CustomStep.CustomFunction;
+import edu.jlime.graphly.rec.salsa.AuthHubResult;
 import edu.jlime.graphly.rec.salsa.AuthHubSubResult;
 import edu.jlime.graphly.traversal.GraphlyTraversal;
 import edu.jlime.graphly.traversal.TraversalResult;
@@ -24,20 +25,16 @@ import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.map.hash.TLongFloatHashMap;
 
 public class HITSStep implements CustomFunction {
-	private String auth;
-	private String hub;
 	private int steps;
 
-	public HITSStep(String auth, String hub, int steps) {
-		this.auth = auth;
-		this.hub = hub;
+	public HITSStep(int steps) {
 		this.steps = steps;
 	}
 
 	@Override
 	public TraversalResult execute(TraversalResult before, GraphlyTraversal tr)
 			throws Exception {
-		Logger log = Logger.getLogger(HITSStep.class);
+		final Logger log = Logger.getLogger(HITSStep.class);
 
 		long[] subgraph = before.vertices().toArray();
 
@@ -47,8 +44,8 @@ public class HITSStep implements CustomFunction {
 
 		JobDispatcher jobClient = tr.getGraph().getJobClient();
 
-		JobContextImpl ctx = jobClient.getEnv().getClientEnv(
-				jobClient.getLocalPeer());
+		JobContextImpl ctx = jobClient.getEnv()
+				.getClientEnv(jobClient.getLocalPeer());
 
 		log.info("Executing HITS on " + subgraph.length + " vertices.");
 
@@ -62,63 +59,76 @@ public class HITSStep implements CustomFunction {
 
 		for (int i = 0; i < steps; i++) {
 
-			System.out.println("Executing Step " + i);
+			log.info("Executing Step " + i);
 
-			final List<Pair<ClientNode, TLongArrayList>> mapped = map.map(
-					GraphlyClient.NUM_JOBS, subgraph, ctx);
+			final List<Pair<ClientNode, TLongArrayList>> mapped = map
+					.map(GraphlyClient.NUM_JOBS, subgraph, ctx);
 
 			ForkJoinTask<AuthHubSubResult> fj = new ForkJoinTask<>();
 
 			for (Pair<ClientNode, TLongArrayList> e : mapped)
-				fj.putJob(
-						new HITSJob(tr.getGraph(), auth, hub, subgraph, e
-								.getValue()), e.getKey());
+				fj.putJob(new HITSJob(tr.getGraph(), auth, hub, subgraph,
+						e.getValue()), e.getKey());
+
+			auth.clear();
+			hub.clear();
 
 			fj.execute(16, new ResultListener<AuthHubSubResult, Void>() {
-				AtomicDouble sumAuth = new AtomicDouble(0d);
-				AtomicDouble sumHub = new AtomicDouble(0d);
 
 				@Override
 				public void onSuccess(AuthHubSubResult subres) {
-					System.out.println("Received subresult.");
+					log.info("Received subresult.");
 					synchronized (auth) {
-						auth.putAll(subres.auth);
-					}
-					synchronized (hub) {
-						hub.putAll(subres.hub);
-					}
-					{
-						TLongFloatIterator it = subres.auth.iterator();
-						while (it.hasNext()) {
-							it.advance();
-							sumAuth.addAndGet(it.value());
+						TLongFloatIterator itAuth = subres.auth.iterator();
+						while (itAuth.hasNext()) {
+							itAuth.advance();
+							auth.adjustOrPutValue(itAuth.key(), itAuth.value(),
+									itAuth.value());
 						}
 					}
-					{
-						TLongFloatIterator it = subres.hub.iterator();
-						while (it.hasNext()) {
-							it.advance();
-							sumHub.addAndGet(it.value());
+					synchronized (hub) {
+						TLongFloatIterator itHub = subres.hub.iterator();
+						while (itHub.hasNext()) {
+							itHub.advance();
+							hub.adjustOrPutValue(itHub.key(), itHub.value(),
+									itHub.value());
 						}
 					}
 				}
 
 				@Override
 				public Void onFinished() {
+					float sumAuth = 0f;
+					float sumHub = 0f;
 					{
 						TLongFloatIterator it = auth.iterator();
 						while (it.hasNext()) {
 							it.advance();
-							it.setValue((float) (it.value() / sumAuth.get()));
+							sumAuth += it.value();
 						}
 					}
 					{
 						TLongFloatIterator it = hub.iterator();
 						while (it.hasNext()) {
 							it.advance();
-							it.setValue((float) (it.value() / sumHub.get()));
+							sumHub += it.value();
 						}
 					}
+					{
+						TLongFloatIterator it = auth.iterator();
+						while (it.hasNext()) {
+							it.advance();
+							it.setValue((float) (it.value() / sumAuth));
+						}
+					}
+					{
+						TLongFloatIterator it = hub.iterator();
+						while (it.hasNext()) {
+							it.advance();
+							it.setValue((float) (it.value() / sumHub));
+						}
+					}
+
 					return null;
 				}
 
@@ -131,16 +141,31 @@ public class HITSStep implements CustomFunction {
 		// TLongIterator itResult = subgraph.iterator();
 		// while (itResult.hasNext()) {
 		// long v = itResult.next();
-		g.setFloat(this.auth, auth);
-		g.setFloat(this.hub, hub);
+		// g.setFloat(this.auth, auth);
+		// g.setFloat(this.hub, hub);
 		// }
+		float sumAuth = 0f;
+		float sumHub = 0f;
+		TLongFloatIterator itAuth = auth.iterator();
+		while (itAuth.hasNext()) {
+			itAuth.advance();
+			sumAuth += itAuth.value();
+		}
 
-		return before;
+		TLongFloatIterator itHub = hub.iterator();
+		while (itHub.hasNext()) {
+			itHub.advance();
+			sumHub += itHub.value();
+		}
+
+		System.out.println(sumAuth);
+		System.out.println(sumHub);
+
+		return new AuthHubResult(auth, hub);
 	}
 
 	@Override
 	public String toString() {
-		return "HITSCustomStep [auth=" + auth + ", hub=" + hub + ", steps="
-				+ steps + "]";
+		return "HITSCustomStep [ steps=" + steps + "]";
 	}
 }

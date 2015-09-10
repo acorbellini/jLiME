@@ -1,14 +1,22 @@
 package edu.jlime.graphly.rec;
 
+import java.util.Set;
+
+import org.apache.log4j.Logger;
+
+import edu.jlime.graphly.client.GraphlyGraph;
 import edu.jlime.graphly.jobs.MapperFactory;
 import edu.jlime.graphly.rec.CustomStep.CustomFunction;
 import edu.jlime.graphly.rec.hits.HITSPregel;
+import edu.jlime.graphly.rec.salsa.AuthHubResult;
 import edu.jlime.graphly.traversal.GraphlyTraversal;
 import edu.jlime.graphly.traversal.Pregel;
 import edu.jlime.graphly.traversal.TraversalResult;
 import edu.jlime.graphly.util.MessageAggregators;
 import edu.jlime.pregel.client.PregelConfig;
 import edu.jlime.pregel.mergers.MessageMergers;
+import edu.jlime.util.Pair;
+import gnu.trove.map.hash.TLongFloatHashMap;
 import gnu.trove.set.hash.TLongHashSet;
 
 public class HITSPregelStep implements CustomFunction {
@@ -16,11 +24,13 @@ public class HITSPregelStep implements CustomFunction {
 	private String auth;
 	private String hub;
 	private int steps;
+	private int top;
 
-	public HITSPregelStep(String auth, String hub, int steps) {
+	public HITSPregelStep(String auth, String hub, int steps, int top) {
 		this.auth = auth;
 		this.hub = hub;
 		this.steps = steps;
+		this.top = top;
 	}
 
 	@Override
@@ -28,6 +38,7 @@ public class HITSPregelStep implements CustomFunction {
 			throws Exception {
 		TLongHashSet sg = before.vertices();
 
+		Logger log = Logger.getLogger(HITSPregel.class);
 		PregelConfig config = PregelConfig.create()
 				.aggregator("hits-auth", MessageAggregators.floatSum())
 				.aggregator("hits-hub", MessageAggregators.floatSum())
@@ -35,10 +46,28 @@ public class HITSPregelStep implements CustomFunction {
 				.merger("hits-hub", MessageMergers.floatSum()).steps(steps)
 				.subgraph("hits-sg", sg);
 
-		tr.getGraph().v(sg).set("mapper", MapperFactory.location())
-				.as(Pregel.class)
+		GraphlyGraph g = tr.getGraph();
+		g.v(sg).set("mapper", MapperFactory.location()).as(Pregel.class)
 				.vertexFunction(new HITSPregel(auth, hub), config).exec();
-		return before;
+
+		System.out.println(g.sumFloat(auth));
+		System.out.println(g.sumFloat(hub));
+
+		log.info("Counting top " + top);
+		Set<Pair<Long, Float>> set = g.topFloat(auth, top);
+
+		TLongFloatHashMap authRes = new TLongFloatHashMap();
+		for (Pair<Long, Float> pair : set) {
+			authRes.put(pair.left, pair.right);
+		}
+
+		Set<Pair<Long, Float>> setHub = g.topFloat(hub, top);
+
+		TLongFloatHashMap hubRes = new TLongFloatHashMap();
+		for (Pair<Long, Float> pair : setHub) {
+			hubRes.put(pair.left, pair.right);
+		}
+		return new AuthHubResult(authRes, hubRes);
 	}
 
 }

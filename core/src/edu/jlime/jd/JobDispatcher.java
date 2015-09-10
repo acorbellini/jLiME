@@ -558,7 +558,7 @@ public class JobDispatcher implements ClusterChangeListener, JobExecutor {
 	}
 
 	public static JobDispatcher build(int i, final RPCDispatcher rpc) {
-		JobDispatcher disp = new JobDispatcher(0, rpc);
+		JobDispatcher disp = new JobDispatcher(i, rpc);
 		disp.setStreamer(new StreamProvider() {
 
 			@Override

@@ -28,10 +28,10 @@ public class WorkerContext {
 	};
 
 	public void send(String type, long to, Object curr) throws Exception {
-		if (task.isLocal(to))
-			task.outputObject(type, v, to, curr);
-		else
-			cache.send(type, this.v, to, curr);
+		// if (task.isLocal(to))
+		// task.outputObject(type, v, to, curr);
+		// else
+		cache.send(type, this.v, to, curr);
 	}
 
 	public void sendAll(String msgType, Object val) throws Exception {
@@ -39,10 +39,10 @@ public class WorkerContext {
 	}
 
 	public void sendFloat(String type, long to, float curr) throws Exception {
-		if (task.isLocal(to))
-			task.outputFloat(type, v, to, curr);
-		else
-			cache.sendFloat(type, this.v, to, curr);
+		// if (task.isLocal(to))
+		// task.outputFloat(type, v, to, curr);
+		// else
+		cache.sendFloat(type, this.v, to, curr);
 
 	}
 
@@ -52,14 +52,13 @@ public class WorkerContext {
 
 	public void sendAllDouble(String msgType, double val) throws Exception {
 		cache.sendAllDouble(msgType, this.v, val);
-
 	}
 
 	public void sendDouble(String type, long to, double val) throws Exception {
-		if (task.isLocal(to))
-			task.outputDouble(type, v, to, val);
-		else
-			cache.sendDouble(type, this.v, to, val);
+		// if (task.isLocal(to))
+		// task.outputDouble(type, v, to, val);
+		// else
+		cache.sendDouble(type, this.v, to, val);
 	}
 
 	public void setCurrVertex(long currentVertex) {

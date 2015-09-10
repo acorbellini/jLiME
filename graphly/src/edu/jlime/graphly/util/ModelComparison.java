@@ -74,15 +74,19 @@ public class ModelComparison {
 	};
 	// @formatter:on
 
-	private static final long[][] GROUPS = new long[][] { new long[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 },
-			{ 1811269, 6035057, 1653, 1025811, 1437, 1829999, 5874844, 1803885, 5925043, 1037948 }, // by
-																									// followers
-			{ 1008721, 269339, 3806, 3663441, 2581430, 1803885, 5299, 21407, 1786295, 1653 }, // by
-																								// followees
-			{ 3653185, 3117695, 3154485, 1020022, 3655067, 31907, 3137321, 7994, 3629842, 1004282 } // by
-																									// IS
-																									// aprox
-																									// 0.5
+	private static final long[][] GROUPS = new long[][] {
+			new long[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 },
+			{ 1811269, 6035057, 1653, 1025811, 1437, 1829999, 5874844, 1803885,
+					5925043, 1037948 }, // by
+										// followers
+			{ 1008721, 269339, 3806, 3663441, 2581430, 1803885, 5299, 21407,
+					1786295, 1653 }, // by
+										// followees
+			{ 3653185, 3117695, 3154485, 1020022, 3655067, 31907, 3137321, 7994,
+					3629842, 1004282 } // by
+										// IS
+										// aprox
+										// 0.5
 
 	};
 
@@ -94,15 +98,20 @@ public class ModelComparison {
 
 	private String startNode;
 
-	public ModelComparison(GraphlyServerFactory fact, String graphName, boolean print_results) {
-		this(fact, graphName, print_results, null);
-	}
+	private int reps;
 
-	public ModelComparison(GraphlyServerFactory fact, String graphName, boolean print_results, String startNode) {
+	// public ModelComparison(GraphlyServerFactory fact, String graphName,
+	// boolean print_results) {
+	// this(fact, graphName, print_results, null, 1);
+	// }
+
+	public ModelComparison(GraphlyServerFactory fact, String graphName,
+			boolean print_results, String startNode, int reps) {
 		this.startNode = startNode;
 		this.graphName = graphName;
 		this.fact = fact;
 		this.print_results = print_results;
+		this.reps = reps;
 	}
 
 	public static void main(String[] args) throws Exception {
@@ -110,31 +119,36 @@ public class ModelComparison {
 		if (args[0].equals("local")) {
 			GraphlyServerFactory fact = GraphlyServerFactory.loopback(args[1]);
 			String graphName = args[2];
-			new ModelComparison(fact, graphName, PRINT, null).run();
+			new ModelComparison(fact, graphName, true, null, 0).run();
 		} else {
-			GraphlyServerFactory fact = GraphlyServerFactory.distributed(args[1], args[2], args[3]);
+			GraphlyServerFactory fact = GraphlyServerFactory
+					.distributed(args[1], args[2], args[3]);
 			String graphName = args[4];
-			new ModelComparison(fact, graphName, PRINT, START_NODE).run();
+			new ModelComparison(fact, graphName, PRINT, START_NODE, REPS).run();
 		}
-
 	}
 
 	private void run() throws Exception {
 		// @formatter:off
 		GraphlyRun[] exp = new GraphlyRun[] { 
-//				Algorithms.ecFJ(),
-				// Algorithms.ecHybrid(),
-				// Algorithms.ecPregel(),
-				// Algorithms.friendLinkFJ(),
-				// Algorithms.friendLinkPregel(),
-//				Algorithms.localPathFJ(),
+				Algorithms.ecFJ(),				
+				Algorithms.ecPregel(),
+				Algorithms.ecHybrid(),
+				Algorithms.friendLinkFJ(),
+				Algorithms.friendLinkPregel(),
+				Algorithms.friendLinkHybrid(),
+				Algorithms.localPathFJ(),
 				Algorithms.localPathPregel(), 
+				Algorithms.localPathHybrid(),
 				Algorithms.katzFJ(),
-				Algorithms.katzPregel(), 
+				Algorithms.katzPregel(),
+				Algorithms.katzHybrid(),
 				Algorithms.salsaFJ(),
-				Algorithms.salsaPregel(), 
+				Algorithms.salsaPregel(),
+				Algorithms.salsaHybrid(),
 				Algorithms.hitsFJ(),				
-				Algorithms.hitsPregel()
+				Algorithms.hitsPregel(),
+				Algorithms.hitsHybrid()
 		};
 		
 		GraphlyRun[] groups_exp = new GraphlyRun[] { 
@@ -150,11 +164,15 @@ public class ModelComparison {
 		for (GraphlyRun run : exp) {
 			for (Mapper mapper : MAPPERS) {
 				for (long user : USERS) {
-					ExperimentResult expRes = GraphlyExperiment.exec(REPS, new long[] { user }, graphName, fact, run,
+					ExperimentResult expRes = GraphlyExperiment.exec(reps,
+							new long[] { user }, graphName, fact, run,
 							print_results, startNode, mapper);
-					System.out.println("user:" + user + " mapper:" + mapper.getName() + " " + run.getName() + " "
-							+ expRes.mem() + ":" + expRes.mem_desv() + " " + expRes.net() + ":" + expRes.net_desv()
-							+ " " + expRes.time() / 1000 + ":" + expRes.time_desv() / 1000);
+					System.out.println("user:" + user + " mapper:"
+							+ mapper.getName() + " " + run.getName() + " "
+							+ expRes.mem() + ":" + expRes.mem_desv() + " "
+							+ expRes.net() + ":" + expRes.net_desv() + " "
+							+ expRes.time() / 1000 + ":"
+							+ expRes.time_desv() / 1000);
 
 				}
 			}
@@ -163,11 +181,15 @@ public class ModelComparison {
 		for (GraphlyRun run : groups_exp) {
 			for (Mapper mapper : MAPPERS) {
 				for (long[] g : GROUPS) {
-					ExperimentResult expRes = GraphlyExperiment.exec(REPS, g, graphName, fact, run, print_results,
-							startNode, mapper);
-					System.out.println("group:" + Arrays.toString(g) + " mapper:" + mapper.getName() + " "
-							+ run.getName() + " " + +expRes.mem() + ":" + expRes.mem_desv() + " " + expRes.net() + ":"
-							+ expRes.net_desv() + " " + expRes.time() / 1000 + ":" + expRes.time_desv() / 1000);
+					ExperimentResult expRes = GraphlyExperiment.exec(reps, g,
+							graphName, fact, run, print_results, startNode,
+							mapper);
+					System.out.println("group:" + Arrays.toString(g)
+							+ " mapper:" + mapper.getName() + " "
+							+ run.getName() + " " + +expRes.mem() + ":"
+							+ expRes.mem_desv() + " " + expRes.net() + ":"
+							+ expRes.net_desv() + " " + expRes.time() / 1000
+							+ ":" + expRes.time_desv() / 1000);
 
 				}
 			}

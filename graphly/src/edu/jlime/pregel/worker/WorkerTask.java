@@ -147,11 +147,12 @@ public class WorkerTask {
 
 		this.worker = w;
 
-		this.coordMgr = rpc.manage(new CoordinatorFactory(rpc,
-				CoordinatorServer.COORDINATOR_KEY), new CoordinatorFilter(),
-				client);
-		this.workerMgr = rpc.manage(new WorkerFactory(rpc,
-				WorkerServer.WORKER_KEY), new WorkerFilter(), client);
+		this.coordMgr = rpc.manage(
+				new CoordinatorFactory(rpc, CoordinatorServer.COORDINATOR_KEY),
+				new CoordinatorFilter(), client);
+		this.workerMgr = rpc.manage(
+				new WorkerFactory(rpc, WorkerServer.WORKER_KEY),
+				new WorkerFilter(), client);
 
 		this.taskid = taskID;
 
@@ -260,13 +261,13 @@ public class WorkerTask {
 
 	public void execute() throws Exception {
 		long init = System.currentTimeMillis();
-		final VertexList vList = this.config.isPersitentCurrentSplitList() ? new PersistedVertexList()
-				: new InMemVertexList();
+		final VertexList vList = this.config.isPersitentCurrentSplitList()
+				? new PersistedVertexList() : new InMemVertexList();
 
 		if (broadcastSize() > 0) { // activate all vertices.
 			if (this.graphVertexList == null) {
-				this.graphVertexList = this.config.isPersitentVertexList() ? new PersistedVertexList()
-						: new InMemVertexList();
+				this.graphVertexList = this.config.isPersitentVertexList()
+						? new PersistedVertexList() : new InMemVertexList();
 				Iterable<Long> vertices = graph.vertices();
 				for (Long v : vertices) {
 					graphVertexList.add(v);
@@ -355,8 +356,8 @@ public class WorkerTask {
 			}
 			log.info("Finished work for step " + currentStep + " on Worker "
 					+ worker.getID());
-			coordMgr.getFirst().finished(getTaskid(), this.worker.getID(),
-					true, aggregators);
+			coordMgr.getFirst().finished(getTaskid(), this.worker.getID(), true,
+					aggregators);
 
 			vList.delete();
 		}
@@ -393,7 +394,7 @@ public class WorkerTask {
 
 	private void executeVertexRange(final int size, final int threads,
 			final AtomicInteger count, final int threadID, VertexList vList)
-			throws Exception {
+					throws Exception {
 
 		LongIterator it = vList.iterator();
 
@@ -421,7 +422,8 @@ public class WorkerTask {
 					currList.add(q.getMessages(e.getKey(), currentVertex));
 				}
 
-				for (Entry<String, PregelMessageQueue> e : broadcast.entrySet()) {
+				for (Entry<String, PregelMessageQueue> e : broadcast
+						.entrySet()) {
 					PregelMessageQueue q = e.getValue();
 					currList.add(q.getMessages(e.getKey(), -1l));
 				}
@@ -429,8 +431,8 @@ public class WorkerTask {
 				for (Entry<Pair<String, String>, PregelMessageQueue> e : subgraphqueue
 						.entrySet()) {
 					PregelMessageQueue q = e.getValue();
-					if (config.getSubgraph(e.getKey().right).contains(
-							currentVertex))
+					if (config.getSubgraph(e.getKey().right)
+							.contains(currentVertex))
 						currList.add(q.getMessages(e.getKey().left, -1l));
 				}
 
@@ -494,11 +496,11 @@ public class WorkerTask {
 	public void outputDouble(String msgtype, long from, long to, double val)
 			throws Exception {
 		if (to != -1l)
-			getWorker(to)
-					.sendDoubleMessage(msgtype, from, to, val, getTaskid());
+			getWorker(to).sendDoubleMessage(msgtype, from, to, val,
+					getTaskid());
 		else
-			workerMgr.broadcast().sendDoubleBroadcastMessage(msgtype, from,
-					val, getTaskid());
+			workerMgr.broadcast().sendDoubleBroadcastMessage(msgtype, from, val,
+					getTaskid());
 	}
 
 	public void outputObject(String msgtype, long from, long to, Object val)
@@ -582,8 +584,8 @@ public class WorkerTask {
 		((FloatMessageQueue) getQueue(msg)).putFloat(from, to, val);
 	}
 
-	public void queueDoubleVertexData(String msg, long from, long to, double val)
-			throws Exception {
+	public void queueDoubleVertexData(String msg, long from, long to,
+			double val) throws Exception {
 		((DoubleMessageQueue) getQueue(msg)).putDouble(from, to, val);
 	}
 
@@ -661,7 +663,8 @@ public class WorkerTask {
 
 	public void queueBroadcastFloatArrayVertexData(String msg, long from,
 			float[] val) throws Exception {
-		FloatArrayMessageQueue q = (FloatArrayMessageQueue) getBroadcastQueue(msg);
+		FloatArrayMessageQueue q = (FloatArrayMessageQueue) getBroadcastQueue(
+				msg);
 		q.putFloatArray(from, -1l, val);
 	}
 
@@ -719,8 +722,8 @@ public class WorkerTask {
 
 	public void outputObjectSubgraph(String msgType, String subGraph, long v,
 			Object val) throws Exception {
-		workerMgr.broadcast().sendBroadcastMessageSubgraph(msgType, subGraph,
-				v, val, getTaskid());
+		workerMgr.broadcast().sendBroadcastMessageSubgraph(msgType, subGraph, v,
+				val, getTaskid());
 	}
 
 	public void queueBroadcastSubgraphVertexData(String msgType,

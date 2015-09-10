@@ -1,9 +1,9 @@
 package edu.jlime.util.compression;
 
+import edu.jlime.util.ByteBuffer;
 import net.jpountz.lz4.LZ4Compressor;
 import net.jpountz.lz4.LZ4Factory;
 import net.jpountz.lz4.LZ4FastDecompressor;
-import edu.jlime.util.ByteBuffer;
 
 public class LZ4Comp implements Compressor {
 	static LZ4Compressor comp = LZ4Factory.fastestInstance().highCompressor();

@@ -5,9 +5,9 @@ import java.io.Serializable;
 import gnu.trove.map.hash.TLongFloatHashMap;
 
 public class AuthHubSubResult implements Serializable {
-	public AuthHubSubResult(TLongFloatHashMap auth2, TLongFloatHashMap hub2) {
-		this.auth = auth2;
-		this.hub = hub2;
+	public AuthHubSubResult(TLongFloatHashMap auth, TLongFloatHashMap hub) {
+		this.auth = auth;
+		this.hub = hub;
 	}
 
 	public TLongFloatHashMap auth;
