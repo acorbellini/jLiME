@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.junit.Test;
 
-import edu.jlime.jd.ClientNode;
+import edu.jlime.jd.Node;
 import edu.jlime.jd.client.Client;
 import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.Job;
@@ -25,7 +25,7 @@ public class RoundRobinTest {
 		}
 
 		@Override
-		public String call(JobContext env, ClientNode peer) throws Exception {
+		public String call(JobContext env, Node peer) throws Exception {
 			// Thread.sleep((long) (Math.random() * 3000));
 			return msg + env.getCluster().getLocalNode().getID();
 		}
@@ -45,8 +45,7 @@ public class RoundRobinTest {
 		jobs.add(new HelloJob("Lets "));
 		jobs.add(new HelloJob("Go "));
 		Client cli = Client.build(3);
-		RoundRobinTask<String> task = new RoundRobinTask<>(jobs,
-				cli.getCluster());
+		RoundRobinTask<String> task = new RoundRobinTask<>(jobs, cli.getCluster());
 
 		// task.setMaxPeers(2);
 

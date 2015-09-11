@@ -52,14 +52,12 @@ public class MessageBundler extends SimpleMessageProcessor {
 	public void onStart() throws Exception {
 		getNext().addMessageListener(MessageType.BUNDLE, new MessageListener() {
 			@Override
-			public void rcv(Message message, MessageProcessor origin)
-					throws Exception {
+			public void rcv(Message message, MessageProcessor origin) throws Exception {
 				ByteBuffer reader = message.getDataBuffer();
 				while (reader.hasRemaining()) {
 					byte[] msg = reader.getByteArray();
 					try {
-						MessageSimple deEncapsulate = Message.deEncapsulate(
-								msg, message.getFrom(), message.getTo());
+						MessageSimple deEncapsulate = Message.deEncapsulate(msg, message.getFrom(), message.getTo());
 						notifyRcvd(deEncapsulate);
 					} catch (Exception e) {
 						e.printStackTrace();
@@ -70,8 +68,7 @@ public class MessageBundler extends SimpleMessageProcessor {
 		getNext().addSecondaryMessageListener(new MessageListener() {
 
 			@Override
-			public void rcv(Message message, MessageProcessor origin)
-					throws Exception {
+			public void rcv(Message message, MessageProcessor origin) throws Exception {
 				notifyRcvd(message);
 			}
 		});
@@ -84,11 +81,9 @@ public class MessageBundler extends SimpleMessageProcessor {
 					Message curr = null;
 					while ((curr = (Message) b.queue.tryTakeOne()) != null) {
 						if (msg == null)
-							msg = Message.newEmptyOutDataMessage(
-									MessageType.BUNDLE, b.to);
+							msg = Message.newEmptyOutDataMessage(MessageType.BUNDLE, b.to);
 						if (msg.getSize() + curr.getSize() < max_size) {
-							msg.getDataBuffer()
-									.putByteArray(curr.toByteArray());
+							msg.getDataBuffer().putByteArray(curr.toByteArray());
 						}
 					}
 					if (msg != null) {
@@ -108,8 +103,7 @@ public class MessageBundler extends SimpleMessageProcessor {
 		int size = msg.getSize();
 		if (size > max_size) {
 			if (log.isDebugEnabled())
-				log.debug("Sending NOT BUNDLED Message of type "
-						+ msg.getType() + " and size " + msg.getSize());
+				log.debug("Sending NOT BUNDLED Message of type " + msg.getType() + " and size " + msg.getSize());
 			sendNext(msg);
 			return;
 		}

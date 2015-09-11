@@ -15,13 +15,13 @@ public class ExecEnvironment {
 
 	Logger log = Logger.getLogger(ExecEnvironment.class);
 
-	JobDispatcher srv;
+	Dispatcher srv;
 
-	public ExecEnvironment(JobDispatcher jobDispatcher) {
+	public ExecEnvironment(Dispatcher jobDispatcher) {
 		this.srv = jobDispatcher;
 	}
 
-	public synchronized JobContextImpl getClientEnv(Peer client) {
+	public synchronized JobContext getClientEnv(Peer client) {
 		JobContextImpl env = clientEnvs.get(client);
 		if (env == null) {
 			if (log.isDebugEnabled())

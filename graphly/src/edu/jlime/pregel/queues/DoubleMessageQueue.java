@@ -13,10 +13,8 @@ import gnu.trove.map.hash.TObjectIntHashMap;
 
 public class DoubleMessageQueue implements PregelMessageQueue {
 
-	private volatile TLongDoubleHashMap readOnly = new TLongDoubleHashMap(8,
-			.75f, Long.MAX_VALUE, Double.MAX_VALUE);
-	private volatile TLongDoubleHashMap current = new TLongDoubleHashMap(8,
-			.75f, Long.MAX_VALUE, Double.MAX_VALUE);
+	private volatile TLongDoubleHashMap readOnly = new TLongDoubleHashMap(8, .75f, Long.MAX_VALUE, Double.MAX_VALUE);
+	private volatile TLongDoubleHashMap current = new TLongDoubleHashMap(8, .75f, Long.MAX_VALUE, Double.MAX_VALUE);
 	private DoubleMessageMerger merger;
 
 	public DoubleMessageQueue(DoubleMessageMerger merger) {
@@ -66,8 +64,7 @@ public class DoubleMessageQueue implements PregelMessageQueue {
 	}
 
 	@Override
-	public void flush(String msgType, String subgraph, WorkerTask workerTask)
-			throws Exception {
+	public void flush(String msgType, String subgraph, WorkerTask workerTask) throws Exception {
 		TObjectIntHashMap<Worker> sizes = new TObjectIntHashMap<>();
 		{
 			final TLongDoubleIterator it = readOnly.iterator();
@@ -104,8 +101,7 @@ public class DoubleMessageQueue implements PregelMessageQueue {
 	}
 
 	@Override
-	public Iterator<PregelMessage> getMessages(final String msgType,
-			final long to) {
+	public Iterator<PregelMessage> getMessages(final String msgType, final long to) {
 		final double found = this.readOnly.get(to);
 		if (found == this.readOnly.getNoEntryValue())
 			return null;

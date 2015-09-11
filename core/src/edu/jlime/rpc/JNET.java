@@ -15,8 +15,7 @@ import edu.jlime.rpc.message.Message;
 import edu.jlime.rpc.message.MessageProcessor;
 import edu.jlime.util.ByteBuffer;
 
-public class JNET extends MessageProcessor implements AddressListProvider,
-		HandleListener<byte[]> {
+public class JNET extends MessageProcessor implements AddressListProvider, HandleListener<byte[]> {
 	private ConcurrentHashMap<Address, InetSocketAddress> addressBook = new ConcurrentHashMap<>();
 
 	private ConcurrentHashMap<Address, ProtocolHost.ProtocolHandle<byte[]>> handles = new ConcurrentHashMap<>();
@@ -40,10 +39,8 @@ public class JNET extends MessageProcessor implements AddressListProvider,
 	public void onStart() throws Exception {
 		for (int i = 0; i < config.port_range; i++) {
 			try {
-				this.addr = new InetSocketAddress(InetAddress.getByName(iface),
-						config.port + i);
-				this.localProto = new ProtocolHost<byte[]>(local.toString(),
-						byte[].class, this.addr);
+				this.addr = new InetSocketAddress(InetAddress.getByName(iface), config.port + i);
+				this.localProto = new ProtocolHost<byte[]>(local.toString(), byte[].class, this.addr);
 				break;
 			} catch (Exception e) {
 				// e.printStackTrace();
@@ -67,8 +64,7 @@ public class JNET extends MessageProcessor implements AddressListProvider,
 								ByteBuffer buff = new ByteBuffer(data);
 								Address from = new Address(buff.getUUID());
 								Address to = new Address(buff.getUUID());
-								Message msg = Message.deEncapsulate(
-										buff.getRawByteArray(), from, local);
+								Message msg = Message.deEncapsulate(buff.getRawByteArray(), from, local);
 								notifyRcvd(msg);
 							}
 						} catch (ClassNotFoundException | IOException e) {
@@ -134,8 +130,7 @@ public class JNET extends MessageProcessor implements AddressListProvider,
 	}
 
 	@Override
-	public void updateAddress(Address id,
-			List<edu.jlime.rpc.message.SocketAddress> addresses) {
+	public void updateAddress(Address id, List<edu.jlime.rpc.message.SocketAddress> addresses) {
 		for (edu.jlime.rpc.message.SocketAddress socketAddress : addresses) {
 			addressBook.putIfAbsent(id, socketAddress.getSockTo());
 		}

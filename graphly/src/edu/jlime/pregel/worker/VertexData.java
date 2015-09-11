@@ -158,9 +158,8 @@ public class VertexData implements Serializable {
 
 	@Override
 	public String toString() {
-		return "VertexData [incoming=" + incoming + ", outgoing=" + outgoing
-				+ ", data=" + data + ", disabledOut=" + disabledOut
-				+ ", disabledIn=" + disabledIn + "]";
+		return "VertexData [incoming=" + incoming + ", outgoing=" + outgoing + ", data=" + data + ", disabledOut="
+				+ disabledOut + ", disabledIn=" + disabledIn + "]";
 	}
 
 }

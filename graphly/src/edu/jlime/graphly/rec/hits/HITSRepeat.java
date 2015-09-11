@@ -7,7 +7,7 @@ import java.util.concurrent.ThreadFactory;
 
 import org.apache.log4j.Logger;
 
-import edu.jlime.graphly.client.GraphlyGraph;
+import edu.jlime.graphly.client.Graph;
 import edu.jlime.graphly.client.SubGraph;
 import edu.jlime.graphly.rec.Repeat;
 import edu.jlime.graphly.traversal.Dir;
@@ -25,19 +25,18 @@ public class HITSRepeat implements Repeat<long[]> {
 	}
 
 	@Override
-	public Object exec(long[] before, final GraphlyGraph g) throws Exception {
-		ExecutorService exec = Executors.newFixedThreadPool(Runtime
-				.getRuntime().availableProcessors(), new ThreadFactory() {
+	public Object exec(long[] before, final Graph g) throws Exception {
+		ExecutorService exec = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(),
+				new ThreadFactory() {
 
-			@Override
-			public Thread newThread(Runnable r) {
-				Thread t = Executors.defaultThreadFactory().newThread(r);
-				t.setName("Salsa Repeat Step");
-				return t;
-			}
-		});
-		final Semaphore max = new Semaphore(Runtime.getRuntime()
-				.availableProcessors());
+					@Override
+					public Thread newThread(Runnable r) {
+						Thread t = Executors.defaultThreadFactory().newThread(r);
+						t.setName("Salsa Repeat Step");
+						return t;
+					}
+				});
+		final Semaphore max = new Semaphore(Runtime.getRuntime().availableProcessors());
 
 		Logger log = Logger.getLogger(HITSRepeat.class);
 
@@ -57,14 +56,12 @@ public class HITSRepeat implements Repeat<long[]> {
 						float sumAuth = 0f;
 						long[] incomingEdges = sg.getEdges(Dir.IN, vid);
 						for (long in : incomingEdges)
-							sumAuth += g.getFloat(in, hubKey,
-									1f / current.length);
+							sumAuth += g.getFloat(in, hubKey, 1f / current.length);
 
 						float sumHub = 0f;
 						long[] outgoingEdges = sg.getEdges(Dir.OUT, vid);
 						for (long out : outgoingEdges)
-							sumHub += g.getFloat(out, authKey,
-									1f / current.length);
+							sumHub += g.getFloat(out, authKey, 1f / current.length);
 
 						synchronized (auth) {
 							auth.put(vid, sumAuth);

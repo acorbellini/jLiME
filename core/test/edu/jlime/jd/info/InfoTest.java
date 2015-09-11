@@ -12,8 +12,7 @@ public class InfoTest {
 	@Test
 	public void infoTest() throws Exception {
 		Client client = Client.build(8);
-		ClusterProfiler profiler = new ClusterProfiler(client.getCluster(),
-				1000);
+		ClusterProfiler profiler = new ClusterProfiler(client.getCluster(), 1000);
 		profiler.start();
 		Thread.sleep(10000);
 		System.out.println(profiler.print(new MetricExtractor() {
@@ -34,8 +33,7 @@ public class InfoTest {
 		System.out.println(profiler.print(new MetricExtractor() {
 			@Override
 			public String get(Metrics info) {
-				return info.list("sysinfo.net").findFirst("eth")
-						.get("recv_total").toString();
+				return info.list("sysinfo.net").findFirst("eth").get("recv_total").toString();
 			}
 		}));
 	}

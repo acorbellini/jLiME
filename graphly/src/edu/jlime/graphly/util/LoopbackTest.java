@@ -6,8 +6,8 @@ import java.io.FileWriter;
 import java.text.NumberFormat;
 import java.util.Locale;
 
-import edu.jlime.graphly.client.GraphlyClient;
-import edu.jlime.graphly.client.GraphlyGraph;
+import edu.jlime.graphly.client.Graphly;
+import edu.jlime.graphly.client.Graph;
 import edu.jlime.graphly.jobs.MapperFactory;
 import edu.jlime.graphly.server.GraphlyServer;
 import edu.jlime.graphly.traversal.Pregel;
@@ -25,9 +25,9 @@ public class LoopbackTest {
 
 		server.start();
 
-		GraphlyClient g = server.getGraphlyClient();
+		Graphly g = server.getGraphlyClient();
 
-		GraphlyGraph test = g.getGraph(args[1]);
+		Graph test = g.getGraph(args[1]);
 
 		// GraphlyLoader loader = new GraphlyLoader(test);
 		// loader.load("C:/Users/acorbellini/Desktop/grafo-carlos/in", ",",

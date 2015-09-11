@@ -11,8 +11,7 @@ import edu.jlime.util.Pair;
 
 public class TopMerger implements GatherMerger<Set<Pair<Long, Float>>> {
 
-	public static final class TopComparator implements
-			Comparator<Pair<Long, Float>>, Serializable {
+	public static final class TopComparator implements Comparator<Pair<Long, Float>>, Serializable {
 		@Override
 		public int compare(Pair<Long, Float> o1, Pair<Long, Float> o2) {
 			int comp = o1.right.compareTo(o2.right) * -1;
@@ -30,8 +29,7 @@ public class TopMerger implements GatherMerger<Set<Pair<Long, Float>>> {
 
 	@Override
 	public Set<Pair<Long, Float>> merge(List<Set<Pair<Long, Float>>> merge) {
-		TreeSet<Pair<Long, Float>> sorted = new TreeSet<Pair<Long, Float>>(
-				new TopComparator());
+		TreeSet<Pair<Long, Float>> sorted = new TreeSet<Pair<Long, Float>>(new TopComparator());
 
 		Iterator<Set<Pair<Long, Float>>> it = merge.iterator();
 		while (it.hasNext()) {

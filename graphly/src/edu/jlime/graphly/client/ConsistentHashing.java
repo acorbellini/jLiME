@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import edu.jlime.core.cluster.Peer;
-import edu.jlime.graphly.storenode.rpc.GraphlyStoreNodeI;
+import edu.jlime.graphly.storenode.rpc.StoreNode;
 import gnu.trove.list.array.TLongArrayList;
 
 public class ConsistentHashing implements Serializable {
@@ -15,7 +15,7 @@ public class ConsistentHashing implements Serializable {
 
 	Peer[] circle;
 
-	GraphlyStoreNodeI[] stores;
+	StoreNode[] stores;
 
 	Peer firstPeer;
 
@@ -23,19 +23,17 @@ public class ConsistentHashing implements Serializable {
 
 	private int range;
 
-	public ConsistentHashing(Map<Peer, GraphlyStoreNodeI> nodes, int vNodes)
-			throws Exception {
+	public ConsistentHashing(Map<Peer, StoreNode> nodes, int vNodes) throws Exception {
 		this.vnodes = vNodes;
 		this.range = keySpace / vNodes;
 		circle = new Peer[vnodes];
-		stores = new GraphlyStoreNodeI[vnodes];
+		stores = new StoreNode[vnodes];
 		if (!initCircle(nodes)) {
 			createCircle(nodes);
 		}
 	}
 
-	private boolean initCircle(Map<Peer, GraphlyStoreNodeI> nodes)
-			throws Exception {
+	private boolean initCircle(Map<Peer, StoreNode> nodes) throws Exception {
 		boolean mod = false;
 		for (Peer gn : nodes.keySet()) {
 			for (Integer range : nodes.get(gn).getRanges()) {
@@ -47,8 +45,7 @@ public class ConsistentHashing implements Serializable {
 		return mod;
 	}
 
-	private void createCircle(Map<Peer, GraphlyStoreNodeI> map)
-			throws Exception {
+	private void createCircle(Map<Peer, StoreNode> map) throws Exception {
 		ArrayList<Peer> nodes = new ArrayList<>(map.keySet());
 		for (int i = 0; i < vnodes; i++) {
 			Peer gs = nodes.get(i % nodes.size());
@@ -63,7 +60,7 @@ public class ConsistentHashing implements Serializable {
 		return circle[hash(k)];
 	}
 
-	public GraphlyStoreNodeI getStore(long k) {
+	public StoreNode getStore(long k) {
 		return stores[hash(k)];
 	}
 

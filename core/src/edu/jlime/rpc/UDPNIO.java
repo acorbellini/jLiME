@@ -30,8 +30,7 @@ import edu.jlime.rpc.message.Message;
 import edu.jlime.rpc.message.MessageProcessor;
 import edu.jlime.rpc.message.SocketAddress;
 
-public class UDPNIO extends MessageProcessor implements AddressListProvider,
-		FailureListener {
+public class UDPNIO extends MessageProcessor implements AddressListProvider, FailureListener {
 
 	public static final int HEADER = 32;
 
@@ -58,17 +57,15 @@ public class UDPNIO extends MessageProcessor implements AddressListProvider,
 	public UDPNIO(Address local, NetworkConfiguration config, String iface) {
 		super("UDP NIO");
 		maxThreads = new Semaphore(config.udp_threads);
-		this.exec = Executors.newFixedThreadPool(config.udp_threads,
-				new ThreadFactory() {
+		this.exec = Executors.newFixedThreadPool(config.udp_threads, new ThreadFactory() {
 
-					@Override
-					public Thread newThread(Runnable r) {
-						Thread t = Executors.defaultThreadFactory()
-								.newThread(r);
-						t.setName("UDP NIO Worker Thread");
-						return t;
-					}
-				});
+			@Override
+			public Thread newThread(Runnable r) {
+				Thread t = Executors.defaultThreadFactory().newThread(r);
+				t.setName("UDP NIO Worker Thread");
+				return t;
+			}
+		});
 		this.local = local;
 		this.config = config;
 		this.iface = iface;
@@ -110,8 +107,7 @@ public class UDPNIO extends MessageProcessor implements AddressListProvider,
 
 		int size = msg.getSize() + HEADER;
 		if (size > config.max_msg_size)
-			log.warn("Surpasing max message size " + config.max_msg_size
-					+ " current size " + size);
+			log.warn("Surpasing max message size " + config.max_msg_size + " current size " + size);
 		edu.jlime.util.ByteBuffer[] msgAsBytes = msg.toByteBuffers();
 		// byte[] ba = msg.toByteArray();
 
@@ -176,12 +172,10 @@ public class UDPNIO extends MessageProcessor implements AddressListProvider,
 
 						Set<SelectionKey> selectedKeys = sel.selectedKeys();
 
-						Iterator<SelectionKey> keyIterator = selectedKeys
-								.iterator();
+						Iterator<SelectionKey> keyIterator = selectedKeys.iterator();
 
 						while (keyIterator.hasNext()) {
-							SelectionKey key = (SelectionKey) keyIterator
-									.next();
+							SelectionKey key = (SelectionKey) keyIterator.next();
 
 							if (key.isReadable()) {
 								read(key.channel());
@@ -208,10 +202,8 @@ public class UDPNIO extends MessageProcessor implements AddressListProvider,
 
 				// Flags
 				ret.setOption(StandardSocketOptions.SO_RCVBUF, config.rcvBuffer);
-				ret.setOption(StandardSocketOptions.SO_SNDBUF,
-						config.sendBuffer);
-				address = new InetSocketAddress(InetAddress.getByName(iface),
-						config.port + i);
+				ret.setOption(StandardSocketOptions.SO_SNDBUF, config.sendBuffer);
+				address = new InetSocketAddress(InetAddress.getByName(iface), config.port + i);
 				ret.bind(address);
 				break;
 			} catch (Exception e) {
@@ -257,8 +249,7 @@ public class UDPNIO extends MessageProcessor implements AddressListProvider,
 	public List<SocketAddress> getAddresses() {
 		ArrayList<SocketAddress> al = new ArrayList<>();
 		try {
-			al.add(new SocketAddress((InetSocketAddress) channel
-					.getLocalAddress(), AddressType.UDPNIO));
+			al.add(new SocketAddress((InetSocketAddress) channel.getLocalAddress(), AddressType.UDPNIO));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

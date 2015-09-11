@@ -7,8 +7,7 @@ import edu.jlime.pregel.graph.VertexFunction;
 import edu.jlime.pregel.messages.FloatPregelMessage;
 import gnu.trove.set.hash.TLongHashSet;
 
-public class CommonNeighboursPregel implements
-		VertexFunction<FloatPregelMessage> {
+public class CommonNeighboursPregel implements VertexFunction<FloatPregelMessage> {
 
 	private float targetAmount;
 
@@ -17,8 +16,7 @@ public class CommonNeighboursPregel implements
 	}
 
 	@Override
-	public void execute(long v, Iterator<FloatPregelMessage> in,
-			WorkerContext ctx) throws Exception {
+	public void execute(long v, Iterator<FloatPregelMessage> in, WorkerContext ctx) throws Exception {
 
 		TLongHashSet out = ctx.getGraph().getNeighbours(v);
 		((SetAggregator) ctx.getAggregator("cm")).add(out);

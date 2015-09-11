@@ -30,8 +30,7 @@ public abstract class SysInfoProvider extends InfoProvider {
 
 						@Override
 						public void proc(Metrics mgr) throws Exception {
-							mgr.meter("sysinfo.net.eth0.sent_total").update(
-									cont);
+							mgr.meter("sysinfo.net.eth0.sent_total").update(cont);
 							cont += 100f;
 						}
 					});
@@ -44,12 +43,10 @@ public abstract class SysInfoProvider extends InfoProvider {
 		return osProviders;
 	}
 
-	public static Long totalnet(String iFaceName, CompositeMetrics<?> info)
-			throws NumberFormatException {
+	public static Long totalnet(String iFaceName, CompositeMetrics<?> info) throws NumberFormatException {
 		Long total = 0l;
 		for (Metrics mgr : info.getMap().values()) {
-			Metric<?> ifdata = mgr.get("sysinfo.net." + iFaceName
-					+ ".sent_total");
+			Metric<?> ifdata = mgr.get("sysinfo.net." + iFaceName + ".sent_total");
 			total += Long.valueOf(ifdata.toString());
 		}
 		return total;

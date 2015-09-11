@@ -97,8 +97,7 @@ public class Peer implements Externalizable, Comparable<Peer> {
 	}
 
 	@Override
-	public void readExternal(ObjectInput in) throws IOException,
-			ClassNotFoundException {
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
 		this.address = (Address) in.readObject();
 		this.name = StreamUtils.readString(in);
 		this.data = StreamUtils.readMap(in);

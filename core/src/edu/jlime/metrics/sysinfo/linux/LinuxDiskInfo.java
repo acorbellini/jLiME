@@ -19,8 +19,8 @@ public class LinuxDiskInfo extends SysInfoProvider {
 			@Override
 			public Set<String> updateSet(IMetrics mgr) throws Exception {
 				HashSet<String> currentDevs = new HashSet<>();
-				String df = CommandLineUtils
-						.execCommand("df -t ext4 -t ext3 -t ext2 -t vfat -t ntfs -t ntfs-3g -T  | tail -n +2 | tr -s ' '");
+				String df = CommandLineUtils.execCommand(
+						"df -t ext4 -t ext3 -t ext2 -t vfat -t ntfs -t ntfs-3g -T  | tail -n +2 | tr -s ' '");
 				StringReader reader = new StringReader(df);
 				BufferedReader buf = new BufferedReader(reader);
 				String line;
@@ -30,10 +30,8 @@ public class LinuxDiskInfo extends SysInfoProvider {
 					String deviceMetric = "sysinfo.disk." + dev;
 					mgr.simple(deviceMetric, dev);
 					mgr.simple(deviceMetric + ".type", diskData[2]);
-					mgr.gauge(deviceMetric + ".used").update(
-							Float.valueOf(diskData[3]));
-					mgr.gauge(deviceMetric + ".available").update(
-							Float.valueOf(diskData[4]));
+					mgr.gauge(deviceMetric + ".used").update(Float.valueOf(diskData[3]));
+					mgr.gauge(deviceMetric + ".available").update(Float.valueOf(diskData[4]));
 					mgr.simple(deviceMetric + ".diskname", diskData[6]);
 
 					currentDevs.add(deviceMetric);

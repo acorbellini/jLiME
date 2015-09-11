@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit;
 import edu.jlime.core.cluster.Cluster;
 import edu.jlime.core.cluster.Peer;
 import edu.jlime.core.rpc.MethodCall;
-import edu.jlime.core.rpc.RPCDispatcher;
+import edu.jlime.core.rpc.RPC;
 
 public class SyncPerfClient {
 
@@ -23,7 +23,7 @@ public class SyncPerfClient {
 		config.port = 6070;
 		config.mcastport = 5050;
 
-		final RPCDispatcher rpc = new JLiMEFactory(config).build();
+		final RPC rpc = new JLiMEFactory(config).build();
 
 		rpc.start();
 
@@ -61,8 +61,8 @@ public class SyncPerfClient {
 				@Override
 				public void run() {
 					try {
-						rpc.callSync(server, cl.getLocalPeer(), new MethodCall(
-								"remote", "addVal", new Object[] { curr }));
+						rpc.callSync(server, cl.getLocalPeer(),
+								new MethodCall("remote", "addVal", new Object[] { curr }));
 					} catch (Exception e) {
 						e.printStackTrace();
 					} finally {
@@ -87,12 +87,9 @@ public class SyncPerfClient {
 		exec.shutdown();
 		exec.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
 
-		rpc.callSync(server, cl.getLocalPeer(), new MethodCall("remote",
-				"finish", new Object[] {}));
+		rpc.callSync(server, cl.getLocalPeer(), new MethodCall("remote", "finish", new Object[] {}));
 
-		System.out.println("Time: "
-				+ ((System.currentTimeMillis() - init) / (double) ITERS)
-				+ " ms");
+		System.out.println("Time: " + ((System.currentTimeMillis() - init) / (double) ITERS) + " ms");
 
 		rpc.stop();
 	}

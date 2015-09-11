@@ -19,10 +19,8 @@ public class PersistedVertexList implements VertexList {
 
 		byte[] asBytes = new byte[8];
 
-		public PersistedLongIterator(PersistedVertexList list)
-				throws FileNotFoundException {
-			this.reader = new BufferedInputStream(
-					new FileInputStream(list.file));
+		public PersistedLongIterator(PersistedVertexList list) throws FileNotFoundException {
+			this.reader = new BufferedInputStream(new FileInputStream(list.file));
 
 		}
 
@@ -50,8 +48,7 @@ public class PersistedVertexList implements VertexList {
 	int cont = 0;
 
 	public PersistedVertexList() throws IOException {
-		this.file = new File(System.getProperty("java.io.tmpdir") + "/"
-				+ UUID.randomUUID() + ".list");
+		this.file = new File(System.getProperty("java.io.tmpdir") + "/" + UUID.randomUUID() + ".list");
 		this.file.createNewFile();
 		this.writer = new BufferedOutputStream(new FileOutputStream(file), MAX);
 	}

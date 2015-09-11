@@ -8,7 +8,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
 
-import edu.jlime.graphly.storenode.rpc.GraphlyStoreNodeI;
+import edu.jlime.graphly.storenode.rpc.StoreNode;
 import gnu.trove.list.array.TLongArrayList;
 
 public class VertexIterator implements Iterator<Long> {
@@ -25,7 +25,7 @@ public class VertexIterator implements Iterator<Long> {
 
 	// private Graphly g;
 
-	private GraphlyStoreNodeI[] nodes;
+	private StoreNode[] nodes;
 
 	Future<TLongArrayList>[] fut = null;
 
@@ -39,13 +39,12 @@ public class VertexIterator implements Iterator<Long> {
 
 	private String gID;
 
-	public VertexIterator(String graph, List<GraphlyStoreNodeI> nodes,
-			int cached) {
+	public VertexIterator(String graph, List<StoreNode> nodes, int cached) {
 		// this.g = graphly;
 		this.gID = graph;
-		this.nodes = new GraphlyStoreNodeI[nodes.size()];
+		this.nodes = new StoreNode[nodes.size()];
 		int nodeIndex = 0;
-		for (GraphlyStoreNodeI graphlyStoreNodeI : nodes) {
+		for (StoreNode graphlyStoreNodeI : nodes) {
 			this.nodes[nodeIndex++] = graphlyStoreNodeI;
 		}
 
@@ -53,7 +52,7 @@ public class VertexIterator implements Iterator<Long> {
 
 		fut = new Future[nodes.size()];
 		for (int i = 0; i < fut.length; i++) {
-			final GraphlyStoreNodeI node = this.nodes[i];
+			final StoreNode node = this.nodes[i];
 			fut[i] = exec.submit(new Callable<TLongArrayList>() {
 				@Override
 				public TLongArrayList call() throws Exception {
@@ -80,16 +79,13 @@ public class VertexIterator implements Iterator<Long> {
 						fut[currentNodeIndex] = null;
 					} else {
 						final long currentMin = cached.get(cached.size() - 1);
-						final GraphlyStoreNodeI node = nodes[currentNodeIndex];
-						fut[currentNodeIndex] = exec
-								.submit(new Callable<TLongArrayList>() {
-									@Override
-									public TLongArrayList call()
-											throws Exception {
-										return node.getVertices(gID,
-												currentMin, max, false);
-									}
-								});
+						final StoreNode node = nodes[currentNodeIndex];
+						fut[currentNodeIndex] = exec.submit(new Callable<TLongArrayList>() {
+							@Override
+							public TLongArrayList call() throws Exception {
+								return node.getVertices(gID, currentMin, max, false);
+							}
+						});
 					}
 				}
 				currentNodeIndex = (currentNodeIndex + 1) % nodes.length;

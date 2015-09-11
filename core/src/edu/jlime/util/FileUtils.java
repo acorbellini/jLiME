@@ -14,8 +14,7 @@ public class FileUtils {
 	 * @return true iff the file and all sub files/directories have been removed
 	 * @throws FileNotFoundException
 	 */
-	public static boolean deleteRecursive(File path)
-			throws FileNotFoundException {
+	public static boolean deleteRecursive(File path) throws FileNotFoundException {
 		if (!path.exists())
 			throw new FileNotFoundException(path.getAbsolutePath());
 		boolean ret = true;

@@ -27,8 +27,8 @@ public class SegmentedMessageQueue {
 
 	private String msgType;
 
-	public SegmentedMessageQueue(String msgType, WorkerTask wt, int segs,
-			int queuelimit, MessageQueueFactory fact, int threads) {
+	public SegmentedMessageQueue(String msgType, WorkerTask wt, int segs, int queuelimit, MessageQueueFactory fact,
+			int threads) {
 		this.msgType = msgType;
 		this.maxThreads = new Semaphore((int) (threads * 1.5f));
 		this.task = wt;
@@ -42,8 +42,7 @@ public class SegmentedMessageQueue {
 			@Override
 			public Thread newThread(Runnable r) {
 				Thread t = Executors.defaultThreadFactory().newThread(r);
-				t.setName("SegmentedQueue Sender Pool for Task "
-						+ task.toString() + ", id:" + task.getTaskid());
+				t.setName("SegmentedQueue Sender Pool for Task " + task.toString() + ", id:" + task.getTaskid());
 				t.setDaemon(true);
 				return t;
 			}
@@ -88,8 +87,7 @@ public class SegmentedMessageQueue {
 		}
 	}
 
-	private void checkSize(int queueIndex, final PregelMessageQueue cache)
-			throws Exception {
+	private void checkSize(int queueIndex, final PregelMessageQueue cache) throws Exception {
 		if (cache.currentSize() == queue_limit) {
 			if (fut[queueIndex] != null)
 				fut[queueIndex].get();
@@ -131,13 +129,11 @@ public class SegmentedMessageQueue {
 	}
 
 	private int getHash(long to) {
-		int hash = Math
-				.abs((int) ((to * 2147483647l) % ((long) this.queue.length)));
+		int hash = Math.abs((int) ((to * 2147483647l) % ((long) this.queue.length)));
 		return hash;
 	}
 
-	public void flush(final String msgType, final WorkerTask workerTask)
-			throws Exception {
+	public void flush(final String msgType, final WorkerTask workerTask) throws Exception {
 		final Semaphore waitFlush = new Semaphore(-queue.length + 1);
 		for (final PregelMessageQueue pregelMessageQueue : queue) {
 			maxThreads.acquire();
@@ -172,8 +168,7 @@ public class SegmentedMessageQueue {
 		}
 	}
 
-	public Iterator<PregelMessage> getMessages(String msgType,
-			long currentVertex) {
+	public Iterator<PregelMessage> getMessages(String msgType, long currentVertex) {
 		int hash = getHash(currentVertex);
 		PregelMessageQueue cache = this.queue[hash];
 		return cache.getMessages(msgType, currentVertex);

@@ -6,8 +6,7 @@ import edu.jlime.util.ByteBuffer;
 public class LongArrayConverter implements TypeConverter {
 
 	@Override
-	public void toArray(Object o, ByteBuffer buffer, Peer cliID)
-			throws Exception {
+	public void toArray(Object o, ByteBuffer buffer, Peer cliID) throws Exception {
 		long[] arra = (long[]) o;
 		buffer.putLongArray(arra);
 

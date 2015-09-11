@@ -6,8 +6,7 @@ import java.io.InputStreamReader;
 
 public class CommandLineUtils {
 
-	private static boolean CYGWIN = System.getProperty("os.name").startsWith(
-			"Windows") ? true : false;
+	private static boolean CYGWIN = System.getProperty("os.name").startsWith("Windows") ? true : false;
 
 	public static String execCommand(String cmd) throws Exception {
 		ProcessBuilder procbuilder = null;
@@ -19,11 +18,9 @@ public class CommandLineUtils {
 			cmd = "\"" + cmd + "\"";
 
 			if (dir.exists())
-				procbuilder = new ProcessBuilder("C:/cygwin/bin/bash.exe",
-						"-c", cmd);
+				procbuilder = new ProcessBuilder("C:/cygwin/bin/bash.exe", "-c", cmd);
 			else if (dir64.exists())
-				procbuilder = new ProcessBuilder("C:/cygwin64/bin/bash.exe",
-						"-c", cmd);
+				procbuilder = new ProcessBuilder("C:/cygwin64/bin/bash.exe", "-c", cmd);
 			else
 				throw new Exception("Cygwin not found");
 
@@ -31,16 +28,14 @@ public class CommandLineUtils {
 			procbuilder = new ProcessBuilder("/bin/sh", "-c", cmd);
 
 		Process proc = procbuilder.start();
-		BufferedReader br = new BufferedReader(new InputStreamReader(
-				proc.getInputStream()));
+		BufferedReader br = new BufferedReader(new InputStreamReader(proc.getInputStream()));
 		StringBuilder outputBuilder = new StringBuilder();
 		String line = null;
 		while ((line = br.readLine()) != null) {
 			outputBuilder.append(line);
 			outputBuilder.append(System.getProperty("line.separator"));
 		}
-		BufferedReader errorReader = new BufferedReader(new InputStreamReader(
-				proc.getErrorStream()));
+		BufferedReader errorReader = new BufferedReader(new InputStreamReader(proc.getErrorStream()));
 		StringBuilder errorBuilder = new StringBuilder();
 		String errorLine = null;
 		while ((errorLine = errorReader.readLine()) != null) {
@@ -50,8 +45,7 @@ public class CommandLineUtils {
 
 		String error = errorBuilder.toString();
 		if (!error.isEmpty())
-			throw new Exception("Error executing command '" + cmd + "' : \n "
-					+ error);
+			throw new Exception("Error executing command '" + cmd + "' : \n " + error);
 
 		return outputBuilder.toString();
 

@@ -18,7 +18,6 @@ public class LoopbackMP extends SimpleMessageProcessor {
 	@Override
 	public void send(Message msg) throws Exception {
 		byte[] ba = msg.toByteArray();
-		notifyRcvd(Message.deEncapsulate(new ByteBuffer(ba), msg.getFrom(),
-				msg.getTo()));
+		notifyRcvd(Message.deEncapsulate(new ByteBuffer(ba), msg.getFrom(), msg.getTo()));
 	}
 }

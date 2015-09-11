@@ -1,6 +1,6 @@
 package edu.jlime.jd.holamundo;
 
-import edu.jlime.jd.ClientNode;
+import edu.jlime.jd.Node;
 import edu.jlime.jd.client.Client;
 import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.RunJob;
@@ -17,7 +17,7 @@ public class HolaMundo extends RunJob {
 	}
 
 	@Override
-	public void run(JobContext env, ClientNode origin) throws Exception {
+	public void run(JobContext env, Node origin) throws Exception {
 		System.out.println("Hola fucking mundo!");
 	}
 

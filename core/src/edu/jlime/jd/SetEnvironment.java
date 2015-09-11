@@ -17,7 +17,7 @@ public class SetEnvironment extends RunJob {
 	}
 
 	@Override
-	public void run(JobContext env, ClientNode origin) throws Exception {
+	public void run(JobContext env, Node origin) throws Exception {
 		// System.out.println("Setting object on "
 		// + env.getCluster().getLocalPeer());
 		env.put(k, v);

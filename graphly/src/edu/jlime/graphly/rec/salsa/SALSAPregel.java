@@ -5,7 +5,7 @@ import java.util.Iterator;
 import edu.jlime.pregel.PregelSubgraph;
 import edu.jlime.pregel.client.WorkerContext;
 import edu.jlime.pregel.graph.VertexFunction;
-import edu.jlime.pregel.graph.rpc.Graph;
+import edu.jlime.pregel.graph.rpc.PregelGraph;
 import edu.jlime.pregel.mergers.ObjectMessageMerger;
 import edu.jlime.pregel.messages.FloatPregelMessage;
 
@@ -47,9 +47,8 @@ public class SALSAPregel implements VertexFunction<FloatPregelMessage> {
 	}
 
 	@Override
-	public void execute(long v, Iterator<FloatPregelMessage> in,
-			WorkerContext ctx) throws Exception {
-		Graph graph = ctx.getGraph();
+	public void execute(long v, Iterator<FloatPregelMessage> in, WorkerContext ctx) throws Exception {
+		PregelGraph graph = ctx.getGraph();
 		float auth = 0f;
 		float hub = 0f;
 		Integer superstep = ctx.getSuperStep();
@@ -66,7 +65,7 @@ public class SALSAPregel implements VertexFunction<FloatPregelMessage> {
 				else
 					hub += msg.getFloat();
 			}
-			
+
 			if (superstep % 2 == 0) {
 				graph.setFloat(v, authKey, auth);
 				graph.setFloat(v, hubKey, hub);
@@ -75,8 +74,7 @@ public class SALSAPregel implements VertexFunction<FloatPregelMessage> {
 
 		// Send auth data
 		if (auth > 0) {
-			long[] toSendAuth = superstep % 2 == 0 ? subgraph.getIncoming(v)
-					: subgraph.getOutgoing(v);
+			long[] toSendAuth = superstep % 2 == 0 ? subgraph.getIncoming(v) : subgraph.getOutgoing(v);
 			if (toSendAuth.length > 0) {
 				float toSend = auth / toSendAuth.length;
 				for (long inV : toSendAuth) {
@@ -87,8 +85,7 @@ public class SALSAPregel implements VertexFunction<FloatPregelMessage> {
 
 		// Send hub data.
 		if (hub > 0) {
-			long[] toSendHub = superstep % 2 == 0 ? subgraph.getOutgoing(v)
-					: subgraph.getIncoming(v);
+			long[] toSendHub = superstep % 2 == 0 ? subgraph.getOutgoing(v) : subgraph.getIncoming(v);
 			if (toSendHub.length > 0) {
 				float toSend = hub / toSendHub.length;
 				for (long outV : toSendHub) {

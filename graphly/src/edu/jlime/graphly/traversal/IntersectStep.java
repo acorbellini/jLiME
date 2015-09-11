@@ -5,12 +5,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.log4j.Logger;
 
-import edu.jlime.graphly.client.GraphlyClient;
+import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.jobs.Mapper;
 import edu.jlime.graphly.traversal.count.CountStep;
-import edu.jlime.jd.ClientNode;
-import edu.jlime.jd.JobDispatcher;
-import edu.jlime.jd.client.JobContextImpl;
+import edu.jlime.jd.Dispatcher;
+import edu.jlime.jd.Node;
+import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.task.ForkJoinTask;
 import edu.jlime.jd.task.ResultListener;
 import edu.jlime.util.Pair;
@@ -21,9 +21,9 @@ import gnu.trove.set.hash.TLongHashSet;
 public class IntersectStep implements Step {
 
 	private Dir dir;
-	private GraphlyTraversal tr;
+	private Traversal tr;
 
-	public IntersectStep(Dir dir, GraphlyTraversal graphlyTraversal) {
+	public IntersectStep(Dir dir, Traversal graphlyTraversal) {
 		this.dir = dir;
 		this.tr = graphlyTraversal;
 	}
@@ -34,50 +34,46 @@ public class IntersectStep implements Step {
 
 		Mapper map = (Mapper) tr.get("mapper");
 
-		JobDispatcher jobClient = tr.getGraph().getJobClient();
+		Dispatcher jobClient = tr.getGraph().getJobClient();
 
-		JobContextImpl ctx = jobClient.getEnv().getClientEnv(
-				jobClient.getLocalPeer());
+		JobContext ctx = jobClient.getEnv().getClientEnv(jobClient.getLocalPeer());
 
-		final List<Pair<ClientNode, TLongArrayList>> mapped = map.map(
-				GraphlyClient.NUM_JOBS, before.vertices().toArray(), ctx);
+		final List<Pair<Node, TLongArrayList>> mapped = map.map(Graphly.NUM_JOBS, before.vertices().toArray(), ctx);
 
 		ForkJoinTask<TLongHashSet> fj = new ForkJoinTask<>();
 
-		for (Pair<ClientNode, TLongArrayList> e : mapped) {
+		for (Pair<Node, TLongArrayList> e : mapped) {
 			fj.putJob(new IntersectJob(tr.getGraph(), dir, e.getValue()), e.getKey());
 		}
 
-		TLongHashSet finalRes = fj.execute(16,
-				new ResultListener<TLongHashSet, TLongHashSet>() {
-					TLongHashSet temp;
+		TLongHashSet finalRes = fj.execute(16, new ResultListener<TLongHashSet, TLongHashSet>() {
+			TLongHashSet temp;
 
-					AtomicInteger jobCount = new AtomicInteger(mapped.size());
+			AtomicInteger jobCount = new AtomicInteger(mapped.size());
 
-					@Override
-					public synchronized void onSuccess(TLongHashSet subres) {
-						log.info("Received result, remaining "
-								+ jobCount.decrementAndGet() + " jobs.");
-						if (temp == null)
-							temp = subres;
-						else {
-							TLongIterator it = temp.iterator();
-							while (it.hasNext()) {
-								if (!subres.contains(it.next()))
-									it.remove();
-							}
-						}
+			@Override
+			public synchronized void onSuccess(TLongHashSet subres) {
+				log.info("Received result, remaining " + jobCount.decrementAndGet() + " jobs.");
+				if (temp == null)
+					temp = subres;
+				else {
+					TLongIterator it = temp.iterator();
+					while (it.hasNext()) {
+						if (!subres.contains(it.next()))
+							it.remove();
 					}
+				}
+			}
 
-					@Override
-					public TLongHashSet onFinished() {
-						return temp;
-					}
+			@Override
+			public TLongHashSet onFinished() {
+				return temp;
+			}
 
-					@Override
-					public void onFailure(Exception res) {
-					}
-				});
+			@Override
+			public void onFailure(Exception res) {
+			}
+		});
 		return new VertexResult(finalRes);
 	}
 }

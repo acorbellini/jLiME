@@ -36,22 +36,18 @@ public abstract class SocketFactory {
 
 		@Override
 		public String toString() {
-			return "jLimeSocket [javaSocket=" + javaSocket + ", port=" + port
-					+ ", addr=" + addr + "]";
+			return "jLimeSocket [javaSocket=" + javaSocket + ", port=" + port + ", addr=" + addr + "]";
 		}
 
 	}
 
-	public abstract jLimeSocket getSocket(String addr, int port)
-			throws Exception;
+	public abstract jLimeSocket getSocket(String addr, int port) throws Exception;
 
-	public static SocketFactory getMcastFactory(final String ifaddr,
-			final int sendBuffer, final int receiveBuffer) {
+	public static SocketFactory getMcastFactory(final String ifaddr, final int sendBuffer, final int receiveBuffer) {
 		return new SocketFactory() {
 
 			@Override
-			public jLimeSocket getSocket(String addr, int port)
-					throws Exception {
+			public jLimeSocket getSocket(String addr, int port) throws Exception {
 				MulticastSocket sock = new MulticastSocket(port);
 				sock.setInterface(InetAddress.getByName(ifaddr));
 				sock.setSendBufferSize(sendBuffer);
@@ -63,13 +59,11 @@ public abstract class SocketFactory {
 
 	}
 
-	public static SocketFactory getUnicastFactory(final int sendBuffer,
-			final int receiveBuffer) {
+	public static SocketFactory getUnicastFactory(final int sendBuffer, final int receiveBuffer) {
 		return new SocketFactory() {
 
 			@Override
-			public jLimeSocket getSocket(String addr, int port)
-					throws Exception {
+			public jLimeSocket getSocket(String addr, int port) throws Exception {
 				InetSocketAddress sockAddr = new InetSocketAddress(addr, port);
 				DatagramSocket sock = new DatagramSocket(sockAddr);
 				sock.setSendBufferSize(sendBuffer);

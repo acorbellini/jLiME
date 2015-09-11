@@ -11,10 +11,8 @@ public class AggregatorStep implements CustomFunction {
 	}
 
 	@Override
-	public TraversalResult execute(TraversalResult before, GraphlyTraversal tr)
-			throws Exception {
-		return new ValueResult(((PregelResult) before).getRes().getAgg(agg)
-				.get());
+	public TraversalResult execute(TraversalResult before, Traversal tr) throws Exception {
+		return new ValueResult(((PregelResult) before).getRes().getAgg(agg).get());
 	}
 
 }

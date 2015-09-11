@@ -3,7 +3,7 @@ package edu.jlime.core.marshalling;
 import org.apache.log4j.Logger;
 
 import edu.jlime.core.cluster.Peer;
-import edu.jlime.core.rpc.RPCDispatcher;
+import edu.jlime.core.rpc.RPC;
 import edu.jlime.util.ByteBuffer;
 
 public class Marshaller {
@@ -12,7 +12,7 @@ public class Marshaller {
 
 	private TypeConverters tc;
 
-	public Marshaller(RPCDispatcher rpcDispatcher) {
+	public Marshaller(RPC rpcDispatcher) {
 		this.tc = new TypeConverters(rpcDispatcher);
 	}
 

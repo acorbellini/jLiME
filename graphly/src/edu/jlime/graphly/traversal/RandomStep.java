@@ -5,11 +5,11 @@ import gnu.trove.list.array.TLongArrayList;
 
 public class RandomStep implements Step {
 
-	private GraphlyTraversal tr;
+	private Traversal tr;
 	private Dir dir;
 	private long[] subset;
 
-	public RandomStep(Dir dir, long[] subset, GraphlyTraversal tr) {
+	public RandomStep(Dir dir, long[] subset, Traversal tr) {
 		this.dir = dir;
 		this.tr = tr;
 		this.subset = subset;

@@ -20,18 +20,18 @@ import java.util.concurrent.TimeUnit;
 
 import edu.jlime.core.cluster.Peer;
 import edu.jlime.core.cluster.PeerFilter;
-import edu.jlime.core.rpc.ClientManager;
-import edu.jlime.core.rpc.RPCDispatcher;
+import edu.jlime.core.rpc.Client;
+import edu.jlime.core.rpc.RPC;
 import edu.jlime.core.rpc.Transferible;
 import edu.jlime.graphly.traversal.Dir;
 import edu.jlime.pregel.graph.PregelGraphLocal;
-import edu.jlime.pregel.graph.rpc.Graph;
-import edu.jlime.pregel.graph.rpc.GraphBroadcast;
+import edu.jlime.pregel.graph.rpc.PregelGraph;
+import edu.jlime.pregel.graph.rpc.PregelGraphBroadcast;
 import edu.jlime.pregel.graph.rpc.GraphFactory;
 import edu.jlime.pregel.util.SplitFunctions;
 import gnu.trove.set.hash.TLongHashSet;
 
-public class InMemoryGraph implements Graph, Transferible {
+public class InMemoryGraph implements PregelGraph, Transferible {
 
 	public static final class InMemoryGraphConnectionFactory implements GraphConnectionFactory {
 		private String name;
@@ -41,16 +41,16 @@ public class InMemoryGraph implements Graph, Transferible {
 		}
 
 		@Override
-		public Graph getGraph(RPCDispatcher rpc) throws Exception {
-			return new InMemoryGraph(rpc, "graph", SplitFunctions.rr(), PregelClient.workerFilter(), 2);
+		public PregelGraph getGraph(RPC rpc) throws Exception {
+			return new InMemoryGraph(rpc, "graph", SplitFunctions.rr(), Pregel.workerFilter(), 2);
 		}
 	}
 
 	private static final int LIMIT = 10000;
 
-	private transient ClientManager<Graph, GraphBroadcast> cli = null;
+	private transient Client<PregelGraph, PregelGraphBroadcast> cli = null;
 
-	private transient RPCDispatcher rpc;
+	private transient RPC rpc;
 
 	private String name;
 
@@ -66,7 +66,7 @@ public class InMemoryGraph implements Graph, Transferible {
 
 	private int minNodes;
 
-	public InMemoryGraph(RPCDispatcher rpc, String name, SplitFunction func, PeerFilter filter, int minNodes)
+	public InMemoryGraph(RPC rpc, String name, SplitFunction func, PeerFilter filter, int minNodes)
 			throws Exception {
 		this.rpc = rpc;
 		this.name = name;
@@ -76,11 +76,11 @@ public class InMemoryGraph implements Graph, Transferible {
 		createClient();
 	}
 
-	private Graph getGraph(long o) throws Exception {
+	private PregelGraph getGraph(long o) throws Exception {
 		if (cli == null) {
 			createClient();
 		}
-		Graph graph = cli.get(func.getPeer(o, cli.getPeers()));
+		PregelGraph graph = cli.get(func.getPeer(o, cli.getPeers()));
 		return graph;
 	}
 
@@ -141,7 +141,7 @@ public class InMemoryGraph implements Graph, Transferible {
 		// return vertices.size();
 		// }
 		int sum = 0;
-		for (Graph g : cli.getAll()) {
+		for (PregelGraph g : cli.getAll()) {
 			sum += g.vertexSize();
 		}
 		return sum;
@@ -150,7 +150,7 @@ public class InMemoryGraph implements Graph, Transferible {
 	@Override
 	public Collection<Long> vertices() throws Exception {
 		// return new TLongSetDecorator(vertices);
-		final Iterator<Graph> graphIt = cli.getAll().iterator();
+		final Iterator<PregelGraph> graphIt = cli.getAll().iterator();
 		return new AbstractCollection<Long>() {
 			@Override
 			public Iterator<Long> iterator() {
@@ -244,7 +244,7 @@ public class InMemoryGraph implements Graph, Transferible {
 		// synchronized (disabled) {
 		// disabled.clear();
 		// }
-		for (Graph g : cli.getAll()) {
+		for (PregelGraph g : cli.getAll()) {
 			g.enableAll();
 		}
 	}
@@ -294,7 +294,7 @@ public class InMemoryGraph implements Graph, Transferible {
 	}
 
 	@Override
-	public void setRPC(RPCDispatcher rpc) {
+	public void setRPC(RPC rpc) {
 		this.rpc = rpc;
 	}
 
@@ -304,10 +304,10 @@ public class InMemoryGraph implements Graph, Transferible {
 
 	public void putOutgoing(List<long[]> cache) throws Exception {
 
-		HashMap<Graph, Set<Long>> create = new HashMap<>();
-		HashMap<Graph, List<long[]>> div = new HashMap<>();
+		HashMap<PregelGraph, Set<Long>> create = new HashMap<>();
+		HashMap<PregelGraph, List<long[]>> div = new HashMap<>();
 		for (long[] e : cache) {
-			Graph g = getGraph(e[0]);
+			PregelGraph g = getGraph(e[0]);
 			List<long[]> l = div.get(g);
 			if (l == null) {
 				l = new ArrayList<long[]>();
@@ -324,7 +324,7 @@ public class InMemoryGraph implements Graph, Transferible {
 			toCreate.add(e[1]);
 		}
 
-		for (final Entry<Graph, List<long[]>> e : div.entrySet()) {
+		for (final Entry<PregelGraph, List<long[]>> e : div.entrySet()) {
 			max.acquire();
 			pool.execute(new Runnable() {
 				@Override
@@ -342,7 +342,7 @@ public class InMemoryGraph implements Graph, Transferible {
 			});
 		}
 
-		for (final Entry<Graph, Set<Long>> e : create.entrySet()) {
+		for (final Entry<PregelGraph, Set<Long>> e : create.entrySet()) {
 			max.acquire();
 			pool.execute(new Runnable() {
 				@Override

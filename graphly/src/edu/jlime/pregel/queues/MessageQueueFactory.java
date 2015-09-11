@@ -37,21 +37,18 @@ public abstract class MessageQueueFactory {
 		};
 	}
 
-	public static MessageQueueFactory doubleQueue(
-			final DoubleMessageMerger doubleMessageMerger) {
+	public static MessageQueueFactory doubleQueue(final DoubleMessageMerger doubleMessageMerger) {
 		return new MessageQueueFactory() {
 
 			@Override
 			public PregelMessageQueue getMQ() {
-				DoubleMessageQueue ret = new DoubleMessageQueue(
-						doubleMessageMerger);
+				DoubleMessageQueue ret = new DoubleMessageQueue(doubleMessageMerger);
 				return ret;
 			}
 		};
 	}
 
-	public static MessageQueueFactory floatArrayFactory(
-			final FloatArrayMerger messageMerger) {
+	public static MessageQueueFactory floatArrayFactory(final FloatArrayMerger messageMerger) {
 		return new MessageQueueFactory() {
 
 			@Override

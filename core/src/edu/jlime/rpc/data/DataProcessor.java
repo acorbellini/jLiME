@@ -23,8 +23,7 @@ import edu.jlime.util.ByteBuffer;
 import edu.jlime.util.compression.CompressionType;
 import edu.jlime.util.compression.Compressor;
 
-public class DataProcessor extends SimpleMessageProcessor implements
-		DataProvider {
+public class DataProcessor extends SimpleMessageProcessor implements DataProvider {
 
 	// private jLiMELRUMap<Integer, Boolean> map = new jLiMELRUMap<>(100);
 
@@ -59,19 +58,17 @@ public class DataProcessor extends SimpleMessageProcessor implements
 	public void onStart() throws Exception {
 		getNext().addMessageListener(MessageType.DATA, new MessageListener() {
 			@Override
-			public void rcv(final Message m, MessageProcessor origin)
-					throws Exception {
+			public void rcv(final Message m, MessageProcessor origin) throws Exception {
 				processData(m);
 			}
 
 		});
-		getNext().addMessageListener(MessageType.RESPONSE,
-				new MessageListener() {
-					@Override
-					public void rcv(Message message, MessageProcessor origin) {
-						processResponse(message);
-					}
-				});
+		getNext().addMessageListener(MessageType.RESPONSE, new MessageListener() {
+			@Override
+			public void rcv(Message message, MessageProcessor origin) {
+				processResponse(message);
+			}
+		});
 	}
 
 	@Override
@@ -84,16 +81,14 @@ public class DataProcessor extends SimpleMessageProcessor implements
 	}
 
 	@Override
-	public byte[] sendData(byte[] msg, Address to, boolean waitForResponse)
-			throws Exception {
+	public byte[] sendData(byte[] msg, Address to, boolean waitForResponse) throws Exception {
 		// UUID id = UUID.randomUUID();
 		int id = idCount.getAndIncrement();
 		byte[] compressed = msg;
 		if (comp != null)
 			compressed = comp.compress(compressed);
 
-		Message toSend = Message.newOutDataMessage(compressed,
-				MessageType.DATA, to);
+		Message toSend = Message.newOutDataMessage(compressed, MessageType.DATA, to);
 		ByteBuffer headerWriter = toSend.getHeaderBuffer();
 		headerWriter.putInt(id);
 		headerWriter.putBoolean(waitForResponse);
@@ -111,8 +106,7 @@ public class DataProcessor extends SimpleMessageProcessor implements
 				synchronized (waiting) {
 					list = waiting.get(to);
 					if (list == null) {
-						list = Collections
-								.newSetFromMap(new ConcurrentHashMap<Integer, Boolean>());
+						list = Collections.newSetFromMap(new ConcurrentHashMap<Integer, Boolean>());
 						waiting.put(to, list);
 					}
 				}
@@ -187,8 +181,7 @@ public class DataProcessor extends SimpleMessageProcessor implements
 					byte[] compress = resp;
 					if (comp != null)
 						compress = comp.compress(resp);
-					Message toSend = Message.newOutDataMessage(compress,
-							MessageType.RESPONSE, m.getFrom());
+					Message toSend = Message.newOutDataMessage(compress, MessageType.RESPONSE, m.getFrom());
 					ByteBuffer headerBuffer = toSend.getHeaderBuffer();
 					headerBuffer.putInt(this.msgID);
 					if (comp != null)
@@ -210,8 +203,7 @@ public class DataProcessor extends SimpleMessageProcessor implements
 				uncompress = comp.uncompress(uncompress, originalSize);
 			}
 
-			DataMessage data = new DataMessage(uncompress, id, m.getTo(),
-					m.getFrom());
+			DataMessage data = new DataMessage(uncompress, id, m.getTo(), m.getFrom());
 			// if (log.isDebugEnabled())
 			// log.debug("Sending data message to listener.");
 			l.messageReceived(data, resp);

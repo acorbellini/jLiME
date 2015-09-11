@@ -5,8 +5,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.log4j.Logger;
 
-import edu.jlime.jd.ClientNode;
-import edu.jlime.jd.JobDispatcher;
+import edu.jlime.jd.Dispatcher;
+import edu.jlime.jd.Node;
 
 public abstract class ResultManager<R> {
 
@@ -26,27 +26,23 @@ public abstract class ResultManager<R> {
 		this.remainingResults = new AtomicInteger(res);
 	}
 
-	protected abstract void handleException(Exception res, String jobID,
-			ClientNode fromID);
+	protected abstract void handleException(Exception res, String jobID, Node fromID);
 
-	protected abstract void handleResult(R res, String jobID, ClientNode fromID);
+	protected abstract void handleResult(R res, String jobID, Node fromID);
 
 	@Override
 	public String toString() {
-		return "Result Manager : " + getRemainingResults() + " - class :  "
-				+ getClass();
+		return "Result Manager : " + getRemainingResults() + " - class :  " + getClass();
 	}
 
-	public void manageResult(JobDispatcher jd, UUID jobID, R res, ClientNode req) {
+	public void manageResult(Dispatcher jd, UUID jobID, R res, Node req) {
 		int current_remaining = remainingResults.decrementAndGet();
 
 		if (current_remaining < 0) {
 			if (res != null && Exception.class.isAssignableFrom(res.getClass()))
-				log.error("Unexpected exception from job " + jobID
-						+ " from server " + req, (Throwable) res);
+				log.error("Unexpected exception from job " + jobID + " from server " + req, (Throwable) res);
 			else if (log.isDebugEnabled())
-				log.debug("Received result, but remaining result count is 0 for "
-						+ jobID + " from server " + req);
+				log.debug("Received result, but remaining result count is 0 for " + jobID + " from server " + req);
 			return;
 		} else if (current_remaining == 0) {
 			if (log.isDebugEnabled())
@@ -56,15 +52,12 @@ public abstract class ResultManager<R> {
 
 		if (res != null && Exception.class.isAssignableFrom(res.getClass())) {
 			if (log.isDebugEnabled())
-				log.debug("Handling exception for " + jobID + " from server "
-						+ req);
-			handleException((Exception) res, jobID.toString(),
-					ClientNode.copy(req, jd));
+				log.debug("Handling exception for " + jobID + " from server " + req);
+			handleException((Exception) res, jobID.toString(), Node.copy(req, jd));
 		} else {
 			if (log.isDebugEnabled())
-				log.debug("Handling result for " + jobID + " from server "
-						+ req);
-			handleResult(res, jobID.toString(), ClientNode.copy(req, jd));
+				log.debug("Handling result for " + jobID + " from server " + req);
+			handleResult(res, jobID.toString(), Node.copy(req, jd));
 		}
 	}
 }

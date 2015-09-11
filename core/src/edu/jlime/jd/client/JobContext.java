@@ -1,6 +1,7 @@
 package edu.jlime.jd.client;
 
 import edu.jlime.jd.ClientCluster;
+import edu.jlime.jd.JobContainer;
 
 public interface JobContext {
 
@@ -21,5 +22,7 @@ public interface JobContext {
 	public abstract Object waitFor(String id);
 
 	public abstract Object getGlobal(String k);
+
+	public abstract void execute(JobContainer j) throws Exception;
 
 }

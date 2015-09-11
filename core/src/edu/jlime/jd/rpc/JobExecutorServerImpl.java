@@ -4,21 +4,19 @@ import java.util.UUID;
 
 import edu.jlime.core.cluster.Peer;
 import edu.jlime.core.rpc.RPCClient;
-import edu.jlime.core.rpc.RPCDispatcher;
+import edu.jlime.core.rpc.RPC;
 import edu.jlime.core.rpc.Transferible;
-import edu.jlime.jd.ClientNode;
 import edu.jlime.jd.JobContainer;
+import edu.jlime.jd.Node;
 
-public class JobExecutorServerImpl extends RPCClient implements JobExecutor,
-		Transferible {
+public class JobExecutorServerImpl extends RPCClient implements JobExecutor, Transferible {
 
-	transient RPCDispatcher localRPC;
+	transient RPC localRPC;
 	transient volatile JobExecutor local = null;
 
-	public JobExecutorServerImpl(RPCDispatcher disp, Peer dest, Peer client,
-			String targetID) {
+	public JobExecutorServerImpl(RPC disp, Peer dest, Peer client, String targetID) {
 		super(disp, dest, client, targetID);
-		this.localRPC = RPCDispatcher.getLocalDispatcher(dest);
+		this.localRPC = RPC.getLocalDispatcher(dest);
 	}
 
 	public void execute(final JobContainer arg0) throws Exception {
@@ -33,8 +31,7 @@ public class JobExecutorServerImpl extends RPCClient implements JobExecutor,
 					}
 				} else
 					try {
-						disp.callAsync(dest, client, targetID, "execute",
-								new Object[] { arg0 });
+						disp.callAsync(dest, client, targetID, "execute", new Object[] { arg0 });
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
@@ -42,8 +39,7 @@ public class JobExecutorServerImpl extends RPCClient implements JobExecutor,
 		});
 	}
 
-	public void result(final Object arg0, final UUID arg1, final ClientNode arg2)
-			throws Exception {
+	public void result(final Object arg0, final UUID arg1, final Node arg2) throws Exception {
 		if (localRPC != null) {
 			async.execute(new Runnable() {
 				public void run() {
@@ -57,14 +53,13 @@ public class JobExecutorServerImpl extends RPCClient implements JobExecutor,
 			;
 			return;
 		}
-		disp.callAsync(dest, client, targetID, "result", new Object[] { arg0,
-				arg1, arg2 });
+		disp.callAsync(dest, client, targetID, "result", new Object[] { arg0, arg1, arg2 });
 	}
 
 	@Override
-	public void setRPC(RPCDispatcher rpc) {
+	public void setRPC(RPC rpc) {
 		this.disp = rpc;
-		this.localRPC = RPCDispatcher.getLocalDispatcher(super.dest);
+		this.localRPC = RPC.getLocalDispatcher(super.dest);
 	}
 
 	public JobExecutor getLocal() throws Exception {

@@ -11,6 +11,7 @@ import org.tukaani.xz.XZOutputStream;
 
 public class XZ implements Compressor {
 	private static LZMA2Options options = new LZMA2Options();
+
 	static {
 		try {
 			options.setPreset(3);
@@ -24,7 +25,7 @@ public class XZ implements Compressor {
 	public byte[] compress(byte[] in) {
 		ByteArrayOutputStream bas = new ByteArrayOutputStream(in.length);
 		try {
-			
+
 			XZOutputStream comp = new XZOutputStream(bas, options);
 
 			comp.write(in);

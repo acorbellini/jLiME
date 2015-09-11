@@ -5,22 +5,19 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
-import com.google.common.util.concurrent.AtomicDouble;
-
-import edu.jlime.graphly.client.GraphlyClient;
-import edu.jlime.graphly.client.GraphlyGraph;
+import edu.jlime.graphly.client.Graphly;
+import edu.jlime.graphly.client.Graph;
 import edu.jlime.graphly.jobs.Mapper;
 import edu.jlime.graphly.rec.CustomStep.CustomFunction;
 import edu.jlime.graphly.rec.salsa.AuthHubResult;
 import edu.jlime.graphly.rec.salsa.AuthHubSubResult;
-import edu.jlime.graphly.storenode.GraphlyStoreNode;
-import edu.jlime.graphly.traversal.CountResult;
-import edu.jlime.graphly.traversal.GraphlyTraversal;
+import edu.jlime.graphly.storenode.StoreNodeImpl;
+import edu.jlime.graphly.traversal.Traversal;
 import edu.jlime.graphly.traversal.TraversalResult;
 import edu.jlime.graphly.util.Gather;
-import edu.jlime.jd.ClientNode;
-import edu.jlime.jd.JobDispatcher;
-import edu.jlime.jd.client.JobContextImpl;
+import edu.jlime.jd.Dispatcher;
+import edu.jlime.jd.Node;
+import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.task.ForkJoinTask;
 import edu.jlime.jd.task.ResultListener;
 import edu.jlime.util.Pair;
@@ -39,7 +36,7 @@ public class HITSHybridStep implements CustomFunction {
 		}
 
 		@Override
-		public Void gather(String graph, GraphlyStoreNode node) throws Exception {
+		public Void gather(String graph, StoreNodeImpl node) throws Exception {
 			TLongFloatIterator it = node.getFloatIterator(graph, k);
 			while (it.hasNext()) {
 				it.advance();
@@ -62,18 +59,18 @@ public class HITSHybridStep implements CustomFunction {
 	}
 
 	@Override
-	public TraversalResult execute(TraversalResult before, GraphlyTraversal tr) throws Exception {
+	public TraversalResult execute(TraversalResult before, Traversal tr) throws Exception {
 		final Logger log = Logger.getLogger(HITSStep.class);
 
 		long[] subgraph = before.vertices().toArray();
 
-		GraphlyGraph g = tr.getGraph();
+		Graph g = tr.getGraph();
 
 		Mapper map = (Mapper) tr.get("mapper");
 
-		JobDispatcher jobClient = tr.getGraph().getJobClient();
+		Dispatcher jobClient = tr.getGraph().getJobClient();
 
-		JobContextImpl ctx = jobClient.getEnv().getClientEnv(jobClient.getLocalPeer());
+		JobContext ctx = jobClient.getEnv().getClientEnv(jobClient.getLocalPeer());
 
 		log.info("Executing HITS on " + subgraph.length + " vertices.");
 
@@ -92,11 +89,11 @@ public class HITSHybridStep implements CustomFunction {
 
 			log.info("Executing Step " + i);
 
-			final List<Pair<ClientNode, TLongArrayList>> mapped = map.map(GraphlyClient.NUM_JOBS, subgraph, ctx);
+			final List<Pair<Node, TLongArrayList>> mapped = map.map(Graphly.NUM_JOBS, subgraph, ctx);
 
 			ForkJoinTask<AuthHubSubResult> fj = new ForkJoinTask<>();
 
-			for (Pair<ClientNode, TLongArrayList> e : mapped)
+			for (Pair<Node, TLongArrayList> e : mapped)
 				fj.putJob(new HITSHybridJob(tr.getGraph(), auth, hub, subgraph, e.getValue()), e.getKey());
 
 			fj.execute(16, new ResultListener<AuthHubSubResult, Void>() {

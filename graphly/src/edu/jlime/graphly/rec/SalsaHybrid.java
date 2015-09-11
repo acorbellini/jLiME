@@ -5,24 +5,22 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
-import edu.jlime.graphly.client.GraphlyClient;
-import edu.jlime.graphly.client.GraphlyGraph;
+import edu.jlime.graphly.client.Graphly;
+import edu.jlime.graphly.client.Graph;
 import edu.jlime.graphly.jobs.Mapper;
 import edu.jlime.graphly.rec.CustomStep.CustomFunction;
 import edu.jlime.graphly.rec.salsa.AuthHubResult;
 import edu.jlime.graphly.rec.salsa.AuthHubSubResult;
-import edu.jlime.graphly.rec.salsa.SalsaJob;
 import edu.jlime.graphly.rec.salsa.SalsaStep;
 import edu.jlime.graphly.traversal.Dir;
-import edu.jlime.graphly.traversal.GraphlyTraversal;
+import edu.jlime.graphly.traversal.Traversal;
 import edu.jlime.graphly.traversal.TraversalResult;
-import edu.jlime.jd.ClientNode;
-import edu.jlime.jd.JobDispatcher;
-import edu.jlime.jd.client.JobContextImpl;
+import edu.jlime.jd.Dispatcher;
+import edu.jlime.jd.Node;
+import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.task.ForkJoinTask;
 import edu.jlime.jd.task.ResultListener;
 import edu.jlime.util.Pair;
-import gnu.trove.iterator.TLongIterator;
 import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.map.hash.TLongFloatHashMap;
 import gnu.trove.set.hash.TLongHashSet;
@@ -42,13 +40,13 @@ public class SalsaHybrid implements CustomFunction {
 	}
 
 	@Override
-	public TraversalResult execute(TraversalResult before, GraphlyTraversal tr) throws Exception {
+	public TraversalResult execute(TraversalResult before, Traversal tr) throws Exception {
 		final Logger log = Logger.getLogger(SalsaStep.class);
 
 		TLongHashSet beforeSet = before.vertices();
 		log.info("Executing Salsa FJ Step on " + beforeSet.size());
 
-		GraphlyGraph g = tr.getGraph();
+		Graph g = tr.getGraph();
 
 		log.info("Filtering authority side");
 		TLongHashSet authSet = g.v(beforeSet).set("mapper", tr.get("mapper"))
@@ -59,9 +57,9 @@ public class SalsaHybrid implements CustomFunction {
 
 		Mapper map = (Mapper) tr.get("mapper");
 
-		JobDispatcher jobClient = tr.getGraph().getJobClient();
+		Dispatcher jobClient = tr.getGraph().getJobClient();
 
-		JobContextImpl ctx = jobClient.getEnv().getClientEnv(jobClient.getLocalPeer());
+		JobContext ctx = jobClient.getEnv().getClientEnv(jobClient.getLocalPeer());
 
 		log.info("Executing SalsaRepeat with hubset " + hubSet.size() + " and auth " + authSet.size());
 
@@ -85,12 +83,11 @@ public class SalsaHybrid implements CustomFunction {
 
 			log.info("Executing Step " + i);
 
-			final List<Pair<ClientNode, TLongArrayList>> mapped = map.map(GraphlyClient.NUM_JOBS, subgraph.toArray(),
-					ctx);
+			final List<Pair<Node, TLongArrayList>> mapped = map.map(Graphly.NUM_JOBS, subgraph.toArray(), ctx);
 
 			ForkJoinTask<AuthHubSubResult> fj = new ForkJoinTask<>();
 
-			for (Pair<ClientNode, TLongArrayList> e : mapped)
+			for (Pair<Node, TLongArrayList> e : mapped)
 				fj.putJob(new SalsaHybridJob(tr.getGraph(), authSize, hubSize, auth, hub, i, subgraph, e.getValue()),
 						e.getKey());
 

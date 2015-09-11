@@ -14,18 +14,18 @@ public class JobContainer implements Runnable, Serializable {
 
 	private boolean noresponse = false;
 
-	ClientNode origin;
+	Node origin;
 
 	private ClientJob<?> rJ;
 
-	transient JobDispatcher srv;
+	transient Dispatcher srv;
 
-	public JobContainer(ClientJob<?> j, ClientNode requestor) {
+	public JobContainer(ClientJob<?> j, Node requestor) {
 		this(j, UUID.randomUUID(), requestor);
 
 	}
 
-	public JobContainer(ClientJob<?> j, UUID id, ClientNode requestor) {
+	public JobContainer(ClientJob<?> j, UUID id, Node requestor) {
 		this.origin = requestor;
 		this.rJ = j;
 		this.jobID = id;
@@ -39,7 +39,7 @@ public class JobContainer implements Runnable, Serializable {
 		return jobID;
 	}
 
-	public ClientNode getRequestor() {
+	public Node getRequestor() {
 		return origin;
 	}
 
@@ -58,18 +58,15 @@ public class JobContainer implements Runnable, Serializable {
 					log.debug("Calling job " + jobID + " from " + origin);
 				res = rJ.call(srv.getEnv().getClientEnv(rJ.getClient()), origin);
 				if (log.isDebugEnabled())
-					log.debug("Finished call to job " + jobID + " from "
-							+ origin);
+					log.debug("Finished call to job " + jobID + " from " + origin);
 			} catch (Exception e) {
 				e.printStackTrace();
 				res = e;
 			}
 			try {
-				if (!isNoresponse()
-						|| Exception.class.isAssignableFrom(res.getClass())) {
+				if (!isNoresponse() || Exception.class.isAssignableFrom(res.getClass())) {
 					if (log.isDebugEnabled())
-						log.debug("Sending result for job " + getJobID()
-								+ " to " + origin);
+						log.debug("Sending result for job " + getJobID() + " to " + origin);
 					srv.sendResult(res, origin, jobID, rJ.getClient());
 				} else {
 					if (log.isDebugEnabled())
@@ -95,7 +92,7 @@ public class JobContainer implements Runnable, Serializable {
 		this.rJ = j;
 	}
 
-	public void setSrv(JobDispatcher srv) {
+	public void setSrv(Dispatcher srv) {
 		this.srv = srv;
 	}
 
@@ -106,8 +103,8 @@ public class JobContainer implements Runnable, Serializable {
 
 	@Override
 	public String toString() {
-		return "JobContainer [jobID=" + jobID + ", noresponse=" + noresponse
-				+ ", origin=" + origin + ", rJ=" + rJ + "]";
+		return "JobContainer [jobID=" + jobID + ", noresponse=" + noresponse + ", origin=" + origin + ", rJ=" + rJ
+				+ "]";
 	}
 
 }

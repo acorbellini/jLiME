@@ -26,22 +26,14 @@ public class LinuxCPUInfo extends SysInfoProvider {
 	@Override
 	public void load(final Metrics mgr) {
 		try {
-			final String cores = CommandLineUtils.execCommand(
-					"cat /proc/cpuinfo | grep -c processor | tr -d '\\n'")
+			final String cores = CommandLineUtils.execCommand("cat /proc/cpuinfo | grep -c processor | tr -d '\\n'")
 					.trim();
 			mgr.simple("sysinfo.cpu.cores", cores);
-			mgr.simple(
-					"sysinfo.cpu.cpuname",
-					CommandLineUtils
-							.execCommand(
-									"cat /proc/cpuinfo | grep 'model name'|uniq| tr -s ' ' | tr -d '\t'")
+			mgr.simple("sysinfo.cpu.cpuname",
+					CommandLineUtils.execCommand("cat /proc/cpuinfo | grep 'model name'|uniq| tr -s ' ' | tr -d '\t'")
 							.substring(12).trim());
-			mgr.simple(
-					"sysinfo.cpu.freq",
-					CommandLineUtils
-							.execCommand(
-									"lscpu | tr -d ' ' | grep 'CPUMHz' | cut -d':' -f2")
-							.trim());
+			mgr.simple("sysinfo.cpu.freq",
+					CommandLineUtils.execCommand("lscpu | tr -d ' ' | grep 'CPUMHz' | cut -d':' -f2").trim());
 			mgr.createTimedSensor(new SensorMeasure() {
 				@Override
 				public void proc(Metrics mgr) throws Exception {
@@ -50,8 +42,7 @@ public class LinuxCPUInfo extends SysInfoProvider {
 			});
 
 		} catch (Exception e) {
-			Logger.getLogger(LinuxCPUInfo.class).error(
-					"Error executing command in linux cpu info.", e);
+			Logger.getLogger(LinuxCPUInfo.class).error("Error executing command in linux cpu info.", e);
 		}
 	}
 
@@ -61,16 +52,13 @@ public class LinuxCPUInfo extends SysInfoProvider {
 		String[] cpuStats = reader.readLine().replaceAll("\\s", " ").split(" ");
 		reader.close();
 		long idle = Integer.valueOf(cpuStats[4]) + Integer.valueOf(cpuStats[5]);
-		long nonidle = Integer.valueOf(cpuStats[1])
-				+ Integer.valueOf(cpuStats[2]) + Integer.valueOf(cpuStats[3])
-				+ Integer.valueOf(cpuStats[6]) + Integer.valueOf(cpuStats[7])
-				+ Integer.valueOf(cpuStats[8]);
+		long nonidle = Integer.valueOf(cpuStats[1]) + Integer.valueOf(cpuStats[2]) + Integer.valueOf(cpuStats[3])
+				+ Integer.valueOf(cpuStats[6]) + Integer.valueOf(cpuStats[7]) + Integer.valueOf(cpuStats[8]);
 
 		long prevtotal = prevIdle + prevNonIdle;
 		long total = idle + nonidle;
 
-		float usage = ((total - prevtotal) - (idle - prevIdle))
-				/ (float) (total - prevtotal);
+		float usage = ((total - prevtotal) - (idle - prevIdle)) / (float) (total - prevtotal);
 
 		prevIdle = idle;
 		prevNonIdle = nonidle;

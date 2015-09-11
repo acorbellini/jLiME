@@ -7,12 +7,12 @@ import org.apache.log4j.Logger;
 import edu.jlime.graphly.jobs.Mapper;
 import edu.jlime.graphly.rec.BetaCalc;
 import edu.jlime.graphly.rec.GraphCount;
-import edu.jlime.graphly.storenode.GraphlyStoreNode;
+import edu.jlime.graphly.storenode.StoreNodeImpl;
 import edu.jlime.graphly.traversal.count.CountStep;
 import edu.jlime.graphly.util.Gather;
-import edu.jlime.jd.ClientNode;
-import edu.jlime.jd.JobDispatcher;
-import edu.jlime.jd.client.JobContextImpl;
+import edu.jlime.jd.Dispatcher;
+import edu.jlime.jd.Node;
+import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.task.ForkJoinTask;
 import edu.jlime.jd.task.ResultListener;
 import edu.jlime.util.Pair;
@@ -37,7 +37,7 @@ public class GraphCountStep implements Step {
 		}
 
 		@Override
-		public Void gather(String graph, GraphlyStoreNode node) throws Exception {
+		public Void gather(String graph, StoreNodeImpl node) throws Exception {
 			TLongFloatIterator it = node.getFloatIterator(graph, k);
 			while (it.hasNext()) {
 				it.advance();
@@ -50,14 +50,14 @@ public class GraphCountStep implements Step {
 
 	private Dir dir;
 	private int max;
-	private GraphlyTraversal tr;
+	private Traversal tr;
 	private String k;
 	private TLongHashSet filters;
 	private boolean returnVertices;
 	private BetaCalc calc;
 	private String kBeta;
 
-	public GraphCountStep(BetaCalc calc, Dir dir, TLongHashSet vertices, int max_edges, GraphlyTraversal tr, String k,
+	public GraphCountStep(BetaCalc calc, Dir dir, TLongHashSet vertices, int max_edges, Traversal tr, String k,
 			boolean returnVertices, String kBeta) {
 		this.calc = calc;
 		this.filters = vertices;
@@ -83,19 +83,19 @@ public class GraphCountStep implements Step {
 
 		Mapper map = (Mapper) tr.get("mapper");
 
-		JobDispatcher jobClient = tr.getGraph().getJobClient();
+		Dispatcher jobClient = tr.getGraph().getJobClient();
 
-		JobContextImpl ctx = jobClient.getEnv().getClientEnv(jobClient.getLocalPeer());
+		JobContext ctx = jobClient.getEnv().getClientEnv(jobClient.getLocalPeer());
 
 		TLongHashSet vertices = before.vertices();
 
 		log.info("Graph count for " + vertices.size());
 
-		final List<Pair<ClientNode, TLongArrayList>> mapped = map.map(1, vertices.toArray(), ctx);
+		final List<Pair<Node, TLongArrayList>> mapped = map.map(1, vertices.toArray(), ctx);
 
 		ForkJoinTask<long[]> fj = new ForkJoinTask<>();
 
-		for (Pair<ClientNode, TLongArrayList> e : mapped) {
+		for (Pair<Node, TLongArrayList> e : mapped) {
 			fj.putJob(new GraphCount(filters, tr.getGraph(), k, dir, max, e.getValue().toArray(), returnVertices),
 					e.getKey());
 		}

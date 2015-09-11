@@ -16,44 +16,37 @@ public abstract class NetworkProtocolFactory {
 
 	public abstract NetworkProtocol getProtocol(String addr);
 
-	public static NetworkProtocolFactory udp(final Address local,
-			final NetworkConfiguration config) {
+	public static NetworkProtocolFactory udp(final Address local, final NetworkConfiguration config) {
 		return new NetworkProtocolFactory(AddressType.MCAST) {
 
 			@Override
 			public NetworkProtocol getProtocol(String addr) {
-				return new UDP(local, addr, config.port, config.port_range,
-						config.max_msg_size, SocketFactory.getUnicastFactory(
-								config.sendBuffer, config.rcvBuffer),
-						config.udp_threads);
+				return new UDP(local, addr, config.port, config.port_range, config.max_msg_size,
+						SocketFactory.getUnicastFactory(config.sendBuffer, config.rcvBuffer), config.udp_threads);
 			}
 
 		};
 	}
 
-	public static NetworkProtocolFactory tcp(final Address localID,
-			final NetworkConfiguration config) {
+	public static NetworkProtocolFactory tcp(final Address localID, final NetworkConfiguration config) {
 		return new NetworkProtocolFactory(AddressType.TCP) {
 
 			@Override
 			public NetworkProtocol getProtocol(String addr) {
-				return new TCP(localID, addr, config.port, config.port_range,
-						config.tcp_config);
+				return new TCP(localID, addr, config.port, config.port_range, config.tcp_config);
 			}
 
 		};
 	}
 
-	public static NetworkProtocolFactory mcast(final Address local,
-			final NetworkConfiguration config) {
+	public static NetworkProtocolFactory mcast(final Address local, final NetworkConfiguration config) {
 		return new NetworkProtocolFactory(AddressType.UDP) {
 
 			@Override
 			public NetworkProtocol getProtocol(String addr) {
-				return new UDP(local, config.mcast_addr, config.mcastport,
-						config.mcast_port_range, config.max_msg_size, true,
-						SocketFactory.getMcastFactory(addr, config.sendBuffer,
-								config.rcvBuffer), config.udp_threads);
+				return new UDP(local, config.mcast_addr, config.mcastport, config.mcast_port_range, config.max_msg_size,
+						true, SocketFactory.getMcastFactory(addr, config.sendBuffer, config.rcvBuffer),
+						config.udp_threads);
 			}
 
 		};

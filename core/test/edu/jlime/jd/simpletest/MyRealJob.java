@@ -1,6 +1,6 @@
 package edu.jlime.jd.simpletest;
 
-import edu.jlime.jd.ClientNode;
+import edu.jlime.jd.Node;
 import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.Job;
 
@@ -15,7 +15,7 @@ public class MyRealJob implements Job<Integer> {
 	}
 
 	@Override
-	public Integer call(JobContext env, ClientNode peer) {
+	public Integer call(JobContext env, Node peer) {
 		System.out.println(data);
 		return data;
 	}

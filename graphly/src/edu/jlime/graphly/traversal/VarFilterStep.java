@@ -9,10 +9,10 @@ import gnu.trove.set.hash.TLongHashSet;
 public class VarFilterStep implements Step {
 
 	private String[] kList;
-	private GraphlyTraversal g;
+	private Traversal g;
 	private boolean neg;
 
-	public VarFilterStep(String[] k, GraphlyTraversal g, boolean neg) {
+	public VarFilterStep(String[] k, Traversal g, boolean neg) {
 		this.kList = k;
 		this.g = g;
 		this.neg = neg;
@@ -32,15 +32,14 @@ public class VarFilterStep implements Step {
 			else
 				res = res.retainAll(filter);
 		}
-		log.info("Filtered " + size + ", left with : " + res.vertices().size()
-				+ " in " + (System.currentTimeMillis() - init) + "ms");
+		log.info("Filtered " + size + ", left with : " + res.vertices().size() + " in "
+				+ (System.currentTimeMillis() - init) + "ms");
 		return res;
 	}
 
 	@Override
 	public String toString() {
-		return "VarFilterStep [kList=" + Arrays.toString(kList) + ", neg="
-				+ neg + "]";
+		return "VarFilterStep [kList=" + Arrays.toString(kList) + ", neg=" + neg + "]";
 	}
 
 }

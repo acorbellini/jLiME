@@ -2,8 +2,7 @@ package edu.jlime.pregel.messages;
 
 import java.io.Serializable;
 
-public abstract class PregelMessage implements Comparable<PregelMessage>,
-		Serializable {
+public abstract class PregelMessage implements Comparable<PregelMessage>, Serializable {
 
 	protected boolean broadcast = false;
 
@@ -51,8 +50,7 @@ public abstract class PregelMessage implements Comparable<PregelMessage>,
 
 	@Override
 	public String toString() {
-		return "PregelMessage [type=" + getType() + ", from=" + getFrom()
-				+ ", to=" + to + "]";
+		return "PregelMessage [type=" + getType() + ", from=" + getFrom() + ", to=" + to + "]";
 	}
 
 	@Override

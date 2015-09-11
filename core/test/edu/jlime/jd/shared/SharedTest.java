@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.junit.Test;
 
-import edu.jlime.jd.ClientNode;
+import edu.jlime.jd.Node;
 import edu.jlime.jd.client.Client;
 import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.Job;
@@ -25,7 +25,7 @@ public class SharedTest {
 		}
 
 		@Override
-		public String call(JobContext env, ClientNode peer) throws Exception {
+		public String call(JobContext env, Node peer) throws Exception {
 			Thread.sleep((long) (Math.random() * 3000));
 			return msg + " - " + env.waitFor("data");
 		}
@@ -40,8 +40,7 @@ public class SharedTest {
 		jobs.add(new SharedJob("2"));
 		jobs.add(new SharedJob("3"));
 		jobs.add(new SharedJob("4"));
-		RoundRobinTask<String> task = new RoundRobinTask<String>(jobs, Client
-				.build().getCluster());
+		RoundRobinTask<String> task = new RoundRobinTask<String>(jobs, Client.build().getCluster());
 
 		task.set("data", "First");
 		List<SharedJob> jobs2 = new ArrayList<>();
@@ -49,8 +48,7 @@ public class SharedTest {
 		jobs2.add(new SharedJob("b"));
 		jobs2.add(new SharedJob("c"));
 		jobs2.add(new SharedJob("d"));
-		RoundRobinTask<String> task2 = new RoundRobinTask<String>(jobs2, Client
-				.build().getCluster());
+		RoundRobinTask<String> task2 = new RoundRobinTask<String>(jobs2, Client.build().getCluster());
 		task2.set("data", "Segundo");
 		task.execute(new ResultListener<String, Void>() {
 			@Override

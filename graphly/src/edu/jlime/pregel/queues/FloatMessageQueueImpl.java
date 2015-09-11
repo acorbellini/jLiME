@@ -16,8 +16,7 @@ import gnu.trove.map.hash.TObjectIntHashMap;
 
 public class FloatMessageQueueImpl implements FloatMessageQueue {
 
-	private static final int HASHES = Runtime.getRuntime()
-			.availableProcessors();
+	private static final int HASHES = Runtime.getRuntime().availableProcessors();
 	private static final float NO_VALUE = Float.MIN_VALUE;
 	private static final long NO_KEY = Long.MIN_VALUE;
 
@@ -76,8 +75,7 @@ public class FloatMessageQueueImpl implements FloatMessageQueue {
 	}
 
 	@Override
-	public void flush(String msgType, String subgraph,
-			final WorkerTask workerTask) throws Exception {
+	public void flush(String msgType, String subgraph, final WorkerTask workerTask) throws Exception {
 
 		TObjectIntHashMap<Worker> sizes = new TObjectIntHashMap<>();
 		{
@@ -104,8 +102,7 @@ public class FloatMessageQueueImpl implements FloatMessageQueue {
 					if (subgraph == null)
 						workerTask.outputFloat(msgType, -1l, -1l, it.value());
 					else
-						workerTask.outputFloatSubgraph(msgType, subgraph, -1l,
-								it.value());
+						workerTask.outputFloatSubgraph(msgType, subgraph, -1l, it.value());
 				} else {
 					Worker w = workerTask.getWorker(to);
 					FloatData data = ret.get(w);
@@ -123,8 +120,7 @@ public class FloatMessageQueueImpl implements FloatMessageQueue {
 	}
 
 	@Override
-	public Iterator<PregelMessage> getMessages(final String msgType,
-			final long to) {
+	public Iterator<PregelMessage> getMessages(final String msgType, final long to) {
 		int hash = getHash(to);
 		final float found = this.readOnly[hash].get(to);
 		if (found == this.readOnly[hash].getNoEntryValue())

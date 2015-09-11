@@ -43,12 +43,10 @@ public class GraphlySintetic {
 
 	private TLongArrayList ls;
 
-	public GraphlySintetic(String fName, String sep, int v, int e, float c,
-			long[] ls) throws IOException {
+	public GraphlySintetic(String fName, String sep, int v, int e, float c, long[] ls) throws IOException {
 		this.fName = fName;
 		this.sep = sep;
-		this.outwriter = new BufferedWriter(new FileWriter(new File(fName
-				+ ".out")));
+		this.outwriter = new BufferedWriter(new FileWriter(new File(fName + ".out")));
 		this.v = v;
 		this.e = e;
 		this.c = c;
@@ -95,8 +93,7 @@ public class GraphlySintetic {
 
 		TLongArrayList vids = new TLongArrayList();
 		if (args.length > 5) {
-			BufferedReader reader = new BufferedReader(new FileReader(new File(
-					args[5])));
+			BufferedReader reader = new BufferedReader(new FileReader(new File(args[5])));
 
 			while (reader.ready()) {
 				long vid = Long.valueOf(reader.readLine().trim());
@@ -105,8 +102,7 @@ public class GraphlySintetic {
 			reader.close();
 		}
 
-		GraphlySintetic sint = new GraphlySintetic(fName, sep, vertices, edges,
-				connectivity, vids.toArray());
+		GraphlySintetic sint = new GraphlySintetic(fName, sep, vertices, edges, connectivity, vids.toArray());
 		sint.create();
 	}
 
@@ -169,8 +165,7 @@ public class GraphlySintetic {
 
 		outwriter.close();
 
-		BufferedWriter inwriter = new BufferedWriter(new FileWriter(new File(
-				fName + ".in")));
+		BufferedWriter inwriter = new BufferedWriter(new FileWriter(new File(fName + ".in")));
 		for (Entry<Long, TLongHashSet> l : in.entrySet()) {
 			long[] edges = l.getValue().toArray();
 			for (long to : edges) {
@@ -206,8 +201,7 @@ public class GraphlySintetic {
 		return ret;
 	}
 
-	public static Iterator<Pair<Long, long[]>> read(String file, String sep)
-			throws NumberFormatException, IOException {
+	public static Iterator<Pair<Long, long[]>> read(String file, String sep) throws NumberFormatException, IOException {
 		return new GraphReader(file, sep);
 	}
 }

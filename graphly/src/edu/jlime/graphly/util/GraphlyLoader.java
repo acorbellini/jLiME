@@ -10,8 +10,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import edu.jlime.graphly.client.GraphlyClient;
-import edu.jlime.graphly.client.GraphlyGraph;
+import edu.jlime.graphly.client.Graphly;
+import edu.jlime.graphly.client.Graph;
 import edu.jlime.graphly.traversal.Dir;
 import edu.jlime.util.Pair;
 
@@ -27,9 +27,9 @@ public class GraphlyLoader {
 
 		Integer serverInt = Integer.valueOf(servers);
 
-		GraphlyClient graphly = GraphlyClient.build(serverInt);
+		Graphly graphly = Graphly.build(serverInt);
 
-		GraphlyGraph g = graphly.getGraph(graph);
+		Graph g = graphly.getGraph(graph);
 
 		if (action.equals("validate")) {
 			new GraphlyLoader(g).validate(fileIn, sep, Dir.IN);
@@ -42,20 +42,18 @@ public class GraphlyLoader {
 		graphly.close();
 	}
 
-	private GraphlyGraph g;
+	private Graph g;
 
-	public GraphlyLoader(GraphlyGraph graphly) {
+	public GraphlyLoader(Graph graphly) {
 		this.g = graphly;
 	}
 
-	public void validate(String file, String sep, final Dir dir)
-			throws Exception, IOException {
+	public void validate(String file, String sep, final Dir dir) throws Exception, IOException {
 		Iterator<Pair<Long, long[]>> adj = GraphlySintetic.read(file, sep);
 		int cont = 0;
 		int last = -1;
 		while (adj.hasNext()) {
-			Pair<java.lang.Long, long[]> pair = (Pair<java.lang.Long, long[]>) adj
-					.next();
+			Pair<java.lang.Long, long[]> pair = (Pair<java.lang.Long, long[]>) adj.next();
 
 			long[] value = pair.getValue();
 			if (value != null) {
@@ -72,8 +70,7 @@ public class GraphlyLoader {
 		}
 	}
 
-	public void load(String fname, String sep, final Dir dir) throws Exception,
-			IOException, InterruptedException {
+	public void load(String fname, String sep, final Dir dir) throws Exception, IOException, InterruptedException {
 		int cont = 0;
 		final AtomicInteger contProm = new AtomicInteger(0);
 		final AtomicLong sum = new AtomicLong(0);

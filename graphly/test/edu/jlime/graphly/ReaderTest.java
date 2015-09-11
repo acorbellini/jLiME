@@ -8,8 +8,7 @@ import edu.jlime.util.Pair;
 import gnu.trove.list.array.TLongArrayList;
 
 public class ReaderTest {
-	public static void main(String[] args) throws NumberFormatException,
-			IOException {
+	public static void main(String[] args) throws NumberFormatException, IOException {
 		System.out.println(System.getProperty("java.io.tmpdir"));
 
 		long[] edges = new long[] { 2, 4, 5, 6, 7, 11, 23, 5, 1 };
@@ -26,8 +25,7 @@ public class ReaderTest {
 									 */
 		}
 		System.out.println(ret);
-		Iterator<Pair<Long, long[]>> adj = GraphlySintetic.read("sinth.g.in",
-				"\t");
+		Iterator<Pair<Long, long[]>> adj = GraphlySintetic.read("sinth.g.in", "\t");
 		System.out.println(adj.next());
 	}
 }

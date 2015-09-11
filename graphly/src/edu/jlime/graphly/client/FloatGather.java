@@ -1,6 +1,6 @@
 package edu.jlime.graphly.client;
 
-import edu.jlime.graphly.storenode.GraphlyStoreNode;
+import edu.jlime.graphly.storenode.StoreNodeImpl;
 import edu.jlime.graphly.util.Gather;
 import gnu.trove.iterator.TLongFloatIterator;
 import gnu.trove.iterator.TLongIterator;
@@ -18,8 +18,7 @@ public class FloatGather implements Gather<TLongFloatHashMap> {
 	}
 
 	@Override
-	public TLongFloatHashMap gather(String graph, GraphlyStoreNode node)
-			throws Exception {
+	public TLongFloatHashMap gather(String graph, StoreNodeImpl node) throws Exception {
 
 		TLongFloatHashMap ret = new TLongFloatHashMap();
 		if (vertices == null) {

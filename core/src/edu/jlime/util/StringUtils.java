@@ -26,17 +26,14 @@ public class StringUtils {
 			return "0";
 		final String[] units = new String[] { "B", "KB", "MB", "GB", "TB" };
 		int digitGroups = (int) (Math.log10(size) / Math.log10(1024));
-		return new DecimalFormat("#,##0.#").format(size
-				/ Math.pow(1024, digitGroups))
-				+ " " + units[digitGroups];
+		return new DecimalFormat("#,##0.#").format(size / Math.pow(1024, digitGroups)) + " " + units[digitGroups];
 	}
 
 	public static String readableTime(long s) {
 		// GridGain devuelve hasta nanosegundos...
 		// s = s/1000;
 		long sinMS = (s / 1000);
-		return String.format("%dh:%02dm:%02ds:%02dms", sinMS / 3600,
-				(sinMS % 3600) / 60, (sinMS % 60), s % 1000);
+		return String.format("%dh:%02dm:%02ds:%02dms", sinMS / 3600, (sinMS % 3600) / 60, (sinMS % 60), s % 1000);
 	}
 
 	public static String printTitle() {

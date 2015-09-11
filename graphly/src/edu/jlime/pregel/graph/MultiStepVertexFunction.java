@@ -7,14 +7,12 @@ import java.util.List;
 import edu.jlime.pregel.client.WorkerContext;
 import edu.jlime.pregel.messages.PregelMessage;
 
-public class MultiStepVertexFunction<T extends PregelMessage> implements
-		VertexFunction<T> {
+public class MultiStepVertexFunction<T extends PregelMessage> implements VertexFunction<T> {
 
 	List<VertexFunction> vFunc = new ArrayList<>();
 
 	@Override
-	public void execute(long v, Iterator<T> in, WorkerContext ctx)
-			throws Exception {
+	public void execute(long v, Iterator<T> in, WorkerContext ctx) throws Exception {
 		int curr = ctx.getSuperStep() % vFunc.size();
 		vFunc.get(curr).execute(v, in, ctx);
 	}

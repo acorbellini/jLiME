@@ -25,16 +25,14 @@ public class DiscoveryMessage {
 
 	private Map<String, String> additional;
 
-	public DiscoveryMessage(UUID id, String name,
-			Map<String, String> additional, List<SocketAddress> addresses) {
+	public DiscoveryMessage(UUID id, String name, Map<String, String> additional, List<SocketAddress> addresses) {
 		this.id = id;
 		this.name = name;
 		this.addresses = addresses;
 		this.additional = additional;
 	}
 
-	public static DiscoveryMessage fromMessage(Message m)
-			throws UnknownHostException {
+	public static DiscoveryMessage fromMessage(Message m) throws UnknownHostException {
 		ByteBuffer reader = m.getHeaderBuffer();
 		UUID id = reader.getUUID();
 		String name = reader.getString();
@@ -47,8 +45,7 @@ public class DiscoveryMessage {
 			String ip = data.getString();
 			int port = data.getInt();
 			AddressType type = AddressType.fromID(data.get());
-			addresses.add(new SocketAddress(new InetSocketAddress(InetAddress
-					.getByName(ip), port), type));
+			addresses.add(new SocketAddress(new InetSocketAddress(InetAddress.getByName(ip), port), type));
 		}
 		return new DiscoveryMessage(id, name, additional, addresses);
 	}
@@ -73,8 +70,7 @@ public class DiscoveryMessage {
 		return additional;
 	}
 
-	public static Message createNew(MessageType t, Address localID,
-			String name, Map<String, String> discAdditionData,
+	public static Message createNew(MessageType t, Address localID, String name, Map<String, String> discAdditionData,
 			List<SocketAddress> addresses) {
 		Message ret = Message.newEmptyBroadcastOutDataMessage(t);
 		ByteBuffer headerWriter = ret.getHeaderBuffer();

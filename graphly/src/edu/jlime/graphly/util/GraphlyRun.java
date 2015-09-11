@@ -1,8 +1,8 @@
 package edu.jlime.graphly.util;
 
-import edu.jlime.graphly.client.GraphlyGraph;
+import edu.jlime.graphly.client.Graph;
 import edu.jlime.graphly.jobs.Mapper;
-import edu.jlime.graphly.traversal.GraphlyTraversal;
+import edu.jlime.graphly.traversal.Traversal;
 import edu.jlime.graphly.traversal.TraversalResult;
 
 public abstract class GraphlyRun {
@@ -13,11 +13,9 @@ public abstract class GraphlyRun {
 		this.setName(name);
 	}
 
-	abstract GraphlyTraversal run(long[] users, GraphlyGraph graph,
-			Mapper mapper) throws Exception;
+	abstract Traversal run(long[] users, Graph graph, Mapper mapper) throws Exception;
 
-	abstract String printResult(TraversalResult res, GraphlyGraph g)
-			throws Exception;
+	abstract String printResult(TraversalResult res, Graph g) throws Exception;
 
 	public String getName() {
 		return name;

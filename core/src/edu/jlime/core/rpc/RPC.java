@@ -31,13 +31,13 @@ import edu.jlime.core.transport.Transport;
 import edu.jlime.metrics.metric.Metrics;
 import edu.jlime.util.StreamUtils;
 
-public class RPCDispatcher implements TransportListener {
+public class RPC implements TransportListener {
 
 	public static enum RPCStatus {
 		STARTED, INIT, DOWN
 	}
 
-	private static final Map<Peer, RPCDispatcher> localdispatchers = new ConcurrentHashMap<>();
+	private static final Map<Peer, RPC> localdispatchers = new ConcurrentHashMap<>();
 
 	private static final String RPC = "RPC";
 
@@ -49,7 +49,7 @@ public class RPCDispatcher implements TransportListener {
 
 	private Marshaller marshaller;
 
-	private Logger log = Logger.getLogger(RPCDispatcher.class);
+	private Logger log = Logger.getLogger(RPC.class);
 
 	private Map<String, Object> targets = new ConcurrentHashMap<>();
 
@@ -62,30 +62,28 @@ public class RPCDispatcher implements TransportListener {
 
 	private Metrics metrics;
 
-	private ExecutorService asyncExec = Executors
-			.newCachedThreadPool(new ThreadFactory() {
+	private ExecutorService asyncExec = Executors.newCachedThreadPool(new ThreadFactory() {
 
-				@Override
-				public Thread newThread(Runnable r) {
-					Thread t = Executors.defaultThreadFactory().newThread(r);
-					t.setName("RPCAsyncThreads");
-					return t;
-				}
-			});
+		@Override
+		public Thread newThread(Runnable r) {
+			Thread t = Executors.defaultThreadFactory().newThread(r);
+			t.setName("RPCAsyncThreads");
+			return t;
+		}
+	});
 
-	private ExecutorService broadcastExec = Executors
-			.newCachedThreadPool(new ThreadFactory() {
-				@Override
-				public Thread newThread(Runnable r) {
-					Thread t = Executors.defaultThreadFactory().newThread(r);
-					t.setName("RPCDispatcherBroadcast");
-					return t;
-				}
-			});
+	private ExecutorService broadcastExec = Executors.newCachedThreadPool(new ThreadFactory() {
+		@Override
+		public Thread newThread(Runnable r) {
+			Thread t = Executors.defaultThreadFactory().newThread(r);
+			t.setName("RPCDispatcherBroadcast");
+			return t;
+		}
+	});
 
 	private volatile boolean stopped = false;
 
-	public RPCDispatcher(Transport tr) {
+	public RPC(Transport tr) {
 		this.tr = tr;
 		this.marshaller = new Marshaller(this);
 		this.registerTarget(RPC, this, true);
@@ -94,13 +92,11 @@ public class RPCDispatcher implements TransportListener {
 		localdispatchers.put(localPeer, this);
 	}
 
-	public Object callSync(Peer dest, Peer clientID, MethodCall call)
-			throws Exception {
+	public Object callSync(Peer dest, Peer clientID, MethodCall call) throws Exception {
 		return call(dest, clientID, call, true);
 	}
 
-	public void callAsync(final Peer dest, final Peer clientID,
-			final MethodCall call) throws Exception {
+	public void callAsync(final Peer dest, final Peer clientID, final MethodCall call) throws Exception {
 		if (asyncExec.isShutdown()) {
 			log.warn("Async Executor is shutted down, maybe the rpc dispatcher was closed.");
 			return;
@@ -119,10 +115,9 @@ public class RPCDispatcher implements TransportListener {
 
 	}
 
-	private Object call(Peer dest, Peer clientID, MethodCall call, boolean sync)
-			throws Exception {
+	private Object call(Peer dest, Peer clientID, MethodCall call, boolean sync) throws Exception {
 		// Local call
-		RPCDispatcher local = localdispatchers.get(dest);
+		RPC local = localdispatchers.get(dest);
 		if (local != null) {
 			if (log.isDebugEnabled())
 				log.debug("Dispatching methodcall to local target.");
@@ -150,8 +145,7 @@ public class RPCDispatcher implements TransportListener {
 				return null;
 			}
 		} catch (Exception e) {
-			throw new Exception("Method call " + call.getName() + " to " + dest
-					+ " failed.", e);
+			throw new Exception("Method call " + call.getName() + " to " + dest + " failed.", e);
 		}
 	}
 
@@ -160,7 +154,7 @@ public class RPCDispatcher implements TransportListener {
 	}
 
 	public synchronized void stop() throws Exception {
-		if(stopped)
+		if (stopped)
 			return;
 		asyncExec.shutdown();
 		targets.clear();
@@ -169,11 +163,10 @@ public class RPCDispatcher implements TransportListener {
 
 		this.marshaller.clear();
 
-		
 		broadcastExec.shutdown();
 		tr.stop();
 		localdispatchers.remove(localPeer);
-		
+
 		this.stopped = true;
 	};
 
@@ -181,8 +174,7 @@ public class RPCDispatcher implements TransportListener {
 		try {
 			Object target = getTarget(mc.getObjectKey());
 			Class<?> objClass = target.getClass();
-			Method m = findMethod(objClass, mc,
-					targetsMethods.get(mc.getObjectKey()));
+			Method m = findMethod(objClass, mc, targetsMethods.get(mc.getObjectKey()));
 			return m.invoke(target, mc.getObjects());
 		} catch (Exception e) {
 			throw new Exception("Error calling " + mc + " ", e);
@@ -194,14 +186,10 @@ public class RPCDispatcher implements TransportListener {
 		Object[] objects = mc.getObjects();
 		Class<?>[] types = m.getParameterTypes();
 		Class<?>[] searchedTypes = mc.getArgTypes();
-		if (m.getName().equals(mc.getName())
-				&& types.length == searchedTypes.length) {
+		if (m.getName().equals(mc.getName()) && types.length == searchedTypes.length) {
 			for (int i = 0; i < types.length; i++) {
-				if (!types[i].isAssignableFrom(searchedTypes[i])
-						&& objects[i] != null)
-					if (Wrappers.get(types[i]) != null
-							&& Wrappers.get(types[i]).isAssignableFrom(
-									searchedTypes[i]))
+				if (!types[i].isAssignableFrom(searchedTypes[i]) && objects[i] != null)
+					if (Wrappers.get(types[i]) != null && Wrappers.get(types[i]).isAssignableFrom(searchedTypes[i]))
 						// mc.unwrapArgument(i);
 						;
 					else
@@ -213,19 +201,16 @@ public class RPCDispatcher implements TransportListener {
 
 	}
 
-	private Method findMethod(Class<?> objClass, MethodCall mc, Method[] methods)
-			throws Exception {
+	private Method findMethod(Class<?> objClass, MethodCall mc, Method[] methods) throws Exception {
 		for (Method m : methods) {
 			if (checkParams(mc, m))
 				return m;
 		}
-		throw new NoSuchMethodException("Method : " + mc.getName()
-				+ ". Object class: " + objClass.toString() + ".");
+		throw new NoSuchMethodException("Method : " + mc.getName() + ". Object class: " + objClass.toString() + ".");
 	}
 
-	public void multiCallAsync(final List<Peer> peers, final Peer client,
-			final String target, final String method, final Object[] objects)
-			throws Exception {
+	public void multiCallAsync(final List<Peer> peers, final Peer client, final String target, final String method,
+			final Object[] objects) throws Exception {
 		// asyncExec.execute(new Runnable() {
 		// @Override
 		// public void run() {
@@ -238,13 +223,12 @@ public class RPCDispatcher implements TransportListener {
 		// });
 	}
 
-	public <T> Map<Peer, T> multiCall(List<Peer> peers, Peer client,
-			String target, String method, Object[] objects) throws Exception {
+	public <T> Map<Peer, T> multiCall(List<Peer> peers, Peer client, String target, String method, Object[] objects)
+			throws Exception {
 		return multiCall(peers, client, new MethodCall(target, method, objects));
 	}
 
-	private <T> Map<Peer, T> multiCall(List<Peer> peers, final Peer client,
-			final MethodCall call) throws Exception {
+	private <T> Map<Peer, T> multiCall(List<Peer> peers, final Peer client, final MethodCall call) throws Exception {
 		// Because I want to marshall this when needed (if this array were a
 		// byte[] and final, I wouldn't be able to create it on demand)
 		final byte[][] marshalled = new byte[1][];
@@ -266,9 +250,8 @@ public class RPCDispatcher implements TransportListener {
 				public void run() {
 					try {
 						if (log.isDebugEnabled())
-							log.debug("Sending broadcast message synchronously to "
-									+ p);
-						RPCDispatcher local = localdispatchers.get(p);
+							log.debug("Sending broadcast message synchronously to " + p);
+						RPC local = localdispatchers.get(p);
 						T sendSync = null;
 						if (local != null)
 							sendSync = (T) local.callTarget(call);
@@ -276,8 +259,7 @@ public class RPCDispatcher implements TransportListener {
 							if (marshalled[0] == null) {
 								marshalledLock.lock();
 								if (marshalled[0] == null)
-									marshalled[0] = getMarshaller()
-											.toByteArray(client, call);
+									marshalled[0] = getMarshaller().toByteArray(client, call);
 								marshalledLock.unlock();
 							}
 							byte[] res = tr.sendSync(p, marshalled[0]);
@@ -288,13 +270,11 @@ public class RPCDispatcher implements TransportListener {
 						// else
 						// ret.put(p, new Object());
 						if (log.isDebugEnabled())
-							log.debug("Finished sending broadcast message synchronously to "
-									+ p);
+							log.debug("Finished sending broadcast message synchronously to " + p);
 					} catch (Exception e) {
 						synchronized (exception) {
 							if (exception[0] == null)
-								exception[0] = new BroadcastException(
-										"Broadcast Exception");
+								exception[0] = new BroadcastException("Broadcast Exception");
 						}
 						exception[0].put(p, e);
 						log.error("Error making broadcast rpc to " + p, e);
@@ -305,8 +285,7 @@ public class RPCDispatcher implements TransportListener {
 		}
 		while (!sem.tryAcquire(5, TimeUnit.SECONDS)) {
 			if (log.isDebugEnabled())
-				log.debug("Waiting for semaphore in multiCall Permits:"
-						+ sem.availablePermits() + " , call:  " + call
+				log.debug("Waiting for semaphore in multiCall Permits:" + sem.availablePermits() + " , call:  " + call
 						+ " , peers : " + peers);
 		}
 		if (log.isDebugEnabled())
@@ -316,13 +295,11 @@ public class RPCDispatcher implements TransportListener {
 		return ret;
 	};
 
-	public Object callSync(Peer dest, Peer clientID, String objectKey,
-			String method, Object[] args) throws Exception {
+	public Object callSync(Peer dest, Peer clientID, String objectKey, String method, Object[] args) throws Exception {
 		return callSync(dest, clientID, new MethodCall(objectKey, method, args));
 	}
 
-	public void callAsync(Peer addr, Peer clientID, String objectKey,
-			String method, Object[] args) throws Exception {
+	public void callAsync(Peer addr, Peer clientID, String objectKey, String method, Object[] args) throws Exception {
 		callAsync(addr, clientID, new MethodCall(objectKey, method, args));
 	}
 
@@ -341,8 +318,7 @@ public class RPCDispatcher implements TransportListener {
 
 		if (is == null)
 			try {
-				is = Class.forName(n).getProtectionDomain().getCodeSource()
-						.getLocation().openStream();
+				is = Class.forName(n).getProtectionDomain().getCodeSource().getLocation().openStream();
 			} catch (Exception e) {
 			}
 
@@ -361,10 +337,8 @@ public class RPCDispatcher implements TransportListener {
 		return serialized;
 	}
 
-	public byte[] getClassFromSource(String name, Peer clientID)
-			throws Exception {
-		byte[] array = (byte[]) callSync(clientID, null, RPC,
-				"getClassDefinition", new String[] { name });
+	public byte[] getClassFromSource(String name, Peer clientID) throws Exception {
+		byte[] array = (byte[]) callSync(clientID, null, RPC, "getClassDefinition", new String[] { name });
 		// return Compression.uncompress(array);
 		return array;
 	}
@@ -377,21 +351,18 @@ public class RPCDispatcher implements TransportListener {
 	}
 
 	@SuppressWarnings("unchecked")
-	public HashMap<String, byte[]> getClassLoaderDataFromServer(
-			String classSource, Peer origin) throws Exception {
-		return (HashMap<String, byte[]>) callSync(origin, null, RPC,
-				"getClassLoaderData", new Object[] { classSource });
+	public HashMap<String, byte[]> getClassLoaderDataFromServer(String classSource, Peer origin) throws Exception {
+		return (HashMap<String, byte[]>) callSync(origin, null, RPC, "getClassLoaderData",
+				new Object[] { classSource });
 	}
 
-	public Class<?> loadClass(Peer classSource, String name)
-			throws ClassNotFoundException {
+	public Class<?> loadClass(Peer classSource, String name) throws ClassNotFoundException {
 		if (classSource == null)
 			return this.getClass().getClassLoader().loadClass(name);
 
 		ClientClassLoader loader = cl.getCL(classSource);
 		if (loader == null) {
-			loader = new ClientClassLoader(RPCDispatcher.class.getClassLoader()
-					.getParent(), classSource, this);
+			loader = new ClientClassLoader(RPC.class.getClassLoader().getParent(), classSource, this);
 			cl.add(classSource, loader);
 		}
 		return loader.loadClass(name);
@@ -402,8 +373,7 @@ public class RPCDispatcher implements TransportListener {
 
 	}
 
-	public void registerTarget(String key, Object target, boolean replace,
-			RPCStatus status) {
+	public void registerTarget(String key, Object target, boolean replace, RPCStatus status) {
 		if (!replace && targets.containsKey(key))
 			return;
 		// System.out.println("Putting target " + key + ": " + target);
@@ -481,12 +451,11 @@ public class RPCDispatcher implements TransportListener {
 	// return this.manage(factory, filter, null);
 	// }
 
-	public <T, B> ClientManager<T, B> manage(ClientFactory<T, B> factory,
-			PeerFilter filter, Peer client) {
-		return new ClientManager<T, B>(this, factory, filter, client);
+	public <T, B> Client<T, B> manage(ClientFactory<T, B> factory, PeerFilter filter, Peer client) {
+		return new Client<T, B>(this, factory, filter, client);
 	}
 
-	public <T, B> ClientManager<T, B> manage(ClientFactory<T, B> f, Peer cli) {
+	public <T, B> Client<T, B> manage(ClientFactory<T, B> f, Peer cli) {
 		return this.manage(f, new PeerFilter() {
 
 			@Override
@@ -496,10 +465,8 @@ public class RPCDispatcher implements TransportListener {
 		}, cli);
 	}
 
-	public void register(Peer p, String name, Object pregelGraphLocal)
-			throws Exception {
-		callSync(p, localPeer, new MethodCall(RPC, "registerTarget",
-				new Object[] { name, pregelGraphLocal, true }));
+	public void register(Peer p, String name, Object pregelGraphLocal) throws Exception {
+		callSync(p, localPeer, new MethodCall(RPC, "registerTarget", new Object[] { name, pregelGraphLocal, true }));
 	}
 
 	public void setTargetsStatuses(String k, RPCStatus newStat) {
@@ -514,13 +481,10 @@ public class RPCDispatcher implements TransportListener {
 		if (rpcStatus == null || !rpcStatus.equals(RPCStatus.STARTED))
 			synchronized (targetsStatuses) {
 				rpcStatus = targetsStatuses.get(name);
-				while (!stopped
-						&& (rpcStatus == null || !rpcStatus
-								.equals(RPCStatus.STARTED)))
+				while (!stopped && (rpcStatus == null || !rpcStatus.equals(RPCStatus.STARTED)))
 					try {
 						if (log.isDebugEnabled())
-							log.debug("Waiting for target " + name
-									+ " to start.");
+							log.debug("Waiting for target " + name + " to start.");
 						targetsStatuses.wait(1000);
 						rpcStatus = targetsStatuses.get(name);
 					} catch (InterruptedException e) {
@@ -532,14 +496,12 @@ public class RPCDispatcher implements TransportListener {
 		return targets.get(name);
 	}
 
-	public static RPCDispatcher getLocalDispatcher(Peer dest) {
+	public static RPC getLocalDispatcher(Peer dest) {
 		return localdispatchers.get(dest);
 	}
 
-	public void registerIfAbsent(Peer p, String name, Object pregelGraphLocal)
-			throws Exception {
-		callSync(p, localPeer, new MethodCall(RPC, "registerTarget",
-				new Object[] { name, pregelGraphLocal, false }));
+	public void registerIfAbsent(Peer p, String name, Object pregelGraphLocal) throws Exception {
+		callSync(p, localPeer, new MethodCall(RPC, "registerTarget", new Object[] { name, pregelGraphLocal, false }));
 	}
 
 	public Object getRealAddress() {

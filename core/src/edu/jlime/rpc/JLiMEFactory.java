@@ -7,7 +7,7 @@ import org.apache.log4j.Logger;
 
 import edu.jlime.core.cluster.Peer;
 import edu.jlime.core.cluster.PeerFilter;
-import edu.jlime.core.rpc.RPCDispatcher;
+import edu.jlime.core.rpc.RPC;
 import edu.jlime.core.rpc.RPCFactory;
 import edu.jlime.core.transport.Address;
 
@@ -29,8 +29,8 @@ public class JLiMEFactory implements RPCFactory {
 		this.filter = filter;
 	}
 
-	public JLiMEFactory(NetworkConfiguration config,
-			Map<String, String> localData, PeerFilter filter) throws Exception {
+	public JLiMEFactory(NetworkConfiguration config, Map<String, String> localData, PeerFilter filter)
+			throws Exception {
 		this.config = config;
 		this.localData = localData;
 		this.filter = filter;
@@ -41,7 +41,7 @@ public class JLiMEFactory implements RPCFactory {
 	}
 
 	@Override
-	public RPCDispatcher build() throws Exception {
+	public RPC build() throws Exception {
 		Address localAddress = new Address();
 		Peer p = new Peer(localAddress, config.name);
 		p.putData(localData);
@@ -76,10 +76,10 @@ public class JLiMEFactory implements RPCFactory {
 			break;
 		}
 		// Transport
-		jLiMETransport tr = new jLiMETransport(p, filter, commStack);
+		JLiME tr = new JLiME(p, filter, commStack);
 
 		// RPC
-		RPCDispatcher rpc = new RPCDispatcher(tr);
+		RPC rpc = new RPC(tr);
 		return rpc;
 	}
 }

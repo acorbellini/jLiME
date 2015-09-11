@@ -18,8 +18,7 @@ public class SimpleClient {
 			total += read;
 			if (i % 500000 == 0) {
 				long time = System.currentTimeMillis() - start;
-				System.out.printf("Read %,d bytes, speed: %,d MB/s%n", total,
-						total / time / 1000);
+				System.out.printf("Read %,d bytes, speed: %,d MB/s%n", total, total / time / 1000);
 			}
 		}
 	}

@@ -82,8 +82,7 @@ public class ProtocolHost<T> {
 	// network communication fields
 	private final DatagramChannel channel;
 
-	public ProtocolHost(String hostName, Class<T> dataClass,
-			SocketAddress localAddress) throws IOException {
+	public ProtocolHost(String hostName, Class<T> dataClass, SocketAddress localAddress) throws IOException {
 		// setup network communication
 		channel = DatagramChannel.open();
 		channel.configureBlocking(false);
@@ -106,8 +105,7 @@ public class ProtocolHost<T> {
 		return register(topic, remoteAddress, null);
 	}
 
-	public ProtocolHandle<T> register(Address topic,
-			SocketAddress remoteAddress, final DataListener<T> listener) {
+	public ProtocolHandle<T> register(Address topic, SocketAddress remoteAddress, final DataListener<T> listener) {
 		ProtocolId protocolId = new ProtocolId(topic, remoteAddress);
 
 		ProtocolListener<T> protocolListener = new ProtocolListener<T>() {
@@ -122,8 +120,7 @@ public class ProtocolHost<T> {
 
 		Protocol<T> protocol;
 		if (hostName != null)
-			protocol = new Protocol<T>(protocolListener,
-					Logger.getConsoleLogger(hostName));
+			protocol = new Protocol<T>(protocolListener, Logger.getConsoleLogger(hostName));
 		else
 			protocol = new Protocol<T>(protocolListener);
 		protocols.put(protocolId, protocol);
@@ -131,8 +128,7 @@ public class ProtocolHost<T> {
 		return new ProtocolHandle<T>(protocolId, this);
 	}
 
-	private synchronized void send(ProtocolId protocolId, T data)
-			throws IOException {
+	private synchronized void send(ProtocolId protocolId, T data) throws IOException {
 		writebuffer.clear();
 		writebuffer.putLong(protocolId.topic.getId().getMostSignificantBits());
 		writebuffer.putLong(protocolId.topic.getId().getLeastSignificantBits());
@@ -144,9 +140,7 @@ public class ProtocolHost<T> {
 		writebuffer.flip();
 		synchronized (channel) {
 			int write = 0;
-			while ((write += channel
-					.send(writebuffer, protocolId.remoteAddress)) != writebuffer
-					.limit()) {
+			while ((write += channel.send(writebuffer, protocolId.remoteAddress)) != writebuffer.limit()) {
 			}
 		}
 	}
@@ -157,22 +151,19 @@ public class ProtocolHost<T> {
 
 	private List<HandleListener<T>> handleListeners = new ArrayList<>();
 
-	private synchronized void receive() throws IOException,
-			ClassNotFoundException {
+	private synchronized void receive() throws IOException, ClassNotFoundException {
 		receiveBuffer.clear();
 		SocketAddress remoteAddress = channel.receive(receiveBuffer);
 		while (remoteAddress != null) {
 			receiveBuffer.flip();
-			ProtocolId protocolId = new ProtocolId(new Address(new UUID(
-					receiveBuffer.getLong(), receiveBuffer.getLong())),
-					remoteAddress);
+			ProtocolId protocolId = new ProtocolId(
+					new Address(new UUID(receiveBuffer.getLong(), receiveBuffer.getLong())), remoteAddress);
 			bufferInput.setBuffer(receiveBuffer);
 
 			Protocol<T> protocol = protocols.get(protocolId);
 
 			if (protocol == null) {
-				ProtocolHandle<T> handle = register(protocolId.topic,
-						protocolId.remoteAddress);
+				ProtocolHandle<T> handle = register(protocolId.topic, protocolId.remoteAddress);
 				protocol = protocols.get(protocolId);
 				for (HandleListener<T> handleListener : handleListeners) {
 					handleListener.added(handle);
@@ -180,8 +171,7 @@ public class ProtocolHost<T> {
 
 			}
 
-			NavigableMap<Short, T> receivedEntries = protocol
-					.receive(objectInput);
+			NavigableMap<Short, T> receivedEntries = protocol.receive(objectInput);
 			for (Map.Entry<Short, T> receivedEntry : receivedEntries.entrySet()) {
 				Short receivedId = receivedEntry.getKey();
 				T receivedData = receivedEntry.getValue();
@@ -203,8 +193,7 @@ public class ProtocolHost<T> {
 				}
 				{
 					Short newestId = newestIds.get(protocolId);
-					if (newestId == null
-							|| protocol.compare(receivedId, newestId) > 0) {
+					if (newestId == null || protocol.compare(receivedId, newestId) > 0) {
 						newestIds.put(protocolId, receivedId);
 						newestDatas.put(protocolId, receivedData);
 					}

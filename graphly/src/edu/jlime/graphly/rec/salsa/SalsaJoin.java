@@ -7,8 +7,7 @@ import gnu.trove.map.hash.TLongObjectHashMap;
 
 public class SalsaJoin implements Join<TLongFloatHashMap, Float> {
 	@Override
-	public TLongObjectHashMap<Float> join(
-			TLongObjectHashMap<TLongFloatHashMap> input) {
+	public TLongObjectHashMap<Float> join(TLongObjectHashMap<TLongFloatHashMap> input) {
 		TLongObjectHashMap<Float> res = new TLongObjectHashMap<>();
 		for (Long vid : input.keys()) {
 			float sum = 0f;

@@ -15,8 +15,7 @@ public class JobContainerConverter implements TypeConverter {
 	}
 
 	@Override
-	public void toArray(Object o, ByteBuffer buffer, Peer cliID)
-			throws Exception {
+	public void toArray(Object o, ByteBuffer buffer, Peer cliID) throws Exception {
 		JobContainer jc = (JobContainer) o;
 		tc.objectToByteArray(jc.getRequestor(), buffer, cliID);
 		tc.objectToByteArray(jc.getJob(), buffer, cliID);
@@ -27,7 +26,7 @@ public class JobContainerConverter implements TypeConverter {
 	@Override
 	public Object fromArray(ByteBuffer buff) throws Exception {
 
-		ClientNode p = (ClientNode) tc.getObjectFromArray(buff);
+		Node p = (Node) tc.getObjectFromArray(buff);
 
 		ClientJob<?> job = (ClientJob<?>) tc.getObjectFromArray(buff);
 		UUID id = buff.getUUID();

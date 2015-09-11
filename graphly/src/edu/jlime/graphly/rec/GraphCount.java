@@ -6,21 +6,20 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 
-import edu.jlime.graphly.client.GraphlyGraph;
+import edu.jlime.graphly.client.Graph;
 import edu.jlime.graphly.traversal.Dir;
 import edu.jlime.graphly.traversal.count.CountJob;
-import edu.jlime.jd.ClientNode;
+import edu.jlime.jd.Node;
 import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.Job;
 import gnu.trove.iterator.TLongFloatIterator;
-import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.map.hash.TLongFloatHashMap;
 import gnu.trove.set.hash.TLongHashSet;
 
 public class GraphCount implements Job<long[]> {
 
 	private static final int MAX = 10000;
-	private GraphlyGraph g;
+	private Graph g;
 	private Dir dir;
 	private int max;
 	private long[] data;
@@ -28,8 +27,8 @@ public class GraphCount implements Job<long[]> {
 	private TLongHashSet filters;
 	private boolean returnVertices;
 
-	public GraphCount(TLongHashSet filters2, GraphlyGraph graph, String k,
-			Dir dir, int max, long[] ls, boolean returnVertices) {
+	public GraphCount(TLongHashSet filters2, Graph graph, String k, Dir dir, int max, long[] ls,
+			boolean returnVertices) {
 		this.filters = filters2;
 		this.g = graph;
 		this.dir = dir;
@@ -40,7 +39,7 @@ public class GraphCount implements Job<long[]> {
 	}
 
 	@Override
-	public long[] call(JobContext env, ClientNode peer) throws Exception {
+	public long[] call(JobContext env, Node peer) throws Exception {
 		final Logger log = Logger.getLogger(CountJob.class);
 		log.info("Executing graph count job for " + data.length);
 		final int threads = Runtime.getRuntime().availableProcessors();
@@ -74,10 +73,8 @@ public class GraphCount implements Job<long[]> {
 
 								for (int j = 0; j < edges.length; j++) {
 									long key = edges[j];
-									if (filters == null
-											|| !filters.contains(key)) {
-										sub.adjustOrPutValue(key, prevCount,
-												prevCount);
+									if (filters == null || !filters.contains(key)) {
+										sub.adjustOrPutValue(key, prevCount, prevCount);
 									}
 								}
 
@@ -87,8 +84,7 @@ public class GraphCount implements Job<long[]> {
 							TLongFloatIterator itMap = sub.iterator();
 							while (itMap.hasNext()) {
 								itMap.advance();
-								finalRes.adjustOrPutValue(itMap.key(),
-										itMap.value(), itMap.value());
+								finalRes.adjustOrPutValue(itMap.key(), itMap.value(), itMap.value());
 							}
 						}
 
@@ -102,8 +98,7 @@ public class GraphCount implements Job<long[]> {
 						// + " on thread " + tID);
 						// g.setTempFloats(k, true, sub);
 						// }
-						log.info(
-								"Finished counting vertices for thread " + tID);
+						log.info("Finished counting vertices for thread " + tID);
 					} catch (Exception e) {
 						e.printStackTrace();
 					}

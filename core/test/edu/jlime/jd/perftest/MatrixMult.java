@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.jlime.jd.ClientNode;
+import edu.jlime.jd.Node;
 import edu.jlime.jd.client.Client;
 import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.Job;
@@ -80,11 +80,10 @@ public class MatrixMult {
 		}
 
 		@Override
-		public MultRes call(JobContext env, ClientNode peer) throws Exception {
+		public MultRes call(JobContext env, Node peer) throws Exception {
 			float[][] cols = (float[][]) env.waitFor("B");
 
-			System.out.println("Multiplying " + cols.length + " cols by a "
-					+ row.length + " sized row.");
+			System.out.println("Multiplying " + cols.length + " cols by a " + row.length + " sized row.");
 
 			float[] res = new float[cols.length];
 			int cont = 0;
@@ -103,12 +102,11 @@ public class MatrixMult {
 		}
 	}
 
-	float[][] testA = new float[][] { new float[] { 1, 2, 3 },
-			new float[] { 4, 5, 6 }, new float[] { 7, 8, 9 },
+	float[][] testA = new float[][] { new float[] { 1, 2, 3 }, new float[] { 4, 5, 6 }, new float[] { 7, 8, 9 },
 			new float[] { 10, 11, 12 } };
 
-	float[][] testB = new float[][] { new float[] { 10, 11, 12, 13 },
-			new float[] { 14, 15, 16, 17 }, new float[] { 18, 19, 20, 21 } };
+	float[][] testB = new float[][] { new float[] { 10, 11, 12, 13 }, new float[] { 14, 15, 16, 17 },
+			new float[] { 18, 19, 20, 21 } };
 
 	public static void main(String[] args) throws Exception {
 		new MatrixMult().MatrixMultTest();
@@ -153,8 +151,7 @@ public class MatrixMult {
 
 		Client cli = Client.build(1);
 
-		RoundRobinTask<MultRes> rrTask = new RoundRobinTask<>(jobs,
-				cli.getCluster());
+		RoundRobinTask<MultRes> rrTask = new RoundRobinTask<>(jobs, cli.getCluster());
 
 		rrTask.set("B", colRow, true);
 		long i = System.currentTimeMillis();

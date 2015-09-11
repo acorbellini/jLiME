@@ -53,8 +53,7 @@ public class CSV implements Closeable {
 		this.sep = sep;
 	}
 
-	public static CSV fileCSV(String file, boolean append, String... header)
-			throws IOException {
+	public static CSV fileCSV(String file, boolean append, String... header) throws IOException {
 		File f = new File(file);
 		File parentDir = f.getParentFile();
 		parentDir.mkdirs();

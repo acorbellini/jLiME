@@ -1,7 +1,7 @@
 package edu.jlime.graphly.traversal;
 
-import edu.jlime.graphly.client.GraphlyGraph;
-import edu.jlime.jd.ClientNode;
+import edu.jlime.graphly.client.Graph;
+import edu.jlime.jd.Node;
 import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.Job;
 import gnu.trove.iterator.TLongIterator;
@@ -10,19 +10,18 @@ import gnu.trove.set.hash.TLongHashSet;
 
 public class IntersectJob implements Job<TLongHashSet> {
 
-	private GraphlyGraph g;
+	private Graph g;
 	private Dir dir;
 	private TLongArrayList list;
 
-	public IntersectJob(GraphlyGraph graph, Dir dir,
-			TLongArrayList tLongArrayList) {
+	public IntersectJob(Graph graph, Dir dir, TLongArrayList tLongArrayList) {
 		this.g = graph;
 		this.dir = dir;
 		this.list = tLongArrayList;
 	}
 
 	@Override
-	public TLongHashSet call(JobContext env, ClientNode peer) throws Exception {
+	public TLongHashSet call(JobContext env, Node peer) throws Exception {
 		TLongHashSet ret = null;
 		TLongIterator it = list.iterator();
 		while (it.hasNext()) {

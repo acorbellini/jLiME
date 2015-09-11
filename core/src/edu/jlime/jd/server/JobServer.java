@@ -3,8 +3,8 @@ package edu.jlime.jd.server;
 import java.util.HashMap;
 
 import edu.jlime.core.cluster.DataFilter;
-import edu.jlime.core.rpc.RPCDispatcher;
-import edu.jlime.jd.JobDispatcher;
+import edu.jlime.core.rpc.RPC;
+import edu.jlime.jd.Dispatcher;
 import edu.jlime.metrics.jmx.MetricsJMX;
 import edu.jlime.metrics.metric.Metrics;
 import edu.jlime.metrics.sysinfo.InfoProvider;
@@ -14,7 +14,7 @@ import edu.jlime.rpc.NetworkConfiguration;
 
 public class JobServer {
 
-	private JobDispatcher jd;
+	private Dispatcher jd;
 	private Metrics mgr;
 
 	public static void main(String[] args) throws Exception {
@@ -37,7 +37,7 @@ public class JobServer {
 		}
 	}
 
-	private JobServer(JobDispatcher jd) throws Exception {
+	private JobServer(Dispatcher jd) throws Exception {
 		this.jd = jd;
 		this.mgr = new Metrics(jd.getLocalPeer().toString());
 		for (InfoProvider sysinfo : SysInfoProvider.get())
@@ -52,15 +52,14 @@ public class JobServer {
 
 		HashMap<String, String> jdData = new HashMap<>();
 		jdData.put("app", "jobdispatcher");
-		jdData.put(JobDispatcher.ISEXEC, Boolean.valueOf(true).toString());
-		jdData.put(JobDispatcher.TAGS, "Server");
+		jdData.put(Dispatcher.ISEXEC, Boolean.valueOf(true).toString());
+		jdData.put(Dispatcher.TAGS, "Server");
 
-		final RPCDispatcher rpc = new JLiMEFactory(new NetworkConfiguration(),
-				jdData, new DataFilter("app", JobDispatcher.SERVER, true))
-				.build();
+		final RPC rpc = new JLiMEFactory(new NetworkConfiguration(), jdData,
+				new DataFilter("app", Dispatcher.SERVER, true)).build();
 
 		// JD
-		final JobDispatcher disp = JobDispatcher.build(0, rpc);
+		final Dispatcher disp = Dispatcher.build(0, rpc);
 
 		return new JobServer(disp);
 	}
@@ -69,7 +68,7 @@ public class JobServer {
 		jd.stop();
 	}
 
-	public JobDispatcher getJd() {
+	public Dispatcher getJd() {
 		return jd;
 	}
 }

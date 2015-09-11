@@ -45,19 +45,15 @@ public class CacheManagerImpl implements CacheManagerI {
 		this.parallel = config.isParallelCache();
 		if (parallel) {
 			this.futures = new ConcurrentHashMap<>();
-			this.pool = Executors.newFixedThreadPool(config.getThreads(),
-					new ThreadFactory() {
-						@Override
-						public Thread newThread(Runnable r) {
-							Thread t = Executors.defaultThreadFactory()
-									.newThread(r);
-							t.setName("Cache Sender Pool for Task "
-									+ task.toString() + ", id:"
-									+ task.getTaskid());
-							t.setDaemon(true);
-							return t;
-						}
-					});
+			this.pool = Executors.newFixedThreadPool(config.getThreads(), new ThreadFactory() {
+				@Override
+				public Thread newThread(Runnable r) {
+					Thread t = Executors.defaultThreadFactory().newThread(r);
+					t.setName("Cache Sender Pool for Task " + task.toString() + ", id:" + task.getTaskid());
+					t.setDaemon(true);
+					return t;
+				}
+			});
 		}
 	}
 
@@ -76,8 +72,7 @@ public class CacheManagerImpl implements CacheManagerI {
 			e.getValue().flush(e.getKey(), null, task);
 		}
 
-		for (Entry<Pair<String, String>, PregelMessageQueue> e : cacheBroadcastSubGraph
-				.entrySet()) {
+		for (Entry<Pair<String, String>, PregelMessageQueue> e : cacheBroadcastSubGraph.entrySet()) {
 			e.getValue().switchQueue();
 			e.getValue().flush(e.getKey().left, e.getKey().right, task);
 		}
@@ -97,8 +92,7 @@ public class CacheManagerImpl implements CacheManagerI {
 		return ret;
 	}
 
-	private PregelMessageQueue getBroadcastSubgraphCache(
-			Pair<String, String> p) {
+	private PregelMessageQueue getBroadcastSubgraphCache(Pair<String, String> p) {
 		PregelMessageQueue ret = cacheBroadcastSubGraph.get(p);
 		if (ret == null) {
 			synchronized (cacheBroadcastSubGraph) {
@@ -126,8 +120,7 @@ public class CacheManagerImpl implements CacheManagerI {
 		return ret;
 	}
 
-	public void send(String type, long from, long to, Object val)
-			throws Exception {
+	public void send(String type, long from, long to, Object val) throws Exception {
 		ObjectMessageQueue q = (ObjectMessageQueue) getCacheFor(type);
 		synchronized (q) {
 			checkSize(type, q);
@@ -135,8 +128,7 @@ public class CacheManagerImpl implements CacheManagerI {
 		}
 	}
 
-	public void sendFloat(String type, long from, long to, float val)
-			throws Exception {
+	public void sendFloat(String type, long from, long to, float val) throws Exception {
 		FloatMessageQueue q = (FloatMessageQueue) getCacheFor(type);
 		synchronized (q) {
 			checkSize(type, q);
@@ -144,8 +136,7 @@ public class CacheManagerImpl implements CacheManagerI {
 		}
 	}
 
-	public void sendDouble(String type, long from, long to, double val)
-			throws Exception {
+	public void sendDouble(String type, long from, long to, double val) throws Exception {
 		DoubleMessageQueue q = (DoubleMessageQueue) getCacheFor(type);
 		synchronized (q) {
 			checkSize(type, q);
@@ -153,8 +144,7 @@ public class CacheManagerImpl implements CacheManagerI {
 		}
 	}
 
-	private void checkSize(final String type, final PregelMessageQueue cache)
-			throws Exception {
+	private void checkSize(final String type, final PregelMessageQueue cache) throws Exception {
 		if (max_size < Integer.MAX_VALUE && cache.currentSize() == max_size) {
 			if (parallel) {
 				Future<?> fut = futures.remove(type);
@@ -182,8 +172,7 @@ public class CacheManagerImpl implements CacheManagerI {
 		}
 	}
 
-	public void sendAllFloat(String type, long from, float val)
-			throws Exception {
+	public void sendAllFloat(String type, long from, float val) throws Exception {
 		FloatMessageQueue q = (FloatMessageQueue) getBroadcastCache(type);
 		synchronized (q) {
 			checkBroadCacheSize(type, q);
@@ -191,8 +180,7 @@ public class CacheManagerImpl implements CacheManagerI {
 		}
 	}
 
-	public void sendAllDouble(String type, long from, double val)
-			throws Exception {
+	public void sendAllDouble(String type, long from, double val) throws Exception {
 		DoubleMessageQueue q = (DoubleMessageQueue) getBroadcastCache(type);
 		synchronized (q) {
 			checkBroadCacheSize(type, q);
@@ -208,8 +196,7 @@ public class CacheManagerImpl implements CacheManagerI {
 		}
 	}
 
-	private void checkBroadCacheSize(String type, PregelMessageQueue q)
-			throws Exception {
+	private void checkBroadCacheSize(String type, PregelMessageQueue q) throws Exception {
 		if (q.currentSize() == config.getBroadcastQueue()) {
 			q.switchQueue();
 			q.flush(type, null, task);
@@ -223,19 +210,16 @@ public class CacheManagerImpl implements CacheManagerI {
 	}
 
 	@Override
-	public void sendAllSubGraph(String msgType, String subgraph, long v,
-			Object val) throws Exception {
+	public void sendAllSubGraph(String msgType, String subgraph, long v, Object val) throws Exception {
 		Pair<String, String> p = new Pair<>(msgType, subgraph);
-		ObjectMessageQueue q = (ObjectMessageQueue) getBroadcastSubgraphCache(
-				p);
+		ObjectMessageQueue q = (ObjectMessageQueue) getBroadcastSubgraphCache(p);
 		synchronized (q) {
 			checkBroadCacheSubgraphSize(p, q);
 			q.put(v, -1l, val);
 		}
 	}
 
-	private void checkBroadCacheSubgraphSize(Pair<String, String> p,
-			PregelMessageQueue q) throws Exception {
+	private void checkBroadCacheSubgraphSize(Pair<String, String> p, PregelMessageQueue q) throws Exception {
 		if (q.currentSize() == config.getBroadcastQueue()) {
 			q.switchQueue();
 			q.flush(p.left, p.right, task);
@@ -243,8 +227,7 @@ public class CacheManagerImpl implements CacheManagerI {
 	}
 
 	@Override
-	public void sendAllFloatSubGraph(String msgType, String subgraph, long v,
-			float val) throws Exception {
+	public void sendAllFloatSubGraph(String msgType, String subgraph, long v, float val) throws Exception {
 		Pair<String, String> p = new Pair<>(msgType, subgraph);
 		FloatMessageQueue q = (FloatMessageQueue) getBroadcastSubgraphCache(p);
 		synchronized (q) {

@@ -13,9 +13,8 @@ public class ClientNodeConverter implements TypeConverter {
 	}
 
 	@Override
-	public void toArray(Object o, ByteBuffer buffer, Peer cliID)
-			throws Exception {
-		ClientNode jc = (ClientNode) o;
+	public void toArray(Object o, ByteBuffer buffer, Peer cliID) throws Exception {
+		Node jc = (Node) o;
 		tc.objectToByteArray(jc.getPeer(), buffer, cliID);
 		tc.objectToByteArray(jc.getClient(), buffer, cliID);
 	}
@@ -24,9 +23,7 @@ public class ClientNodeConverter implements TypeConverter {
 	public Object fromArray(ByteBuffer buff) throws Exception {
 		Peer p = (Peer) tc.getObjectFromArray(buff);
 		Peer client = (Peer) tc.getObjectFromArray(buff);
-		ClientNode jn = new ClientNode(p, client,
-				(JobDispatcher) DispatcherManager.getJD(tc.getRPC()
-						.getCluster().getLocalPeer()));
+		Node jn = new Node(p, client, (Dispatcher) DispatcherManager.getJD(tc.getRPC().getCluster().getLocalPeer()));
 		return jn;
 	}
 }

@@ -3,8 +3,8 @@ package edu.jlime.pregel.client;
 import java.util.HashMap;
 
 import edu.jlime.core.cluster.DataFilter;
-import edu.jlime.core.rpc.ClientManager;
-import edu.jlime.core.rpc.RPCDispatcher;
+import edu.jlime.core.rpc.Client;
+import edu.jlime.core.rpc.RPC;
 import edu.jlime.pregel.PregelExecution;
 import edu.jlime.pregel.coordinator.CoordinatorServer;
 import edu.jlime.pregel.coordinator.rpc.Coordinator;
@@ -19,26 +19,26 @@ import edu.jlime.pregel.worker.rpc.WorkerFactory;
 import edu.jlime.rpc.JLiMEFactory;
 import edu.jlime.rpc.NetworkConfiguration;
 
-public class PregelClient {
+public class Pregel {
 
 	private static final String PREGEL_CLIENT = "pregel_client";
 
-	private RPCDispatcher rpc;
+	private RPC rpc;
 	private int minWorkers;
 	private Coordinator coordinator;
 
-	private ClientManager<Worker, WorkerBroadcast> workers;
+	private Client<Worker, WorkerBroadcast> workers;
 
-	public PregelClient(RPCDispatcher rpc, int numWorkers) throws Exception {
+	public Pregel(RPC rpc, int numWorkers) throws Exception {
 		this.minWorkers = numWorkers;
 		this.rpc = rpc;
-		workers = rpc.manage(new WorkerFactory(rpc, WorkerServer.WORKER_KEY),
-				new WorkerFilter(), this.rpc.getCluster().getLocalPeer());
+		workers = rpc.manage(new WorkerFactory(rpc, WorkerServer.WORKER_KEY), new WorkerFilter(),
+				this.rpc.getCluster().getLocalPeer());
 		workers.waitForClient(minWorkers);
 
-		ClientManager<Coordinator, CoordinatorBroadcast> coordCli = rpc.manage(
-				new CoordinatorFactory(rpc, CoordinatorServer.COORDINATOR_KEY),
-				new CoordinatorFilter(), this.rpc.getCluster().getLocalPeer());
+		Client<Coordinator, CoordinatorBroadcast> coordCli = rpc.manage(
+				new CoordinatorFactory(rpc, CoordinatorServer.COORDINATOR_KEY), new CoordinatorFilter(),
+				this.rpc.getCluster().getLocalPeer());
 		this.coordinator = coordCli.waitFirst();
 	}
 
@@ -53,13 +53,11 @@ public class PregelClient {
 	//
 	// }
 
-	public PregelExecution execute(VertexFunction f, long[] vList,
-			PregelConfig conf) throws Exception {
-		return coordinator.execute(f, vList, conf, this.rpc.getCluster()
-				.getLocalPeer());
+	public PregelExecution execute(VertexFunction f, long[] vList, PregelConfig conf) throws Exception {
+		return coordinator.execute(f, vList, conf, this.rpc.getCluster().getLocalPeer());
 	}
 
-	public RPCDispatcher getRPC() {
+	public RPC getRPC() {
 		return rpc;
 	}
 
@@ -67,18 +65,17 @@ public class PregelClient {
 		return new WorkerFilter();
 	}
 
-	public static PregelClient build(int min) throws Exception {
+	public static Pregel build(int min) throws Exception {
 		NetworkConfiguration config = new NetworkConfiguration();
 		config.port = 4040;
 		config.mcastport = 5050;
 		HashMap<String, String> data = new HashMap<>();
 		data.put("app", PREGEL_CLIENT);
 
-		RPCDispatcher rpc = new JLiMEFactory(config, data, new DataFilter(
-				"app", "pregel", true)).build();
+		RPC rpc = new JLiMEFactory(config, data, new DataFilter("app", "pregel", true)).build();
 		rpc.start();
 
-		PregelClient cli = new PregelClient(rpc, min);
+		Pregel cli = new Pregel(rpc, min);
 		return cli;
 	}
 }

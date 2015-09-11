@@ -7,9 +7,9 @@ package edu.jlime.graphly.traversal;
 public class SaveStep implements Step {
 
 	private String k;
-	private GraphlyTraversal g;
+	private Traversal g;
 
-	public SaveStep(String k, GraphlyTraversal g) {
+	public SaveStep(String k, Traversal g) {
 		this.k = k;
 		this.g = g;
 	}

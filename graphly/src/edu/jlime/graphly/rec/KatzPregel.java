@@ -4,7 +4,7 @@ import java.util.Iterator;
 
 import edu.jlime.pregel.client.WorkerContext;
 import edu.jlime.pregel.graph.VertexFunction;
-import edu.jlime.pregel.graph.rpc.Graph;
+import edu.jlime.pregel.graph.rpc.PregelGraph;
 import edu.jlime.pregel.messages.FloatPregelMessage;
 import edu.jlime.pregel.worker.FloatAggregator;
 import gnu.trove.iterator.TLongIterator;
@@ -21,9 +21,8 @@ public class KatzPregel implements VertexFunction<FloatPregelMessage> {
 	}
 
 	@Override
-	public void execute(long v, Iterator<FloatPregelMessage> in,
-			WorkerContext ctx) throws Exception {
-		Graph g = ctx.getGraph();
+	public void execute(long v, Iterator<FloatPregelMessage> in, WorkerContext ctx) throws Exception {
+		PregelGraph g = ctx.getGraph();
 
 		float adj = 0f;
 		if (ctx.getSuperStep() > 0) {

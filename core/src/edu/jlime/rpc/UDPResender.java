@@ -60,15 +60,13 @@ public class UDPResender extends SimpleMessageProcessor {
 
 	private int max_size;
 
-	public UDPResender(MessageProcessor next, NetworkConfiguration config,
-			int max_size) {
+	public UDPResender(MessageProcessor next, NetworkConfiguration config, int max_size) {
 		super(next, "UDP resender");
 		this.max_size = max_size;
 		next.addMessageListener(MessageType.ACK, new MessageListener() {
 
 			@Override
-			public void rcv(Message msg, MessageProcessor origin)
-					throws Exception {
+			public void rcv(Message msg, MessageProcessor origin) throws Exception {
 
 				ByteBuffer headerBuffer = msg.getHeaderBuffer();
 
@@ -81,8 +79,7 @@ public class UDPResender extends SimpleMessageProcessor {
 		next.addSecondaryMessageListener(new MessageListener() {
 
 			@Override
-			public void rcv(Message msg, MessageProcessor origin)
-					throws Exception {
+			public void rcv(Message msg, MessageProcessor origin) throws Exception {
 				notifyRcvd(msg);
 			}
 		});
@@ -90,8 +87,7 @@ public class UDPResender extends SimpleMessageProcessor {
 		next.addMessageListener(MessageType.ACK_SEQ, new MessageListener() {
 
 			@Override
-			public void rcv(Message msg, MessageProcessor origin)
-					throws Exception {
+			public void rcv(Message msg, MessageProcessor origin) throws Exception {
 
 				ByteBuffer headerBuffer = msg.getHeaderBuffer();
 
@@ -115,8 +111,7 @@ public class UDPResender extends SimpleMessageProcessor {
 
 				receivedAckBuffer(headerBuffer);
 
-				Message encap = Message.deEncapsulate(msg.getDataAsBytes(),
-						msg.getFrom(), msg.getTo());
+				Message encap = Message.deEncapsulate(msg.getDataAsBytes(), msg.getFrom(), msg.getTo());
 				notifyRcvd(encap);
 			}
 
@@ -148,8 +143,7 @@ public class UDPResender extends SimpleMessageProcessor {
 					if (value != null)
 						synchronized (value) {
 							while (!value.isEmpty()) {
-								Message ack = Message.newEmptyOutDataMessage(
-										MessageType.ACK, e.getKey());
+								Message ack = Message.newEmptyOutDataMessage(MessageType.ACK, e.getKey());
 								attachAcks(ack, value);
 								try {
 									sendNext(ack);
@@ -187,8 +181,7 @@ public class UDPResender extends SimpleMessageProcessor {
 
 	private void send0(Message msg, UUID id) throws Exception {
 
-		Message acked = Message.encapsulate(msg, MessageType.ACK_SEQ,
-				msg.getFrom(), msg.getTo());
+		Message acked = Message.encapsulate(msg, MessageType.ACK_SEQ, msg.getFrom(), msg.getTo());
 		ByteBuffer headerBuffer = acked.getHeaderBuffer();
 		headerBuffer.putUUID(id);
 

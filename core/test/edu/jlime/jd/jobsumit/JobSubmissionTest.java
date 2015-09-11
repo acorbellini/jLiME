@@ -3,7 +3,7 @@ package edu.jlime.jd.jobsumit;
 import org.junit.Test;
 
 import edu.jlime.jd.ClientCluster;
-import edu.jlime.jd.ClientNode;
+import edu.jlime.jd.Node;
 import edu.jlime.jd.client.Client;
 import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.Job;
@@ -21,7 +21,7 @@ public class JobSubmissionTest {
 		}
 
 		@Override
-		public String[] call(JobContext env, ClientNode peer) throws Exception {
+		public String[] call(JobContext env, Node peer) throws Exception {
 			return toSplit.split("\\s");
 		}
 	}

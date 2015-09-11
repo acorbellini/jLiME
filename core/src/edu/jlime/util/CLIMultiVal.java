@@ -6,8 +6,7 @@ public class CLIMultiVal extends CLIOption {
 
 	private HashSet<String> posible = new HashSet<>();
 
-	public CLIMultiVal(String name, String shortName, String desc,
-			String defaultValue, String[] posible) {
+	public CLIMultiVal(String name, String shortName, String desc, String defaultValue, String[] posible) {
 		super(name, shortName, desc, 1, defaultValue);
 		for (String string : posible) {
 			this.posible.add(string);

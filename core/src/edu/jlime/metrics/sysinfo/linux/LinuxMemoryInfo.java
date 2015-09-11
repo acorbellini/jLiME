@@ -17,9 +17,7 @@ public class LinuxMemoryInfo extends SysInfoProvider {
 
 			@Override
 			public void proc(Metrics mgr) throws Exception {
-				String[] free = CommandLineUtils
-						.execCommand("free | grep Mem | tr -s ' '").trim()
-						.split("\\s");
+				String[] free = CommandLineUtils.execCommand("free | grep Mem | tr -s ' '").trim().split("\\s");
 				String root = "sysinfo.mem";
 				mgr.gauge(root + ".total").update(Float.valueOf(free[1]));
 				mgr.gauge(root + ".used").update(Float.valueOf(free[2]));

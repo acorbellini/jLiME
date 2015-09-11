@@ -30,22 +30,19 @@ public class FlowControl extends SimpleMessageProcessor {
 	public void onStart() throws Exception {
 		getNext().addMessageListener(MessageType.FC, new MessageListener() {
 			@Override
-			public void rcv(Message msg, MessageProcessor origin)
-					throws Exception {
+			public void rcv(Message msg, MessageProcessor origin) throws Exception {
 				FlowControlPerNode fc = getFC(msg.getFrom());
 				ByteBuffer reader = msg.getHeaderBuffer();
 				int max_send = reader.getInt();
 				fc.update(msg.getDataSize(), max_send);
-				notifyRcvd(Message.deEncapsulate(msg.getDataAsBytes(),
-						msg.getFrom(), msg.getTo()));
+				notifyRcvd(Message.deEncapsulate(msg.getDataAsBytes(), msg.getFrom(), msg.getTo()));
 
 			}
 		});
 
 		getNext().addMessageListener(MessageType.FC_ACK, new MessageListener() {
 			@Override
-			public void rcv(Message msg, MessageProcessor origin)
-					throws Exception {
+			public void rcv(Message msg, MessageProcessor origin) throws Exception {
 				FlowControlPerNode fc = getFC(msg.getFrom());
 				fc.ackRcvd();
 			}

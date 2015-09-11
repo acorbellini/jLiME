@@ -69,13 +69,12 @@ public class UDP extends NetworkProtocol implements PacketReceiver {
 
 	private int threads;
 
-	public UDP(Address logical, String addr, int port, int range,
-			int max_msg_size, SocketFactory fact, int threads) {
+	public UDP(Address logical, String addr, int port, int range, int max_msg_size, SocketFactory fact, int threads) {
 		this(logical, addr, port, range, max_msg_size, false, fact, threads);
 	}
 
-	public UDP(Address logical, String addr, int port, int range,
-			int max_msg_size, boolean mcast, SocketFactory fact, int threads) {
+	public UDP(Address logical, String addr, int port, int range, int max_msg_size, boolean mcast, SocketFactory fact,
+			int threads) {
 		super(addr, port, range, fact, logical);
 		this.max_bytes = max_msg_size;
 		this.threads = threads;
@@ -121,8 +120,7 @@ public class UDP extends NetworkProtocol implements PacketReceiver {
 		list.addFirst(data);
 	}
 
-	private HashMap<UUID, LinkedBlockingDeque<byte[]>> getStreamDataOf(
-			Address from) {
+	private HashMap<UUID, LinkedBlockingDeque<byte[]>> getStreamDataOf(Address from) {
 		HashMap<UUID, LinkedBlockingDeque<byte[]>> sd = null;
 		synchronized (streamData) {
 			sd = streamData.get(from);
@@ -147,13 +145,11 @@ public class UDP extends NetworkProtocol implements PacketReceiver {
 	}
 
 	@Override
-	public void sendBytes(byte[] built, Address to, SocketAddress realSockAddr)
-			throws Exception {
+	public void sendBytes(byte[] built, Address to, SocketAddress realSockAddr) throws Exception {
 		send(DatagramType.DATA, built, to, realSockAddr);
 	}
 
-	private void send(DatagramType data, byte[] bytes, Address to,
-			SocketAddress realSockAddr) throws Exception {
+	private void send(DatagramType data, byte[] bytes, Address to, SocketAddress realSockAddr) throws Exception {
 		byte[] built = new byte[bytes.length + 1];
 		built[0] = data.getId();
 		System.arraycopy(bytes, 0, built, 1, bytes.length);
@@ -168,8 +164,7 @@ public class UDP extends NetworkProtocol implements PacketReceiver {
 				if (bup != null && !bup.isEmpty()) {
 					realSockAddr = bup.get((int) (Math.random() * bup.size()));
 				} else if (!to.equals(Address.noAddr())) {
-					log.error("Address "
-							+ to
+					log.error("Address " + to
 							+ " was not in send table, and did not contain a physical address to send to.");
 					return;
 				}
@@ -180,16 +175,14 @@ public class UDP extends NetworkProtocol implements PacketReceiver {
 			log.error("Can not send message with size " + built.length);
 			return;
 		}
-		DatagramPacket dg = new DatagramPacket(built, built.length,
-				realSockAddr.getSockTo());
+		DatagramPacket dg = new DatagramPacket(built, built.length, realSockAddr.getSockTo());
 		send(getDatagramSocket(), dg);
 	}
 
 	@Override
 	public List<SocketAddress> getAddresses() {
 		List<SocketAddress> list = new ArrayList<>();
-		InetSocketAddress sockAddr = (InetSocketAddress) getDatagramSocket()
-				.getLocalSocketAddress();
+		InetSocketAddress sockAddr = (InetSocketAddress) getDatagramSocket().getLocalSocketAddress();
 		list.add(new SocketAddress(sockAddr, getType()));
 		return list;
 	}
@@ -199,27 +192,23 @@ public class UDP extends NetworkProtocol implements PacketReceiver {
 	}
 
 	public void onStart(Object socket) {
-		rx = new DatagramReceiver((DatagramSocket) socket, max_bytes, this,
-				threads);
+		rx = new DatagramReceiver((DatagramSocket) socket, max_bytes, this, threads);
 	}
 
 	private void send(DatagramSocket sock, Object obj) {
 		DatagramPacket dg = (DatagramPacket) obj;
 		InetAddress localAddress = localAddr.getSockTo().getAddress();
-		if (localAddress != null
-				&& dg.getAddress().getClass().equals(localAddress.getClass()))
+		if (localAddress != null && dg.getAddress().getClass().equals(localAddress.getClass()))
 			try {
 				sock.send(dg);
 			} catch (Exception e) {
-				log.debug("Failed sending datagram to " + dg.getAddress() + ":"
-						+ dg.getPort() + " with size " + dg.getLength()
-						+ " on socket " + sock.getLocalSocketAddress(), e);
+				log.debug("Failed sending datagram to " + dg.getAddress() + ":" + dg.getPort() + " with size "
+						+ dg.getLength() + " on socket " + sock.getLocalSocketAddress(), e);
 			}
 	}
 
 	@Override
-	public void beforeProcess(ByteBuffer pkt, InetSocketAddress addr,
-			Address from, Address to) {
+	public void beforeProcess(ByteBuffer pkt, InetSocketAddress addr, Address from, Address to) {
 		// currentSendAddress.put(from,
 		// new SocketAddress(pkt.getAddr(), getType()));
 	}
@@ -230,8 +219,7 @@ public class UDP extends NetworkProtocol implements PacketReceiver {
 	}
 
 	@Override
-	public RemoteInputStream getInputStream(final UUID streamId,
-			final Address from) {
+	public RemoteInputStream getInputStream(final UUID streamId, final Address from) {
 		return new RemoteInputStream(streamId) {
 			byte[] currData;
 			int offset = 0;
@@ -266,11 +254,9 @@ public class UDP extends NetworkProtocol implements PacketReceiver {
 	}
 
 	@Override
-	public RemoteOutputStream getOutputStream(final UUID streamId,
-			final Address to) {
+	public RemoteOutputStream getOutputStream(final UUID streamId, final Address to) {
 		return new RemoteOutputStream(streamId) {
-			java.nio.ByteBuffer buffer = java.nio.ByteBuffer
-					.allocate(max_bytes - 16);
+			java.nio.ByteBuffer buffer = java.nio.ByteBuffer.allocate(max_bytes - 16);
 			boolean closed = false;
 
 			@Override
@@ -284,8 +270,7 @@ public class UDP extends NetworkProtocol implements PacketReceiver {
 
 			@Override
 			public void flush() throws IOException {
-				java.nio.ByteBuffer toSend = java.nio.ByteBuffer
-						.allocate(max_bytes);
+				java.nio.ByteBuffer toSend = java.nio.ByteBuffer.allocate(max_bytes);
 				toSend.putLong(streamId.getLeastSignificantBits());
 				toSend.putLong(streamId.getMostSignificantBits());
 				toSend.put(buffer.array());

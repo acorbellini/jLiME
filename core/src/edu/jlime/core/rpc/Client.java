@@ -17,13 +17,13 @@ import edu.jlime.core.cluster.ClusterChangeListener;
 import edu.jlime.core.cluster.Peer;
 import edu.jlime.core.cluster.PeerFilter;
 
-public class ClientManager<T, B> implements ClusterChangeListener {
+public class Client<T, B> implements ClusterChangeListener {
 
 	private List<Peer> cachedPeers = new LinkedList<>();
 
 	private List<T> cachedClients = new LinkedList<>();
 
-	private RPCDispatcher rpc;
+	private RPC rpc;
 
 	private ClientFactory<T, B> factory;
 
@@ -37,10 +37,9 @@ public class ClientManager<T, B> implements ClusterChangeListener {
 
 	private Peer client;
 
-	private Logger log = Logger.getLogger(ClientManager.class);
+	private Logger log = Logger.getLogger(Client.class);
 
-	public ClientManager(RPCDispatcher rpc, ClientFactory<T, B> factory,
-			PeerFilter filter, Peer client) {
+	public Client(RPC rpc, ClientFactory<T, B> factory, PeerFilter filter, Peer client) {
 		this.rpc = rpc;
 		this.filter = filter;
 		this.factory = factory;
@@ -71,8 +70,7 @@ public class ClientManager<T, B> implements ClusterChangeListener {
 					log.debug("Adding peer " + peer + " to client manager.");
 				if (clients.containsKey(peer)) {
 					if (log.isDebugEnabled())
-						log.debug("Ignoring peer " + peer
-								+ " already exists on client manager.");
+						log.debug("Ignoring peer " + peer + " already exists on client manager.");
 					return;
 				}
 				T value = factory.get(peer, client);
@@ -117,8 +115,7 @@ public class ClientManager<T, B> implements ClusterChangeListener {
 		synchronized (this) {
 			while (clients.size() < min) {
 				if (log.isDebugEnabled())
-					log.debug("Client Manager is waiting for "
-							+ (min - clients.size()) + " current peers: "
+					log.debug("Client Manager is waiting for " + (min - clients.size()) + " current peers: "
 							+ clients.keySet());
 				wait(2000);
 			}
@@ -151,7 +148,7 @@ public class ClientManager<T, B> implements ClusterChangeListener {
 		return clients.get(peer);
 	}
 
-	public RPCDispatcher getRpc() {
+	public RPC getRpc() {
 		return rpc;
 	}
 

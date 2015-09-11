@@ -24,8 +24,7 @@ public class Table {
 			if (c == null)
 				return "CELL IS NULL.";
 			try {
-				return String.format(Locale.ENGLISH, "%.2f",
-						Double.valueOf(c.value()));
+				return String.format(Locale.ENGLISH, "%.2f", Double.valueOf(c.value()));
 			} catch (NumberFormatException e) {
 				return "PARSE ERROR: " + c.value();
 			}
@@ -115,17 +114,16 @@ public class Table {
 
 		// System.out.println("adsasda ;) asdjsklajdas".replaceAll(";",
 		// "\\\\;"));
-		// System.out.println("/  asdasd \\".replace("\\", " "));
+		// System.out.println("/ asdasd \\".replace("\\", " "));
 		// String sep = escape(";");
 		// String[] split = "separado\\;va todo junto;todo junto\\;va separado"
 		// .split("(?<!\\\\)" + sep);
 		// System.out.println(Arrays.toString(split));
 
-		Table t = Table
-				.readCSV(
-						new File(
-								"C:/Users/acorbellini/Dropbox/Twitter Results/results/availablememory/13348/13348-profile-mem-availablememory-run1.csv"),
-						",", ".", true);
+		Table t = Table.readCSV(
+				new File(
+						"C:/Users/acorbellini/Dropbox/Twitter Results/results/availablememory/13348/13348-profile-mem-availablememory-run1.csv"),
+				",", ".", true);
 		t.sortTableHeader(new Comparator<String>() {
 			@Override
 			public int compare(String o1, String o2) {
@@ -160,8 +158,7 @@ public class Table {
 		System.out.println(t);
 	}
 
-	public void fillRow(String title, int fromCol, int toCol, int i, int end,
-			CellFactory cf) {
+	public void fillRow(String title, int fromCol, int toCol, int i, int end, CellFactory cf) {
 		Row r = newRow();
 		r.add(new ValueCell(title));
 		for (int c = fromCol; c <= toCol; c++) {
@@ -173,8 +170,7 @@ public class Table {
 		return new Range(this, c, i, c, end, true);
 	}
 
-	public void fillCol(String title, int fromRow, int toRow, int fromCol,
-			int toCol, CellFactory factory) {
+	public void fillCol(String title, int fromRow, int toRow, int fromCol, int toCol, CellFactory factory) {
 		Col c = newCol();
 		c.add(new ValueCell(title));
 		for (int r = fromRow; r <= toRow; r++)
@@ -194,8 +190,7 @@ public class Table {
 		sortRow(0, 1, getColLimit(), comparator);
 	}
 
-	public Integer[] getSortIndexes(final Dim r, int from, int to,
-			final Comparator<String> comparator) {
+	public Integer[] getSortIndexes(final Dim r, int from, int to, final Comparator<String> comparator) {
 		Integer[] indexes = new Integer[r.size()];
 		for (int i = 0; i < indexes.length; i++) {
 			indexes[i] = i;
@@ -217,8 +212,7 @@ public class Table {
 		return indexes;
 	}
 
-	private void sortCol(int col, int from, int to,
-			Comparator<String> comparator) {
+	private void sortCol(int col, int from, int to, Comparator<String> comparator) {
 		Col column = getCol(col);
 		Integer[] indexes = getSortIndexes(column, from, to, comparator);
 		reorderRows(indexes);
@@ -241,8 +235,7 @@ public class Table {
 		}
 	}
 
-	private void sortRow(int row, int from, int to,
-			Comparator<String> comparator) {
+	private void sortRow(int row, int from, int to, Comparator<String> comparator) {
 		Row copy = getRow(row);
 		Integer[] indexes = getSortIndexes(copy, from, to, comparator);
 		reorderColumns(indexes);
@@ -265,8 +258,7 @@ public class Table {
 		return table.get(col + "," + row);
 	}
 
-	public static Table readCSV(File csv, String columnSep, String decimalSep,
-			boolean windows) throws Exception {
+	public static Table readCSV(File csv, String columnSep, String decimalSep, boolean windows) throws Exception {
 		CSVBuilder builder = new CSVBuilder(csv);
 		builder.setUseWindowsNewLine(windows);
 		builder.setColumnSep(columnSep);
@@ -294,8 +286,7 @@ public class Table {
 		sortCols(0, 1, getRowLimit(), comparator);
 	}
 
-	private void sortCols(int col, int init, int end,
-			Comparator<String> comparator) {
+	private void sortCols(int col, int init, int end, Comparator<String> comparator) {
 		Col copy = getCol(col);
 		Integer[] indexes = getSortIndexes(copy, init, end, comparator);
 		reorderRows(indexes);
@@ -466,8 +457,7 @@ public class Table {
 
 	public void toCSV(String file) throws IOException {
 
-		BufferedWriter writer = new BufferedWriter(new FileWriter(file
-				+ ".temp"));
+		BufferedWriter writer = new BufferedWriter(new FileWriter(file + ".temp"));
 		writer.write(toString());
 		writer.close();
 

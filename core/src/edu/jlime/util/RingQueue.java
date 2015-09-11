@@ -35,8 +35,7 @@ public class RingQueue {
 		int currentEnd = end;
 		int currentReserved = reserved.getAndIncrement();
 		int cont = 0;
-		while (currentReserved - currentInit >= buffer.length
-				|| currentReserved - 1 != currentEnd) {
+		while (currentReserved - currentInit >= buffer.length || currentReserved - 1 != currentEnd) {
 			while (currentInit == init && currentEnd == end) {
 				cont++;
 				if (cont == 1000) {

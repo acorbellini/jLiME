@@ -16,7 +16,7 @@ public class ClientJob<R> implements Job<R> {
 	}
 
 	@Override
-	public R call(JobContext env, ClientNode peer) throws Exception {
+	public R call(JobContext env, Node peer) throws Exception {
 		return contained.call(env, peer);
 	}
 

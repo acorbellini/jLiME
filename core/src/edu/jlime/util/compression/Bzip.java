@@ -14,8 +14,8 @@ public class Bzip implements Compressor {
 		ByteArrayOutputStream bas = new ByteArrayOutputStream(in.length);
 		try {
 
-			BZip2CompressorOutputStream comp = new BZip2CompressorOutputStream(
-					bas, BZip2CompressorOutputStream.chooseBlockSize(in.length));
+			BZip2CompressorOutputStream comp = new BZip2CompressorOutputStream(bas,
+					BZip2CompressorOutputStream.chooseBlockSize(in.length));
 			comp.write(in);
 			comp.close();
 			bas.close();
@@ -34,8 +34,7 @@ public class Bzip implements Compressor {
 		ByteArrayOutputStream out = new ByteArrayOutputStream(size);
 		ByteArrayInputStream bas = new ByteArrayInputStream(in);
 		try {
-			BZip2CompressorInputStream comp = new BZip2CompressorInputStream(
-					bas);
+			BZip2CompressorInputStream comp = new BZip2CompressorInputStream(bas);
 			int len;
 			byte[] buffer = new byte[1024];
 

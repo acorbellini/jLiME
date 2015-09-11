@@ -38,8 +38,7 @@ public class BroadcastException extends Exception {
 
 	@Override
 	public void printStackTrace(PrintStream s) {
-		s.println(getClass().getName() + ": Received (" + listOfExcep.size()
-				+ ") Broadcast Exception/s");
+		s.println(getClass().getName() + ": Received (" + listOfExcep.size() + ") Broadcast Exception/s");
 		for (Entry<Peer, Exception> e : listOfExcep.entrySet()) {
 			s.print("From " + e.getKey() + " = ");
 			e.getValue().printStackTrace(s);

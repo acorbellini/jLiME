@@ -10,7 +10,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadFactory;
 
-import edu.jlime.graphly.client.GraphlyGraph;
+import edu.jlime.graphly.client.Graph;
 import edu.jlime.graphly.client.SubGraph;
 import edu.jlime.graphly.rec.Repeat;
 import edu.jlime.graphly.traversal.Dir;
@@ -23,8 +23,7 @@ public class SalsaRepeat implements Repeat<long[]> {
 	private Object defaultauth;
 	private Object defaulthub;
 
-	public SalsaRepeat(String authKey, String hubKey, TLongHashSet authSet,
-			TLongHashSet hubSet) {
+	public SalsaRepeat(String authKey, String hubKey, TLongHashSet authSet, TLongHashSet hubSet) {
 		this.authKey = authKey;
 		this.hubKey = hubKey;
 		this.defaultauth = 1f / authSet.size();
@@ -36,23 +35,22 @@ public class SalsaRepeat implements Repeat<long[]> {
 	}
 
 	@Override
-	public Object exec(long[] before, GraphlyGraph g) throws Exception {
+	public Object exec(long[] before, Graph g) throws Exception {
 		final SubGraph sg = g.getSubGraph("salsa-sub", all);
 
-		ExecutorService exec = Executors.newFixedThreadPool(Runtime
-				.getRuntime().availableProcessors(), new ThreadFactory() {
+		ExecutorService exec = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(),
+				new ThreadFactory() {
 
-			@Override
-			public Thread newThread(Runnable r) {
-				Thread t = Executors.defaultThreadFactory().newThread(r);
-				t.setName("Salsa Repeat Step");
-				t.setDaemon(true);
-				return t;
-			}
-		});
+					@Override
+					public Thread newThread(Runnable r) {
+						Thread t = Executors.defaultThreadFactory().newThread(r);
+						t.setName("Salsa Repeat Step");
+						t.setDaemon(true);
+						return t;
+					}
+				});
 
-		final Semaphore max = new Semaphore(Runtime.getRuntime()
-				.availableProcessors());
+		final Semaphore max = new Semaphore(Runtime.getRuntime().availableProcessors());
 
 		sg.getProperty(authKey, defaultauth);
 		sg.getProperty(hubKey, defaulthub);
@@ -89,8 +87,7 @@ public class SalsaRepeat implements Repeat<long[]> {
 		return before;
 	}
 
-	private Map<String, Object> salsa(final SubGraph sg, long vid)
-			throws Exception {
+	private Map<String, Object> salsa(final SubGraph sg, long vid) throws Exception {
 		Map<String, Object> ret = new HashMap<>();
 		float authCalc = 0f;
 		long[] inEdges = sg.getEdges(Dir.IN, vid);
@@ -103,8 +100,7 @@ public class SalsaRepeat implements Repeat<long[]> {
 					for (long w : outV) {
 						int inW = sg.getEdgesCount(Dir.IN, w);
 						if (inW > 0)
-							res += ((Float) sg.getProperty(w, authKey,
-									defaultauth)) / (outV.length * inW);
+							res += ((Float) sg.getProperty(w, authKey, defaultauth)) / (outV.length * inW);
 					}
 					return res;
 				}
@@ -123,8 +119,7 @@ public class SalsaRepeat implements Repeat<long[]> {
 					for (long w : inV) {
 						int outW = sg.getEdgesCount(Dir.OUT, w);
 						if (outW > 0)
-							res += ((Float) sg.getProperty(w, hubKey,
-									defaulthub)) / (inV.length * outW);
+							res += ((Float) sg.getProperty(w, hubKey, defaulthub)) / (inV.length * outW);
 					}
 					return res;
 				}

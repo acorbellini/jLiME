@@ -32,8 +32,7 @@ public class GenericObjectConverter implements TypeConverter {
 		Peer client = (Peer) this.typeConverters.getObjectFromArray(buff);
 		ByteArrayInputStream bis = new ByteArrayInputStream(buff.getByteArray());
 
-		MarshallerInputStream stream = new MarshallerInputStream(bis,
-				this.typeConverters.getRPC(), client);
+		MarshallerInputStream stream = new MarshallerInputStream(bis, this.typeConverters.getRPC(), client);
 		Object ret = stream.readObject();
 		stream.close();
 		return ret;

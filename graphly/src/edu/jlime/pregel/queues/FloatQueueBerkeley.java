@@ -46,8 +46,7 @@ public class FloatQueueBerkeley implements FloatMessageQueue {
 	}
 
 	@Override
-	public void flush(String msgType, String subgraph, WorkerTask workerTask)
-			throws Exception {
+	public void flush(String msgType, String subgraph, WorkerTask workerTask) throws Exception {
 		TObjectIntHashMap<Worker> sizes = new TObjectIntHashMap<>();
 		{
 			final TLongFloatIterator it = readOnly.iterator();
@@ -84,8 +83,7 @@ public class FloatQueueBerkeley implements FloatMessageQueue {
 	}
 
 	@Override
-	public Iterator<PregelMessage> getMessages(final String msgType,
-			final long to) {
+	public Iterator<PregelMessage> getMessages(final String msgType, final long to) {
 		final Float found = this.readOnly.get(to);
 		if (found == null)
 			return null;

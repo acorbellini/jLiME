@@ -9,7 +9,7 @@ import edu.jlime.jd.job.Job;
 public class RemoteReference<T> implements Serializable {
 
 	private String key;
-	private ClientNode node;
+	private Node node;
 	private boolean removeOnGet = false;
 
 	public RemoteReference(T adyacents, JobContext ctx) {
@@ -23,7 +23,7 @@ public class RemoteReference<T> implements Serializable {
 
 	}
 
-	public RemoteReference(ClientNode node, String key) {
+	public RemoteReference(Node node, String key) {
 		this.key = key;
 		this.node = node;
 	}
@@ -32,14 +32,14 @@ public class RemoteReference<T> implements Serializable {
 		return key;
 	}
 
-	public ClientNode getNode() {
+	public Node getNode() {
 		return node;
 	}
 
 	public T get() throws Exception {
 		return node.exec(new Job<T>() {
 			@Override
-			public T call(JobContext env, ClientNode peer) throws Exception {
+			public T call(JobContext env, Node peer) throws Exception {
 				if (removeOnGet)
 					return (T) env.remove(key);
 				return (T) env.get(key);

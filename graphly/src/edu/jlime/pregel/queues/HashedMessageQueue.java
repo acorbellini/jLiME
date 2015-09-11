@@ -63,8 +63,7 @@ public class HashedMessageQueue implements ObjectMessageQueue {
 	}
 
 	@Override
-	public void flush(String msgType, String subgraph, WorkerTask workerTask)
-			throws Exception {
+	public void flush(String msgType, String subgraph, WorkerTask workerTask) throws Exception {
 		// final TLongObjectIterator<Object> it = readOnly.iterator();
 		// while (it.hasNext()) {
 		// it.advance();
@@ -94,8 +93,7 @@ public class HashedMessageQueue implements ObjectMessageQueue {
 				if (subgraph == null)
 					workerTask.outputObject(msgType, -1l, -1l, it.value());
 				else
-					workerTask.outputObjectSubgraph(msgType, subgraph, -1l,
-							it.value());
+					workerTask.outputObjectSubgraph(msgType, subgraph, -1l, it.value());
 			} else {
 				Worker w = workerTask.getWorker(to);
 				ObjectData data = ret.get(w);
@@ -113,8 +111,7 @@ public class HashedMessageQueue implements ObjectMessageQueue {
 	}
 
 	@Override
-	public Iterator<PregelMessage> getMessages(final String msgType,
-			final long to) {
+	public Iterator<PregelMessage> getMessages(final String msgType, final long to) {
 		final Object found = this.readOnly.get(to);
 		if (found == null)
 			return null;

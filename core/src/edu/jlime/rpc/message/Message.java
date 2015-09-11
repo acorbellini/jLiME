@@ -55,8 +55,7 @@ public abstract class Message {
 
 	protected abstract byte[] build();
 
-	public static Message encapsulate(Message msg, MessageType type,
-			Address from, Address to) {
+	public static Message encapsulate(Message msg, MessageType type, Address from, Address to) {
 		return new MessageEncap(new Header(type), from, to, msg);
 	};
 
@@ -64,23 +63,19 @@ public abstract class Message {
 		return header;
 	}
 
-	public static MessageSimple deEncapsulate(byte[] simple, Address from,
-			Address to) {
+	public static MessageSimple deEncapsulate(byte[] simple, Address from, Address to) {
 		ByteBuffer reader = new ByteBuffer(simple);
 		Header h = Header.fromBytes(reader);
 		ByteBuffer d = new ByteBuffer(reader, h.headerData.limit, reader.limit);
 		return new MessageSimple(h, d, from, to);
 	};
 
-	public static Message newOutDataMessage(byte[] data, MessageType type,
-			Address to) {
+	public static Message newOutDataMessage(byte[] data, MessageType type, Address to) {
 		return newFullDataMessage(data, type, null, to);
 	}
 
-	public static Message newFullDataMessage(byte[] data, MessageType type,
-			Address from, Address to) {
-		return new MessageSimple(new Header(type), new ByteBuffer(data), from,
-				to);
+	public static Message newFullDataMessage(byte[] data, MessageType type, Address from, Address to) {
+		return new MessageSimple(new Header(type), new ByteBuffer(data), from, to);
 	};
 
 	public ByteBuffer[] toByteBuffers() {
@@ -123,8 +118,7 @@ public abstract class Message {
 		return getDataBuffer().size();
 	}
 
-	public static Message encapsulateOut(Message msg, MessageType type,
-			Address to) {
+	public static Message encapsulateOut(Message msg, MessageType type, Address to) {
 		return encapsulate(msg, type, null, to);
 	}
 
@@ -161,8 +155,7 @@ public abstract class Message {
 		this.sock = sock;
 	}
 
-	public static Message deEncapsulate(ByteBuffer reader, Address from,
-			Address to) {
+	public static Message deEncapsulate(ByteBuffer reader, Address from, Address to) {
 		Header h = Header.fromBytes(reader);
 		ByteBuffer d = new ByteBuffer(reader, h.headerData.limit, reader.limit);
 		return new MessageSimple(h, d, from, to);

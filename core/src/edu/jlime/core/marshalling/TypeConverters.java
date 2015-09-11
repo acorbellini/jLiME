@@ -22,7 +22,7 @@ import edu.jlime.core.marshalling.converters.PeerConverter;
 import edu.jlime.core.marshalling.converters.StringConverter;
 import edu.jlime.core.marshalling.converters.UUIDConverter;
 import edu.jlime.core.rpc.MethodCall;
-import edu.jlime.core.rpc.RPCDispatcher;
+import edu.jlime.core.rpc.RPC;
 import edu.jlime.core.rpc.RPCObject;
 import edu.jlime.core.transport.Address;
 import edu.jlime.metrics.metric.Metrics;
@@ -34,13 +34,13 @@ public class TypeConverters {
 
 	private Map<String, TypeConverter> convs = new ConcurrentHashMap<>();
 
-	RPCDispatcher rpc;
+	RPC rpc;
 
-	public RPCDispatcher getRPC() {
+	public RPC getRPC() {
 		return rpc;
 	}
 
-	public TypeConverters(RPCDispatcher rpcDispatcher) {
+	public TypeConverters(RPC rpcDispatcher) {
 
 		this.rpc = rpcDispatcher;
 
@@ -62,8 +62,7 @@ public class TypeConverters {
 
 		registerTypeConverter(MethodCall.class, new MethodCallConverter(this));
 
-		registerTypeConverter(RPCDispatcher.class, new RPCDispatcherConverter(
-				rpc));
+		registerTypeConverter(RPC.class, new RPCDispatcherConverter(rpc));
 
 		registerTypeConverter(RPCObject.class, new RPCObjectConverter(this));
 
@@ -87,7 +86,8 @@ public class TypeConverters {
 
 	/**
 	 * 
-	 * @param class of the object to be marshalled/unmarshalled
+	 * @param class
+	 *            of the object to be marshalled/unmarshalled
 	 * @param converter
 	 *            to be used
 	 */
@@ -104,8 +104,7 @@ public class TypeConverters {
 
 	Logger log = Logger.getLogger(TypeConverters.class);
 
-	public void objectToByteArray(Object o, ByteBuffer buffer, Peer client)
-			throws Exception {
+	public void objectToByteArray(Object o, ByteBuffer buffer, Peer client) throws Exception {
 		Class<?> classOfObject = o == null ? NullType.class : o.getClass();
 		// Default converter
 		TypeConverter converter = getTypeConverter(classOfObject);

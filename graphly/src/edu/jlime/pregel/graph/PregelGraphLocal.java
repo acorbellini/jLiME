@@ -8,14 +8,14 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import edu.jlime.graphly.traversal.Dir;
-import edu.jlime.pregel.graph.rpc.Graph;
+import edu.jlime.pregel.graph.rpc.PregelGraph;
 import edu.jlime.pregel.worker.VertexData;
 import gnu.trove.decorator.TLongSetDecorator;
 import gnu.trove.iterator.TLongObjectIterator;
 import gnu.trove.map.hash.TLongObjectHashMap;
 import gnu.trove.set.hash.TLongHashSet;
 
-public class PregelGraphLocal implements Serializable, Graph {
+public class PregelGraphLocal implements Serializable, PregelGraph {
 
 	/**
 	 * 

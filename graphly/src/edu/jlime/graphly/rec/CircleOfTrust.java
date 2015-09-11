@@ -5,11 +5,11 @@ import java.util.NavigableSet;
 
 import com.google.common.collect.TreeMultimap;
 
-import edu.jlime.graphly.client.GraphlyGraph;
+import edu.jlime.graphly.client.Graph;
 import edu.jlime.graphly.rec.CustomStep.CustomFunction;
 import edu.jlime.graphly.traversal.CountResult;
 import edu.jlime.graphly.traversal.Dir;
-import edu.jlime.graphly.traversal.GraphlyTraversal;
+import edu.jlime.graphly.traversal.Traversal;
 import edu.jlime.graphly.traversal.TraversalResult;
 import gnu.trove.iterator.TLongFloatIterator;
 import gnu.trove.iterator.TLongObjectIterator;
@@ -29,16 +29,13 @@ public class CircleOfTrust implements CustomFunction {
 	}
 
 	@Override
-	public TraversalResult execute(TraversalResult before, GraphlyTraversal tr)
-			throws Exception {
-		GraphlyGraph g = tr.getGraph();
+	public TraversalResult execute(TraversalResult before, Traversal tr) throws Exception {
+		Graph g = tr.getGraph();
 
-		TraversalResult cot = g.v(before.vertices().toArray())
-				.set("mapper", tr.get("mapper")).as(Recommendation.class)
+		TraversalResult cot = g.v(before.vertices().toArray()).set("mapper", tr.get("mapper")).as(Recommendation.class)
 				.randomwalk("circleoftrust", steps, max, Dir.OUT).exec();
 
-		TLongObjectHashMap<Object> c = g.collect("circleoftrust", -1, cot
-				.vertices().toArray());
+		TLongObjectHashMap<Object> c = g.collect("circleoftrust", -1, cot.vertices().toArray());
 
 		TLongFloatHashMap ret = new TLongFloatHashMap();
 
@@ -46,8 +43,7 @@ public class CircleOfTrust implements CustomFunction {
 		TLongObjectIterator<Object> collectIt = c.iterator();
 		while (collectIt.hasNext()) {
 			collectIt.advance();
-			TLongFloatHashMap properties = (TLongFloatHashMap) collectIt
-					.value();
+			TLongFloatHashMap properties = (TLongFloatHashMap) collectIt.value();
 			TLongFloatIterator it = properties.iterator();
 			while (it.hasNext()) {
 				it.advance();

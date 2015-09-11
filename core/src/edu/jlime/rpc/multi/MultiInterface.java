@@ -26,8 +26,7 @@ import edu.jlime.util.NetworkChangeListener;
 import edu.jlime.util.NetworkUtils;
 import edu.jlime.util.NetworkUtils.SelectedInterface;
 
-public class MultiInterface extends MessageProcessor implements
-		NetworkChangeListener, AddressListProvider, Streamer {
+public class MultiInterface extends MessageProcessor implements NetworkChangeListener, AddressListProvider, Streamer {
 
 	private static Logger log = Logger.getLogger(MultiInterface.class);
 
@@ -43,8 +42,7 @@ public class MultiInterface extends MessageProcessor implements
 
 	private Metrics metrics;
 
-	public MultiInterface(AddressType type, long max_update_time,
-			NetworkProtocolFactory factory) {
+	public MultiInterface(AddressType type, long max_update_time, NetworkProtocolFactory factory) {
 		super("Multi Interface Message Processor");
 		this.type = type;
 		this.max_update_time = max_update_time;
@@ -65,8 +63,7 @@ public class MultiInterface extends MessageProcessor implements
 	private void createIfaces(List<SelectedInterface> newIfacesList) {
 		MessageListener list = new MessageListener() {
 			@Override
-			public void rcv(Message m, MessageProcessor origin)
-					throws Exception {
+			public void rcv(Message m, MessageProcessor origin) throws Exception {
 
 				Address id = m.getFrom();
 				StackElement proc = ifTable.get(id);
@@ -77,8 +74,7 @@ public class MultiInterface extends MessageProcessor implements
 						if (proc == null) {
 							long t = System.currentTimeMillis();
 							if (log.isDebugEnabled())
-								log.debug("Updating processor for ID " + id
-										+ " to " + origin);
+								log.debug("Updating processor for ID " + id + " to " + origin);
 							lastRcvd.put(id, t);
 							ifTable.put(id, origin);
 						}
@@ -89,10 +85,8 @@ public class MultiInterface extends MessageProcessor implements
 					Long last = lastRcvd.get(id);
 					if (curr - last > max_update_time) {
 						if (log.isDebugEnabled())
-							log.debug("Last Time I received data from " + id
-									+ " was " + (curr - last)
-									+ " updating procesor " + proc
-									+ " to processor " + origin);
+							log.debug("Last Time I received data from " + id + " was " + (curr - last)
+									+ " updating procesor " + proc + " to processor " + origin);
 						ifTable.put(id, origin);
 					}
 					lastRcvd.put(id, curr);
@@ -107,12 +101,10 @@ public class MultiInterface extends MessageProcessor implements
 				if (log.isDebugEnabled())
 					log.debug("Creating new processor for interface " + iface);
 
-				MessageProcessor msg = factory.getProtocol(iface.getInet()
-						.getHostAddress());
+				MessageProcessor msg = factory.getProtocol(iface.getInet().getHostAddress());
 				try {
 					msg.start();
-					super.registerProcessor(iface.getInet().getHostAddress(),
-							msg);
+					super.registerProcessor(iface.getInet().getHostAddress(), msg);
 					msg.addAllMessageListener(list);
 
 					if (metrics != null)
@@ -137,16 +129,14 @@ public class MultiInterface extends MessageProcessor implements
 
 			if (proc != null && !proc.isStopped()) {
 				if (log.isDebugEnabled())
-					log.debug("Sending Message of type " + msg.getType()
-							+ " to " + to + " using processor " + proc);
+					log.debug("Sending Message of type " + msg.getType() + " to " + to + " using processor " + proc);
 				proc.send(msg);
 				return;
 			}
 		}
 
 		if (log.isDebugEnabled())
-			log.debug("Sending Message of type " + msg.getType()
-					+ " to all processors because processor for " + to
+			log.debug("Sending Message of type " + msg.getType() + " to all processors because processor for " + to
 					+ " was not found");
 		sendToAllProcs(msg);
 	}
@@ -162,8 +152,7 @@ public class MultiInterface extends MessageProcessor implements
 	}
 
 	@Override
-	public void interfacesChanged(List<SelectedInterface> added,
-			List<SelectedInterface> removed) {
+	public void interfacesChanged(List<SelectedInterface> added, List<SelectedInterface> removed) {
 
 		createIfaces(added);
 		for (SelectedInterface si : removed) {
@@ -211,8 +200,7 @@ public class MultiInterface extends MessageProcessor implements
 		}
 	}
 
-	public static MultiInterface create(AddressType type,
-			NetworkConfiguration config, NetworkProtocolFactory fact) {
+	public static MultiInterface create(AddressType type, NetworkConfiguration config, NetworkProtocolFactory fact) {
 		return new MultiInterface(type, config.interface_max_update_time, fact);
 	}
 

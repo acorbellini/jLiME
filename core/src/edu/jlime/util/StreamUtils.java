@@ -15,15 +15,12 @@ public class StreamUtils {
 	private static volatile int cont = 0;
 	private static volatile int promCount = 0;
 
-	public static byte[] read(InputStream inputStream, int size)
-			throws IOException {
+	public static byte[] read(InputStream inputStream, int size) throws IOException {
 		int read = 0;
 		int remaining = size;
 
 		byte[] buffer = new byte[size];
-		while (remaining != 0
-				&& (read = inputStream
-						.read(buffer, size - remaining, remaining)) != -1)
+		while (remaining != 0 && (read = inputStream.read(buffer, size - remaining, remaining)) != -1)
 			remaining -= read;
 		if (read == -1 && remaining != 0)
 			throw new IOException("Stream closed before finishing read.");
@@ -42,8 +39,7 @@ public class StreamUtils {
 			byte[] buffered = new byte[4096];
 			int read = 0;
 			int total = 0;
-			while (total != 4096
-					&& (read = bis.read(buffered, total, 4096 - total)) != -1) {
+			while (total != 4096 && (read = bis.read(buffered, total, 4096 - total)) != -1) {
 				total += read;
 			}
 			if (read == -1)
@@ -55,15 +51,13 @@ public class StreamUtils {
 		return buffer.build();
 	}
 
-	public static void putString(DataOutput out, String name)
-			throws IOException {
+	public static void putString(DataOutput out, String name) throws IOException {
 		byte[] bytes = name.getBytes();
 		putByteArray(out, bytes);
 
 	}
 
-	private static void putByteArray(DataOutput out, byte[] bytes)
-			throws IOException {
+	private static void putByteArray(DataOutput out, byte[] bytes) throws IOException {
 		putInt(out, bytes.length);
 		out.write(bytes);
 	}
@@ -72,8 +66,7 @@ public class StreamUtils {
 		out.writeInt(length);
 	}
 
-	public static void putMap(DataOutput out, Map<String, String> data)
-			throws IOException {
+	public static void putMap(DataOutput out, Map<String, String> data) throws IOException {
 		int size = data.size();
 		putInt(out, size);
 		for (Entry<String, String> e : data.entrySet()) {
@@ -87,8 +80,7 @@ public class StreamUtils {
 		return new String(readByteArray(in, size));
 	}
 
-	private static byte[] readByteArray(DataInput in, int size)
-			throws IOException {
+	private static byte[] readByteArray(DataInput in, int size) throws IOException {
 		byte[] bytes = new byte[size];
 		in.readFully(bytes);
 		return bytes;
@@ -98,8 +90,7 @@ public class StreamUtils {
 		return in.readInt();
 	}
 
-	public static Map<String, String> readMap(ObjectInput in)
-			throws IOException {
+	public static Map<String, String> readMap(ObjectInput in) throws IOException {
 		Map<String, String> map = new HashMap<>();
 		int size = readInt(in);
 		for (int i = 0; i < size; i++) {

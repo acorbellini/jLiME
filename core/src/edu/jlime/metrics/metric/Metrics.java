@@ -24,8 +24,7 @@ public class Metrics implements Serializable, IMetrics {
 
 	// This ones are fixed.
 
-	private SortedMap<String, Metric<?>> metrics = Collections
-			.synchronizedSortedMap(new TreeMap<String, Metric<?>>());
+	private SortedMap<String, Metric<?>> metrics = Collections.synchronizedSortedMap(new TreeMap<String, Metric<?>>());
 
 	private transient volatile Timer timer;
 
@@ -107,8 +106,7 @@ public class Metrics implements Serializable, IMetrics {
 		while (it.hasNext()) {
 			Entry<String, Metric<?>> e = it.next();
 			if (e.getKey().startsWith(k))
-				ret.add(e.getKey().substring(0,
-						e.getKey().indexOf(".", k.length() + 1)));
+				ret.add(e.getKey().substring(0, e.getKey().indexOf(".", k.length() + 1)));
 			else
 				return ret;
 		}
@@ -125,8 +123,7 @@ public class Metrics implements Serializable, IMetrics {
 
 		String nextLetter = String.valueOf((char) (el.charAt(0) + 1));
 		synchronized (metrics) {
-			SortedMap<String, Metric<?>> m = new TreeMap<>(metrics.subMap(k,
-					root + nextLetter));
+			SortedMap<String, Metric<?>> m = new TreeMap<>(metrics.subMap(k, root + nextLetter));
 			return m;
 		}
 	}

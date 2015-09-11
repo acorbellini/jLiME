@@ -132,8 +132,7 @@ public class MessageQueue implements ObjectMessageQueue {
 	}
 
 	@Override
-	public void flush(String msgType, String subgraph, WorkerTask workerTask)
-			throws Exception {
+	public void flush(String msgType, String subgraph, WorkerTask workerTask) throws Exception {
 		TObjectIntHashMap<Worker> sizes = new TObjectIntHashMap<>();
 		{
 			for (Entry<long[], Object> e : readOnly.entrySet()) {
@@ -152,8 +151,7 @@ public class MessageQueue implements ObjectMessageQueue {
 				if (subgraph == null)
 					workerTask.outputObject(msgType, -1l, -1l, e.getValue());
 				else
-					workerTask.outputObjectSubgraph(msgType, subgraph, -1l,
-							e.getValue());
+					workerTask.outputObjectSubgraph(msgType, subgraph, -1l, e.getValue());
 			} else {
 				Worker w = workerTask.getWorker(to);
 				ObjectData data = ret.get(w);
@@ -171,8 +169,8 @@ public class MessageQueue implements ObjectMessageQueue {
 
 	@Override
 	public Iterator<PregelMessage> getMessages(final String msgType, long v) {
-		SortedMap<long[], Object> sm = readOnly.subMap(new long[] { v,
-				Long.MIN_VALUE }, new long[] { v + 1, Long.MIN_VALUE });
+		SortedMap<long[], Object> sm = readOnly.subMap(new long[] { v, Long.MIN_VALUE },
+				new long[] { v + 1, Long.MIN_VALUE });
 		final Iterator<Entry<long[], Object>> it = sm.entrySet().iterator();
 		return new Iterator<PregelMessage>() {
 
@@ -180,8 +178,7 @@ public class MessageQueue implements ObjectMessageQueue {
 			public PregelMessage next() {
 				Entry<long[], Object> e = it.next();
 				long[] k = e.getKey();
-				return new GenericPregelMessage(msgType, k[1], k[0],
-						e.getValue());
+				return new GenericPregelMessage(msgType, k[1], k[0], e.getValue());
 			}
 
 			@Override

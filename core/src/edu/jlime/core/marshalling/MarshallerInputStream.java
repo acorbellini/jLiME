@@ -8,19 +8,19 @@ import java.io.ObjectStreamClass;
 import org.apache.log4j.Logger;
 
 import edu.jlime.core.cluster.Peer;
-import edu.jlime.core.rpc.RPCDispatcher;
+import edu.jlime.core.rpc.RPC;
 import edu.jlime.core.rpc.Transferible;
 
 public class MarshallerInputStream extends ObjectInputStream {
 
 	private Peer classSource;
 
-	private RPCDispatcher disp;
+	private RPC disp;
 
 	Logger log = Logger.getLogger(MarshallerInputStream.class);
 
-	public MarshallerInputStream(InputStream is, RPCDispatcher rpcDispatcher,
-			Peer classSourceID) throws IOException, SecurityException {
+	public MarshallerInputStream(InputStream is, RPC rpcDispatcher, Peer classSourceID)
+			throws IOException, SecurityException {
 		super(is);
 		this.disp = rpcDispatcher;
 		this.classSource = classSourceID;
@@ -28,8 +28,7 @@ public class MarshallerInputStream extends ObjectInputStream {
 	}
 
 	@Override
-	protected Class<?> resolveClass(ObjectStreamClass desc)
-			throws ClassNotFoundException {
+	protected Class<?> resolveClass(ObjectStreamClass desc) throws ClassNotFoundException {
 		Exception e;
 		String name = desc.getName();
 

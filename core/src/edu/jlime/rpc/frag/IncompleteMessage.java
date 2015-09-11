@@ -40,8 +40,7 @@ public class IncompleteMessage {
 		int current = acc.getAndAdd(data.length);
 
 		if (log.isDebugEnabled())
-			log.debug("Received incomplete message " + id
-					+ " current accumulated:" + (current + data.length)
+			log.debug("Received incomplete message " + id + " current accumulated:" + (current + data.length)
 					+ " of total:" + total + " offset: " + offsetInOriginal);
 		return true;
 	};

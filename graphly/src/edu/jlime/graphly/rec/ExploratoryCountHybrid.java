@@ -3,11 +3,11 @@ package edu.jlime.graphly.rec;
 import java.util.Arrays;
 import java.util.Set;
 
-import edu.jlime.graphly.client.GraphlyGraph;
+import edu.jlime.graphly.client.Graph;
 import edu.jlime.graphly.rec.CustomStep.CustomFunction;
 import edu.jlime.graphly.traversal.CountResult;
 import edu.jlime.graphly.traversal.Dir;
-import edu.jlime.graphly.traversal.GraphlyTraversal;
+import edu.jlime.graphly.traversal.Traversal;
 import edu.jlime.graphly.traversal.TraversalResult;
 import edu.jlime.util.Pair;
 import gnu.trove.map.hash.TLongFloatHashMap;
@@ -20,8 +20,7 @@ public class ExploratoryCountHybrid implements CustomFunction {
 	private String countK;
 	private Dir[] dirs;
 
-	public ExploratoryCountHybrid(int max_edges, int top, String countK,
-			Dir... dirs) {
+	public ExploratoryCountHybrid(int max_edges, int top, String countK, Dir... dirs) {
 		this.max_edges = max_edges;
 		this.top = top;
 		this.countK = countK;
@@ -29,20 +28,17 @@ public class ExploratoryCountHybrid implements CustomFunction {
 	}
 
 	@Override
-	public TraversalResult execute(TraversalResult before, GraphlyTraversal tr)
-			throws Exception {
+	public TraversalResult execute(TraversalResult before, Traversal tr) throws Exception {
 
-		GraphlyGraph g = tr.getGraph();
+		Graph g = tr.getGraph();
 		TLongHashSet vertices = before.vertices();
 
-		TLongHashSet list = g.v(vertices).set("mapper", tr.get("mapper"))
-				.to(dirs[0], max_edges).exec().vertices();
+		TLongHashSet list = g.v(vertices).set("mapper", tr.get("mapper")).to(dirs[0], max_edges).exec().vertices();
 
 		TLongHashSet filter = new TLongHashSet(list);
 		filter.addAll(vertices);
 		g.v(list).set("mapper", tr.get("mapper"))
-				.traverseGraphCount(countK, null, filter, max_edges, null,
-						Arrays.copyOfRange(dirs, 1, dirs.length))
+				.traverseGraphCount(countK, null, filter, max_edges, null, Arrays.copyOfRange(dirs, 1, dirs.length))
 				.exec();
 
 		Set<Pair<Long, Float>> set = g.topFloat(countK, top);

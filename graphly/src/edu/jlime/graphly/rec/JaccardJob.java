@@ -1,8 +1,8 @@
 package edu.jlime.graphly.rec;
 
-import edu.jlime.graphly.client.GraphlyGraph;
+import edu.jlime.graphly.client.Graph;
 import edu.jlime.graphly.traversal.Dir;
-import edu.jlime.jd.ClientNode;
+import edu.jlime.jd.Node;
 import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.Job;
 import gnu.trove.iterator.TLongIterator;
@@ -11,17 +11,16 @@ import gnu.trove.set.hash.TLongHashSet;
 
 public class JaccardJob implements Job<JaccardSubResult> {
 
-	private GraphlyGraph g;
+	private Graph g;
 	private TLongArrayList list;
 
-	public JaccardJob(GraphlyGraph graph, TLongArrayList value) {
+	public JaccardJob(Graph graph, TLongArrayList value) {
 		this.g = graph;
 		this.list = value;
 	}
 
 	@Override
-	public JaccardSubResult call(JobContext env, ClientNode peer)
-			throws Exception {
+	public JaccardSubResult call(JobContext env, Node peer) throws Exception {
 		JaccardSubResult ret = new JaccardSubResult();
 		TLongIterator it = list.iterator();
 		while (it.hasNext()) {

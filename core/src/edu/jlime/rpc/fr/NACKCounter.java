@@ -71,8 +71,7 @@ class NACKCounter {
 	public void send(Message msg) throws Exception {
 		int seqN = this.seqN.getAndIncrement();
 
-		while (!ack.isStopped()
-				&& Math.abs(seqN - confirmed.get()) >= max_resend_size) {
+		while (!ack.isStopped() && Math.abs(seqN - confirmed.get()) >= max_resend_size) {
 			if (log.isDebugEnabled())
 				log.debug("Blocking on seq " + seqN);
 			synchronized (this.seqN) {
@@ -83,11 +82,9 @@ class NACKCounter {
 		if (log.isDebugEnabled())
 			log.debug("Sending seq " + seqN);
 
-		resendArray[pos(seqN)].setData(msg, System.currentTimeMillis(), seqN,
-				time);
+		resendArray[pos(seqN)].setData(msg, System.currentTimeMillis(), seqN, time);
 
-		Message ackSeqMsg = Message
-				.encapsulateOut(msg, MessageType.ACK_SEQ, to);
+		Message ackSeqMsg = Message.encapsulateOut(msg, MessageType.ACK_SEQ, to);
 		ackSeqMsg.getHeaderBuffer().putInt(seqN);
 		ackSeqMsg.getHeaderBuffer().putInt(nextExpectedNumber);
 
@@ -167,8 +164,7 @@ class NACKCounter {
 		}
 
 		if (log.isDebugEnabled())
-			log.debug("Confirmed " + seq + " updated confirmed "
-					+ confirmed.get());
+			log.debug("Confirmed " + seq + " updated confirmed " + confirmed.get());
 	}
 
 	public boolean sendNacks() throws Exception {
@@ -212,8 +208,7 @@ class NACKCounter {
 			int count = 0;
 
 			while (appended + NACK_SIZE < diff && count < rcvd.length) {
-				int i = Math.abs(ackSenderCursor.getAndIncrement())
-						% rcvd.length;
+				int i = Math.abs(ackSenderCursor.getAndIncrement()) % rcvd.length;
 				count++;
 				if (!rcvd[i].confirmed && rcvd[i].seq != -1) {
 					int seq = rcvd[i].seq;
@@ -295,8 +290,7 @@ class NACKCounter {
 
 				Message data = resendData.getData(seq);
 
-				if (resendData.resend && data != null
-						&& curr - resendData.timeSent >= resendData.timeout) {
+				if (resendData.resend && data != null && curr - resendData.timeSent >= resendData.timeout) {
 					resendData.timeSent = curr;
 					resendData.timeout *= timeout_mult;
 
@@ -312,8 +306,7 @@ class NACKCounter {
 					// }
 					// }
 
-					Message ackMsg = Message.encapsulateOut(data,
-							MessageType.ACK_SEQ, to);
+					Message ackMsg = Message.encapsulateOut(data, MessageType.ACK_SEQ, to);
 					ackMsg.getHeaderBuffer().putInt(seq);
 					ackMsg.getHeaderBuffer().putInt(nextExpectedNumber);
 					ack.sendNext(ackMsg);

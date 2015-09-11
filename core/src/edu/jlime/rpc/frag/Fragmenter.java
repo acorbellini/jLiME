@@ -46,19 +46,16 @@ public class Fragmenter extends SimpleMessageProcessor {
 	public void onStart() throws Exception {
 		getNext().addSecondaryMessageListener(new MessageListener() {
 			@Override
-			public void rcv(Message message, MessageProcessor origin)
-					throws Exception {
+			public void rcv(Message message, MessageProcessor origin) throws Exception {
 				if (log.isDebugEnabled())
-					log.debug("Received msg type " + message.getType()
-							+ " to be bypassed");
+					log.debug("Received msg type " + message.getType() + " to be bypassed");
 				notifyRcvd(message);
 			}
 		});
 
 		getNext().addMessageListener(MessageType.FRAG, new MessageListener() {
 			@Override
-			public void rcv(Message message, MessageProcessor origin)
-					throws Exception {
+			public void rcv(Message message, MessageProcessor origin) throws Exception {
 				ByteBuffer header = message.getHeaderBuffer();
 
 				Address from = message.getFrom();
@@ -88,11 +85,9 @@ public class Fragmenter extends SimpleMessageProcessor {
 						incomplete = incompletes.get(fragID);
 						if (incomplete == null) {
 							if (log.isDebugEnabled())
-								log.debug("Received first fragment of message with id "
-										+ fragID + " from " + from);
+								log.debug("Received first fragment of message with id " + fragID + " from " + from);
 
-							incomplete = new IncompleteMessage(messageLength,
-									fragID);
+							incomplete = new IncompleteMessage(messageLength, fragID);
 
 							incompletes.put(fragID, incomplete);
 						}
@@ -102,18 +97,14 @@ public class Fragmenter extends SimpleMessageProcessor {
 					// synchronized (incomplete) {
 					// if (!incomplete.contains(offset)) {
 					if (log.isDebugEnabled())
-						log.debug("Adding offset " + offset
-								+ " to message with id " + fragID + " from "
-								+ from);
+						log.debug("Adding offset " + offset + " to message with id " + fragID + " from " + from);
 					if (incomplete.setCompleted()) {
 						if (log.isDebugEnabled())
-							log.debug("Notifying COMPLETED Message with id "
-									+ fragID + " from " + from);
+							log.debug("Notifying COMPLETED Message with id " + fragID + " from " + from);
 
 						parts.get(from).remove(fragID);
 
-						notifyRcvd(Message.deEncapsulate(incomplete.getBuff(),
-								from, to));
+						notifyRcvd(Message.deEncapsulate(incomplete.getBuff(), from, to));
 					}
 					// else {
 					// if (log.isDebugEnabled())
@@ -152,12 +143,9 @@ public class Fragmenter extends SimpleMessageProcessor {
 				// byte[] fragData = Arrays.copyOfRange(data, offset, offset
 				// + Math.min(maxBytes, remaining));
 
-				ByteBuffer fragData = new ByteBuffer(data, offset
-						+ Math.min(maxBytes, remaining), offset);
+				ByteBuffer fragData = new ByteBuffer(data, offset + Math.min(maxBytes, remaining), offset);
 
-				Message toSend = new MessageSimple(
-						new Header(MessageType.FRAG), fragData, msg.getFrom(),
-						msg.getTo());
+				Message toSend = new MessageSimple(new Header(MessageType.FRAG), fragData, msg.getFrom(), msg.getTo());
 
 				ByteBuffer headerW = toSend.getHeaderBuffer();
 
@@ -171,10 +159,8 @@ public class Fragmenter extends SimpleMessageProcessor {
 				headerW.putInt(data.length);
 
 				if (log.isDebugEnabled())
-					log.debug("Sending fragment with size " + toSend.getSize()
-							+ " offset " + offset + " (" + (i + 1) + "/"
-							+ numMsg + ") with id " + fragid + " to "
-							+ msg.getTo());
+					log.debug("Sending fragment with size " + toSend.getSize() + " offset " + offset + " (" + (i + 1)
+							+ "/" + numMsg + ") with id " + fragid + " to " + msg.getTo());
 				sendNext(toSend);
 			}
 		}

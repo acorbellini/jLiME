@@ -6,7 +6,7 @@ import java.util.TreeSet;
 import org.apache.log4j.Logger;
 
 import edu.jlime.graphly.client.TopMerger.TopComparator;
-import edu.jlime.graphly.storenode.GraphlyStoreNode;
+import edu.jlime.graphly.storenode.StoreNodeImpl;
 import edu.jlime.util.Pair;
 import gnu.trove.iterator.TLongFloatIterator;
 import gnu.trove.iterator.TLongIterator;
@@ -29,12 +29,10 @@ public class TopGatherer implements Gather<Set<Pair<Long, Float>>> {
 	}
 
 	@Override
-	public Set<Pair<Long, Float>> gather(String graph, GraphlyStoreNode node)
-			throws Exception {
+	public Set<Pair<Long, Float>> gather(String graph, StoreNodeImpl node) throws Exception {
 		Logger log = Logger.getLogger(TopGatherer.class);
 		long init = System.currentTimeMillis();
-		TreeSet<Pair<Long, Float>> sorted = new TreeSet<Pair<Long, Float>>(
-				new TopComparator());
+		TreeSet<Pair<Long, Float>> sorted = new TreeSet<Pair<Long, Float>>(new TopComparator());
 
 		if (v == null) {
 			TLongFloatIterator it = node.getFloatIterator(graph, prop);
@@ -69,8 +67,7 @@ public class TopGatherer implements Gather<Set<Pair<Long, Float>>> {
 			}
 		}
 
-		log.info("Finished top gatherer in "
-				+ (System.currentTimeMillis() - init) + "ms");
+		log.info("Finished top gatherer in " + (System.currentTimeMillis() - init) + "ms");
 		return sorted;
 	}
 }

@@ -48,8 +48,7 @@ final class GraphReader implements Iterator<Pair<Long, long[]>> {
 					nextLine = line;
 					done = true;
 				} else {
-					long v = Long.valueOf(line.substring(indexOf + 1,
-							line.length()));
+					long v = Long.valueOf(line.substring(indexOf + 1, line.length()));
 					map.add(v);
 				}
 			}

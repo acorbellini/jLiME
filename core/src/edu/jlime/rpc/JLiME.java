@@ -16,29 +16,26 @@ import edu.jlime.rpc.data.DataListener;
 import edu.jlime.rpc.data.DataMessage;
 import edu.jlime.rpc.data.Response;
 
-public class jLiMETransport extends Transport implements DataListener {
+public class JLiME extends Transport implements DataListener {
 
-	private Logger log = Logger.getLogger(jLiMETransport.class);
+	private Logger log = Logger.getLogger(JLiME.class);
 
 	private Stack commStack;
 
-	private ExecutorService handleExecutor = Executors
-			.newCachedThreadPool(new ThreadFactory() {
-				AtomicInteger cont = new AtomicInteger(0);
+	private ExecutorService handleExecutor = Executors.newCachedThreadPool(new ThreadFactory() {
+		AtomicInteger cont = new AtomicInteger(0);
 
-				@Override
-				public Thread newThread(Runnable r) {
-					Thread t = Executors.defaultThreadFactory().newThread(r);
-					t.setName("jLiME Transport Thread "
-							+ cont.getAndIncrement());
-					t.setDaemon(true);
-					return t;
-				}
-			});
+		@Override
+		public Thread newThread(Runnable r) {
+			Thread t = Executors.defaultThreadFactory().newThread(r);
+			t.setName("jLiME Transport Thread " + cont.getAndIncrement());
+			t.setDaemon(true);
+			return t;
+		}
+	});
 
-	public jLiMETransport(Peer local, PeerFilter filter, Stack commStack) {
-		super(local, filter, commStack.getDiscovery(), commStack
-				.getFailureDetection(), commStack.getStreamer());
+	public JLiME(Peer local, PeerFilter filter, Stack commStack) {
+		super(local, filter, commStack.getDiscovery(), commStack.getFailureDetection(), commStack.getStreamer());
 		this.commStack = commStack;
 		this.commStack.getData().addDataListener(this);
 	}
@@ -52,18 +49,15 @@ public class jLiMETransport extends Transport implements DataListener {
 
 	@Override
 	public void sendAsync(Peer peer, byte[] marshalled) throws Exception {
-		commStack.getData().sendData(marshalled, (Address) peer.getAddress(),
-				false);
+		commStack.getData().sendData(marshalled, (Address) peer.getAddress(), false);
 	}
 
 	@Override
 	public byte[] sendSync(Peer peer, byte[] marshalled) throws Exception {
 		if (log.isDebugEnabled())
-			log.debug("Calling Synchronously " + peer + ", sending "
-					+ marshalled.length + " b.");
+			log.debug("Calling Synchronously " + peer + ", sending " + marshalled.length + " b.");
 
-		byte[] resp = commStack.getData().sendData(marshalled,
-				peer.getAddress(), true);
+		byte[] resp = commStack.getData().sendData(marshalled, peer.getAddress(), true);
 
 		if (log.isDebugEnabled())
 			log.debug("FINISHED synchronous call  to " + peer + ", response "
@@ -81,8 +75,7 @@ public class jLiMETransport extends Transport implements DataListener {
 			public void run() {
 				Address origin = msg.getFrom();
 				byte[] buff = msg.getData();
-				byte[] rsp = jLiMETransport.super.callTransportListener(origin,
-						buff);
+				byte[] rsp = JLiME.super.callTransportListener(origin, buff);
 
 				// if (log.isDebugEnabled())
 				// log.debug("Sending response using response handler: " +

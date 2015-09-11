@@ -25,8 +25,7 @@ import edu.jlime.rpc.message.MessageProcessor;
 import edu.jlime.rpc.message.SocketAddress;
 import edu.jlime.util.ByteBuffer;
 
-public class RabbitProcessor extends MessageProcessor implements
-		AddressListProvider {
+public class RabbitProcessor extends MessageProcessor implements AddressListProvider {
 
 	Logger log = Logger.getLogger(RabbitProcessor.class);
 
@@ -40,8 +39,7 @@ public class RabbitProcessor extends MessageProcessor implements
 	private String replyQueueName;
 	private QueueingConsumer consumer;
 
-	public RabbitProcessor(NetworkConfiguration config, String iface,
-			Address local) {
+	public RabbitProcessor(NetworkConfiguration config, String iface, Address local) {
 		super("Rabbit Processor");
 		this.config = config;
 		this.iface = iface;
@@ -77,8 +75,7 @@ public class RabbitProcessor extends MessageProcessor implements
 		to.basicPublish("", msg.getTo().toString(), null, built);
 	}
 
-	private Channel createRabbit(Address id, InetSocketAddress sockTo)
-			throws IOException {
+	private Channel createRabbit(Address id, InetSocketAddress sockTo) throws IOException {
 		ConnectionFactory factory = new ConnectionFactory();
 		factory.setHost(sockTo.getHostName());
 		// This should be part of the config.
@@ -95,8 +92,7 @@ public class RabbitProcessor extends MessageProcessor implements
 	public List<SocketAddress> getAddresses() {
 		ArrayList<SocketAddress> ret = new ArrayList<>();
 		try {
-			ret.add(new SocketAddress(new InetSocketAddress(InetAddress
-					.getLocalHost(), 0), getType()));
+			ret.add(new SocketAddress(new InetSocketAddress(InetAddress.getLocalHost(), 0), getType()));
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 		}
@@ -132,8 +128,7 @@ public class RabbitProcessor extends MessageProcessor implements
 		connection = factory.newConnection();
 		channel = connection.createChannel();
 
-		replyQueueName = channel.queueDeclare(local.toString(), false, false,
-				true, null).getQueue();
+		replyQueueName = channel.queueDeclare(local.toString(), false, false, true, null).getQueue();
 		consumer = new QueueingConsumer(channel);
 		channel.basicConsume(replyQueueName, true, consumer);
 
@@ -141,10 +136,8 @@ public class RabbitProcessor extends MessageProcessor implements
 			public void run() {
 				while (!stopped) {
 					try {
-						QueueingConsumer.Delivery delivery = consumer
-								.nextDelivery();
-						final edu.jlime.util.ByteBuffer buff = new edu.jlime.util.ByteBuffer(
-								delivery.getBody());
+						QueueingConsumer.Delivery delivery = consumer.nextDelivery();
+						final edu.jlime.util.ByteBuffer buff = new edu.jlime.util.ByteBuffer(delivery.getBody());
 
 						final Address from = new Address(buff.getUUID());
 						final Address to = new Address(buff.getUUID());

@@ -113,49 +113,36 @@ public class NetworkConfiguration {
 		this.nack_resend_delay = config.getInt("nack.resend_delay", 25);
 		this.nack_max_resend_size = config.getInt("nack.max_resend_size", 128);
 
-		this.interface_max_update_time = config.getInt("multi.max_update_time",
-				10000);
+		this.interface_max_update_time = config.getInt("multi.max_update_time", 10000);
 		try {
-			this.name = config.getString("def.name", InetAddress.getLocalHost()
-					.getHostName());
+			this.name = config.getString("def.name", InetAddress.getLocalHost().getHostName());
 		} catch (UnknownHostException e) {
 			this.name = "";
 			e.printStackTrace();
 		}
 
 		this.fcConfig = new FCConfiguration();
-		this.fcConfig.time_before_resend_ack = config.getInt(
-				"fc.time_before_resend_ack", 1500);
+		this.fcConfig.time_before_resend_ack = config.getInt("fc.time_before_resend_ack", 1500);
 
-		this.fcConfig.send_ack_threshold = config.getFloat("fc.fcAckThreshold",
-				0.9f);
-		this.fcConfig.movement_factor = config.getFloat("fc.movement_factor",
-				0.1f);
+		this.fcConfig.send_ack_threshold = config.getFloat("fc.fcAckThreshold", 0.9f);
+		this.fcConfig.movement_factor = config.getFloat("fc.movement_factor", 0.1f);
 
-		this.fcConfig.old_send_importance = config.getFloat(
-				"fc.old_send_importance", 0.7f);
-		this.fcConfig.new_send_importance = config.getFloat(
-				"fc.new_send_importance", 0.3f);
+		this.fcConfig.old_send_importance = config.getFloat("fc.old_send_importance", 0.7f);
+		this.fcConfig.new_send_importance = config.getFloat("fc.new_send_importance", 0.3f);
 
-		this.fcConfig.min_send_threshold = config.getInt(
-				"fc.min_rcvd_threshold", 100000);
+		this.fcConfig.min_send_threshold = config.getInt("fc.min_rcvd_threshold", 100000);
 		this.fcConfig.max_rcv_initial = config.getInt("fc.max_rcv", 100000);
 		this.fcConfig.max_send_initial = config.getInt("fc.max_send", 6000);
 
-		this.tcpnio_max_msg_size = config.getInt("tcpnio.max_msg_size",
-				32 * 1024);
+		this.tcpnio_max_msg_size = config.getInt("tcpnio.max_msg_size", 32 * 1024);
 
 		this.tcp_config = new TCPConfig();
 		this.tcp_config.conn_limit = config.getInt("tcp.conn_limit", 10);
 		this.tcp_config.time_limit = config.getInt("tcp.time_limit", 15000);
-		this.tcp_config.tcp_rcv_buffer = config.getInt("tcp.rcv_buffer",
-				25 * 1024 * 1024);
-		this.tcp_config.tcp_send_buffer = config.getInt("tcp.send_buffer",
-				25 * 1024 * 1024);
-		this.tcp_config.input_buffer = config.getInt("tcp.input_buffer",
-				32 * 1024);
-		this.tcp_config.output_buffer = config.getInt("tcp.output_buffer",
-				32 * 1024);
+		this.tcp_config.tcp_rcv_buffer = config.getInt("tcp.rcv_buffer", 25 * 1024 * 1024);
+		this.tcp_config.tcp_send_buffer = config.getInt("tcp.send_buffer", 25 * 1024 * 1024);
+		this.tcp_config.input_buffer = config.getInt("tcp.input_buffer", 32 * 1024);
+		this.tcp_config.output_buffer = config.getInt("tcp.output_buffer", 32 * 1024);
 
 	}
 }

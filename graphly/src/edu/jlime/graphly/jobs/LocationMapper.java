@@ -10,9 +10,9 @@ import java.util.Map.Entry;
 import org.apache.log4j.Logger;
 
 import edu.jlime.core.cluster.Peer;
-import edu.jlime.graphly.client.GraphlyClient;
+import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.util.GraphlyUtil;
-import edu.jlime.jd.ClientNode;
+import edu.jlime.jd.Node;
 import edu.jlime.jd.client.JobContext;
 import edu.jlime.util.Pair;
 import gnu.trove.list.array.TLongArrayList;
@@ -21,26 +21,24 @@ public class LocationMapper implements Mapper, Closeable {
 
 	private static final long serialVersionUID = 1634522852310272015L;
 
-	private transient volatile GraphlyClient g;
-	private ClientNode[] nodes;
+	private transient volatile Graphly g;
+	private Node[] nodes;
 
 	private transient volatile Logger log;
 
 	private Peer[] peers;
 
 	@Override
-	public List<Pair<ClientNode, TLongArrayList>> map(int max, long[] data,
-			JobContext ctx) throws Exception {
+	public List<Pair<Node, TLongArrayList>> map(int max, long[] data, JobContext ctx) throws Exception {
 
 		// if (log.isDebugEnabled())
 		// log.debug("Mapping " + data.length + " keys by location.");
 
 		Map<Peer, TLongArrayList> map = getGraph(ctx).getHash().hashKeys(data);
 
-		Map<ClientNode, TLongArrayList> ret = new HashMap<>();
+		Map<Node, TLongArrayList> ret = new HashMap<>();
 		for (Entry<Peer, TLongArrayList> e : map.entrySet()) {
-			ret.put(getGraph(ctx).getJobClient().getCluster()
-					.getClientFor(e.getKey()), e.getValue());
+			ret.put(getGraph(ctx).getJobClient().getCluster().getClientFor(e.getKey()), e.getValue());
 		}
 		return GraphlyUtil.divide(ret, max);
 	}
@@ -61,23 +59,23 @@ public class LocationMapper implements Mapper, Closeable {
 			return;
 
 		this.peers = getGraph(ctx).getHash().getCircle();
-		this.nodes = new ClientNode[peers.length];
+		this.nodes = new Node[peers.length];
 		for (int i = 0; i < this.nodes.length; i++) {
 			this.nodes[i] = ctx.getCluster().getClientFor(this.peers[i]);
 		}
 	}
 
 	@Override
-	public ClientNode getNode(long v, JobContext ctx) {
+	public Node getNode(long v, JobContext ctx) {
 		return nodes[getGraph(ctx).getHash().hash(v)];
 	}
 
-	private GraphlyClient getGraph(JobContext ctx) {
+	private Graphly getGraph(JobContext ctx) {
 		if (g == null) {
 			synchronized (this) {
 				if (g == null) {
 					this.log = Logger.getLogger(LocationMapper.class);
-					this.g = (GraphlyClient) ctx.getGlobal("graphly");
+					this.g = (Graphly) ctx.getGlobal("graphly");
 					ctx.put("location_mapper", this);
 				}
 			}

@@ -6,7 +6,7 @@ import edu.jlime.pregel.client.WorkerContext;
 import edu.jlime.pregel.coordinator.CoordinatorTask;
 import edu.jlime.pregel.coordinator.HaltCondition;
 import edu.jlime.pregel.graph.VertexFunction;
-import edu.jlime.pregel.graph.rpc.Graph;
+import edu.jlime.pregel.graph.rpc.PregelGraph;
 import edu.jlime.pregel.messages.FloatPregelMessage;
 import edu.jlime.pregel.worker.FloatAggregator;
 import gnu.trove.iterator.TLongIterator;
@@ -46,7 +46,7 @@ public class PageRankFloat implements VertexFunction<FloatPregelMessage> {
 
 	@Override
 	public void execute(long v, Iterator<FloatPregelMessage> in, WorkerContext ctx) throws Exception {
-		Graph graph = ctx.getGraph();
+		PregelGraph graph = ctx.getGraph();
 
 		// Jacobi iterative method: (1-d) + d * function
 		// Example :

@@ -6,7 +6,7 @@ import edu.jlime.pregel.graph.VertexFunction;
 
 public class Pregel extends CustomTraversal {
 
-	public Pregel(GraphlyTraversal tr) {
+	public Pregel(Traversal tr) {
 		super(tr);
 	}
 

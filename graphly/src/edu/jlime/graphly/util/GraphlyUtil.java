@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import edu.jlime.jd.ClientNode;
+import edu.jlime.jd.Node;
 import edu.jlime.util.Pair;
 import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.set.hash.TLongHashSet;
@@ -56,11 +56,10 @@ public class GraphlyUtil {
 		return toRet;
 	}
 
-	public static List<Pair<ClientNode, TLongArrayList>> divide(
-			Map<ClientNode, TLongArrayList> div, int num) {
-		ArrayList<Pair<ClientNode, TLongArrayList>> ret = new ArrayList<>();
-		for (Entry<ClientNode, TLongArrayList> entry : div.entrySet()) {
-			ClientNode cli = entry.getKey();
+	public static List<Pair<Node, TLongArrayList>> divide(Map<Node, TLongArrayList> div, int num) {
+		ArrayList<Pair<Node, TLongArrayList>> ret = new ArrayList<>();
+		for (Entry<Node, TLongArrayList> entry : div.entrySet()) {
+			Node cli = entry.getKey();
 			TLongArrayList list = entry.getValue();
 			int perjob = (int) Math.ceil(list.size() / (double) num);
 			for (int i = 0; i < list.size(); i += perjob) {

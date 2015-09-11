@@ -14,8 +14,7 @@ public class CLI {
 		optHash.put(name, new CLIOption(name, shortName, desc, 0, null));
 	}
 
-	public void param(String name, String shortName, String desc,
-			String defaultVal) {
+	public void param(String name, String shortName, String desc, String defaultVal) {
 		optHash.put(name, new CLIOption(name, shortName, desc, 1, defaultVal));
 	}
 
@@ -31,8 +30,7 @@ public class CLI {
 		}
 	}
 
-	private void fillVals(String arg, ArrayIterator<String> it)
-			throws ParseException {
+	private void fillVals(String arg, ArrayIterator<String> it) throws ParseException {
 		for (String k : optHash.keySet()) {
 			CLIOption cli = optHash.get(k);
 			if (arg.equals(cli.getName())) {
@@ -40,31 +38,25 @@ public class CLI {
 					try {
 						String val = it.peek();
 						if (!cli.validateVal(val))
-							throw new ParseException("Error validating arg "
-									+ arg + ".", 0);
+							throw new ParseException("Error validating arg " + arg + ".", 0);
 						cli.setValue(val);
 						if (val.startsWith("-"))
-							throw new ParseException(
-									"Missing value for argument " + arg + ".",
-									0);
+							throw new ParseException("Missing value for argument " + arg + ".", 0);
 						else
 							it.next();
 					} catch (Exception e) {
-						throw new ParseException("Missing value for argument "
-								+ arg + ".", 0);
+						throw new ParseException("Missing value for argument " + arg + ".", 0);
 					}
 
 				}
 				return;
 			} else if (arg.startsWith(cli.getShortName())) {
 				if (cli.getValNum() == 1) {
-					String val = arg.substring(cli.getShortName().length(),
-							arg.length());
+					String val = arg.substring(cli.getShortName().length(), arg.length());
 					if (val.isEmpty())
 						val = it.next();
 					if (!cli.validateVal(val))
-						throw new ParseException("Error validating arg " + arg
-								+ ".", 0);
+						throw new ParseException("Error validating arg " + arg + ".", 0);
 					cli.setValue(val);
 					return;
 				}
@@ -147,9 +139,7 @@ public class CLI {
 				for (int i = 0; i < leftSize; i++)
 					desc.append(" ");
 
-				desc.append(opt.getDesc().substring(cont,
-						opt.getDesc().length())
-						+ "\n");
+				desc.append(opt.getDesc().substring(cont, opt.getDesc().length()) + "\n");
 			}
 			builder.append(desc);
 		}
@@ -160,8 +150,7 @@ public class CLI {
 		return builder.toString();
 	}
 
-	public void mult(String name, String shortName, String desc, String def,
-			String[] posible) {
+	public void mult(String name, String shortName, String desc, String def, String[] posible) {
 		optHash.put(name, new CLIMultiVal(name, shortName, desc, def, posible));
 	}
 }

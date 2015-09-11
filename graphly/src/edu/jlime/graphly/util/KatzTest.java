@@ -6,8 +6,8 @@ import java.io.FileWriter;
 import java.text.NumberFormat;
 import java.util.Locale;
 
-import edu.jlime.graphly.client.GraphlyClient;
-import edu.jlime.graphly.client.GraphlyGraph;
+import edu.jlime.graphly.client.Graphly;
+import edu.jlime.graphly.client.Graph;
 import edu.jlime.graphly.jobs.MapperFactory;
 import edu.jlime.graphly.rec.KatzPregel;
 import edu.jlime.graphly.server.GraphlyServer;
@@ -25,9 +25,9 @@ public class KatzTest {
 
 		server.start();
 
-		GraphlyClient g = server.getGraphlyClient();
+		Graphly g = server.getGraphlyClient();
 
-		GraphlyGraph test = g.getGraph(args[1]);
+		Graph test = g.getGraph(args[1]);
 
 		// GraphlyLoader loader = new GraphlyLoader(test);
 		// loader.load("C:/Users/Alejandro/Desktop/grafo-carlos/in", ",",
@@ -42,38 +42,22 @@ public class KatzTest {
 		// test.setDefaultFloat("pagerank", 1f / vertexCount);
 		// test.setDefaultFloat("ranksource", .85f);
 
-		test.v()
-				.set("mapper", MapperFactory.rr())
-				.as(Pregel.class)
-				.vertexFunction(
-						new KatzPregel("katz", 0.0001f),
-						PregelConfig
-								.create()
-								.haltCondition(
-										new PageRankHaltCondition(0.000001f,
-												"katz"))
-								.steps(50)
-								.persistVList(false)
-								.executeOnAll(true)
-								.queue(100)
-								.cache(CacheFactory.NO_CACHE)
-								.aggregator("katz",
-										MessageAggregators.floatSum())
-								.merger("katz", MessageMergers.floatSum()))
+		test.v().set("mapper", MapperFactory.rr()).as(Pregel.class).vertexFunction(new KatzPregel("katz", 0.0001f),
+				PregelConfig.create().haltCondition(new PageRankHaltCondition(0.000001f, "katz")).steps(50)
+						.persistVList(false).executeOnAll(true).queue(100).cache(CacheFactory.NO_CACHE)
+						.aggregator("katz", MessageAggregators.floatSum()).merger("katz", MessageMergers.floatSum()))
 				.exec();
 		System.out.println((System.currentTimeMillis() - init) / 1000f);
 		NumberFormat numberInstance = NumberFormat.getNumberInstance(Locale.US);
 		numberInstance.setMaximumFractionDigits(10);
 
-		BufferedWriter writer = new BufferedWriter(new FileWriter(new File(
-				args[2])));
+		BufferedWriter writer = new BufferedWriter(new FileWriter(new File(args[2])));
 
 		TLongFloatHashMap res = test.getFloats("katz");
 		TLongFloatIterator it = res.iterator();
 		while (it.hasNext()) {
 			it.advance();
-			writer.append(it.key() + "," + numberInstance.format(it.value())
-					+ "\n");
+			writer.append(it.key() + "," + numberInstance.format(it.value()) + "\n");
 		}
 		writer.close();
 		float sum = test.sumFloat("katz");

@@ -19,9 +19,8 @@ public class PingDiscovery extends Discovery {
 
 	private int port_range;
 
-	public PingDiscovery(Address local, String name, MessageProcessor unicast,
-			NetworkConfiguration opts, int port, int port_range)
-			throws Exception {
+	public PingDiscovery(Address local, String name, MessageProcessor unicast, NetworkConfiguration opts, int port,
+			int port_range) throws Exception {
 		super(local, name, opts, unicast, unicast);
 		this.port = port;
 		this.port_range = port_range;
@@ -46,12 +45,10 @@ public class PingDiscovery extends Discovery {
 		}
 	}
 
-	private void sendDiscoveryMessage(String inetaddr, int port)
-			throws Exception {
+	private void sendDiscoveryMessage(String inetaddr, int port) throws Exception {
 		Message msg = newDiscoveryMessage();
 		msg.setTo(Address.noAddr());
-		msg.setInetSocketAddress(new SocketAddress(new InetSocketAddress(
-				inetaddr, port), AddressType.ANY));
+		msg.setInetSocketAddress(new SocketAddress(new InetSocketAddress(inetaddr, port), AddressType.ANY));
 		discoveryData.send(msg);
 	}
 

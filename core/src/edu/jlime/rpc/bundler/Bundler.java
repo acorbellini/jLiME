@@ -60,8 +60,7 @@ public class Bundler {
 		if (log.isDebugEnabled())
 			log.debug("Sending bundle of size " + pos + ".");
 
-		Message msg = Message.newOutDataMessage(
-				Arrays.copyOfRange(bundle, 0, pos), MessageType.BUNDLE, to);
+		Message msg = Message.newOutDataMessage(Arrays.copyOfRange(bundle, 0, pos), MessageType.BUNDLE, to);
 		next.send(msg);
 
 		bundle = new byte[max_size];
@@ -76,8 +75,7 @@ public class Bundler {
 	public synchronized void send(Message msg) throws Exception {
 		int msgSize = msg.getSize();
 		if (log.isDebugEnabled())
-			log.debug("Bundling message of type " + msg.getType()
-					+ " and size " + msg.getSize());
+			log.debug("Bundling message of type " + msg.getType() + " and size " + msg.getSize());
 
 		if (msgSize + 4 > bundle.length) {
 			next.send(msg);
@@ -87,8 +85,7 @@ public class Bundler {
 		if (msgAsBytes.length + 4 + pos >= bundle.length)
 			sendBundle();
 
-		System.arraycopy(DataTypeUtils.intToByteArray(msgAsBytes.length), 0,
-				bundle, pos, 4);
+		System.arraycopy(DataTypeUtils.intToByteArray(msgAsBytes.length), 0, bundle, pos, 4);
 		System.arraycopy(msgAsBytes, 0, bundle, pos + 4, msgAsBytes.length);
 
 		pos += msgAsBytes.length + 4;

@@ -47,8 +47,7 @@ public class CSVBuilder {
 		return line.split("(?<!\\\\)" + sep, -1);
 	}
 
-	private static String[] compress(int expectedFields, String[] split,
-			String sep) {
+	private static String[] compress(int expectedFields, String[] split, String sep) {
 		String[] compressed = new String[expectedFields];
 		for (int i = 0; i < split.length; i++) {
 			if (i < expectedFields)
@@ -77,8 +76,7 @@ public class CSVBuilder {
 
 						if (!isInt(c.value()))
 							try {
-								String newVal = c.value().replaceAll(
-										escape(getDecimalSep()), ".");
+								String newVal = c.value().replaceAll(escape(getDecimalSep()), ".");
 								Double.valueOf(newVal);
 								c.setValue(newVal);
 								c.setFormat(Table.DoubleFormatter);
@@ -126,10 +124,8 @@ public class CSVBuilder {
 
 				if (split.length > getExpectedFields()) {
 					if (log.isDebugEnabled())
-						log.debug("Line " + line + " had more fields ("
-								+ split.length + ") than expected ("
-								+ getExpectedFields()
-								+ "). Merging into last line.");
+						log.debug("Line " + line + " had more fields (" + split.length + ") than expected ("
+								+ getExpectedFields() + "). Merging into last line.");
 
 					split = compress(getExpectedFields(), split, getColumnSep());
 				} else if (split.length < getExpectedFields()) {
@@ -140,8 +136,7 @@ public class CSVBuilder {
 					// + expectedFields + ").");
 
 					if (log.isDebugEnabled())
-						log.debug("Joining line " + line + " had less fields ("
-								+ split.length + ") than expected ("
+						log.debug("Joining line " + line + " had less fields (" + split.length + ") than expected ("
 								+ getExpectedFields() + ").");
 
 					StringBuilder b = new StringBuilder(line);
@@ -156,11 +151,9 @@ public class CSVBuilder {
 					}
 
 					if (split.length > getExpectedFields())
-						split = compress(getExpectedFields(), split,
-								getColumnSep());
+						split = compress(getExpectedFields(), split, getColumnSep());
 					if (log.isDebugEnabled())
-						log.debug("Resulting line from joing is " + line
-								+ " had fields (" + split.length + ").");
+						log.debug("Resulting line from joing is " + line + " had fields (" + split.length + ").");
 
 				}
 			}

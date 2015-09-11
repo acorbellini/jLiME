@@ -22,8 +22,7 @@ public class PeerConverter implements TypeConverter {
 	}
 
 	@Override
-	public void toArray(Object o, ByteBuffer buffer, Peer cliID)
-			throws Exception {
+	public void toArray(Object o, ByteBuffer buffer, Peer cliID) throws Exception {
 		Peer p = (Peer) o;
 		this.typeConverters.objectToByteArray(p.getAddress(), buffer, cliID);
 		buffer.putString(p.getName());
@@ -32,8 +31,7 @@ public class PeerConverter implements TypeConverter {
 
 	@Override
 	public Object fromArray(ByteBuffer buffer) throws Exception {
-		Address address = (Address) this.typeConverters
-				.getObjectFromArray(buffer);
+		Address address = (Address) this.typeConverters.getObjectFromArray(buffer);
 		String name = buffer.getString();
 		Map<String, String> map = buffer.getMap();
 		return new Peer(address, name, map);

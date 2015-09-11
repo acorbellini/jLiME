@@ -19,8 +19,8 @@ public abstract class Transport implements DiscoveryListener, FailureListener {
 	private Metrics metrics;
 	private Streamer streamer;
 
-	public Transport(Peer local, PeerFilter filter, DiscoveryProvider disco,
-			FailureProvider failure, Streamer streamer) {
+	public Transport(Peer local, PeerFilter filter, DiscoveryProvider disco, FailureProvider failure,
+			Streamer streamer) {
 		// CLUSTER
 		this.cluster = new Cluster(local, filter);
 		this.disco = disco;
@@ -36,16 +36,15 @@ public abstract class Transport implements DiscoveryListener, FailureListener {
 	}
 
 	@Override
-	public void memberMessage(Address from, String name,
-			Map<String, String> data, Object realAddress) throws Exception {
+	public void memberMessage(Address from, String name, Map<String, String> data, Object realAddress)
+			throws Exception {
 		Peer p = cluster.getByAddress(from);
 		if (p == null) {
 			Peer peer = new Peer(from, name);
 			peer.putData(data);
 			if (cluster.addPeer(peer)) {
 				if (log.isDebugEnabled())
-					log.debug("New member found : " + name + " id " + from
-							+ " with address " + realAddress);
+					log.debug("New member found : " + name + " id " + from + " with address " + realAddress);
 				failure.addPeerToMonitor(peer);
 				onNewPeer(peer);
 			}

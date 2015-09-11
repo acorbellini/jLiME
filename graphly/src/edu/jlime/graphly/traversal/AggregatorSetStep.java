@@ -12,10 +12,8 @@ public class AggregatorSetStep implements CustomFunction {
 	}
 
 	@Override
-	public TraversalResult execute(TraversalResult before, GraphlyTraversal tr)
-			throws Exception {
-		return new VertexResult(((SetAggregator) ((PregelResult) before)
-				.getRes().getAgg(key)).getSet());
+	public TraversalResult execute(TraversalResult before, Traversal tr) throws Exception {
+		return new VertexResult(((SetAggregator) ((PregelResult) before).getRes().getAgg(key)).getSet());
 	}
 
 }

@@ -22,9 +22,7 @@ public class InMemoryGraphProperties {
 		insertIntoGraphMap(map, vid, k, val);
 	}
 
-	private void insertIntoGraphMap(
-			Map<String, TLongObjectHashMap<Object>> props, long vid, String k,
-			Object val) {
+	private void insertIntoGraphMap(Map<String, TLongObjectHashMap<Object>> props, long vid, String k, Object val) {
 		TLongObjectHashMap<Object> map = props.get(k);
 		if (map == null) {
 			synchronized (props) {

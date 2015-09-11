@@ -27,8 +27,7 @@ public class RandomWalkJoin implements Join<List<long[]>, TLongFloatHashMap> {
 	}
 
 	@Override
-	public TLongObjectHashMap<TLongFloatHashMap> join(
-			TLongObjectHashMap<List<long[]>> before) {
+	public TLongObjectHashMap<TLongFloatHashMap> join(TLongObjectHashMap<List<long[]>> before) {
 		TLongObjectHashMap<TLongFloatHashMap> finalRes = new TLongObjectHashMap<>();
 		TLongObjectIterator<List<long[]>> it = before.iterator();
 		while (it.hasNext()) {

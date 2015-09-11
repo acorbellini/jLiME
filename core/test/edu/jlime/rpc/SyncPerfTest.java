@@ -2,7 +2,7 @@ package edu.jlime.rpc;
 
 import java.util.HashSet;
 
-import edu.jlime.core.rpc.RPCDispatcher;
+import edu.jlime.core.rpc.RPC;
 import edu.jlime.metrics.metric.Metrics;
 
 public class SyncPerfTest {
@@ -36,7 +36,7 @@ public class SyncPerfTest {
 
 		Metrics metrics = new Metrics("test");
 
-		RPCDispatcher rpc = new JLiMEFactory(config).build();
+		RPC rpc = new JLiMEFactory(config).build();
 
 		rpc.setMetrics(metrics);
 

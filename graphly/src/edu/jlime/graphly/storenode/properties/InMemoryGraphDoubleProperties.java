@@ -23,8 +23,7 @@ public class InMemoryGraphDoubleProperties {
 		insertIntoGraphMap(map, vid, k, val);
 	}
 
-	private void insertIntoGraphMap(Map<String, TLongDoubleHashMap> props,
-			long vid, String k, double val) {
+	private void insertIntoGraphMap(Map<String, TLongDoubleHashMap> props, long vid, String k, double val) {
 		TLongDoubleHashMap map = props.get(k);
 		if (map == null) {
 			synchronized (props) {

@@ -12,26 +12,22 @@ import gnu.trove.set.hash.TLongHashSet;
 public class SubGraph {
 
 	private static final int LOCKS = 1021;
-	private GraphlyGraph g;
+	private Graph g;
 	private TLongHashSet vertices;
 
-	private ConcurrentHashMap<Long, Map<String, Object>> props = new ConcurrentHashMap<>(
-			1000, 0.9f, 8);
+	private ConcurrentHashMap<Long, Map<String, Object>> props = new ConcurrentHashMap<>(1000, 0.9f, 8);
 	private Object[] propLocks = new Object[LOCKS];
 
-	private ConcurrentHashMap<String, Object> temps = new ConcurrentHashMap<>(
-			1000, 0.9f, 8);
+	private ConcurrentHashMap<String, Object> temps = new ConcurrentHashMap<>(1000, 0.9f, 8);
 	private Object[] tempsLocks = new Object[LOCKS];
 
-	private ConcurrentHashMap<Long, long[]> edges = new ConcurrentHashMap<>(
-			1000, 0.9f, 8);
+	private ConcurrentHashMap<Long, long[]> edges = new ConcurrentHashMap<>(1000, 0.9f, 8);
 	private Object[] edgesLocks = new Object[LOCKS];
 
-	private ConcurrentHashMap<Long, Integer> counts = new ConcurrentHashMap<>(
-			1000, 0.9f, 8);
+	private ConcurrentHashMap<Long, Integer> counts = new ConcurrentHashMap<>(1000, 0.9f, 8);
 	private Object[] countsLocks = new Object[LOCKS];
 
-	public SubGraph(GraphlyGraph graphly, long[] all) {
+	public SubGraph(Graph graphly, long[] all) {
 		for (int i = 0; i < LOCKS; i++) {
 			propLocks[i] = new Object();
 			tempsLocks[i] = new Object();
@@ -45,8 +41,7 @@ public class SubGraph {
 		vertices = new TLongHashSet(all);
 	}
 
-	public long[] getEdges(final Dir dir, final Long vid)
-			throws ExecutionException {
+	public long[] getEdges(final Dir dir, final Long vid) throws ExecutionException {
 		// if (dir.equals(Dir.IN))
 		// return get(dir, edgecacheIn, vid);
 		// else if (dir.equals(Dir.OUT))
@@ -80,8 +75,7 @@ public class SubGraph {
 		return res;
 	}
 
-	public Integer getEdgesCount(final Dir dir, final long vid)
-			throws Exception {
+	public Integer getEdgesCount(final Dir dir, final long vid) throws Exception {
 		Long k = vid;
 		if (dir.equals(Dir.IN))
 			k = -k - 1;
@@ -111,8 +105,7 @@ public class SubGraph {
 		props.clear();
 	}
 
-	public Object getProperty(final Long w, final String a, final Object f)
-			throws Exception {
+	public Object getProperty(final Long w, final String a, final Object f) throws Exception {
 		Map<String, Object> p = props.get(w);
 		if (p == null) {
 			synchronized (propLocks[(int) ((w * 31) % LOCKS)]) {
@@ -168,11 +161,9 @@ public class SubGraph {
 		temps.clear();
 	}
 
-	public void getProperty(String authKey, Object defaultauth)
-			throws Exception {
+	public void getProperty(String authKey, Object defaultauth) throws Exception {
 		synchronized (this) {
-			Map<Long, Map<String, Object>> props = g.getProperties(
-					vertices.toArray(), authKey);
+			Map<Long, Map<String, Object>> props = g.getProperties(vertices.toArray(), authKey);
 			for (Entry<Long, Map<String, Object>> e : props.entrySet()) {
 				Long l = e.getKey();
 				Map<String, Object> value = e.getValue();

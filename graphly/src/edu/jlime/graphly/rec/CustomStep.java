@@ -2,7 +2,7 @@ package edu.jlime.graphly.rec;
 
 import java.io.Serializable;
 
-import edu.jlime.graphly.traversal.GraphlyTraversal;
+import edu.jlime.graphly.traversal.Traversal;
 import edu.jlime.graphly.traversal.Step;
 import edu.jlime.graphly.traversal.TraversalResult;
 
@@ -10,15 +10,14 @@ public class CustomStep implements Step {
 
 	public static interface CustomFunction extends Serializable {
 
-		TraversalResult execute(TraversalResult before, GraphlyTraversal tr)
-				throws Exception;
+		TraversalResult execute(TraversalResult before, Traversal tr) throws Exception;
 
 	}
 
-	private GraphlyTraversal tr;
+	private Traversal tr;
 	private CustomFunction func;
 
-	public CustomStep(GraphlyTraversal tr, CustomFunction func) {
+	public CustomStep(Traversal tr, CustomFunction func) {
 		this.tr = tr;
 		this.func = func;
 	}

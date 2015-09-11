@@ -26,8 +26,7 @@ public class DataTypeUtils {
 	}
 
 	public static int byteArrayToInt(byte[] b, int i) {
-		return b[i + 3] & INT_MASK | (b[i + 2] & INT_MASK) << 8
-				| (b[i + 1] & INT_MASK) << 16 | (b[i] & INT_MASK) << 24;
+		return b[i + 3] & INT_MASK | (b[i + 2] & INT_MASK) << 8 | (b[i + 1] & INT_MASK) << 16 | (b[i] & INT_MASK) << 24;
 	}
 
 	public static void intToByteArray(int a, int i, byte[] ret) {
@@ -63,12 +62,9 @@ public class DataTypeUtils {
 	}
 
 	public static long byteArrayToLong(byte[] b, int i) {
-		return ((((long) b[0 + i] & LONG_MASK) << 56)
-				| (((long) b[1 + i] & LONG_MASK) << 48)
-				| (((long) b[2 + i] & LONG_MASK) << 40)
-				| (((long) b[3 + i] & LONG_MASK) << 32)
-				| (((long) b[4 + i] & LONG_MASK) << 24)
-				| (((long) b[5 + i] & LONG_MASK) << 16)
+		return ((((long) b[0 + i] & LONG_MASK) << 56) | (((long) b[1 + i] & LONG_MASK) << 48)
+				| (((long) b[2 + i] & LONG_MASK) << 40) | (((long) b[3 + i] & LONG_MASK) << 32)
+				| (((long) b[4 + i] & LONG_MASK) << 24) | (((long) b[5 + i] & LONG_MASK) << 16)
 				| (((long) b[6 + i] & LONG_MASK) << 8) | (((long) b[7 + i] & LONG_MASK)));
 		// long l = 0;
 		// for (int i = offset; i < offset + 8; i++) {
@@ -94,8 +90,8 @@ public class DataTypeUtils {
 
 	public static void main(String[] args) {
 		{
-			long[] longs = new long[] { 0, 10, 12, 3, 6, 1, -1, -5, -6,
-					Long.MAX_VALUE, Long.MIN_VALUE, 12312312, 551, 12312341 };
+			long[] longs = new long[] { 0, 10, 12, 3, 6, 1, -1, -5, -6, Long.MAX_VALUE, Long.MIN_VALUE, 12312312, 551,
+					12312341 };
 			List<byte[]> list = new ArrayList<byte[]>();
 			for (long l : longs)
 				list.add(longToByteArrayOrdered(l));
@@ -155,10 +151,9 @@ public class DataTypeUtils {
 	}
 
 	public static byte[] longToByteArrayOrdered(long value) {
-		return new byte[] { (byte) ((value >> 56) ^ INV_MASK),
-				(byte) ((value >> 48)), (byte) ((value >> 40)),
-				(byte) ((value >> 32)), (byte) ((value >> 24)),
-				(byte) ((value >> 16)), (byte) ((value >> 8)), (byte) (value) };
+		return new byte[] { (byte) ((value >> 56) ^ INV_MASK), (byte) ((value >> 48)), (byte) ((value >> 40)),
+				(byte) ((value >> 32)), (byte) ((value >> 24)), (byte) ((value >> 16)), (byte) ((value >> 8)),
+				(byte) (value) };
 	}
 
 	public static long byteArrayToLongOrdered(byte[] bytes) {
@@ -166,12 +161,9 @@ public class DataTypeUtils {
 	}
 
 	public static long byteArrayToLongOrdered(byte[] b, int i) {
-		return ((((long) (b[0 + i] ^ INV_MASK) & LONG_MASK) << 56)
-				| (((long) (b[1 + i]) & LONG_MASK) << 48)
-				| (((long) (b[2 + i]) & LONG_MASK) << 40)
-				| (((long) (b[3 + i]) & LONG_MASK) << 32)
-				| (((long) (b[4 + i]) & LONG_MASK) << 24)
-				| (((long) (b[5 + i]) & LONG_MASK) << 16)
+		return ((((long) (b[0 + i] ^ INV_MASK) & LONG_MASK) << 56) | (((long) (b[1 + i]) & LONG_MASK) << 48)
+				| (((long) (b[2 + i]) & LONG_MASK) << 40) | (((long) (b[3 + i]) & LONG_MASK) << 32)
+				| (((long) (b[4 + i]) & LONG_MASK) << 24) | (((long) (b[5 + i]) & LONG_MASK) << 16)
 				| (((long) (b[6 + i]) & LONG_MASK) << 8) | (((long) (b[7 + i]) & LONG_MASK)));
 		// long l = 0;
 		// for (int i = offset; i < offset + 8; i++) {

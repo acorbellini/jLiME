@@ -7,20 +7,20 @@ import java.util.UUID;
 
 import edu.jlime.core.cluster.DataFilter;
 import edu.jlime.core.cluster.Peer;
-import edu.jlime.core.rpc.RPCDispatcher;
+import edu.jlime.core.rpc.RPC;
 import edu.jlime.core.stream.RemoteInputStream;
 import edu.jlime.core.stream.RemoteOutputStream;
 import edu.jlime.jd.ClientCluster;
-import edu.jlime.jd.JobDispatcher;
+import edu.jlime.jd.Dispatcher;
 import edu.jlime.jd.StreamProvider;
 import edu.jlime.rpc.JLiMEFactory;
 import edu.jlime.rpc.NetworkConfiguration;
 
 public class Client implements Closeable {
 
-	JobDispatcher jd;
+	Dispatcher jd;
 
-	public Client(JobDispatcher jd) throws Exception {
+	public Client(Dispatcher jd) throws Exception {
 		this.jd = jd;
 	}
 
@@ -31,27 +31,24 @@ public class Client implements Closeable {
 	public static Client build(int i) throws Exception {
 		HashMap<String, String> jdData = new HashMap<>();
 		jdData.put("app", "jobdispatcher");
-		jdData.put(JobDispatcher.ISEXEC, Boolean.valueOf(false).toString());
-		jdData.put(JobDispatcher.TAGS, "Client");
+		jdData.put(Dispatcher.ISEXEC, Boolean.valueOf(false).toString());
+		jdData.put(Dispatcher.TAGS, "Client");
 
 		NetworkConfiguration config = new NetworkConfiguration();
 
-		final RPCDispatcher rpc = new JLiMEFactory(config, jdData,
-				new DataFilter("app", "job", true)).build();
+		final RPC rpc = new JLiMEFactory(config, jdData, new DataFilter("app", "job", true)).build();
 
-		JobDispatcher jd = new JobDispatcher(i, rpc);
+		Dispatcher jd = new Dispatcher(i, rpc);
 		jd.setStreamer(new StreamProvider() {
 
 			@Override
 			public RemoteOutputStream getOutputStream(UUID streamID, Peer to) {
-				return rpc.getStreamer().getOutputStream(streamID,
-						to.getAddress());
+				return rpc.getStreamer().getOutputStream(streamID, to.getAddress());
 			}
 
 			@Override
 			public RemoteInputStream getInputStream(UUID streamID, Peer to) {
-				return rpc.getStreamer().getInputStream(streamID,
-						to.getAddress());
+				return rpc.getStreamer().getInputStream(streamID, to.getAddress());
 			}
 		});
 		jd.start();
@@ -71,7 +68,7 @@ public class Client implements Closeable {
 		}
 	}
 
-	public JobDispatcher getJd() {
+	public Dispatcher getJd() {
 		return jd;
 	}
 

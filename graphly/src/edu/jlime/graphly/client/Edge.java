@@ -1,12 +1,12 @@
 package edu.jlime.graphly.client;
 
-public class GraphlyEdge {
+public class Edge {
 
 	private Long from;
 	private Long to;
-	private GraphlyGraph g;
+	private Graph g;
 
-	public GraphlyEdge(Long id, Long id2, GraphlyGraph graphly) {
+	public Edge(Long id, Long id2, Graph graphly) {
 		this.from = id;
 		this.to = id2;
 		this.g = graphly;

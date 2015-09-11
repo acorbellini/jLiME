@@ -39,8 +39,7 @@ public class LogFilter<T> extends WeightedFilter<T> {
 		for (Entry<T, Float> val : vals.entrySet()) {
 			float norm = normalize(max, val);
 			float offset = 1 + std_dev;
-			float weighted = (float) (Math.log10(norm + 1 + offset) / Math
-					.log10(1 + offset));
+			float weighted = (float) (Math.log10(norm + 1 + offset) / Math.log10(1 + offset));
 
 			res.put(val.getKey(), weighted);
 		}

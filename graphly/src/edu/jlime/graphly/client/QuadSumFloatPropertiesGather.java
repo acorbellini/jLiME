@@ -4,8 +4,8 @@ import java.util.Iterator;
 
 import com.google.common.collect.Lists;
 
-import edu.jlime.graphly.storenode.GraphlyStoreNode;
-import edu.jlime.graphly.storenode.rpc.GraphlyStoreNodeI;
+import edu.jlime.graphly.storenode.StoreNodeImpl;
+import edu.jlime.graphly.storenode.rpc.StoreNode;
 import edu.jlime.graphly.util.Gather;
 import gnu.trove.decorator.TLongSetDecorator;
 import gnu.trove.set.hash.TLongHashSet;
@@ -25,12 +25,11 @@ public class QuadSumFloatPropertiesGather implements Gather<Float> {
 	}
 
 	@Override
-	public Float gather(String graph, GraphlyStoreNode node) throws Exception {
+	public Float gather(String graph, StoreNodeImpl node) throws Exception {
 		float ret = 0f;
 		Iterator<Long> it;
 		if (v == null)
-			it = new VertexIterator(graph,
-					Lists.newArrayList((GraphlyStoreNodeI) node), 100000);
+			it = new VertexIterator(graph, Lists.newArrayList((StoreNode) node), 100000);
 		else
 			it = new TLongSetDecorator(v).iterator();
 		while (it.hasNext()) {

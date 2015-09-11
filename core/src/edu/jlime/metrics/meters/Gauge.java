@@ -37,8 +37,7 @@ public class Gauge implements Metric<Float>, GaugeMBean {
 
 	@Override
 	public String toString() {
-		return Metrics.format("val=" + current, "min=" + min, "max=" + max,
-				"prom=" + prom);
+		return Metrics.format("val=" + current, "min=" + min, "max=" + max, "prom=" + prom);
 	}
 
 	@Override

@@ -6,7 +6,7 @@ import java.util.concurrent.Semaphore;
 import org.junit.Test;
 
 import edu.jlime.jd.ClientCluster;
-import edu.jlime.jd.ClientNode;
+import edu.jlime.jd.Node;
 import edu.jlime.jd.client.Client;
 import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.ResultManager;
@@ -29,7 +29,7 @@ public class TransmittedReceivedTest {
 		}
 
 		@Override
-		public void run(JobContext env, ClientNode origin) throws Exception {
+		public void run(JobContext env, Node origin) throws Exception {
 			// System.out.println(msg);
 		}
 
@@ -40,26 +40,22 @@ public class TransmittedReceivedTest {
 		private static final long serialVersionUID = 4843051203459150275L;
 
 		@Override
-		public void run(JobContext env, ClientNode origin) throws Exception {
-			System.out
-					.println("\n********************************************************\n");
+		public void run(JobContext env, Node origin) throws Exception {
+			System.out.println("\n********************************************************\n");
 			System.out.println("Executing Transmission Job for " + origin);
-			System.out
-					.println("\n********************************************************\n");
+			System.out.println("\n********************************************************\n");
 			ClientCluster cluster = env.getCluster();
 
 			for (int i = 1; i <= 10; i++) {
-				System.out
-						.println("\n********************************************************\n");
+				System.out.println("\n********************************************************\n");
 				System.out.println("Executing round " + i + " for " + origin);
-				System.out
-						.println("\n********************************************************\n");
+				System.out.println("\n********************************************************\n");
 				int[] data = new int[8000];
 				for (int j = 0; j < data.length; j++) {
 					data[i] = (int) (Math.random() * 1000000);
 				}
-				cluster.broadcast(new MessageJob("Message From "
-						+ env.getCluster().getLocalNode() + " round " + i, data));
+				cluster.broadcast(
+						new MessageJob("Message From " + env.getCluster().getLocalNode() + " round " + i, data));
 			}
 		}
 	}
@@ -81,25 +77,23 @@ public class TransmittedReceivedTest {
 		ClientCluster cluster = cli.getCluster();
 		System.out.println("Local Peer: " + cluster.getLocalNode());
 
-		ArrayList<ClientNode> exec = cluster.getExecutors();
+		ArrayList<Node> exec = cluster.getExecutors();
 		// final Semaphore sem = new Semaphore(-exec.size() + 1);
 		final Semaphore sem = new Semaphore(0);
-		ClientNode peer = exec.get(0);
+		Node peer = exec.get(0);
 		// for (ClientNode peer : exec) {
 		System.out.println("Executing transmission Job on " + peer);
 		peer.execAsync(new TransmissionJob(), new ResultManager<Boolean>() {
 
 			@Override
-			public void handleException(Exception res, String jobID,
-					ClientNode fromID) {
+			public void handleException(Exception res, String jobID, Node fromID) {
 				System.out.println("Received Exception ");
 				res.printStackTrace();
 				sem.release();
 			}
 
 			@Override
-			public void handleResult(Boolean res, String jobID,
-					ClientNode fromID) {
+			public void handleResult(Boolean res, String jobID, Node fromID) {
 				System.out.println("Received Result  from " + fromID);
 				sem.release();
 			}

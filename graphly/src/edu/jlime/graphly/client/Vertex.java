@@ -1,12 +1,12 @@
 package edu.jlime.graphly.client;
 
-public class GraphlyVertex {
+public class Vertex {
 
 	protected long id;
 
-	protected GraphlyGraph g;
+	protected Graph g;
 
-	public GraphlyVertex(long id, GraphlyGraph graphly) {
+	public Vertex(long id, Graph graphly) {
 		this.id = id;
 		this.g = graphly;
 	}
@@ -24,8 +24,7 @@ public class GraphlyVertex {
 
 	}
 
-	public GraphlyEdge addEdge(String label, GraphlyVertex inVertex,
-			Object[] keyValues) throws Exception {
+	public Edge addEdge(String label, Vertex inVertex, Object[] keyValues) throws Exception {
 		return g.addEdge(id, (Long) inVertex.getID(), label, keyValues);
 	}
 

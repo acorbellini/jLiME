@@ -45,8 +45,7 @@ class AcknowledgeCounter {
 
 	private float timeout_mult;
 
-	public AcknowledgeCounter(Acknowledge ack, Address to,
-			NetworkConfiguration config) {
+	public AcknowledgeCounter(Acknowledge ack, Address to, NetworkConfiguration config) {
 		this.ack = ack;
 		this.timeout_mult = config.timeout_mult;
 		this.max_resend_size = config.ack_max_resend_size;
@@ -78,22 +77,18 @@ class AcknowledgeCounter {
 		}
 
 		if (log.isDebugEnabled())
-			log.debug("Sending message with seqN " + seqN + " to "
-					+ msg.getTo());
+			log.debug("Sending message with seqN " + seqN + " to " + msg.getTo());
 
-		resendArray[pos(seqN)].setData(msg, System.currentTimeMillis(), seqN,
-				config.retransmit_delay);
+		resendArray[pos(seqN)].setData(msg, System.currentTimeMillis(), seqN, config.retransmit_delay);
 
-		Message ackSeqMsg = Message
-				.encapsulateOut(msg, MessageType.ACK_SEQ, to);
+		Message ackSeqMsg = Message.encapsulateOut(msg, MessageType.ACK_SEQ, to);
 		ackSeqMsg.getHeaderBuffer().putInt(seqN);
 		ackSeqMsg.getHeaderBuffer().putInt(nextExpectedNumber);
 		// appendAcks(ackSeqMsg, 10, 10);
 
 		int size = ackSeqMsg.getSize();
 		if (size > config.max_msg_size)
-			log.warn("Surpasing max message size " + config.max_msg_size
-					+ " with " + size);
+			log.warn("Surpasing max message size " + config.max_msg_size + " with " + size);
 
 		ack.sendNext(ackSeqMsg);
 	}
@@ -104,9 +99,8 @@ class AcknowledgeCounter {
 			// acks.add(seq);
 			recheck = true;
 			if (log.isDebugEnabled())
-				log.debug("Ignoring repeated seq number " + seq
-						+ " next expected " + nextExpectedNumber + " from "
-						+ to);
+				log.debug(
+						"Ignoring repeated seq number " + seq + " next expected " + nextExpectedNumber + " from " + to);
 			return false;
 		}
 
@@ -139,14 +133,12 @@ class AcknowledgeCounter {
 	public void confirm(int seq) throws Exception {
 		if (seq <= confirmed.get()) {
 			if (log.isDebugEnabled())
-				log.debug("Ignoring confirmation for seq number " + seq
-						+ " from " + to);
+				log.debug("Ignoring confirmation for seq number " + seq + " from " + to);
 			return;
 		}
 
 		if (log.isDebugEnabled())
-			log.debug("Received confirmation for seq number " + seq + " from "
-					+ to);
+			log.debug("Received confirmation for seq number " + seq + " from " + to);
 
 		ResendData curr = resendArray[pos(seq)];
 		curr.setConfirmed();
@@ -168,8 +160,7 @@ class AcknowledgeCounter {
 							done = true;
 					}
 					if (log.isDebugEnabled())
-						log.debug("Confirmed " + seq + " updated confirmed "
-								+ confirmed.get() + " for address " + to);
+						log.debug("Confirmed " + seq + " updated confirmed " + confirmed.get() + " for address " + to);
 				}
 			}
 		}
@@ -204,8 +195,7 @@ class AcknowledgeCounter {
 		// && sent <= maxSent
 		// && count < MAX_RESEND_ITERATIONS
 		) {
-			int i = Math.abs(resendCursor.getAndIncrement())
-					% resendArray.length;
+			int i = Math.abs(resendCursor.getAndIncrement()) % resendArray.length;
 
 			ResendData res = resendArray[i];
 
@@ -221,8 +211,7 @@ class AcknowledgeCounter {
 				try {
 					res.timeSent = curr;
 					res.timeout *= timeout_mult;
-					Message ackMsg = Message.encapsulateOut(data,
-							MessageType.ACK_SEQ, to);
+					Message ackMsg = Message.encapsulateOut(data, MessageType.ACK_SEQ, to);
 					ackMsg.getHeaderBuffer().putInt(seq);
 					ackMsg.getHeaderBuffer().putInt(nextExpectedNumber);
 
@@ -230,8 +219,7 @@ class AcknowledgeCounter {
 
 					if (!confirmed) {
 						if (log.isDebugEnabled())
-							log.debug("Resending message with seq" + seq
-									+ " to " + to);
+							log.debug("Resending message with seq" + seq + " to " + to);
 						ack.sendNext(ackMsg);
 						sent++;
 					}
@@ -273,8 +261,7 @@ class AcknowledgeCounter {
 			int count = 0;
 
 			while (appended + ACK_HEADER < diff && count < rcvd.length) {
-				int i = Math.abs(ackSenderCursor.getAndIncrement()
-						% rcvd.length);
+				int i = Math.abs(ackSenderCursor.getAndIncrement() % rcvd.length);
 
 				count++;
 
@@ -338,8 +325,7 @@ class AcknowledgeCounter {
 		if (remoteNextExpected <= confirmed.get())
 			return;
 		if (log.isDebugEnabled())
-			log.debug("Confirming all [" + confirmed.get() + 1 + ","
-					+ remoteNextExpected + ") from " + to);
+			log.debug("Confirming all [" + confirmed.get() + 1 + "," + remoteNextExpected + ") from " + to);
 		for (int i = confirmed.get() + 1; i < remoteNextExpected; i++) {
 			confirm(i);
 		}

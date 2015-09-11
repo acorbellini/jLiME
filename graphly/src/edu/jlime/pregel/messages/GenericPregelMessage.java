@@ -15,8 +15,7 @@ public class GenericPregelMessage<T> extends PregelMessage {
 
 	@Override
 	public PregelMessage getCopy() {
-		GenericPregelMessage genericPregelMessage = new GenericPregelMessage(
-				getType(), from, to, v);
+		GenericPregelMessage genericPregelMessage = new GenericPregelMessage(getType(), from, to, v);
 		genericPregelMessage.setBroadcast(isBroadcast());
 		return genericPregelMessage;
 	}

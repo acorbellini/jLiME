@@ -4,15 +4,14 @@ import java.io.Serializable;
 import java.util.List;
 
 import edu.jlime.core.cluster.Peer;
-import edu.jlime.jd.ClientNode;
+import edu.jlime.jd.Node;
 import edu.jlime.jd.client.JobContext;
 import edu.jlime.util.Pair;
 import gnu.trove.list.array.TLongArrayList;
 
 public interface Mapper extends Serializable {
 
-	public List<Pair<ClientNode, TLongArrayList>> map(int max, long[] data,
-			JobContext ctx) throws Exception;
+	public List<Pair<Node, TLongArrayList>> map(int max, long[] data, JobContext ctx) throws Exception;
 
 	public String getName();
 
@@ -20,7 +19,7 @@ public interface Mapper extends Serializable {
 
 	public void update(JobContext ctx) throws Exception;
 
-	public ClientNode getNode(long v, JobContext ctx);
+	public Node getNode(long v, JobContext ctx);
 
 	public Peer[] getPeers();
 

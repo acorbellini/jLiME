@@ -20,11 +20,9 @@ public class MetricConverter implements TypeConverter {
 	}
 
 	@Override
-	public void toArray(Object o, ByteBuffer buffer, Peer client)
-			throws Exception {
+	public void toArray(Object o, ByteBuffer buffer, Peer client) throws Exception {
 		Metrics m = (Metrics) o;
-		ArrayList<Entry<String, Metric<?>>> entries = new ArrayList<>(m
-				.getMetrics().entrySet());
+		ArrayList<Entry<String, Metric<?>>> entries = new ArrayList<>(m.getMetrics().entrySet());
 		buffer.putString(m.getId());
 		buffer.putInt(entries.size());
 		for (Entry<String, Metric<?>> entry : entries) {

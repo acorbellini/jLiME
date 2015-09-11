@@ -7,7 +7,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.log4j.Logger;
 
 import edu.jlime.core.cluster.Peer;
-import edu.jlime.core.rpc.RPCDispatcher;
+import edu.jlime.core.rpc.RPC;
 
 public class ClientClassLoader extends ClassLoader {
 
@@ -15,14 +15,13 @@ public class ClientClassLoader extends ClassLoader {
 
 	Peer clientAddress;
 
-	RPCDispatcher disp;
+	RPC disp;
 
 	private Map<String, Class<?>> loaded = new ConcurrentHashMap<String, Class<?>>();
 
 	Logger log = Logger.getLogger(ClientClassLoader.class);
 
-	public ClientClassLoader(ClassLoader parent, Peer classSource,
-			RPCDispatcher rpcDispatcher) {
+	public ClientClassLoader(ClassLoader parent, Peer classSource, RPC rpcDispatcher) {
 		super(parent);
 		this.clientAddress = classSource;
 		this.disp = rpcDispatcher;
@@ -72,8 +71,7 @@ public class ClientClassLoader extends ClassLoader {
 		} catch (Exception e) {
 			log.error("", e);
 		}
-		throw new ClassNotFoundException("ClassLoader couldn't find class "
-				+ name);
+		throw new ClassNotFoundException("ClassLoader couldn't find class " + name);
 	}
 
 	public Peer getClientID() {
@@ -84,8 +82,7 @@ public class ClientClassLoader extends ClassLoader {
 		return classLoaderData;
 	}
 
-	public Class<?> loadClassFromBytes(byte[] bytes, String name)
-			throws Exception {
+	public Class<?> loadClassFromBytes(byte[] bytes, String name) throws Exception {
 		try {
 			Class<?> c = defineClass(name, bytes, 0, bytes.length);
 			resolveClass(c);
@@ -97,8 +94,7 @@ public class ClientClassLoader extends ClassLoader {
 			if (cl != null)
 				return cl;
 		}
-		throw new ClassNotFoundException("Class " + name
-				+ "  could not be loaded.");
+		throw new ClassNotFoundException("Class " + name + "  could not be loaded.");
 	}
 
 	public Class<?> getLoaded(String name) {

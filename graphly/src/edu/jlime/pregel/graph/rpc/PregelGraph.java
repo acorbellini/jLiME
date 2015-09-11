@@ -8,7 +8,7 @@ import edu.jlime.core.rpc.Sync;
 import edu.jlime.graphly.traversal.Dir;
 import gnu.trove.set.hash.TLongHashSet;
 
-public interface Graph extends Serializable {
+public interface PregelGraph extends Serializable {
 
 	@Sync
 	public abstract void putLink(long o, long dest) throws Exception;

@@ -2,7 +2,7 @@ package edu.jlime.pregel.client;
 
 import edu.jlime.pregel.PregelSubgraph;
 import edu.jlime.pregel.coordinator.Aggregator;
-import edu.jlime.pregel.graph.rpc.Graph;
+import edu.jlime.pregel.graph.rpc.PregelGraph;
 import edu.jlime.pregel.worker.CacheManagerI;
 import edu.jlime.pregel.worker.WorkerTask;
 
@@ -19,7 +19,7 @@ public class WorkerContext {
 		this.cache = cacheManager;
 	}
 
-	public Graph getGraph() {
+	public PregelGraph getGraph() {
 		return task.getGraph();
 	};
 
@@ -73,13 +73,11 @@ public class WorkerContext {
 		return task.getSubgraph(string);
 	}
 
-	public void sendAllSubGraph(String msgType, String subgraph, Object val)
-			throws Exception {
+	public void sendAllSubGraph(String msgType, String subgraph, Object val) throws Exception {
 		cache.sendAllSubGraph(msgType, subgraph, this.v, val);
 	}
 
-	public void sendAllFloatSubGraph(String msgType, String subgraph, float val)
-			throws Exception {
+	public void sendAllFloatSubGraph(String msgType, String subgraph, float val) throws Exception {
 		cache.sendAllFloatSubGraph(msgType, subgraph, this.v, val);
 	}
 }

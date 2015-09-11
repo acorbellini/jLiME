@@ -12,8 +12,7 @@ import edu.jlime.rpc.message.Message;
 import edu.jlime.rpc.message.MessageProcessor;
 import edu.jlime.rpc.message.SocketAddress;
 
-public class MultiDiscovery extends MessageProcessor implements
-		DiscoveryProvider {
+public class MultiDiscovery extends MessageProcessor implements DiscoveryProvider {
 
 	public MultiDiscovery() {
 		super("MultiDiscovery");

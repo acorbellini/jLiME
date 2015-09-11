@@ -6,7 +6,7 @@ import org.apache.log4j.Logger;
 
 import edu.jlime.pregel.client.WorkerContext;
 import edu.jlime.pregel.graph.VertexFunction;
-import edu.jlime.pregel.graph.rpc.Graph;
+import edu.jlime.pregel.graph.rpc.PregelGraph;
 import edu.jlime.pregel.messages.DoublePregelMessage;
 import edu.jlime.pregel.messages.PregelMessage;
 import gnu.trove.iterator.TLongIterator;
@@ -23,11 +23,10 @@ public class PageRankDouble implements VertexFunction<PregelMessage> {
 	// double d = 0.85;
 
 	@Override
-	public void execute(long v, Iterator<PregelMessage> in, WorkerContext ctx)
-			throws Exception {
+	public void execute(long v, Iterator<PregelMessage> in, WorkerContext ctx) throws Exception {
 		Logger log = Logger.getLogger(PageRankDouble.class);
 
-		Graph graph = ctx.getGraph();
+		PregelGraph graph = ctx.getGraph();
 
 		double oldval = graph.getDouble(v, "pagerank");
 
@@ -47,9 +46,8 @@ public class PageRankDouble implements VertexFunction<PregelMessage> {
 			double d = graph.getDouble(v, "ranksource");
 			currentVal = (1 - d) / vertexSize + d * (sum);
 			if (log.isDebugEnabled())
-				log.debug("Saving pagerank " + currentVal + " into " + v
-						+ " ( 1 - " + d + "/" + graph.vertexSize() + " + " + d
-						+ "*" + sum + " )");
+				log.debug("Saving pagerank " + currentVal + " into " + v + " ( 1 - " + d + "/" + graph.vertexSize()
+						+ " + " + d + "*" + sum + " )");
 
 			graph.setDouble(v, "pagerank", currentVal);
 

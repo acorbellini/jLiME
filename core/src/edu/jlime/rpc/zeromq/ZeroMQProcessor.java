@@ -22,8 +22,7 @@ import edu.jlime.rpc.message.MessageProcessor;
 import edu.jlime.rpc.message.SocketAddress;
 import edu.jlime.util.ByteBuffer;
 
-public class ZeroMQProcessor extends MessageProcessor implements
-		AddressListProvider {
+public class ZeroMQProcessor extends MessageProcessor implements AddressListProvider {
 
 	private Context context;
 	private Socket responder;
@@ -35,8 +34,7 @@ public class ZeroMQProcessor extends MessageProcessor implements
 	private ConcurrentHashMap<Address, Socket> addressBook = new ConcurrentHashMap<>();
 	private SocketAddress socket;
 
-	public ZeroMQProcessor(NetworkConfiguration config, String iface,
-			Address local) {
+	public ZeroMQProcessor(NetworkConfiguration config, String iface, Address local) {
 		super("ZeroMQ");
 		this.config = config;
 		this.iface = iface;
@@ -100,8 +98,7 @@ public class ZeroMQProcessor extends MessageProcessor implements
 		for (int i = 0; i < config.port_range; i++) {
 			try {
 				responder.bind("tcp://" + iface + ":" + (config.port + i));
-				this.socket = new SocketAddress(new InetSocketAddress(iface,
-						config.port + i), getType());
+				this.socket = new SocketAddress(new InetSocketAddress(iface, config.port + i), getType());
 				break;
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -114,8 +111,7 @@ public class ZeroMQProcessor extends MessageProcessor implements
 				while (!stopped) {
 					// Wait for next request from client
 					byte[] b = responder.recv();
-					final edu.jlime.util.ByteBuffer buff = new edu.jlime.util.ByteBuffer(
-							b);
+					final edu.jlime.util.ByteBuffer buff = new edu.jlime.util.ByteBuffer(b);
 
 					final Address from = new Address(buff.getUUID());
 					final Address to = new Address(buff.getUUID());
@@ -130,8 +126,7 @@ public class ZeroMQProcessor extends MessageProcessor implements
 					exec.execute(new Runnable() {
 						@Override
 						public void run() {
-							Message msg = Message.deEncapsulate(buff, from,
-									local);
+							Message msg = Message.deEncapsulate(buff, from, local);
 							try {
 								notifyRcvd(msg);
 							} catch (Exception e) {

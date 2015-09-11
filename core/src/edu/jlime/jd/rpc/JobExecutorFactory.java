@@ -4,14 +4,13 @@ import java.util.List;
 
 import edu.jlime.core.cluster.Peer;
 import edu.jlime.core.rpc.ClientFactory;
-import edu.jlime.core.rpc.RPCDispatcher;
+import edu.jlime.core.rpc.RPC;
 
-public class JobExecutorFactory implements
-		ClientFactory<JobExecutor, JobExecutorBroadcast> {
-	private RPCDispatcher rpc;
+public class JobExecutorFactory implements ClientFactory<JobExecutor, JobExecutorBroadcast> {
+	private RPC rpc;
 	private String target;
 
-	public JobExecutorFactory(RPCDispatcher rpc, String target) {
+	public JobExecutorFactory(RPC rpc, String target) {
 		this.rpc = rpc;
 		this.target = target;
 	}

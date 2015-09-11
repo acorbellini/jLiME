@@ -4,7 +4,7 @@ import java.util.UUID;
 
 import edu.jlime.core.stream.RemoteInputStream;
 import edu.jlime.core.stream.RemoteOutputStream;
-import edu.jlime.jd.ClientNode;
+import edu.jlime.jd.Node;
 import edu.jlime.jd.client.JobContext;
 
 public abstract class StreamJob extends RunJob {
@@ -20,13 +20,13 @@ public abstract class StreamJob extends RunJob {
 		this.streamIDOutput = UUID.randomUUID();
 	}
 
-	public final void run(JobContext env, ClientNode origin) throws Exception {
-		run(env.getCluster().getInputStream(streamIDInput, origin), env
-				.getCluster().getOutputStream(streamIDOutput, origin), env);
+	public final void run(JobContext env, Node origin) throws Exception {
+		run(env.getCluster().getInputStream(streamIDInput, origin),
+				env.getCluster().getOutputStream(streamIDOutput, origin), env);
 	}
 
-	public abstract void run(RemoteInputStream inputStream,
-			RemoteOutputStream outputStream, JobContext ctx) throws Exception;
+	public abstract void run(RemoteInputStream inputStream, RemoteOutputStream outputStream, JobContext ctx)
+			throws Exception;
 
 	public UUID getStreamIDInput() {
 		return streamIDInput;

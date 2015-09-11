@@ -2,11 +2,7 @@ package edu.jlime.graphly.util;
 
 import java.util.Iterator;
 
-import com.google.common.collect.Lists;
-
-import edu.jlime.graphly.client.VertexIterator;
-import edu.jlime.graphly.storenode.GraphlyStoreNode;
-import edu.jlime.graphly.storenode.rpc.GraphlyStoreNodeI;
+import edu.jlime.graphly.storenode.StoreNodeImpl;
 import gnu.trove.decorator.TLongSetDecorator;
 import gnu.trove.iterator.TLongFloatIterator;
 import gnu.trove.set.hash.TLongHashSet;
@@ -25,7 +21,7 @@ public class SumFloatPropertiesGather implements Gather<Float> {
 	}
 
 	@Override
-	public Float gather(String graph, GraphlyStoreNode node) throws Exception {
+	public Float gather(String graph, StoreNodeImpl node) throws Exception {
 
 		if (v == null) {
 			float ret = 0f;

@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import edu.jlime.jd.ClientCluster;
-import edu.jlime.jd.ClientNode;
+import edu.jlime.jd.Node;
 import edu.jlime.jd.job.Job;
 
 public class RoundRobinTask<T> extends BroadcastTask<T> {
@@ -14,12 +14,11 @@ public class RoundRobinTask<T> extends BroadcastTask<T> {
 	}
 
 	@Override
-	public <J extends Job<T>> HashMap<Job<T>, ClientNode> split(
-			List<ClientNode> peers, List<J> jobs) {
-		HashMap<Job<T>, ClientNode> map = new HashMap<>();
+	public <J extends Job<T>> HashMap<Job<T>, Node> split(List<Node> peers, List<J> jobs) {
+		HashMap<Job<T>, Node> map = new HashMap<>();
 		int count = 0;
 		for (Job<T> job : jobs) {
-			ClientNode p = peers.get(count++ % peers.size());
+			Node p = peers.get(count++ % peers.size());
 			map.put(job, p);
 		}
 		return map;

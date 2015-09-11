@@ -1,12 +1,11 @@
 package edu.jlime.graphly.traversal;
 
-
 public class MarkStep implements Step {
 
-	private GraphlyTraversal tr;
+	private Traversal tr;
 	private String k;
 
-	public MarkStep(String k, GraphlyTraversal graphlyTraversal) {
+	public MarkStep(String k, Traversal graphlyTraversal) {
 		this.k = k;
 		this.tr = graphlyTraversal;
 	}

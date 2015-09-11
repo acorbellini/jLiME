@@ -13,8 +13,7 @@ public class RemoteReferenceConverter implements TypeConverter {
 	}
 
 	@Override
-	public void toArray(Object o, ByteBuffer buffer, Peer cliID)
-			throws Exception {
+	public void toArray(Object o, ByteBuffer buffer, Peer cliID) throws Exception {
 		RemoteReference rr = (RemoteReference) o;
 		tc.objectToByteArray(rr.getNode(), buffer, cliID);
 		buffer.putString(rr.getKey());
@@ -22,7 +21,7 @@ public class RemoteReferenceConverter implements TypeConverter {
 
 	@Override
 	public Object fromArray(ByteBuffer buff) throws Exception {
-		ClientNode p = (ClientNode) tc.getObjectFromArray(buff);
+		Node p = (Node) tc.getObjectFromArray(buff);
 		String key = buff.getString();
 		RemoteReference rr = new RemoteReference(p, key);
 		return rr;

@@ -1,7 +1,7 @@
 package edu.jlime.graphly.util;
 
-import edu.jlime.graphly.client.GraphlyClient;
-import edu.jlime.graphly.client.GraphlyGraph;
+import edu.jlime.graphly.client.Graphly;
+import edu.jlime.graphly.client.Graph;
 import edu.jlime.graphly.jobs.MapperFactory;
 import edu.jlime.graphly.rec.Recommendation;
 import edu.jlime.graphly.traversal.Pregel;
@@ -9,11 +9,11 @@ import edu.jlime.graphly.traversal.Pregel;
 public class QueryTest {
 
 	public static void main(String[] args) throws Exception {
-		GraphlyClient graphly = GraphlyClient.build(4);
+		Graphly graphly = Graphly.build(4);
 
 		// System.out.println(graphly.listGraphs());
 		//
-		final GraphlyGraph g = graphly.getGraph(args[0]);
+		final Graph g = graphly.getGraph(args[0]);
 		//
 		// long init = System.currentTimeMillis();
 		// Pregel tr = g.v().set("mapper", MapperFactory.location())
@@ -102,9 +102,8 @@ public class QueryTest {
 		// System.out.println(sum);
 		// }
 		long init = System.currentTimeMillis();
-		Pregel pagerank = g.v().set("mapper", MapperFactory.location())
-				.as(Recommendation.class).pagerank("pagerank", 30, 1E-5f)
-				.as(Pregel.class);
+		Pregel pagerank = g.v().set("mapper", MapperFactory.location()).as(Recommendation.class)
+				.pagerank("pagerank", 30, 1E-5f).as(Pregel.class);
 
 		pagerank.getConfig().threads(2).queue(1000);
 

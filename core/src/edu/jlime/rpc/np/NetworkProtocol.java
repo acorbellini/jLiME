@@ -207,8 +207,6 @@ public abstract class NetworkProtocol extends SimpleMessageProcessor implements 
 		if (metrics != null)
 			metrics.set("jlime.interface").remove(this.socket.getAddr() + ":" + this.socket.getPort());
 
-		
-		
 		stopNP();
 	}
 

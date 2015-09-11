@@ -6,8 +6,7 @@ import edu.jlime.util.ByteBuffer;
 public class DoubleConverter implements TypeConverter {
 
 	@Override
-	public void toArray(Object o, ByteBuffer buffer, Peer cliID)
-			throws Exception {
+	public void toArray(Object o, ByteBuffer buffer, Peer cliID) throws Exception {
 		buffer.putDouble((Double) o);
 	}
 

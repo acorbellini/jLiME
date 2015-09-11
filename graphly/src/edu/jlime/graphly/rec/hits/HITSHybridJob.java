@@ -6,11 +6,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import edu.jlime.graphly.client.GraphlyGraph;
+import edu.jlime.graphly.client.Graph;
 import edu.jlime.graphly.client.SubGraph;
 import edu.jlime.graphly.rec.salsa.AuthHubSubResult;
 import edu.jlime.graphly.traversal.Dir;
-import edu.jlime.jd.ClientNode;
+import edu.jlime.jd.Node;
 import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.Job;
 import gnu.trove.iterator.TLongFloatIterator;
@@ -19,13 +19,13 @@ import gnu.trove.map.hash.TLongFloatHashMap;
 
 public class HITSHybridJob implements Job<AuthHubSubResult> {
 
-	private GraphlyGraph g;
+	private Graph g;
 	private String auth;
 	private String hub;
 	private long[] subgraph;
 	private TLongArrayList vertices;
 
-	public HITSHybridJob(GraphlyGraph graph, String auth, String hub, long[] subgraph, TLongArrayList value) {
+	public HITSHybridJob(Graph graph, String auth, String hub, long[] subgraph, TLongArrayList value) {
 		this.g = graph;
 		this.auth = auth;
 		this.hub = hub;
@@ -34,7 +34,7 @@ public class HITSHybridJob implements Job<AuthHubSubResult> {
 	}
 
 	@Override
-	public AuthHubSubResult call(JobContext env, ClientNode peer) throws Exception {
+	public AuthHubSubResult call(JobContext env, Node peer) throws Exception {
 		final SubGraph sg = g.getSubGraph("hitsg", this.subgraph);
 
 		ArrayList<Future<AuthHubSubResult>> futs = new ArrayList<>();

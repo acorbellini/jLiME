@@ -36,9 +36,8 @@ class TCPPacketConnection implements Runnable {
 
 	private TimerTask closeTimer;
 
-	public TCPPacketConnection(Socket sock, final long time_limit,
-			TCPConnectionManager mgr, int input_buffer, int output_buffer)
-			throws IOException {
+	public TCPPacketConnection(Socket sock, final long time_limit, TCPConnectionManager mgr, int input_buffer,
+			int output_buffer) throws IOException {
 		this.mgr = mgr;
 		this.conn = sock;
 		is = sock.getInputStream();
@@ -102,9 +101,8 @@ class TCPPacketConnection implements Runnable {
 				// is.readFully(br, 0, br.length);
 				byte[] b = read();
 				if (b != null) {
-					mgr.rcvr.dataReceived(b,
-							(InetSocketAddress) conn.getRemoteSocketAddress());
-				}// mgr.packets.put(new TCPPacket(b, this));
+					mgr.rcvr.dataReceived(b, (InetSocketAddress) conn.getRemoteSocketAddress());
+				} // mgr.packets.put(new TCPPacket(b, this));
 					// else
 					// return;
 			} catch (Exception e) {

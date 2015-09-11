@@ -11,11 +11,11 @@ import java.util.TreeMap;
 
 import org.springframework.context.support.FileSystemXmlApplicationContext;
 
-import edu.jlime.graphly.client.GraphlyClient;
-import edu.jlime.graphly.client.GraphlyGraph;
+import edu.jlime.graphly.client.Graphly;
+import edu.jlime.graphly.client.Graph;
 import edu.jlime.graphly.jobs.Mapper;
 import edu.jlime.graphly.server.LocalGraphlyServer;
-import edu.jlime.jd.ClientNode;
+import edu.jlime.jd.Node;
 import edu.jlime.jd.profiler.ClusterProfiler;
 import edu.jlime.jd.profiler.MetricExtractor;
 import edu.jlime.jd.profiler.ProfilerFunctionPerDate;
@@ -95,25 +95,18 @@ public class RecommendationTest {
 				// Mapper mapper = ctxt.getBean(mapperName, Mapper.class);
 				for (Entry<String, String> ug : users.entrySet())
 					for (int runID = 0; runID < Integer.valueOf(runs); runID++) {
-						if (timeTable.find(queryID, runID, ug.getKey(),
-								mapper.getName())) {
-							System.out.println("Running Experiment " + queryID
-									+ " run " + runID + " mapper "
-									+ mapper.getName() + " users "
-									+ ug.getKey());
+						if (timeTable.find(queryID, runID, ug.getKey(), mapper.getName())) {
+							System.out.println("Running Experiment " + queryID + " run " + runID + " mapper "
+									+ mapper.getName() + " users " + ug.getKey());
 						} else {
-							System.out.println("Running Experiment " + queryID
-									+ " run " + runID + " mapper "
-									+ mapper.getName() + " users "
-									+ ug.getKey());
-							String[] split = ug.getValue().trim()
-									.replaceAll("\\s+", " ").split(" ");
+							System.out.println("Running Experiment " + queryID + " run " + runID + " mapper "
+									+ mapper.getName() + " users " + ug.getKey());
+							String[] split = ug.getValue().trim().replaceAll("\\s+", " ").split(" ");
 							TLongArrayList list = new TLongArrayList();
 							for (String string : split) {
 								list.add(Long.valueOf(string));
 							}
-							run(mapper, mapper.getName(), runID, queryID, q,
-									ug.getKey(), list.toArray(), timeTable,
+							run(mapper, mapper.getName(), runID, queryID, q, ug.getKey(), list.toArray(), timeTable,
 									networkTable, memoryTable);
 							timeTable.toCSV(timeFile);
 							networkTable.toCSV(netFile);
@@ -126,25 +119,21 @@ public class RecommendationTest {
 
 	}
 
-	public void run(Mapper mapper, String mapperName, Integer runID,
-			String experiment, QueryContainer queryContainer, String ug,
-			long[] users, Table time, Table net, Table mem) throws Exception,
-			FileNotFoundException, IOException {
+	public void run(Mapper mapper, String mapperName, Integer runID, String experiment, QueryContainer queryContainer,
+			String ug, long[] users, Table time, Table net, Table mem)
+					throws Exception, FileNotFoundException, IOException {
 		if (execType.equals("cluster"))
-			CommandLineUtils
-					.execCommand("bash graphly.sh start eight.txt acorbellini");
+			CommandLineUtils.execCommand("bash graphly.sh start eight.txt acorbellini");
 		else {
 			String localdir = ctxt.getBean("localdir", String.class);
-			this.localServers = LocalGraphlyServer.createServers(localdir,
-					this.servers, true, this.servers, null, null);
+			this.localServers = LocalGraphlyServer.createServers(localdir, this.servers, true, this.servers, null,
+					null);
 		}
-		System.out.println("Creating client, waiting for " + servers
-				+ " execution nodes.");
+		System.out.println("Creating client, waiting for " + servers + " execution nodes.");
 
-		GraphlyClient graph = GraphlyClient.build(servers);
-		GraphlyGraph g = graph.getGraph(graphID);
-		ClusterProfiler profiler = new ClusterProfiler(graph.getJobClient()
-				.getCluster(), 2000);
+		Graphly graph = Graphly.build(servers);
+		Graph g = graph.getGraph(graphID);
+		ClusterProfiler profiler = new ClusterProfiler(graph.getJobClient().getCluster(), 2000);
 		profiler.start();
 		long init = System.currentTimeMillis();
 		queryContainer.run(g, users, mapper);
@@ -160,49 +149,44 @@ public class RecommendationTest {
 
 		time.addRow(experiment, runID, ug, mapper.getName(), total / 1000);
 
-		Map<ClientNode, Float> diffs = profiler.calcPerNode(
-				new ProfilerFunctionPerNode<Float>() {
+		Map<Node, Float> diffs = profiler.calcPerNode(new ProfilerFunctionPerNode<Float>() {
 
-					@Override
-					public Float call(TreeMap<Date, Float> value) {
-						Float first = Float.valueOf(value.firstEntry()
-								.getValue());
-						Float last = Float
-								.valueOf(value.lastEntry().getValue());
-						return last - first;
-					}
-				}, new MetricExtractor<Float>() {
-					@Override
-					public Float get(Metrics m) {
-						return Float.valueOf(m.list("sysinfo.net")
-								.findFirst("eth|p7p1").get("sent_total").get());
-					}
-				});
+			@Override
+			public Float call(TreeMap<Date, Float> value) {
+				Float first = Float.valueOf(value.firstEntry().getValue());
+				Float last = Float.valueOf(value.lastEntry().getValue());
+				return last - first;
+			}
+		}, new MetricExtractor<Float>() {
+			@Override
+			public Float get(Metrics m) {
+				return Float.valueOf(m.list("sysinfo.net").findFirst("eth|p7p1").get("sent_total").get());
+			}
+		});
 		float netSum = 0f;
-		for (Entry<ClientNode, Float> netentry : diffs.entrySet()) {
+		for (Entry<Node, Float> netentry : diffs.entrySet()) {
 			netSum += netentry.getValue();
 		}
 
 		net.addRow(experiment, runID, ug, mapper.getName(), netSum);
 
-		Map<Date, Float> memSums = profiler.calcPerDate(
-				new ProfilerFunctionPerDate<Float>() {
+		Map<Date, Float> memSums = profiler.calcPerDate(new ProfilerFunctionPerDate<Float>() {
 
-					@Override
-					public Float call(TreeMap<ClientNode, Float> value) {
-						float sum = 0f;
-						for (Entry<ClientNode, Float> e : value.entrySet()) {
-							sum += Float.valueOf(e.getValue());
-						}
-						return sum;
-					}
-				}, new MetricExtractor<Float>() {
+			@Override
+			public Float call(TreeMap<Node, Float> value) {
+				float sum = 0f;
+				for (Entry<Node, Float> e : value.entrySet()) {
+					sum += Float.valueOf(e.getValue());
+				}
+				return sum;
+			}
+		}, new MetricExtractor<Float>() {
 
-					@Override
-					public Float get(Metrics m) {
-						return Float.valueOf(m.get("jvminfo.mem.used").get());
-					}
-				});
+			@Override
+			public Float get(Metrics m) {
+				return Float.valueOf(m.get("jvminfo.mem.used").get());
+			}
+		});
 
 		float memMax = 0f;
 		for (Entry<Date, Float> memEntry : memSums.entrySet()) {
@@ -211,8 +195,7 @@ public class RecommendationTest {
 		}
 		mem.addRow(experiment, runID, ug, mapper.getName(), memMax);
 		if (execType.equals("cluster"))
-			CommandLineUtils
-					.execCommand("bash graphly.sh stop eight.txt acorbellini");
+			CommandLineUtils.execCommand("bash graphly.sh stop eight.txt acorbellini");
 		else {
 			for (LocalGraphlyServer l : this.localServers) {
 				l.stop();

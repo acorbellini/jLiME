@@ -8,19 +8,18 @@ import edu.jlime.core.cluster.Peer;
 
 public class RPCClient implements Transferible {
 
-	protected static ExecutorService async = Executors
-			.newCachedThreadPool(new ThreadFactory() {
+	protected static ExecutorService async = Executors.newCachedThreadPool(new ThreadFactory() {
 
-				@Override
-				public Thread newThread(Runnable r) {
-					Thread t = Executors.defaultThreadFactory().newThread(r);
-					t.setName("LocalRPCAsyncThreads");
-					t.setDaemon(true);
-					return t;
-				}
-			});
+		@Override
+		public Thread newThread(Runnable r) {
+			Thread t = Executors.defaultThreadFactory().newThread(r);
+			t.setName("LocalRPCAsyncThreads");
+			t.setDaemon(true);
+			return t;
+		}
+	});
 
-	transient protected RPCDispatcher disp;
+	transient protected RPC disp;
 	protected Peer local;
 	protected Peer dest;
 	protected Peer client;
@@ -29,7 +28,7 @@ public class RPCClient implements Transferible {
 	public RPCClient() {
 	}
 
-	public RPCClient(RPCDispatcher disp, Peer dest, Peer client, String targetID) {
+	public RPCClient(RPC disp, Peer dest, Peer client, String targetID) {
 		this.disp = disp;
 		this.dest = dest;
 		this.client = client;
@@ -41,8 +40,7 @@ public class RPCClient implements Transferible {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + ((dest == null) ? 0 : dest.hashCode());
-		result = prime * result
-				+ ((targetID == null) ? 0 : targetID.hashCode());
+		result = prime * result + ((targetID == null) ? 0 : targetID.hashCode());
 		return result;
 	}
 
@@ -69,7 +67,7 @@ public class RPCClient implements Transferible {
 	}
 
 	@Override
-	public void setRPC(RPCDispatcher rpc) throws Exception {
+	public void setRPC(RPC rpc) throws Exception {
 		this.disp = rpc;
 	}
 

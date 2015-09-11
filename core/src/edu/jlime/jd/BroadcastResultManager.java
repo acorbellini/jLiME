@@ -12,10 +12,9 @@ import edu.jlime.jd.job.ResultManager;
 
 final class BroadcastResultManager<R> extends ResultManager<R> {
 
-	private final BroadcastException exception = new BroadcastException(
-			"Broadcast Exception");
+	private final BroadcastException exception = new BroadcastException("Broadcast Exception");
 
-	private final Map<ClientNode, R> resultMap = new Hashtable<>();
+	private final Map<Node, R> resultMap = new Hashtable<>();
 
 	private final Semaphore sem;
 
@@ -27,13 +26,13 @@ final class BroadcastResultManager<R> extends ResultManager<R> {
 	}
 
 	@Override
-	public void handleException(Exception res, String jobID, ClientNode fromID) {
+	public void handleException(Exception res, String jobID, Node fromID) {
 		exception.put(fromID.getPeer(), res);
 		sem.release();
 	}
 
 	@Override
-	public void handleResult(R res, String jobID, ClientNode from) {
+	public void handleResult(R res, String jobID, Node from) {
 		if (res != null) {
 			resultMap.put(from, res);
 		} else
@@ -46,8 +45,7 @@ final class BroadcastResultManager<R> extends ResultManager<R> {
 
 	public void waitResults() {
 		if (log.isDebugEnabled())
-			log.debug("Broadcast result manager waiting for "
-					+ sem.availablePermits() + " results.");
+			log.debug("Broadcast result manager waiting for " + sem.availablePermits() + " results.");
 		try {
 			sem.acquire();
 		} catch (InterruptedException e) {
@@ -63,7 +61,7 @@ final class BroadcastResultManager<R> extends ResultManager<R> {
 		return exception;
 	}
 
-	public Map<ClientNode, R> getRes() {
+	public Map<Node, R> getRes() {
 		return resultMap;
 	}
 

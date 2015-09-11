@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import edu.jlime.core.cluster.StreamResult;
 import edu.jlime.core.stream.RemoteInputStream;
 import edu.jlime.core.stream.RemoteOutputStream;
-import edu.jlime.jd.ClientNode;
+import edu.jlime.jd.Node;
 import edu.jlime.jd.client.Client;
 import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.StreamJob;
@@ -28,8 +28,7 @@ public class StreamTest {
 	public static class StreamTestJob extends StreamJob {
 
 		@Override
-		public void run(RemoteInputStream inputStream,
-				RemoteOutputStream outputStream, JobContext ctx)
+		public void run(RemoteInputStream inputStream, RemoteOutputStream outputStream, JobContext ctx)
 				throws Exception {
 			// Scanner scanner = new Scanner(inputStream);
 			// try {
@@ -65,8 +64,7 @@ public class StreamTest {
 			float time = (System.nanoTime() - init) / (float) (1000000000);
 			System.out.println(megas / time + " mb/s");
 
-			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(
-					outputStream));
+			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream));
 			writer.write("Hello hello hello, is there anybody out there?");
 			writer.close();
 		}
@@ -78,7 +76,7 @@ public class StreamTest {
 
 		long init = System.nanoTime();
 
-		ClientNode peer = cli.getCluster().getAnyExecutor();
+		Node peer = cli.getCluster().getAnyExecutor();
 
 		StreamTestJob stream = new StreamTestJob();
 

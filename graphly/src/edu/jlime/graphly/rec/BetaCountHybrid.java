@@ -1,15 +1,14 @@
 package edu.jlime.graphly.rec;
 
-import java.util.Arrays;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
 
-import edu.jlime.graphly.client.GraphlyGraph;
+import edu.jlime.graphly.client.Graph;
 import edu.jlime.graphly.rec.CustomStep.CustomFunction;
 import edu.jlime.graphly.traversal.CountResult;
 import edu.jlime.graphly.traversal.Dir;
-import edu.jlime.graphly.traversal.GraphlyTraversal;
+import edu.jlime.graphly.traversal.Traversal;
 import edu.jlime.graphly.traversal.TraversalResult;
 import edu.jlime.util.Pair;
 import gnu.trove.map.hash.TLongFloatHashMap;
@@ -32,9 +31,9 @@ public class BetaCountHybrid implements CustomFunction {
 	}
 
 	@Override
-	public TraversalResult execute(TraversalResult before, GraphlyTraversal tr) throws Exception {
+	public TraversalResult execute(TraversalResult before, Traversal tr) throws Exception {
 
-		GraphlyGraph g = tr.getGraph();
+		Graph g = tr.getGraph();
 		TLongHashSet vertices = before.vertices();
 
 		g.v(vertices).set("mapper", tr.get("mapper"))

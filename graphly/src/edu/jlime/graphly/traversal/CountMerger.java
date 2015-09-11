@@ -8,8 +8,7 @@ import edu.jlime.jd.task.ResultListener;
 import gnu.trove.iterator.TLongFloatIterator;
 import gnu.trove.map.hash.TLongFloatHashMap;
 
-public class CountMerger implements
-		ResultListener<TraversalResult, TraversalResult>, Serializable {
+public class CountMerger implements ResultListener<TraversalResult, TraversalResult>, Serializable {
 	TLongFloatHashMap temp = new TLongFloatHashMap();
 
 	@Override

@@ -2,13 +2,13 @@ package edu.jlime.pregel.worker;
 
 import java.util.Iterator;
 
-import edu.jlime.pregel.graph.rpc.Graph;
+import edu.jlime.pregel.graph.rpc.PregelGraph;
 
 public class GraphVertexList implements VertexList {
 
-	private Graph g;
+	private PregelGraph g;
 
-	public GraphVertexList(Graph graph) {
+	public GraphVertexList(PregelGraph graph) {
 		this.g = graph;
 	}
 

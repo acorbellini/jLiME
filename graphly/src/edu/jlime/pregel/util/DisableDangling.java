@@ -4,7 +4,7 @@ import java.util.Iterator;
 
 import edu.jlime.pregel.client.WorkerContext;
 import edu.jlime.pregel.graph.VertexFunction;
-import edu.jlime.pregel.graph.rpc.Graph;
+import edu.jlime.pregel.graph.rpc.PregelGraph;
 import edu.jlime.pregel.messages.PregelMessage;
 import gnu.trove.iterator.TLongIterator;
 import gnu.trove.set.hash.TLongHashSet;
@@ -12,9 +12,8 @@ import gnu.trove.set.hash.TLongHashSet;
 public class DisableDangling implements VertexFunction<PregelMessage> {
 
 	@Override
-	public void execute(long v, Iterator<PregelMessage> in, WorkerContext ctx)
-			throws Exception {
-		Graph graph = ctx.getGraph();
+	public void execute(long v, Iterator<PregelMessage> in, WorkerContext ctx) throws Exception {
+		PregelGraph graph = ctx.getGraph();
 		if (ctx.getSuperStep() > 0) {
 			while (in.hasNext()) {
 				PregelMessage pm = in.next();

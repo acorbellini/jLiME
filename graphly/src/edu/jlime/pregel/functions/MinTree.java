@@ -12,8 +12,7 @@ class MinTree implements ObjectVertexFunction {
 	private static final String DELETE = "delete";
 
 	@Override
-	public void execute(long v, TLongObjectHashMap<Object> incoming,
-			WorkerContext ctx) throws Exception {
+	public void execute(long v, TLongObjectHashMap<Object> incoming, WorkerContext ctx) throws Exception {
 		// TODO refactor to use Tlongobjectmap
 		// Graph graph = ctx.getGraph();
 		//

@@ -6,15 +6,15 @@ import edu.jlime.core.rpc.RPCObject;
 import edu.jlime.util.ByteBuffer;
 import gnu.trove.iterator.TLongFloatIterator;
 
-public class GraphlyCount implements Serializable, RPCObject {
+public class Count implements Serializable, RPCObject {
 	// TLongFloatMap res;
 	long[] keys;
 	float[] vals;
 
-	public GraphlyCount() {
+	public Count() {
 	}
 
-	public GraphlyCount(long[] k, float[] vals) {
+	public Count(long[] k, float[] vals) {
 		this.keys = k;
 		this.vals = vals;
 	}

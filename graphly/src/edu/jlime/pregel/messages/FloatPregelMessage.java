@@ -19,8 +19,7 @@ public class FloatPregelMessage extends PregelMessage {
 
 	@Override
 	public PregelMessage getCopy() {
-		FloatPregelMessage floatPregelMessage = new FloatPregelMessage(
-				getType(), from, to, v);
+		FloatPregelMessage floatPregelMessage = new FloatPregelMessage(getType(), from, to, v);
 		floatPregelMessage.setBroadcast(isBroadcast());
 		return floatPregelMessage;
 	}

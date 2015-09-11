@@ -17,9 +17,7 @@ public class LinuxNetInfo extends SysInfoProvider {
 			@Override
 			public Set<String> updateSet(IMetrics mgr) throws Exception {
 				HashSet<String> currentifaces = new HashSet<>();
-				String[] ifaces = CommandLineUtils
-						.execCommand(
-								"ifconfig | cut -d' ' -f1 | tr '\\n' ' '| tr -s ' '")
+				String[] ifaces = CommandLineUtils.execCommand("ifconfig | cut -d' ' -f1 | tr '\\n' ' '| tr -s ' '")
 						.trim().split(" ");
 				for (String iface : ifaces) {
 					String currentRoot = "sysinfo.net." + iface;
@@ -27,24 +25,20 @@ public class LinuxNetInfo extends SysInfoProvider {
 
 					mgr.simple(currentRoot + ".ifname", iface);
 
-					String ifconfigForIface = CommandLineUtils
-							.execCommand("ifconfig "
-									+ iface
-									+ " | grep -o -E [0-9]+\\\\.[0-9]+\\\\.[0-9]+\\\\.[0-9]+ | tr '\\n' ' '| tr -s ' '");
+					String ifconfigForIface = CommandLineUtils.execCommand("ifconfig " + iface
+							+ " | grep -o -E [0-9]+\\\\.[0-9]+\\\\.[0-9]+\\\\.[0-9]+ | tr '\\n' ' '| tr -s ' '");
 					if (!ifconfigForIface.isEmpty()) {
 						String[] ipdata = ifconfigForIface.trim().split(" ");
 						mgr.simple(currentRoot + ".ip", ipdata[0]);
 						mgr.simple(currentRoot + ".broadcast", ipdata[1]);
 					}
 
-					String ifconfigConsumption = CommandLineUtils
-							.execCommand("cat /sys/class/net/" + iface
-									+ "/statistics/rx_bytes /sys/class/net/"
-									+ iface + "/statistics/tx_bytes");
-					String[] bytes = ifconfigConsumption.replace("\n", " ")
-							.split(" ");
+					String ifconfigConsumption = CommandLineUtils.execCommand("cat /sys/class/net/" + iface
+							+ "/statistics/rx_bytes /sys/class/net/" + iface + "/statistics/tx_bytes");
+					String[] bytes = ifconfigConsumption.replace("\n", " ").split(" ");
 					// if (log.isDebugEnabled())
-					// log.debug("Consumption info (Ifconfig) result of interface "
+					// log.debug("Consumption info (Ifconfig) result of
+					// interface "
 					// + iface + " : " + ifconfigConsumption);
 
 					Float rcvd = Float.valueOf(bytes[0]) / 1024;

@@ -44,8 +44,7 @@ public class Header {
 	public static Header fromBytes(ByteBuffer reader) {
 		MessageType type = MessageType.fromID(reader.get());
 		int size = reader.getInt();
-		ByteBuffer headerData = new ByteBuffer(reader, reader.readPos,
-				reader.readPos + size);
+		ByteBuffer headerData = new ByteBuffer(reader, reader.readPos, reader.readPos + size);
 		Header header = new Header();
 		header.type = type;
 		header.headerData = headerData;

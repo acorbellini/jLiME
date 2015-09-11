@@ -30,33 +30,28 @@ class FlowControlPerNode extends SimpleMessageProcessor {
 
 	private Timer t;
 
-	public FlowControlPerNode(Address to, MessageProcessor comm,
-			final FCConfiguration config) {
+	public FlowControlPerNode(Address to, MessageProcessor comm, final FCConfiguration config) {
 		super(comm, "Flow Control for " + to);
 		this.addr = to;
 		this.config = config;
 		this.max_send = config.max_send_initial;
 		t = new Timer("Resend ack from flow control to " + to);
-		t.schedule(
-				new TimerTask() {
-					@Override
-					public void run() {
-						try {
+		t.schedule(new TimerTask() {
+			@Override
+			public void run() {
+				try {
 
-							long curr = System.currentTimeMillis();
-							if (curr - lastFCAckSent < config.time_before_resend_ack)
-								return;
-							if (log.isDebugEnabled())
-								log.debug("Sending FC_ACK, passed "
-										+ config.time_before_resend_ack / 1000
-										+ " sec.");
-							sendFCAck();
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
-					}
-				}, this.config.time_before_resend_ack,
-				this.config.time_before_resend_ack);
+					long curr = System.currentTimeMillis();
+					if (curr - lastFCAckSent < config.time_before_resend_ack)
+						return;
+					if (log.isDebugEnabled())
+						log.debug("Sending FC_ACK, passed " + config.time_before_resend_ack / 1000 + " sec.");
+					sendFCAck();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}, this.config.time_before_resend_ack, this.config.time_before_resend_ack);
 	}
 
 	Long lastWaitTime;
@@ -79,28 +74,24 @@ class FlowControlPerNode extends SimpleMessageProcessor {
 
 	private void updateMaxSend(Long currLatency, Long lastLatency) {
 
-		float improvement = config.movement_factor
-				+ (lastLatency / (float) currLatency);
+		float improvement = config.movement_factor + (lastLatency / (float) currLatency);
 
 		int old_max_send = max_send;
 
-		max_send = (int) (max_send * config.old_send_importance + config.new_send_importance
-				* max_send * improvement);
+		max_send = (int) (max_send * config.old_send_importance + config.new_send_importance * max_send * improvement);
 
 		if (log.isDebugEnabled())
-			log.debug("Current latency is " + currLatency
-					+ " last latency was " + lastLatency
-					+ " Updating Max Send " + old_max_send + " to " + max_send);
+			log.debug("Current latency is " + currLatency + " last latency was " + lastLatency + " Updating Max Send "
+					+ old_max_send + " to " + max_send);
 
 		if (max_send < config.min_send_threshold)
 			max_send = config.min_send_threshold;
 	}
 
-	public synchronized void getPermission(int size)
-			throws InterruptedException {
+	public synchronized void getPermission(int size) throws InterruptedException {
 		while (currSend + size >= max_send) {
-			log.debug("Message of size " + size + " passed size of Max send ("
-					+ max_send + "b) Current Send: " + currSend);
+			log.debug("Message of size " + size + " passed size of Max send (" + max_send + "b) Current Send: "
+					+ currSend);
 			lastWaitTime = System.currentTimeMillis();
 			wait();
 		}
@@ -136,8 +127,7 @@ class FlowControlPerNode extends SimpleMessageProcessor {
 
 	private long lastFCAckSent = System.currentTimeMillis();
 
-	public synchronized void update(int rcvd, int max_send_remote)
-			throws Exception {
+	public synchronized void update(int rcvd, int max_send_remote) throws Exception {
 
 		currRcvd += rcvd;
 		// if (first && max_send_remote != max_rcv) {
@@ -151,8 +141,7 @@ class FlowControlPerNode extends SimpleMessageProcessor {
 		// }
 		if (currRcvd >= config.send_ack_threshold * max_send_remote) {
 			if (log.isDebugEnabled())
-				log.debug("FC passed " + config.send_ack_threshold + " of "
-						+ max_send_remote + " sending FC_ACK");
+				log.debug("FC passed " + config.send_ack_threshold + " of " + max_send_remote + " sending FC_ACK");
 			sendFCAck();
 			currRcvd = 0;
 		}

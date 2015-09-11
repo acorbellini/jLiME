@@ -4,7 +4,6 @@ import java.net.InetSocketAddress;
 
 public interface DataReceiver {
 
-	public void dataReceived(byte[] array, InetSocketAddress addr)
-			throws Exception;
+	public void dataReceived(byte[] array, InetSocketAddress addr) throws Exception;
 
 }

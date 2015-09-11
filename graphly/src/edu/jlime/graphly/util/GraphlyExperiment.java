@@ -5,11 +5,11 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
-import edu.jlime.graphly.client.GraphlyClient;
-import edu.jlime.graphly.client.GraphlyGraph;
+import edu.jlime.graphly.client.Graphly;
+import edu.jlime.graphly.client.Graph;
 import edu.jlime.graphly.jobs.Mapper;
 import edu.jlime.graphly.server.GraphlyServer;
-import edu.jlime.graphly.traversal.GraphlyTraversal;
+import edu.jlime.graphly.traversal.Traversal;
 import edu.jlime.graphly.traversal.TraversalResult;
 import edu.jlime.jd.profiler.ClusterProfiler;
 
@@ -113,9 +113,8 @@ public class GraphlyExperiment {
 
 	private Mapper mapper;
 
-	public GraphlyExperiment(int reps, long[] users, GraphlyRun run,
-			GraphlyServerFactory fact, String graph, boolean print_results,
-			String startNode, Mapper mapper) {
+	public GraphlyExperiment(int reps, long[] users, GraphlyRun run, GraphlyServerFactory fact, String graph,
+			boolean print_results, String startNode, Mapper mapper) {
 		this.reps = reps;
 		this.run = run;
 		this.fact = fact;
@@ -137,18 +136,16 @@ public class GraphlyExperiment {
 			GraphlyServer server = fact.build();
 			server.start();
 
-			GraphlyClient graphly = server.getGraphlyClient();
+			Graphly graphly = server.getGraphlyClient();
 
-			GraphlyGraph graph = graphly.getGraph(graphName);
+			Graph graph = graphly.getGraph(graphName);
 
-			ClusterProfiler prof = new ClusterProfiler(
-					graphly.getJobClient().getCluster(), 1000);
+			ClusterProfiler prof = new ClusterProfiler(graphly.getJobClient().getCluster(), 1000);
 			prof.start();
-			GraphlyTraversal tr = run.run(users, graph, mapper);
+			Traversal tr = run.run(users, graph, mapper);
 			TraversalResult res = null;
 			if (this.start != null)
-				res = tr.submit(graphly.getJobClient().getCluster()
-						.getByName(this.start));
+				res = tr.submit(graphly.getJobClient().getCluster().getByName(this.start));
 			else
 				res = tr.exec();
 			long time = System.currentTimeMillis() - start;
@@ -157,8 +154,7 @@ public class GraphlyExperiment {
 				System.out.println(run.printResult(res, graph));
 
 			if (i > 0) {
-				expRes.addExperiment(time, prof.getNetworkConsumption(),
-						prof.getMemoryConsumption());
+				expRes.addExperiment(time, prof.getNetworkConsumption(), prof.getMemoryConsumption());
 			}
 			graphly.close();
 			server.stop();
@@ -167,11 +163,9 @@ public class GraphlyExperiment {
 
 	}
 
-	public static ExperimentResult exec(int reps, long[] users, String graph,
-			GraphlyServerFactory fact, GraphlyRun run, boolean print_results,
-			String startNode, Mapper mapper) throws Exception {
-		return new GraphlyExperiment(reps, users, run, fact, graph,
-				print_results, startNode, mapper).execute();
+	public static ExperimentResult exec(int reps, long[] users, String graph, GraphlyServerFactory fact, GraphlyRun run,
+			boolean print_results, String startNode, Mapper mapper) throws Exception {
+		return new GraphlyExperiment(reps, users, run, fact, graph, print_results, startNode, mapper).execute();
 
 	}
 }

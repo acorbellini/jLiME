@@ -5,15 +5,14 @@ import gnu.trove.set.hash.TLongHashSet;
 public class FilterStep implements Step {
 
 	private TLongHashSet filter;
-	protected GraphlyTraversal g;
+	protected Traversal g;
 	private boolean neg;
 
-	public FilterStep(long[] filter, GraphlyTraversal graphlyTraversal) {
+	public FilterStep(long[] filter, Traversal graphlyTraversal) {
 		this(filter, graphlyTraversal, false);
 	}
 
-	public FilterStep(long[] filter, GraphlyTraversal graphlyTraversal,
-			boolean b) {
+	public FilterStep(long[] filter, Traversal graphlyTraversal, boolean b) {
 		this.filter = new TLongHashSet(filter);
 		this.g = graphlyTraversal;
 		this.neg = b;

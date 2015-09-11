@@ -6,7 +6,7 @@ public class AddVertexStep implements Step {
 
 	private long[] v;
 
-	public AddVertexStep(GraphlyTraversal graphlyTraversal, long... users) {
+	public AddVertexStep(Traversal graphlyTraversal, long... users) {
 		this.v = users;
 	}
 

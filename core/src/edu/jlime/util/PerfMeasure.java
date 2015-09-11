@@ -37,8 +37,7 @@ public class PerfMeasure {
 			double d = (sum / (double) c);
 			if (curr == c) {
 				// Exception e = new Exception();
-				System.out.println(name + " (" + Thread.currentThread() + ") :"
-						+ d + " ms");
+				System.out.println(name + " (" + Thread.currentThread() + ") :" + d + " ms");
 				// e.printStackTrace();
 				reset();
 			} else {
@@ -72,8 +71,7 @@ public class PerfMeasure {
 			synchronized (global) {
 				timer = global.get(k);
 				if (timer == null) {
-					timer = new PerfTime(k, count, Thread.currentThread(),
-							perThread);
+					timer = new PerfTime(k, count, Thread.currentThread(), perThread);
 					global.put(k, timer);
 				}
 			}
@@ -83,8 +81,7 @@ public class PerfMeasure {
 
 	private static String getName(String name) {
 		Thread currentThread = Thread.currentThread();
-		return name + " - " + currentThread.getName() + " - "
-				+ currentThread.getId();
+		return name + " - " + currentThread.getName() + " - " + currentThread.getId();
 	}
 
 	public static PerfTime startGlobal(int count) {

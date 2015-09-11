@@ -1,9 +1,9 @@
 package edu.jlime.graphly.rec.randomwalk;
 
-import edu.jlime.graphly.client.GraphlyGraph;
+import edu.jlime.graphly.client.Graph;
 import edu.jlime.graphly.client.SubGraph;
 import edu.jlime.graphly.traversal.Dir;
-import edu.jlime.graphly.traversal.GraphlyTraversal;
+import edu.jlime.graphly.traversal.Traversal;
 import edu.jlime.graphly.traversal.each.ForEach;
 import gnu.trove.list.array.TLongArrayList;
 
@@ -22,14 +22,13 @@ public class RandomWalkForeach implements ForEach<long[]> {
 	}
 
 	@Override
-	public long[] exec(long vid, GraphlyGraph g) throws Exception {
+	public long[] exec(long vid, Graph g) throws Exception {
 		if (subset != null && subset.length > 0) {
 			SubGraph sg = g.getSubGraph("random-walk", subset);
 			TLongArrayList ret = new TLongArrayList();
 			boolean done = false;
 			long cursor = vid;
-			while (((max_depth < 1f && Math.random() > max_depth) || ret.size() < max_depth)
-					&& !done) {
+			while (((max_depth < 1f && Math.random() > max_depth) || ret.size() < max_depth) && !done) {
 				for (Dir dir : dirs) {
 					cursor = sg.getRandomEdge(dir, cursor);
 					if (cursor < 0)
@@ -49,9 +48,8 @@ public class RandomWalkForeach implements ForEach<long[]> {
 		TLongArrayList ret = new TLongArrayList();
 		boolean done = false;
 		long cursor = vid;
-		while (((max_depth < 1f && Math.random() > max_depth) || ret.size() < max_depth)
-				&& !done) {
-			GraphlyTraversal tr = g.v(cursor);
+		while (((max_depth < 1f && Math.random() > max_depth) || ret.size() < max_depth) && !done) {
+			Traversal tr = g.v(cursor);
 			for (Dir dir : dirs) {
 				tr.random(dir, subset);
 			}

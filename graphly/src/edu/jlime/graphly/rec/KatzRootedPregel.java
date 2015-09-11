@@ -5,7 +5,7 @@ import java.util.Iterator;
 import edu.jlime.graphly.traversal.Dir;
 import edu.jlime.pregel.client.WorkerContext;
 import edu.jlime.pregel.graph.VertexFunction;
-import edu.jlime.pregel.graph.rpc.Graph;
+import edu.jlime.pregel.graph.rpc.PregelGraph;
 import edu.jlime.pregel.messages.FloatPregelMessage;
 import gnu.trove.iterator.TLongIterator;
 import gnu.trove.set.hash.TLongHashSet;
@@ -26,7 +26,7 @@ public class KatzRootedPregel implements VertexFunction<FloatPregelMessage> {
 
 	@Override
 	public void execute(long v, Iterator<FloatPregelMessage> in, WorkerContext ctx) throws Exception {
-		Graph g = ctx.getGraph();
+		PregelGraph g = ctx.getGraph();
 
 		float adj = 0f;
 		if (ctx.getSuperStep() > 0) {

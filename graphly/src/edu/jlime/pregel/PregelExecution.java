@@ -10,8 +10,7 @@ public class PregelExecution implements Serializable {
 	int taskID;
 	private HashMap<String, Aggregator> agg;
 
-	public PregelExecution(int steps, int taskID,
-			HashMap<String, Aggregator> aggregators) {
+	public PregelExecution(int steps, int taskID, HashMap<String, Aggregator> aggregators) {
 		super();
 		this.steps = steps;
 		this.taskID = taskID;

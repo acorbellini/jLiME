@@ -26,8 +26,7 @@ public class MPChainPerfTest {
 					count++;
 				else {
 					long time = System.nanoTime();
-					System.out.println("Aprox time to send " + count + " msgs "
-							+ (time - init) / MSGS + " ns");
+					System.out.println("Aprox time to send " + count + " msgs " + (time - init) / MSGS + " ns");
 				}
 			}
 
@@ -55,8 +54,7 @@ public class MPChainPerfTest {
 		}
 		init = System.nanoTime();
 		for (int i = 1; i <= MSGS; i++) {
-			first.send(Message.newEmptyOutDataMessage(MessageType.ACK,
-					new Address(UUID.randomUUID())));
+			first.send(Message.newEmptyOutDataMessage(MessageType.ACK, new Address(UUID.randomUUID())));
 		}
 
 	}

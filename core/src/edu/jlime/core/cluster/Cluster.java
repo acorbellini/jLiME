@@ -76,8 +76,7 @@ public class Cluster implements Iterable<Peer> {
 	public boolean addPeer(Peer peer) {
 		if (filter != null && !filter.verify(peer)) {
 			if (log.isDebugEnabled())
-				log.debug("Filtering " + peer + " app: "
-						+ localPeer.getData("app"));
+				log.debug("Filtering " + peer + " app: " + localPeer.getData("app"));
 			return false;
 		}
 
@@ -85,8 +84,7 @@ public class Cluster implements Iterable<Peer> {
 			if (peers.contains(peer))
 				return false;
 			if (log.isDebugEnabled())
-				log.debug(localPeer.getData("app") + ": Added peer "
-						+ peer.getName());
+				log.debug(localPeer.getData("app") + ": Added peer " + peer.getName());
 
 			peers.add(peer);
 			peers.notifyAll();

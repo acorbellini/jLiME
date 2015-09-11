@@ -63,8 +63,7 @@ public class MethodCall implements Serializable {
 				obj = obj.substring(0, 100) + "...";
 			builder.append((builder.length() > 0 ? "," : "") + obj);
 		}
-		return "MethodCall [objectKey=" + objectKey + ", name=" + name
-				+ ", objects=" + builder.toString() + "]";
+		return "MethodCall [objectKey=" + objectKey + ", name=" + name + ", objects=" + builder.toString() + "]";
 	}
 
 	public void unwrapArgument(int i) {

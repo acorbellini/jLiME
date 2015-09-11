@@ -4,11 +4,11 @@ import java.util.Iterator;
 
 public class VertexList implements Iterable<Long> {
 
-	private GraphlyClient g;
+	private Graphly g;
 	private int max;
 	private String graph;
 
-	public VertexList(String graph, GraphlyClient graphly, int cached) {
+	public VertexList(String graph, Graphly graphly, int cached) {
 		this.g = graphly;
 		this.graph = graph;
 		this.max = cached;

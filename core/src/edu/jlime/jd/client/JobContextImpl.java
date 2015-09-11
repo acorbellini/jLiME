@@ -12,8 +12,8 @@ import org.apache.log4j.Logger;
 
 import edu.jlime.core.cluster.Peer;
 import edu.jlime.jd.ClientCluster;
+import edu.jlime.jd.Dispatcher;
 import edu.jlime.jd.JobContainer;
-import edu.jlime.jd.JobDispatcher;
 
 public class JobContextImpl implements JobContext {
 
@@ -27,9 +27,9 @@ public class JobContextImpl implements JobContext {
 
 	private ClientCluster cluster;
 
-	private JobDispatcher srv;
+	private Dispatcher srv;
 
-	public JobContextImpl(JobDispatcher srv, ClientCluster c, Peer cliId) {
+	public JobContextImpl(Dispatcher srv, ClientCluster c, Peer cliId) {
 		this.srv = srv;
 		this.id = cliId;
 		this.cluster = c;

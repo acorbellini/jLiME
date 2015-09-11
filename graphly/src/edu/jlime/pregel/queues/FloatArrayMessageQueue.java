@@ -45,8 +45,7 @@ public class FloatArrayMessageQueue implements PregelMessageQueue {
 	}
 
 	@Override
-	public void flush(String msgType, String subgraph, WorkerTask workerTask)
-			throws Exception {
+	public void flush(String msgType, String subgraph, WorkerTask workerTask) throws Exception {
 		TObjectIntHashMap<Worker> sizes = new TObjectIntHashMap<>();
 		{
 			final TLongObjectIterator<float[]> it = readOnly.iterator();
@@ -83,8 +82,7 @@ public class FloatArrayMessageQueue implements PregelMessageQueue {
 	}
 
 	@Override
-	public Iterator<PregelMessage> getMessages(final String msgType,
-			final long to) {
+	public Iterator<PregelMessage> getMessages(final String msgType, final long to) {
 		final float[] found = this.readOnly.get(to);
 		if (found == null)
 			return null;

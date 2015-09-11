@@ -23,15 +23,15 @@ import edu.jlime.util.ByteBuffer;
 
 public class NACK extends SimpleMessageProcessor {
 
-	ExecutorService exec = Executors.newFixedThreadPool(Runtime.getRuntime()
-			.availableProcessors(), new ThreadFactory() {
-		@Override
-		public Thread newThread(Runnable r) {
-			Thread t = Executors.defaultThreadFactory().newThread(r);
-			t.setName("NACK Resender Thread");
-			return t;
-		}
-	});
+	ExecutorService exec = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(),
+			new ThreadFactory() {
+				@Override
+				public Thread newThread(Runnable r) {
+					Thread t = Executors.defaultThreadFactory().newThread(r);
+					t.setName("NACK Resender Thread");
+					return t;
+				}
+			});
 
 	public static final int HEADER = Header.HEADER + 4 + 4; // SEQN and
 															// NEXTEXPECTEDNUMBER
@@ -110,46 +110,40 @@ public class NACK extends SimpleMessageProcessor {
 			}
 		}, this.config.nack_delay, this.config.nack_delay);
 
-		getNext().addMessageListener(MessageType.ACK_SEQ,
-				new MessageListener() {
-					@Override
-					public void rcv(final Message m, MessageProcessor origin)
-							throws Exception {
-						final ByteBuffer headerBuffer = m.getHeaderBuffer();
-						final int seq = headerBuffer.getInt();
-						final int confirmed = headerBuffer.getInt();
-						if (log.isTraceEnabled())
-							log.trace("Received Ack'd msg with seq # " + seq
-									+ " from " + m.getFrom());
+		getNext().addMessageListener(MessageType.ACK_SEQ, new MessageListener() {
+			@Override
+			public void rcv(final Message m, MessageProcessor origin) throws Exception {
+				final ByteBuffer headerBuffer = m.getHeaderBuffer();
+				final int seq = headerBuffer.getInt();
+				final int confirmed = headerBuffer.getInt();
+				if (log.isTraceEnabled())
+					log.trace("Received Ack'd msg with seq # " + seq + " from " + m.getFrom());
 
-						final NACKCounter counter = getCounter(m.getFrom());
-						if (counter != null) {
-							// exec.execute(new Runnable() {
-							// @Override
-							// public void run() {
-							// try {
-							if (counter.seqNumberArrived(seq)) {
-								notifyRcvd(Message.deEncapsulate(
-										m.getDataBuffer(), m.getFrom(),
-										m.getTo()));
-							}
-							counter.sync(confirmed, false);
-							counter.receivedNackBuffer(headerBuffer);
-							// } catch (Exception e) {
-							// e.printStackTrace();
-							// }
-							//
-							// }
-							// });
-
-						}
+				final NACKCounter counter = getCounter(m.getFrom());
+				if (counter != null) {
+					// exec.execute(new Runnable() {
+					// @Override
+					// public void run() {
+					// try {
+					if (counter.seqNumberArrived(seq)) {
+						notifyRcvd(Message.deEncapsulate(m.getDataBuffer(), m.getFrom(), m.getTo()));
 					}
-				});
+					counter.sync(confirmed, false);
+					counter.receivedNackBuffer(headerBuffer);
+					// } catch (Exception e) {
+					// e.printStackTrace();
+					// }
+					//
+					// }
+					// });
+
+				}
+			}
+		});
 
 		getNext().addMessageListener(MessageType.ACK, new MessageListener() {
 			@Override
-			public void rcv(final Message m, MessageProcessor origin)
-					throws Exception {
+			public void rcv(final Message m, MessageProcessor origin) throws Exception {
 				final NACKCounter counter = getCounter(m.getFrom());
 				if (counter != null) {
 					// exec.execute(new Runnable() {
@@ -170,8 +164,7 @@ public class NACK extends SimpleMessageProcessor {
 
 		getNext().addMessageListener(MessageType.SYN, new MessageListener() {
 			@Override
-			public void rcv(final Message m, MessageProcessor origin)
-					throws Exception {
+			public void rcv(final Message m, MessageProcessor origin) throws Exception {
 				final NACKCounter counter = getCounter(m.getFrom());
 				if (counter != null) {
 					ByteBuffer headerBuffer = m.getHeaderBuffer();

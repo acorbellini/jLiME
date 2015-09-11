@@ -1,15 +1,15 @@
 package edu.jlime.graphly.traversal;
 
-import edu.jlime.jd.ClientNode;
+import edu.jlime.jd.Node;
 
 public class CustomTraversal {
-	protected GraphlyTraversal tr;
+	protected Traversal tr;
 
-	public CustomTraversal(GraphlyTraversal tr) {
+	public CustomTraversal(Traversal tr) {
 		this.tr = tr;
 	}
 
-	public GraphlyTraversal asTraversal() {
+	public Traversal asTraversal() {
 		return tr;
 	}
 
@@ -21,7 +21,7 @@ public class CustomTraversal {
 		return tr.exec();
 	}
 
-	public TraversalResult submit(ClientNode c) throws Exception {
+	public TraversalResult submit(Node c) throws Exception {
 		return tr.submit(c);
 	}
 }

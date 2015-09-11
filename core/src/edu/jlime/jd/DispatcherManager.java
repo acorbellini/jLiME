@@ -8,13 +8,13 @@ import edu.jlime.jd.rpc.JobExecutor;
 
 public class DispatcherManager {
 
-	private static Map<Peer, JobDispatcher> localDispatchers = new ConcurrentHashMap<>();
+	private static Map<Peer, Dispatcher> localDispatchers = new ConcurrentHashMap<>();
 
-	public static void registerJD(JobDispatcher jobDispatcher) {
+	public static void registerJD(Dispatcher jobDispatcher) {
 		localDispatchers.put(jobDispatcher.getLocalPeer(), jobDispatcher);
 	}
 
-	public static void unregisterJD(JobDispatcher jobDispatcher) {
+	public static void unregisterJD(Dispatcher jobDispatcher) {
 		localDispatchers.remove(jobDispatcher.getLocalPeer());
 	}
 

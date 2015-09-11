@@ -29,12 +29,11 @@ public class MetricsJMX {
 		}
 	}
 
-	private ObjectName getObjectName(String k)
-			throws MalformedObjectNameException {
+	private ObjectName getObjectName(String k) throws MalformedObjectNameException {
 		String name = getName(k);
 		String type = getType(k);
-		return new ObjectName("jlime.metrics." + mgr.getId() + ":"
-				+ (type != null ? "type=" + type + "," : "") + "name=" + name);
+		return new ObjectName(
+				"jlime.metrics." + mgr.getId() + ":" + (type != null ? "type=" + type + "," : "") + "name=" + name);
 	}
 
 	private String getType(String k) {

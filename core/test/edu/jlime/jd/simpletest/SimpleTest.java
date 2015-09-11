@@ -6,7 +6,7 @@ import java.util.Map;
 
 import org.junit.Test;
 
-import edu.jlime.jd.ClientNode;
+import edu.jlime.jd.Node;
 import edu.jlime.jd.client.Client;
 import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.Job;
@@ -14,8 +14,7 @@ import edu.jlime.jd.mapreduce.MapReduceTask;
 
 public class SimpleTest {
 
-	public static final class SimpleMR extends
-			MapReduceTask<int[], Integer, Integer> {
+	public static final class SimpleMR extends MapReduceTask<int[], Integer, Integer> {
 
 		private static final long serialVersionUID = 3793991695179624792L;
 
@@ -24,11 +23,11 @@ public class SimpleTest {
 		}
 
 		@Override
-		public Map<Job<Integer>, ClientNode> map(int[] data, JobContext env) {
-			Map<Job<Integer>, ClientNode> res = new HashMap<>();
+		public Map<Job<Integer>, Node> map(int[] data, JobContext env) {
+			Map<Job<Integer>, Node> res = new HashMap<>();
 			int countData = 0;
 			while (countData != data.length) {
-				for (ClientNode peer : env.getCluster()) {
+				for (Node peer : env.getCluster()) {
 					res.put(new MyRealJob(data[countData++]), peer);
 					if (countData == data.length)
 						break;
@@ -52,8 +51,7 @@ public class SimpleTest {
 
 		Thread.sleep(3000);
 
-		MapReduceTask<int[], Integer, Integer> task = new SimpleMR(new int[] {
-				1, 2, 3, 4, 5, 6, 7, 8 });
+		MapReduceTask<int[], Integer, Integer> task = new SimpleMR(new int[] { 1, 2, 3, 4, 5, 6, 7, 8 });
 
 		System.out.println(cl.getCluster().getAnyExecutor().exec(task));
 

@@ -34,8 +34,7 @@ public class Acknowledge extends SimpleMessageProcessor {
 
 	private Timer t;
 
-	public Acknowledge(MessageProcessor next, int max_size,
-			NetworkConfiguration config) {
+	public Acknowledge(MessageProcessor next, int max_size, NetworkConfiguration config) {
 		super(next, "Acknowledge");
 		this.config = config;
 		this.max_size = max_size;
@@ -68,39 +67,33 @@ public class Acknowledge extends SimpleMessageProcessor {
 			}
 		}, config.ack_delay, config.ack_delay);
 
-		getNext().addMessageListener(MessageType.ACK_SEQ,
-				new MessageListener() {
-					@Override
-					public void rcv(Message m, MessageProcessor origin)
-							throws Exception {
-						ByteBuffer headerBuffer = m.getHeaderBuffer();
-						int seq = headerBuffer.getInt();
-						int nextexpected = headerBuffer.getInt();
+		getNext().addMessageListener(MessageType.ACK_SEQ, new MessageListener() {
+			@Override
+			public void rcv(Message m, MessageProcessor origin) throws Exception {
+				ByteBuffer headerBuffer = m.getHeaderBuffer();
+				int seq = headerBuffer.getInt();
+				int nextexpected = headerBuffer.getInt();
 
-						if (log.isTraceEnabled())
-							log.trace("Received Ack'd msg with seq # " + seq
-									+ " from " + m.getFrom());
+				if (log.isTraceEnabled())
+					log.trace("Received Ack'd msg with seq # " + seq + " from " + m.getFrom());
 
-						AcknowledgeCounter counter = getCounter(m.getFrom());
+				AcknowledgeCounter counter = getCounter(m.getFrom());
 
-						if (counter != null) {
-							if (counter.seqNumberArrived(seq)) {
-								notifyRcvd(Message.deEncapsulate(
-										m.getDataBuffer(), m.getFrom(),
-										m.getTo()));
-							}
-
-							counter.receivedAckBuffer(headerBuffer);
-
-							counter.confirmAll(nextexpected);
-						}
+				if (counter != null) {
+					if (counter.seqNumberArrived(seq)) {
+						notifyRcvd(Message.deEncapsulate(m.getDataBuffer(), m.getFrom(), m.getTo()));
 					}
-				});
+
+					counter.receivedAckBuffer(headerBuffer);
+
+					counter.confirmAll(nextexpected);
+				}
+			}
+		});
 
 		getNext().addMessageListener(MessageType.ACK, new MessageListener() {
 			@Override
-			public void rcv(Message m, MessageProcessor origin)
-					throws Exception {
+			public void rcv(Message m, MessageProcessor origin) throws Exception {
 				AcknowledgeCounter counter = getCounter(m.getFrom());
 
 				if (counter != null) {

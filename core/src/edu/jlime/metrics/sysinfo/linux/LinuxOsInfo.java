@@ -13,8 +13,7 @@ public class LinuxOsInfo extends SysInfoProvider {
 		mgr.simple("sysinfo.os.type", generalData[0].trim());
 		mgr.simple("sysinfo.os.type.hostname", generalData[1].trim());
 		mgr.simple("sysinfo.os.type.arch", generalData[2].trim());
-		mgr.simple("sysinfo.os.type.dist",
-				CommandLineUtils.execCommand("uname -v").trim());
+		mgr.simple("sysinfo.os.type.dist", CommandLineUtils.execCommand("uname -v").trim());
 	}
 
 }

@@ -22,8 +22,7 @@ public class RangeIterator implements Iterator<Pair<byte[], byte[]>> {
 	private boolean includeFirst;
 	private DB db;
 
-	public RangeIterator(boolean inclFirst, byte[] from, byte[] to, int max,
-			DB db) {
+	public RangeIterator(boolean inclFirst, byte[] from, byte[] to, int max, DB db) {
 		this.includeFirst = inclFirst;
 		this.curr = from;
 		this.to = to;
@@ -59,8 +58,7 @@ public class RangeIterator implements Iterator<Pair<byte[], byte[]>> {
 						Entry<byte[], byte[]> e = iterator.next();
 						byte[] key = e.getKey();
 						curr = key;
-						if (UnsignedBytes.lexicographicalComparator().compare(
-								to, key) > 0) {
+						if (UnsignedBytes.lexicographicalComparator().compare(to, key) > 0) {
 							if (!first || (first && includeFirst)) {
 								first = false;
 								cursor = new Pair<>(key, e.getValue());

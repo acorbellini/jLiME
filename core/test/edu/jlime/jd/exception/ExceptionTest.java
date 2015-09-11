@@ -2,7 +2,7 @@ package edu.jlime.jd.exception;
 
 import org.junit.Test;
 
-import edu.jlime.jd.ClientNode;
+import edu.jlime.jd.Node;
 import edu.jlime.jd.client.Client;
 import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.RunJob;
@@ -15,7 +15,7 @@ public class ExceptionTest {
 		private static final long serialVersionUID = 8685143678806165178L;
 
 		@Override
-		public void run(JobContext env, ClientNode origin) throws Exception {
+		public void run(JobContext env, Node origin) throws Exception {
 			throw new Exception("Remote Exception.");
 		}
 

@@ -41,8 +41,7 @@ public class BerkeleyKV {
 			EnvironmentConfig envConfig = new EnvironmentConfig();
 			envConfig.setAllowCreate(true);
 			envConfig.setCacheSize(CACHE);
-			String path = System.getProperty("java.io.tmpdir")
-					+ "/graphly-berkeley-" + UUID.randomUUID() + "/";
+			String path = System.getProperty("java.io.tmpdir") + "/graphly-berkeley-" + UUID.randomUUID() + "/";
 			this.file = new File(path);
 			if (!file.exists())
 				file.mkdir();
@@ -71,8 +70,7 @@ public class BerkeleyKV {
 		}
 		if (stat == OperationStatus.NOTFOUND)
 			return NO_ENTRY;
-		return Float
-				.intBitsToFloat(DataTypeUtils.byteArrayToInt(vGet.getData()));
+		return Float.intBitsToFloat(DataTypeUtils.byteArrayToInt(vGet.getData()));
 
 	}
 
@@ -128,8 +126,7 @@ public class BerkeleyKV {
 
 				@Override
 				public float value() {
-					return Float.intBitsToFloat(DataTypeUtils
-							.byteArrayToInt(data.getData()));
+					return Float.intBitsToFloat(DataTypeUtils.byteArrayToInt(data.getData()));
 				}
 
 				@Override

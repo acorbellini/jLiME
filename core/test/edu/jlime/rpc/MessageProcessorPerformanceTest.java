@@ -43,8 +43,7 @@ public class MessageProcessorPerformanceTest {
 			int msgCount = 0;
 
 			@Override
-			public void rcv(Message msg, MessageProcessor origin)
-					throws Exception {
+			public void rcv(Message msg, MessageProcessor origin) throws Exception {
 				// System.out.println(msg.getDataReader().getInt());
 				set.add(msg);
 				msgCount++;
@@ -57,9 +56,7 @@ public class MessageProcessorPerformanceTest {
 				int iter = ITERMAX / 2;
 				while (iter < ITERMAX) {
 					try {
-						mp.send(Message.newOutDataMessage(
-								DataTypeUtils.intToByteArray(iter),
-								MessageType.ACK, null));
+						mp.send(Message.newOutDataMessage(DataTypeUtils.intToByteArray(iter), MessageType.ACK, null));
 					} catch (Exception e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -73,8 +70,7 @@ public class MessageProcessorPerformanceTest {
 		t.start();
 		int iter = 0;
 		while (iter < ITERMAX / 2) {
-			mp.send(Message.newOutDataMessage(
-					DataTypeUtils.intToByteArray(iter), MessageType.ACK, null));
+			mp.send(Message.newOutDataMessage(DataTypeUtils.intToByteArray(iter), MessageType.ACK, null));
 			iter++;
 		}
 	}

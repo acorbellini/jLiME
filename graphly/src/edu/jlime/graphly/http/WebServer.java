@@ -33,10 +33,8 @@ public class WebServer {
 		return this;
 	}
 
-	private HttpServer httpserver() throws IllegalArgumentException,
-			IOException {
-		ResourceConfig config = new PackagesResourceConfig(
-				"edu.jlime.graphly.http.resource");
+	private HttpServer httpserver() throws IllegalArgumentException, IOException {
+		ResourceConfig config = new PackagesResourceConfig("edu.jlime.graphly.http.resource");
 		return HttpServerFactory.create(getURI(getPort()), config);
 	}
 
@@ -44,8 +42,7 @@ public class WebServer {
 		return UriBuilder.fromUri("http://localhost/").port(port).build();
 	}
 
-	public static void main(String[] args) throws IllegalArgumentException,
-			IOException {
+	public static void main(String[] args) throws IllegalArgumentException, IOException {
 		new WebServer().start();
 	}
 
@@ -55,18 +52,16 @@ public class WebServer {
 		while (true)
 			try {
 				httpserver = httpserver();
-				ExecutorService asyncExec = Executors
-						.newCachedThreadPool(new ThreadFactory() {
+				ExecutorService asyncExec = Executors.newCachedThreadPool(new ThreadFactory() {
 
-							@Override
-							public Thread newThread(Runnable r) {
-								Thread t = Executors.defaultThreadFactory()
-										.newThread(r);
-								t.setName("Admin Console Thread");
-								t.setDaemon(true);
-								return t;
-							}
-						});
+					@Override
+					public Thread newThread(Runnable r) {
+						Thread t = Executors.defaultThreadFactory().newThread(r);
+						t.setName("Admin Console Thread");
+						t.setDaemon(true);
+						return t;
+					}
+				});
 
 				httpserver.setExecutor(asyncExec);
 				httpserver.start();

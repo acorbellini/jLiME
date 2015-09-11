@@ -1,6 +1,6 @@
 package edu.jlime.graphly.rec;
 
-import edu.jlime.graphly.client.GraphlyGraph;
+import edu.jlime.graphly.client.Graph;
 import edu.jlime.graphly.traversal.Dir;
 import gnu.trove.set.hash.TLongHashSet;
 
@@ -18,7 +18,7 @@ public class MinEdgeFilter implements VertexFilter {
 	}
 
 	@Override
-	public boolean filter(long vid, GraphlyGraph g) throws Exception {
+	public boolean filter(long vid, Graph g) throws Exception {
 		return g.getEdgesCount(dir, vid, at) >= min;
 	}
 

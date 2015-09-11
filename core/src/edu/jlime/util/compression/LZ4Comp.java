@@ -7,8 +7,7 @@ import net.jpountz.lz4.LZ4FastDecompressor;
 
 public class LZ4Comp implements Compressor {
 	static LZ4Compressor comp = LZ4Factory.fastestInstance().highCompressor();
-	static LZ4FastDecompressor decomp = LZ4Factory.fastestInstance()
-			.fastDecompressor();
+	static LZ4FastDecompressor decomp = LZ4Factory.fastestInstance().fastDecompressor();
 
 	@Override
 	public byte[] compress(byte[] in) {

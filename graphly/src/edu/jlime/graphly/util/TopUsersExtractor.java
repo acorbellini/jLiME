@@ -10,8 +10,8 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import edu.jlime.graphly.client.GraphlyClient;
-import edu.jlime.graphly.client.GraphlyGraph;
+import edu.jlime.graphly.client.Graphly;
+import edu.jlime.graphly.client.Graph;
 import edu.jlime.graphly.server.GraphlyServer;
 import edu.jlime.graphly.traversal.Dir;
 import gnu.trove.set.hash.TLongHashSet;
@@ -25,14 +25,13 @@ public class TopUsersExtractor {
 		GraphlyServer s = GraphlyServerFactory.loopback(args[0]).build();
 		s.start();
 
-		GraphlyClient graphly = s.getGraphlyClient();
+		Graphly graphly = s.getGraphlyClient();
 
-		final GraphlyGraph g = graphly.getGraph(args[1]);
+		final Graph g = graphly.getGraph(args[1]);
 
 		// Thread.sleep(2000);
 
-		final BufferedWriter writer = new BufferedWriter(new FileWriter(
-				new File(args[2])));
+		final BufferedWriter writer = new BufferedWriter(new FileWriter(new File(args[2])));
 
 		final AtomicInteger count = new AtomicInteger(0);
 		final TLongHashSet at = new TLongHashSet();
@@ -58,15 +57,13 @@ public class TopUsersExtractor {
 						} catch (Exception e1) {
 							e1.printStackTrace();
 						}
-						float IS = (followersCount - followeesCount)
-								/ (float) (followersCount + followeesCount);
+						float IS = (followersCount - followeesCount) / (float) (followersCount + followeesCount);
 
 						IS = (IS + 1) / 2;
 
 						synchronized (writer) {
 							try {
-								writer.write(vid + "," + followeesCount + ","
-										+ followersCount + "," + IS + "\r\n");
+								writer.write(vid + "," + followeesCount + "," + followersCount + "," + IS + "\r\n");
 							} catch (IOException e) {
 								e.printStackTrace();
 							}

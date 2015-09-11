@@ -26,8 +26,7 @@ public class DatagramReceiver {
 
 	ExecutorService exec;
 
-	public DatagramReceiver(DatagramSocket sock, int buff_size,
-			PacketReceiver receiver, int threads) {
+	public DatagramReceiver(DatagramSocket sock, int buff_size, PacketReceiver receiver, int threads) {
 		exec = Executors.newFixedThreadPool(threads, new ThreadFactory() {
 
 			@Override
@@ -49,8 +48,7 @@ public class DatagramReceiver {
 						read();
 				} catch (Exception e) {
 					if (log.isDebugEnabled())
-						log.debug("Error reading from datagram socket "
-								+ e.getMessage());
+						log.debug("Error reading from datagram socket " + e.getMessage());
 				}
 			}
 		};

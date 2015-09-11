@@ -1,7 +1,7 @@
 package edu.jlime.pregel.util;
 
 import edu.jlime.pregel.client.InMemoryGraph;
-import edu.jlime.pregel.client.PregelClient;
+import edu.jlime.pregel.client.Pregel;
 import edu.jlime.pregel.client.PregelConfig;
 import edu.jlime.pregel.functions.PageRankFloat;
 import edu.jlime.pregel.mergers.MessageMergers;
@@ -11,9 +11,8 @@ public class PregelTest {
 
 	public static void main(String[] args) throws Exception {
 
-		PregelClient cli = PregelClient.build(2);
-		InMemoryGraph g = new InMemoryGraph(cli.getRPC(), "graph",
-				SplitFunctions.rr(), PregelClient.workerFilter(), 2);
+		Pregel cli = Pregel.build(2);
+		InMemoryGraph g = new InMemoryGraph(cli.getRPC(), "graph", SplitFunctions.rr(), Pregel.workerFilter(), 2);
 
 		// Bigger graph to stress workers.
 		String pathname = args[0];// e.g. "C:/Users/Ale/Desktop/dataset.csv";
@@ -36,13 +35,9 @@ public class PregelTest {
 		g.setDefaultValue("pagerank", 1d / g.vertexSize());
 		g.setDefaultValue("ranksource", .85d);
 
-		cli.execute(
-				new PageRankFloat("pagerank", g.vertexSize()),
-				null,
-				new PregelConfig().split(SplitFunctions.rr())
-						.merger("pr", MessageMergers.floatSum())
-						.graph(InMemoryGraph.getFactory("graph")).steps(30)
-						.threads(10).executeOnAll(true));
+		cli.execute(new PageRankFloat("pagerank", g.vertexSize()), null,
+				new PregelConfig().split(SplitFunctions.rr()).merger("pr", MessageMergers.floatSum())
+						.graph(InMemoryGraph.getFactory("graph")).steps(30).threads(10).executeOnAll(true));
 
 		System.out.println("Finished PageRank Test.");
 
@@ -52,8 +47,7 @@ public class PregelTest {
 		for (Long v : g.vertices()) {
 			sum += (Double) g.get(v, "pagerank");
 		}
-		System.out.println("vertices: " + g.vertexSize() + " sum: " + sum
-				+ " avg: " + sum / g.vertexSize());
+		System.out.println("vertices: " + g.vertexSize() + " sum: " + sum + " avg: " + sum / g.vertexSize());
 		cli.stop();
 	}
 

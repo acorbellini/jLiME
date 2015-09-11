@@ -15,7 +15,7 @@ import edu.jlime.jd.job.ResultManager;
 import edu.jlime.jd.job.StreamJob;
 import edu.jlime.metrics.metric.IMetrics;
 
-public class ClientNode implements Serializable {
+public class Node implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
@@ -23,9 +23,9 @@ public class ClientNode implements Serializable {
 
 	private Peer peer;
 
-	transient private JobDispatcher jd;
+	transient private Dispatcher jd;
 
-	public ClientNode(Peer p, Peer clientID, JobDispatcher disp) {
+	public Node(Peer p, Peer clientID, Dispatcher disp) {
 		this.peer = p;
 		this.clientID = clientID;
 		this.jd = disp;
@@ -64,7 +64,7 @@ public class ClientNode implements Serializable {
 
 	public Set<String> getTags() {
 		HashSet<String> ret = new HashSet<>();
-		String[] tags = peer.getData(JobDispatcher.TAGS).split(",");
+		String[] tags = peer.getData(Dispatcher.TAGS).split(",");
 		for (String t : tags) {
 			ret.add(t);
 		}
@@ -72,7 +72,7 @@ public class ClientNode implements Serializable {
 	}
 
 	public boolean isExec() {
-		boolean isExec = Boolean.valueOf(peer.getData(JobDispatcher.ISEXEC));
+		boolean isExec = Boolean.valueOf(peer.getData(Dispatcher.ISEXEC));
 		return isExec;
 	}
 
@@ -85,31 +85,28 @@ public class ClientNode implements Serializable {
 			execAsync(stream, new ResultManager<Boolean>() {
 
 				@Override
-				public void handleException(Exception res, String jobID,
-						ClientNode fromID) {
+				public void handleException(Exception res, String jobID, Node fromID) {
 					res.printStackTrace();
 					stream.setFinished(true);
 				}
 
 				@Override
-				public void handleResult(Boolean res, String jobID,
-						ClientNode fromID) {
+				public void handleResult(Boolean res, String jobID, Node fromID) {
 					stream.setFinished(true);
 				}
 			});
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		return new StreamResult(getOutputStream(stream.getStreamIDInput()),
-				getInputStream(stream.getStreamIDOutput()));
+		return new StreamResult(getOutputStream(stream.getStreamIDInput()), getInputStream(stream.getStreamIDOutput()));
 	}
 
 	public Address getID() {
 		return peer.getAddress();
 	}
 
-	public static ClientNode copy(ClientNode req, JobDispatcher disp) {
-		return new ClientNode(req.getPeer(), req.clientID, disp);
+	public static Node copy(Node req, Dispatcher disp) {
+		return new Node(req.getPeer(), req.clientID, disp);
 	}
 
 	public String getName() {
@@ -118,9 +115,9 @@ public class ClientNode implements Serializable {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (!(obj instanceof ClientNode))
+		if (!(obj instanceof Node))
 			return false;
-		ClientNode other = (ClientNode) obj;
+		Node other = (Node) obj;
 		return peer.equals(other.getPeer());
 	}
 

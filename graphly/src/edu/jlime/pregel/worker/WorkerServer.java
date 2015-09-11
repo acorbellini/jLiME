@@ -5,8 +5,8 @@ import java.util.HashMap;
 import org.apache.log4j.Logger;
 
 import edu.jlime.core.cluster.DataFilter;
-import edu.jlime.core.rpc.ClientManager;
-import edu.jlime.core.rpc.RPCDispatcher;
+import edu.jlime.core.rpc.Client;
+import edu.jlime.core.rpc.RPC;
 import edu.jlime.pregel.coordinator.rpc.Coordinator;
 import edu.jlime.pregel.coordinator.rpc.CoordinatorBroadcast;
 import edu.jlime.pregel.worker.rpc.Worker;
@@ -16,15 +16,15 @@ import edu.jlime.rpc.NetworkConfiguration;
 
 public class WorkerServer {
 	public static final String WORKER_KEY = "pregel_worker";
-	private RPCDispatcher disp;
+	private RPC disp;
 
-	private ClientManager<Coordinator, CoordinatorBroadcast> coord;
-	private ClientManager<Worker, WorkerBroadcast> workers;
+	private Client<Coordinator, CoordinatorBroadcast> coord;
+	private Client<Worker, WorkerBroadcast> workers;
 
 	private Logger log = Logger.getLogger(WorkerServer.class);
 	private WorkerImpl worker;
 
-	public WorkerServer(RPCDispatcher disp) throws Exception {
+	public WorkerServer(RPC disp) throws Exception {
 		this.disp = disp;
 		this.worker = new WorkerImpl(disp);
 		disp.registerTarget(WORKER_KEY, worker, true);
@@ -39,9 +39,8 @@ public class WorkerServer {
 		data.put("app", "graphly");
 		data.put("type", WORKER_KEY);
 
-		JLiMEFactory fact = new JLiMEFactory(config, data, new DataFilter(
-				"app", "graphly", true));
-		RPCDispatcher disp = fact.build();
+		JLiMEFactory fact = new JLiMEFactory(config, data, new DataFilter("app", "graphly", true));
+		RPC disp = fact.build();
 
 		WorkerServer ws = new WorkerServer(disp);
 		disp.start();

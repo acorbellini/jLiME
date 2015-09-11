@@ -305,8 +305,7 @@ public class ParallelLongFloatMap implements TLongFloatMap, Serializable {
 	}
 
 	@Override
-	public float adjustOrPutValue(long key, float adjust_amount,
-			float put_amount) {
+	public float adjustOrPutValue(long key, float adjust_amount, float put_amount) {
 		TLongFloatHashMap m = getMap(key);
 		synchronized (m) {
 			return m.adjustOrPutValue(key, adjust_amount, put_amount);

@@ -5,15 +5,15 @@ import java.util.Set;
 
 import org.apache.commons.lang3.NotImplementedException;
 
-import edu.jlime.graphly.client.GraphlyGraph;
+import edu.jlime.graphly.client.Graph;
 import edu.jlime.pregel.client.GraphConnectionFactory;
-import edu.jlime.pregel.graph.rpc.Graph;
+import edu.jlime.pregel.graph.rpc.PregelGraph;
 import gnu.trove.set.hash.TLongHashSet;
 
-public class GraphlyPregelAdapter implements Graph {
-	private GraphlyGraph g;
+public class GraphlyPregelAdapter implements PregelGraph {
+	private Graph g;
 
-	public GraphlyPregelAdapter(GraphlyGraph g) {
+	public GraphlyPregelAdapter(Graph g) {
 		this.g = g;
 	}
 

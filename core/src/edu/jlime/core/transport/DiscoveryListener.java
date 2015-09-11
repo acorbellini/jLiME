@@ -4,6 +4,5 @@ import java.util.Map;
 
 public interface DiscoveryListener {
 
-	void memberMessage(Address from, String name, Map<String, String> data,
-			Object socket) throws Exception;
+	void memberMessage(Address from, String name, Map<String, String> data, Object socket) throws Exception;
 }

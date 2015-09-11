@@ -89,8 +89,7 @@ public class ByteBuffer {
 	}
 
 	public float getFloat() {
-		java.nio.ByteBuffer buff = java.nio.ByteBuffer.wrap(buffered, readPos,
-				4);
+		java.nio.ByteBuffer buff = java.nio.ByteBuffer.wrap(buffered, readPos, 4);
 		readPos += 4;
 		return buff.getFloat();
 	}
@@ -172,8 +171,7 @@ public class ByteBuffer {
 
 	public Object getObject() throws Exception {
 		int size = getInt();
-		ByteArrayInputStream is = new ByteArrayInputStream(buffered, readPos,
-				size);
+		ByteArrayInputStream is = new ByteArrayInputStream(buffered, readPos, size);
 
 		ObjectInputStream oos = new ObjectInputStream(is);
 		Object ret = oos.readObject();
@@ -289,8 +287,7 @@ public class ByteBuffer {
 	}
 
 	public void putShort(short blockMagic) {
-		putRawByteArray(java.nio.ByteBuffer.allocate(2).putShort(blockMagic)
-				.array());
+		putRawByteArray(java.nio.ByteBuffer.allocate(2).putShort(blockMagic).array());
 	}
 
 	public void putRawByteArray(byte[] data) {
@@ -416,8 +413,7 @@ public class ByteBuffer {
 	}
 
 	public void putRange(byte[] original, int originalOffset, int length) {
-		putByteArray(Arrays.copyOfRange(original, originalOffset,
-				originalOffset + length));
+		putByteArray(Arrays.copyOfRange(original, originalOffset, originalOffset + length));
 	}
 
 	public void putBoolean(boolean b) {

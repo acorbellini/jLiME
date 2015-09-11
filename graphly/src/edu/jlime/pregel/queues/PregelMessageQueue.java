@@ -13,11 +13,9 @@ public interface PregelMessageQueue {
 
 	public abstract int readOnlySize();
 
-	public abstract void flush(String msgType, String subgraph,
-			WorkerTask workerTask) throws Exception;
+	public abstract void flush(String msgType, String subgraph, WorkerTask workerTask) throws Exception;
 
-	public abstract Iterator<PregelMessage> getMessages(String msgType,
-			long currentVertex);
+	public abstract Iterator<PregelMessage> getMessages(String msgType, long currentVertex);
 
 	public abstract long[] keys();
 

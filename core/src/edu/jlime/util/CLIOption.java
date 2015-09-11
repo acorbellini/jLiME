@@ -14,8 +14,7 @@ public class CLIOption {
 
 	private String defaultValue;
 
-	public CLIOption(String name, String shortName, String desc, int vals,
-			String defaultValue) {
+	public CLIOption(String name, String shortName, String desc, int vals, String defaultValue) {
 		super();
 		this.setName(name);
 		this.setShortName(shortName);

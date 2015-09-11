@@ -5,7 +5,7 @@ import java.util.Iterator;
 import edu.jlime.pregel.PregelSubgraph;
 import edu.jlime.pregel.client.WorkerContext;
 import edu.jlime.pregel.graph.VertexFunction;
-import edu.jlime.pregel.graph.rpc.Graph;
+import edu.jlime.pregel.graph.rpc.PregelGraph;
 import edu.jlime.pregel.messages.FloatPregelMessage;
 import edu.jlime.pregel.worker.FloatAggregator;
 
@@ -19,10 +19,9 @@ public class HITSPregel implements VertexFunction<FloatPregelMessage> {
 	}
 
 	@Override
-	public void execute(long v, Iterator<FloatPregelMessage> in,
-			WorkerContext ctx) throws Exception {
+	public void execute(long v, Iterator<FloatPregelMessage> in, WorkerContext ctx) throws Exception {
 
-		Graph g = ctx.getGraph();
+		PregelGraph g = ctx.getGraph();
 		PregelSubgraph sg = ctx.getSubGraph("hits-sg");
 		float auth = 0f;
 		float hub = 0f;
@@ -40,10 +39,8 @@ public class HITSPregel implements VertexFunction<FloatPregelMessage> {
 					auth += m;
 			}
 
-			float acc_auth = ((FloatAggregator) ctx.getAggregator("hits-auth"))
-					.get();
-			float acc_hub = ((FloatAggregator) ctx.getAggregator("hits-hub"))
-					.get();
+			float acc_auth = ((FloatAggregator) ctx.getAggregator("hits-auth")).get();
+			float acc_hub = ((FloatAggregator) ctx.getAggregator("hits-hub")).get();
 
 			auth /= acc_auth;
 			hub /= acc_hub;
@@ -60,10 +57,8 @@ public class HITSPregel implements VertexFunction<FloatPregelMessage> {
 		for (long l : out)
 			ctx.sendFloat("hits-hub", l, hub);
 
-		((FloatAggregator) ctx.getAggregator("hits-hub")).add(-1, -1,
-				inc.length == 0 ? auth : auth * inc.length);
-		((FloatAggregator) ctx.getAggregator("hits-auth")).add(-1, -1,
-				out.length == 0 ? hub : hub * out.length);
+		((FloatAggregator) ctx.getAggregator("hits-hub")).add(-1, -1, inc.length == 0 ? auth : auth * inc.length);
+		((FloatAggregator) ctx.getAggregator("hits-auth")).add(-1, -1, out.length == 0 ? hub : hub * out.length);
 
 	}
 }

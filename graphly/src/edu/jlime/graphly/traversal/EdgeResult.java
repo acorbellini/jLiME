@@ -26,13 +26,11 @@ public class EdgeResult extends TraversalResult {
 
 	}
 
-	private TraversalResult retain(final TLongHashSet toFilter,
-			final boolean remove) {
+	private TraversalResult retain(final TLongHashSet toFilter, final boolean remove) {
 		edges.retainEntries(new TLongLongProcedure() {
 			@Override
 			public boolean execute(long k, long v) {
-				boolean isInFilter = toFilter.contains(k)
-						|| toFilter.contains(v);
+				boolean isInFilter = toFilter.contains(k) || toFilter.contains(v);
 				if (isInFilter && remove)
 					return false;
 				return false;

@@ -45,8 +45,7 @@ public class PingFailureDetection implements StackElement, FailureProvider {
 		list.add(l);
 	}
 
-	public PingFailureDetection(final MessageProcessor conn,
-			NetworkConfiguration config) {
+	public PingFailureDetection(final MessageProcessor conn, NetworkConfiguration config) {
 		this.conn = conn;
 		this.max_missed = config.max_pings;
 		this.ping_delay = config.ping_delay;
@@ -73,11 +72,9 @@ public class PingFailureDetection implements StackElement, FailureProvider {
 								failed(peer, current.get());
 							else {
 								if (log.isDebugEnabled())
-									log.debug("Sending ping to " + peer
-											+ ", try number " + current.get());
+									log.debug("Sending ping to " + peer + ", try number " + current.get());
 								try {
-									conn.send(Message.newEmptyOutDataMessage(
-											MessageType.PING, peer));
+									conn.send(Message.newEmptyOutDataMessage(MessageType.PING, peer));
 								} catch (Exception e1) {
 									e1.printStackTrace();
 								}
@@ -114,8 +111,7 @@ public class PingFailureDetection implements StackElement, FailureProvider {
 	public void addPingProvider(MessageProcessor conn) {
 		conn.addAllMessageListener(new MessageListener() {
 			@Override
-			public void rcv(Message m, MessageProcessor origin)
-					throws Exception {
+			public void rcv(Message m, MessageProcessor origin) throws Exception {
 				pongArrived(m);
 			}
 		});

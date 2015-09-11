@@ -5,11 +5,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.log4j.Logger;
 
-import edu.jlime.graphly.client.GraphlyClient;
+import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.jobs.Mapper;
-import edu.jlime.jd.ClientNode;
-import edu.jlime.jd.JobDispatcher;
-import edu.jlime.jd.client.JobContextImpl;
+import edu.jlime.jd.Dispatcher;
+import edu.jlime.jd.Node;
+import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.task.ForkJoinTask;
 import edu.jlime.jd.task.ResultListener;
 import edu.jlime.util.Pair;
@@ -19,15 +19,15 @@ import gnu.trove.set.hash.TLongHashSet;
 public class VertexStep implements Step {
 
 	private Dir dir;
-	private GraphlyTraversal tr;
+	private Traversal tr;
 	private int max_edges;
 	private boolean expand;
 
-	public VertexStep(Dir dir, int max_edges, GraphlyTraversal tr) {
+	public VertexStep(Dir dir, int max_edges, Traversal tr) {
 		this(dir, max_edges, false, tr);
 	}
 
-	public VertexStep(Dir dir, int max_edges, boolean b, GraphlyTraversal tr) {
+	public VertexStep(Dir dir, int max_edges, boolean b, Traversal tr) {
 		this.dir = dir;
 		this.tr = tr;
 		this.max_edges = max_edges;
@@ -41,47 +41,42 @@ public class VertexStep implements Step {
 
 		Mapper map = (Mapper) tr.get("mapper");
 
-		JobDispatcher jobClient = tr.getGraph().getJobClient();
+		Dispatcher jobClient = tr.getGraph().getJobClient();
 
-		JobContextImpl ctx = jobClient.getEnv().getClientEnv(
-				jobClient.getLocalPeer());
+		JobContext ctx = jobClient.getEnv().getClientEnv(jobClient.getLocalPeer());
 
 		TLongHashSet vertices = before.vertices();
-		final List<Pair<ClientNode, TLongArrayList>> div = map.map(
-				GraphlyClient.NUM_JOBS, vertices.toArray(), ctx);
+		final List<Pair<Node, TLongArrayList>> div = map.map(Graphly.NUM_JOBS, vertices.toArray(), ctx);
 
 		ForkJoinTask<long[]> fj = new ForkJoinTask<>();
-		for (Pair<ClientNode, TLongArrayList> e : div) {
-			fj.putJob(new VertexJob(tr.getGraph(), dir, max_edges, e.getValue()
-					.toArray()), e.getKey());
+		for (Pair<Node, TLongArrayList> e : div) {
+			fj.putJob(new VertexJob(tr.getGraph(), dir, max_edges, e.getValue().toArray()), e.getKey());
 		}
 
 		if (log.isDebugEnabled())
 			log.debug("Executing " + div.size() + " jobs.");
 
-		TLongHashSet finalRes = fj
-				.execute(new ResultListener<long[], TLongHashSet>() {
-					TLongHashSet ret = new TLongHashSet();
+		TLongHashSet finalRes = fj.execute(new ResultListener<long[], TLongHashSet>() {
+			TLongHashSet ret = new TLongHashSet();
 
-					AtomicInteger cont = new AtomicInteger(div.size());
+			AtomicInteger cont = new AtomicInteger(div.size());
 
-					@Override
-					public synchronized void onSuccess(long[] result) {
-						if (log.isDebugEnabled())
-							log.debug("Received result jobs, remaining "
-									+ cont.decrementAndGet());
-						ret.addAll(result);
-					}
+			@Override
+			public synchronized void onSuccess(long[] result) {
+				if (log.isDebugEnabled())
+					log.debug("Received result jobs, remaining " + cont.decrementAndGet());
+				ret.addAll(result);
+			}
 
-					@Override
-					public TLongHashSet onFinished() {
-						return ret;
-					}
+			@Override
+			public TLongHashSet onFinished() {
+				return ret;
+			}
 
-					@Override
-					public void onFailure(Exception res) {
-					}
-				});
+			@Override
+			public void onFailure(Exception res) {
+			}
+		});
 		log.info("Returning  " + finalRes.size() + " vertices.");
 		if (expand)
 			finalRes.addAll(vertices);

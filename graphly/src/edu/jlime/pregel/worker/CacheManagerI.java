@@ -18,10 +18,8 @@ public interface CacheManagerI {
 
 	void stop();
 
-	void sendAllSubGraph(String msgType, String subgraph, long v, Object val)
-			throws Exception;
+	void sendAllSubGraph(String msgType, String subgraph, long v, Object val) throws Exception;
 
-	void sendAllFloatSubGraph(String msgType, String subgraph, long v, float val)
-			throws Exception;
+	void sendAllFloatSubGraph(String msgType, String subgraph, long v, float val) throws Exception;
 
 }

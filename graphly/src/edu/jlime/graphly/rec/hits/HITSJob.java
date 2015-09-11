@@ -6,30 +6,27 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import org.springframework.util.SystemPropertyUtils;
-
-import edu.jlime.graphly.client.GraphlyGraph;
+import edu.jlime.graphly.client.Graph;
 import edu.jlime.graphly.client.SubGraph;
 import edu.jlime.graphly.rec.salsa.AuthHubSubResult;
 import edu.jlime.graphly.traversal.Dir;
-import edu.jlime.jd.ClientNode;
+import edu.jlime.jd.Node;
 import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.Job;
 import gnu.trove.iterator.TLongFloatIterator;
-import gnu.trove.iterator.TLongIterator;
 import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.map.hash.TLongFloatHashMap;
 
 public class HITSJob implements Job<AuthHubSubResult> {
 
-	private GraphlyGraph g;
+	private Graph g;
 	private TLongFloatHashMap auth;
 	private TLongFloatHashMap hub;
 	private long[] subgraph;
 	private TLongArrayList vertices;
 
-	public HITSJob(GraphlyGraph graph, TLongFloatHashMap auth,
-			TLongFloatHashMap hub, long[] subgraph, TLongArrayList value) {
+	public HITSJob(Graph graph, TLongFloatHashMap auth, TLongFloatHashMap hub, long[] subgraph,
+			TLongArrayList value) {
 		this.g = graph;
 		this.auth = new TLongFloatHashMap(auth);
 		this.hub = new TLongFloatHashMap(hub);
@@ -38,8 +35,7 @@ public class HITSJob implements Job<AuthHubSubResult> {
 	}
 
 	@Override
-	public AuthHubSubResult call(JobContext env, ClientNode peer)
-			throws Exception {
+	public AuthHubSubResult call(JobContext env, Node peer) throws Exception {
 		final SubGraph sg = g.getSubGraph("hitsg", this.subgraph);
 		ArrayList<Future<AuthHubSubResult>> futs = new ArrayList<>();
 		final int threads = Runtime.getRuntime().availableProcessors();
@@ -53,43 +49,40 @@ public class HITSJob implements Job<AuthHubSubResult> {
 
 		for (int i = 0; i < threads; i++) {
 			final int tID = i;
-			Future<AuthHubSubResult> fut = exec
-					.submit(new Callable<AuthHubSubResult>() {
-						@Override
-						public AuthHubSubResult call() throws Exception {
-							TLongFloatHashMap authRes = new TLongFloatHashMap();
-							TLongFloatHashMap hubRes = new TLongFloatHashMap();
+			Future<AuthHubSubResult> fut = exec.submit(new Callable<AuthHubSubResult>() {
+				@Override
+				public AuthHubSubResult call() throws Exception {
+					TLongFloatHashMap authRes = new TLongFloatHashMap();
+					TLongFloatHashMap hubRes = new TLongFloatHashMap();
 
-							int from = (int) (chunks * tID);
-							int to = (int) (chunks * (tID + 1));
+					int from = (int) (chunks * tID);
+					int to = (int) (chunks * (tID + 1));
 
-							if (tID == threads - 1)
-								to = vertices.size();
+					if (tID == threads - 1)
+						to = vertices.size();
 
-							int cont = from;
-							while (cont < to) {
-								long v = vertices.get(cont++);
-								long[] outgoing = sg.getEdges(Dir.OUT, v);
-								float value = hub.get(v);
-								if (value != hub.getNoEntryValue()) {
-									for (long out : outgoing) {
-										authRes.adjustOrPutValue(out, value,
-												value);
-									}
-								}
-
-								long[] incoming = sg.getEdges(Dir.IN, v);
-								float value2 = auth.get(v);
-								if (value2 != auth.getNoEntryValue()) {
-									for (long in : incoming) {
-										hubRes.adjustOrPutValue(in, value2,
-												value2);
-									}
-								}
+					int cont = from;
+					while (cont < to) {
+						long v = vertices.get(cont++);
+						long[] outgoing = sg.getEdges(Dir.OUT, v);
+						float value = hub.get(v);
+						if (value != hub.getNoEntryValue()) {
+							for (long out : outgoing) {
+								authRes.adjustOrPutValue(out, value, value);
 							}
-							return new AuthHubSubResult(authRes, hubRes);
 						}
-					});
+
+						long[] incoming = sg.getEdges(Dir.IN, v);
+						float value2 = auth.get(v);
+						if (value2 != auth.getNoEntryValue()) {
+							for (long in : incoming) {
+								hubRes.adjustOrPutValue(in, value2, value2);
+							}
+						}
+					}
+					return new AuthHubSubResult(authRes, hubRes);
+				}
+			});
 			futs.add(fut);
 		}
 		exec.shutdown();
@@ -107,8 +100,7 @@ public class HITSJob implements Job<AuthHubSubResult> {
 			TLongFloatIterator itHub = authHubSubResult.hub.iterator();
 			while (itHub.hasNext()) {
 				itHub.advance();
-				hubRes.adjustOrPutValue(itHub.key(), itHub.value(),
-						itHub.value());
+				hubRes.adjustOrPutValue(itHub.key(), itHub.value(), itHub.value());
 			}
 		}
 

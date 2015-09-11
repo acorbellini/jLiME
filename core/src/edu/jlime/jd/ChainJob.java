@@ -9,28 +9,27 @@ import java.util.concurrent.Semaphore;
 import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.Job;
 
-public class ChainJob<R> implements Job<Map<ClientNode, R>> {
+public class ChainJob<R> implements Job<Map<Node, R>> {
 
 	private static final long serialVersionUID = -1099540720020480578L;
 
-	private List<ClientNode> rem;
+	private List<Node> rem;
 
 	private Job<R> j;
 
-	public ChainJob(Job<R> j, List<ClientNode> remaining) {
+	public ChainJob(Job<R> j, List<Node> remaining) {
 		this.j = j;
 		this.rem = remaining;
 	}
 
 	@Override
-	public Map<ClientNode, R> call(final JobContext env, ClientNode peer)
-			throws Exception {
+	public Map<Node, R> call(final JobContext env, Node peer) throws Exception {
 
 		// System.out.println("Chaining from server "
 		// + env.getCluster().getLocalPeer() + " to " + rem);
 
-		final ConcurrentHashMap<ClientNode, R> ret = new ConcurrentHashMap<>();
-		ClientNode local = env.getCluster().getLocalNode();
+		final ConcurrentHashMap<Node, R> ret = new ConcurrentHashMap<>();
+		Node local = env.getCluster().getLocalNode();
 
 		ret.put(local, local.exec(j));
 
@@ -38,8 +37,7 @@ public class ChainJob<R> implements Job<Map<ClientNode, R>> {
 			final Semaphore sem = new Semaphore(-1);
 			new Thread() {
 				public void run() {
-					ArrayList<ClientNode> middle = new ArrayList<>(rem.subList(
-							0, (int) Math.ceil(rem.size() / (double) 2)));
+					ArrayList<Node> middle = new ArrayList<>(rem.subList(0, (int) Math.ceil(rem.size() / (double) 2)));
 					try {
 						ret.putAll(env.getCluster().chain(middle, j));
 					} catch (Exception e) {
@@ -53,9 +51,8 @@ public class ChainJob<R> implements Job<Map<ClientNode, R>> {
 			else
 				new Thread() {
 					public void run() {
-						ArrayList<ClientNode> middle = new ArrayList<>(
-								rem.subList((int) Math.ceil(rem.size()
-										/ (double) 2), rem.size()));
+						ArrayList<Node> middle = new ArrayList<>(
+								rem.subList((int) Math.ceil(rem.size() / (double) 2), rem.size()));
 						try {
 							ret.putAll(env.getCluster().chain(middle, j));
 						} catch (Exception e) {
