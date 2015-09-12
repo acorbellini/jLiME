@@ -10,7 +10,7 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 
 import edu.jlime.graphly.client.Graph;
-import edu.jlime.graphly.rec.BetaCalc;
+import edu.jlime.graphly.rec.Beta;
 import edu.jlime.graphly.rec.CustomStep;
 import edu.jlime.graphly.rec.CustomStep.CustomFunction;
 import edu.jlime.graphly.rec.Repeat;
@@ -254,14 +254,14 @@ public class Traversal implements Serializable {
 	}
 
 	public Traversal traverseGraphCount(String countk, String kBeta, TLongHashSet vertices, int max_edges,
-			BetaCalc calc, Dir... dirs) {
+			Beta calc, Dir... dirs) {
 		for (int i = 0; i < dirs.length; i++) {
 			graphcount(calc, countk, vertices, dirs[i], max_edges, i != dirs.length - 1, kBeta);
 		}
 		return this;
 	}
 
-	public Traversal graphcount(BetaCalc calc, String countk, TLongHashSet vertices, Dir dir, int max_edges,
+	public Traversal graphcount(Beta calc, String countk, TLongHashSet vertices, Dir dir, int max_edges,
 			boolean returnVertices, String kBeta) {
 		addStep(new GraphCountStep(calc, dir, vertices, max_edges, this, countk, returnVertices, kBeta));
 		return this;

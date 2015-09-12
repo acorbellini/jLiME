@@ -3,14 +3,14 @@ package edu.jlime.graphly.rec;
 import java.util.Iterator;
 
 import edu.jlime.graphly.traversal.Dir;
-import edu.jlime.pregel.client.WorkerContext;
+import edu.jlime.pregel.client.Context;
 import edu.jlime.pregel.graph.VertexFunction;
 import edu.jlime.pregel.graph.rpc.PregelGraph;
-import edu.jlime.pregel.messages.FloatPregelMessage;
+import edu.jlime.pregel.messages.FloatMessage;
 import gnu.trove.iterator.TLongIterator;
 import gnu.trove.set.hash.TLongHashSet;
 
-public class KatzRootedPregel implements VertexFunction<FloatPregelMessage> {
+public class KatzRootedPregel implements VertexFunction<FloatMessage> {
 
 	private String prop;
 	private float beta;
@@ -25,15 +25,15 @@ public class KatzRootedPregel implements VertexFunction<FloatPregelMessage> {
 	}
 
 	@Override
-	public void execute(long v, Iterator<FloatPregelMessage> in, WorkerContext ctx) throws Exception {
+	public void execute(long v, Iterator<FloatMessage> in, Context ctx) throws Exception {
 		PregelGraph g = ctx.getGraph();
 
 		float adj = 0f;
 		if (ctx.getSuperStep() > 0) {
 			float sum = 0f;
 			while (in.hasNext()) {
-				FloatPregelMessage msg = in.next();
-				sum += msg.getFloat();
+				FloatMessage msg = in.next();
+				sum += msg.value();
 			}
 
 			float oldKatz = g.getFloat(prop, v, 0f);

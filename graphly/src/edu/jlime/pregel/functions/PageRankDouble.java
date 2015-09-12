@@ -4,7 +4,7 @@ import java.util.Iterator;
 
 import org.apache.log4j.Logger;
 
-import edu.jlime.pregel.client.WorkerContext;
+import edu.jlime.pregel.client.Context;
 import edu.jlime.pregel.graph.VertexFunction;
 import edu.jlime.pregel.graph.rpc.PregelGraph;
 import edu.jlime.pregel.messages.DoublePregelMessage;
@@ -23,7 +23,7 @@ public class PageRankDouble implements VertexFunction<PregelMessage> {
 	// double d = 0.85;
 
 	@Override
-	public void execute(long v, Iterator<PregelMessage> in, WorkerContext ctx) throws Exception {
+	public void execute(long v, Iterator<PregelMessage> in, Context ctx) throws Exception {
 		Logger log = Logger.getLogger(PageRankDouble.class);
 
 		PregelGraph graph = ctx.getGraph();

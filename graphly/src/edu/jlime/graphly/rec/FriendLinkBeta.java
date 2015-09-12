@@ -1,6 +1,6 @@
 package edu.jlime.graphly.rec;
 
-public class FriendLinkBeta implements BetaCalc {
+public class FriendLinkBeta implements Beta {
 
 	private long vcount;
 

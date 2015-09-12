@@ -2,12 +2,12 @@ package edu.jlime.graphly.rec;
 
 import java.util.Iterator;
 
-import edu.jlime.pregel.client.WorkerContext;
+import edu.jlime.pregel.client.Context;
 import edu.jlime.pregel.graph.VertexFunction;
-import edu.jlime.pregel.messages.FloatPregelMessage;
+import edu.jlime.pregel.messages.FloatMessage;
 import gnu.trove.set.hash.TLongHashSet;
 
-public class CommonNeighboursPregel implements VertexFunction<FloatPregelMessage> {
+public class CommonNeighboursPregel implements VertexFunction<FloatMessage> {
 
 	private float targetAmount;
 
@@ -16,7 +16,7 @@ public class CommonNeighboursPregel implements VertexFunction<FloatPregelMessage
 	}
 
 	@Override
-	public void execute(long v, Iterator<FloatPregelMessage> in, WorkerContext ctx) throws Exception {
+	public void execute(long v, Iterator<FloatMessage> in, Context ctx) throws Exception {
 
 		TLongHashSet out = ctx.getGraph().getNeighbours(v);
 		((SetAggregator) ctx.getAggregator("cm")).add(out);

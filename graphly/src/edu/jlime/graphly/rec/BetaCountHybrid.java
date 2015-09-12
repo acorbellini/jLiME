@@ -20,9 +20,9 @@ public class BetaCountHybrid implements CustomFunction {
 	private int top;
 	private String countK;
 	private Dir[] dirs;
-	private BetaCalc calc;
+	private Beta calc;
 
-	public BetaCountHybrid(BetaCalc calc, int top, String countK, Dir... dirs) {
+	public BetaCountHybrid(Beta calc, int top, String countK, Dir... dirs) {
 		this.max_edges = Integer.MAX_VALUE;
 		this.top = top;
 		this.countK = countK;

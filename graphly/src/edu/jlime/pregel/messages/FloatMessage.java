@@ -1,9 +1,9 @@
 package edu.jlime.pregel.messages;
 
-public class FloatPregelMessage extends PregelMessage {
+public class FloatMessage extends PregelMessage {
 	float v;
 
-	public FloatPregelMessage(String msgType, long from, long to, float val) {
+	public FloatMessage(String msgType, long from, long to, float val) {
 		super(msgType, from, to);
 		this.v = val;
 	}
@@ -12,14 +12,14 @@ public class FloatPregelMessage extends PregelMessage {
 		this.v = v;
 	}
 
-	public float getFloat() {
+	public float value() {
 		return v;
 
 	}
 
 	@Override
 	public PregelMessage getCopy() {
-		FloatPregelMessage floatPregelMessage = new FloatPregelMessage(getType(), from, to, v);
+		FloatMessage floatPregelMessage = new FloatMessage(getType(), from, to, v);
 		floatPregelMessage.setBroadcast(isBroadcast());
 		return floatPregelMessage;
 	}

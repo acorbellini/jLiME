@@ -29,14 +29,14 @@ import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.map.TLongFloatMap;
 import gnu.trove.map.hash.TLongFloatHashMap;
 
-public class BetaCountStep implements CustomFunction {
+public class BetaCount implements CustomFunction {
 
 	// private float beta;
 	private int depth;
-	private BetaCalc beta;
+	private Beta beta;
 	private Dir dir;
 
-	public BetaCountStep(BetaCalc beta, int depth, Dir dir) {
+	public BetaCount(Beta beta, int depth, Dir dir) {
 		this.beta = beta;
 		this.depth = depth;
 		this.dir = dir;

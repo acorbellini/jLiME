@@ -22,7 +22,7 @@ import edu.jlime.pregel.PregelSubgraph;
 import edu.jlime.pregel.client.CoordinatorFilter;
 import edu.jlime.pregel.client.PregelConfig;
 import edu.jlime.pregel.client.SplitFunction;
-import edu.jlime.pregel.client.WorkerContext;
+import edu.jlime.pregel.client.Context;
 import edu.jlime.pregel.coordinator.Aggregator;
 import edu.jlime.pregel.coordinator.CoordinatorServer;
 import edu.jlime.pregel.coordinator.rpc.Coordinator;
@@ -332,7 +332,7 @@ public class WorkerTask {
 
 		ArrayList<Iterator<PregelMessage>> currList = new ArrayList<>();
 
-		WorkerContext ctx = new WorkerContext(WorkerTask.this, cacheMgr.get(threadID), -1);
+		Context ctx = new Context(WorkerTask.this, cacheMgr.get(threadID), -1);
 
 		int range = vList.size() / threads;
 		int from = threadID * range;

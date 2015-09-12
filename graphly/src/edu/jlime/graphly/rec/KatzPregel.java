@@ -2,15 +2,15 @@ package edu.jlime.graphly.rec;
 
 import java.util.Iterator;
 
-import edu.jlime.pregel.client.WorkerContext;
+import edu.jlime.pregel.client.Context;
 import edu.jlime.pregel.graph.VertexFunction;
 import edu.jlime.pregel.graph.rpc.PregelGraph;
-import edu.jlime.pregel.messages.FloatPregelMessage;
+import edu.jlime.pregel.messages.FloatMessage;
 import edu.jlime.pregel.worker.FloatAggregator;
 import gnu.trove.iterator.TLongIterator;
 import gnu.trove.set.hash.TLongHashSet;
 
-public class KatzPregel implements VertexFunction<FloatPregelMessage> {
+public class KatzPregel implements VertexFunction<FloatMessage> {
 
 	private String prop;
 	private float beta;
@@ -21,14 +21,14 @@ public class KatzPregel implements VertexFunction<FloatPregelMessage> {
 	}
 
 	@Override
-	public void execute(long v, Iterator<FloatPregelMessage> in, WorkerContext ctx) throws Exception {
+	public void execute(long v, Iterator<FloatMessage> in, Context ctx) throws Exception {
 		PregelGraph g = ctx.getGraph();
 
 		float adj = 0f;
 		if (ctx.getSuperStep() > 0) {
 			while (in.hasNext()) {
-				FloatPregelMessage msg = in.next();
-				adj += msg.getFloat();
+				FloatMessage msg = in.next();
+				adj += msg.value();
 			}
 
 			float diff = 0f;

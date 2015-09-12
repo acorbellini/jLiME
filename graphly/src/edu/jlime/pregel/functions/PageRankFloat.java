@@ -2,17 +2,17 @@ package edu.jlime.pregel.functions;
 
 import java.util.Iterator;
 
-import edu.jlime.pregel.client.WorkerContext;
+import edu.jlime.pregel.client.Context;
 import edu.jlime.pregel.coordinator.CoordinatorTask;
 import edu.jlime.pregel.coordinator.HaltCondition;
 import edu.jlime.pregel.graph.VertexFunction;
 import edu.jlime.pregel.graph.rpc.PregelGraph;
-import edu.jlime.pregel.messages.FloatPregelMessage;
+import edu.jlime.pregel.messages.FloatMessage;
 import edu.jlime.pregel.worker.FloatAggregator;
 import gnu.trove.iterator.TLongIterator;
 import gnu.trove.set.hash.TLongHashSet;
 
-public class PageRankFloat implements VertexFunction<FloatPregelMessage> {
+public class PageRankFloat implements VertexFunction<FloatMessage> {
 	private static final String PAGERANK_MESSAGE = "pr";
 
 	private int vertexSize;
@@ -45,7 +45,7 @@ public class PageRankFloat implements VertexFunction<FloatPregelMessage> {
 	}
 
 	@Override
-	public void execute(long v, Iterator<FloatPregelMessage> in, WorkerContext ctx) throws Exception {
+	public void execute(long v, Iterator<FloatMessage> in, Context ctx) throws Exception {
 		PregelGraph graph = ctx.getGraph();
 
 		// Jacobi iterative method: (1-d) + d * function
@@ -56,7 +56,7 @@ public class PageRankFloat implements VertexFunction<FloatPregelMessage> {
 			float oldval = graph.getFloat(v, prop);
 			double sum = 0f;
 			while (in.hasNext())
-				sum += ((FloatPregelMessage) in.next()).getFloat();
+				sum += ((FloatMessage) in.next()).value();
 			float d = graph.getFloat(v, "ranksource");
 			currentVal = (float) ((1 - d) / vertexSize + d * sum);
 			float diff = Math.abs(currentVal - oldval);

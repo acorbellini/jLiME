@@ -1,6 +1,6 @@
 package edu.jlime.pregel.functions;
 
-import edu.jlime.pregel.client.WorkerContext;
+import edu.jlime.pregel.client.Context;
 import edu.jlime.pregel.graph.ObjectVertexFunction;
 import gnu.trove.map.hash.TLongObjectHashMap;
 
@@ -12,7 +12,7 @@ class MinTree implements ObjectVertexFunction {
 	private static final String DELETE = "delete";
 
 	@Override
-	public void execute(long v, TLongObjectHashMap<Object> incoming, WorkerContext ctx) throws Exception {
+	public void execute(long v, TLongObjectHashMap<Object> incoming, Context ctx) throws Exception {
 		// TODO refactor to use Tlongobjectmap
 		// Graph graph = ctx.getGraph();
 		//

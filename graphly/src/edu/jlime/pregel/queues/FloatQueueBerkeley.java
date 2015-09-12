@@ -3,7 +3,7 @@ package edu.jlime.pregel.queues;
 import java.util.HashMap;
 import java.util.Iterator;
 
-import edu.jlime.pregel.messages.FloatPregelMessage;
+import edu.jlime.pregel.messages.FloatMessage;
 import edu.jlime.pregel.messages.PregelMessage;
 import edu.jlime.pregel.worker.FloatData;
 import edu.jlime.pregel.worker.WorkerTask;
@@ -94,7 +94,7 @@ public class FloatQueueBerkeley implements FloatMessageQueue {
 				@Override
 				public PregelMessage next() {
 					first = false;
-					return new FloatPregelMessage(msgType, -1l, to, found);
+					return new FloatMessage(msgType, -1l, to, found);
 				}
 
 				@Override

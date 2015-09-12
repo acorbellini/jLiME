@@ -149,7 +149,7 @@ public class Recommendation extends CustomTraversal {
 	}
 
 	public CustomTraversal katzFJ(float beta, int depth, int top, Dir dir) {
-		tr.customStep(new BetaCountStep(new KatzBeta(beta), depth, dir)).top(top);
+		tr.customStep(new BetaCount(new KatzBeta(beta), depth, dir)).top(top);
 		return this;
 	}
 
@@ -203,7 +203,7 @@ public class Recommendation extends CustomTraversal {
 
 	public CustomTraversal localPathFJ(float alpha, int top, Dir dir) {
 
-		tr.customStep(new BetaCountStep(new LPBeta(alpha), 3, dir)).top(top);
+		tr.customStep(new BetaCount(new LPBeta(alpha), 3, dir)).top(top);
 
 		return this;
 	}
@@ -221,7 +221,7 @@ public class Recommendation extends CustomTraversal {
 	public CustomTraversal friendLinkFJ(int top, int depth, Dir dir) throws Exception {
 		long vertices = tr.getGraph().getVertexCount();
 
-		tr.customStep(new BetaCountStep(new FriendLinkBeta(vertices), depth, dir)).top(top);
+		tr.customStep(new BetaCount(new FriendLinkBeta(vertices), depth, dir)).top(top);
 
 		return this;
 

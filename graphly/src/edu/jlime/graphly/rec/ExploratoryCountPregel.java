@@ -31,7 +31,7 @@ public class ExploratoryCountPregel implements CustomFunction {
 		Graph g = tr.getGraph();
 
 		g.v(before.vertices()).set("mapper", tr.get("mapper")).as(Pregel.class)
-				.vertexFunction(new ExploratoryCountVertexFunction(), config).exec();
+				.vertexFunction(new ExploratoryCount(), config).exec();
 
 		Logger log = Logger.getLogger(ExploratoryCountPregel.class);
 

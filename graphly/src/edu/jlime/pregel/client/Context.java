@@ -6,14 +6,14 @@ import edu.jlime.pregel.graph.rpc.PregelGraph;
 import edu.jlime.pregel.worker.CacheManagerI;
 import edu.jlime.pregel.worker.WorkerTask;
 
-public class WorkerContext {
+public class Context {
 	private WorkerTask task;
 
 	private long v;
 
 	private CacheManagerI cache;
 
-	public WorkerContext(WorkerTask task, CacheManagerI cacheManager, long v) {
+	public Context(WorkerTask task, CacheManagerI cacheManager, long v) {
 		this.task = task;
 		this.v = v;
 		this.cache = cacheManager;

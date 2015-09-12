@@ -5,7 +5,7 @@ import java.util.List;
 import org.apache.log4j.Logger;
 
 import edu.jlime.graphly.jobs.Mapper;
-import edu.jlime.graphly.rec.BetaCalc;
+import edu.jlime.graphly.rec.Beta;
 import edu.jlime.graphly.rec.GraphCount;
 import edu.jlime.graphly.storenode.StoreNodeImpl;
 import edu.jlime.graphly.traversal.count.CountStep;
@@ -26,9 +26,9 @@ public class GraphCountStep implements Step {
 		private int depth;
 		private String k;
 		private String kBeta;
-		private BetaCalc calc;
+		private Beta calc;
 
-		public BetaGather(int depth, String k, String kBeta, BetaCalc calc) {
+		public BetaGather(int depth, String k, String kBeta, Beta calc) {
 			super();
 			this.depth = depth;
 			this.k = k;
@@ -54,10 +54,10 @@ public class GraphCountStep implements Step {
 	private String k;
 	private TLongHashSet filters;
 	private boolean returnVertices;
-	private BetaCalc calc;
+	private Beta calc;
 	private String kBeta;
 
-	public GraphCountStep(BetaCalc calc, Dir dir, TLongHashSet vertices, int max_edges, Traversal tr, String k,
+	public GraphCountStep(Beta calc, Dir dir, TLongHashSet vertices, int max_edges, Traversal tr, String k,
 			boolean returnVertices, String kBeta) {
 		this.calc = calc;
 		this.filters = vertices;

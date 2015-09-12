@@ -3,13 +3,13 @@ package edu.jlime.graphly.rec.hits;
 import java.util.Iterator;
 
 import edu.jlime.pregel.PregelSubgraph;
-import edu.jlime.pregel.client.WorkerContext;
+import edu.jlime.pregel.client.Context;
 import edu.jlime.pregel.graph.VertexFunction;
 import edu.jlime.pregel.graph.rpc.PregelGraph;
-import edu.jlime.pregel.messages.FloatPregelMessage;
+import edu.jlime.pregel.messages.FloatMessage;
 import edu.jlime.pregel.worker.FloatAggregator;
 
-public class HITSPregel implements VertexFunction<FloatPregelMessage> {
+public class HITSPregel implements VertexFunction<FloatMessage> {
 	private String authKey;
 	private String hubKey;
 
@@ -19,7 +19,7 @@ public class HITSPregel implements VertexFunction<FloatPregelMessage> {
 	}
 
 	@Override
-	public void execute(long v, Iterator<FloatPregelMessage> in, WorkerContext ctx) throws Exception {
+	public void execute(long v, Iterator<FloatMessage> in, Context ctx) throws Exception {
 
 		PregelGraph g = ctx.getGraph();
 		PregelSubgraph sg = ctx.getSubGraph("hits-sg");
@@ -31,8 +31,8 @@ public class HITSPregel implements VertexFunction<FloatPregelMessage> {
 		} else {
 
 			while (in.hasNext()) {
-				FloatPregelMessage pm = in.next();
-				float m = pm.getFloat();
+				FloatMessage pm = in.next();
+				float m = pm.value();
 				if (pm.getType().equals("hits-auth"))
 					hub += m;
 				else

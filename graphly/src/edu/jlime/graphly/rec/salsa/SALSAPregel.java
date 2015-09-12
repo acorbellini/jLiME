@@ -3,13 +3,13 @@ package edu.jlime.graphly.rec.salsa;
 import java.util.Iterator;
 
 import edu.jlime.pregel.PregelSubgraph;
-import edu.jlime.pregel.client.WorkerContext;
+import edu.jlime.pregel.client.Context;
 import edu.jlime.pregel.graph.VertexFunction;
 import edu.jlime.pregel.graph.rpc.PregelGraph;
 import edu.jlime.pregel.mergers.ObjectMessageMerger;
-import edu.jlime.pregel.messages.FloatPregelMessage;
+import edu.jlime.pregel.messages.FloatMessage;
 
-public class SALSAPregel implements VertexFunction<FloatPregelMessage> {
+public class SALSAPregel implements VertexFunction<FloatMessage> {
 
 	public static class SalsaMessage {
 		float auth;
@@ -47,7 +47,7 @@ public class SALSAPregel implements VertexFunction<FloatPregelMessage> {
 	}
 
 	@Override
-	public void execute(long v, Iterator<FloatPregelMessage> in, WorkerContext ctx) throws Exception {
+	public void execute(long v, Iterator<FloatMessage> in, Context ctx) throws Exception {
 		PregelGraph graph = ctx.getGraph();
 		float auth = 0f;
 		float hub = 0f;
@@ -59,11 +59,11 @@ public class SALSAPregel implements VertexFunction<FloatPregelMessage> {
 			hub = 1f / hs;
 		} else {
 			while (in.hasNext()) {
-				FloatPregelMessage msg = in.next();
+				FloatMessage msg = in.next();
 				if (msg.getType().equals("salsa-auth"))
-					auth += msg.getFloat();
+					auth += msg.value();
 				else
-					hub += msg.getFloat();
+					hub += msg.value();
 			}
 
 			if (superstep % 2 == 0) {

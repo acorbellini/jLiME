@@ -1,6 +1,6 @@
 package edu.jlime.graphly.rec;
 
-public class LPBeta implements BetaCalc {
+public class LPBeta implements Beta {
 
 	private float beta;
 
