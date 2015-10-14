@@ -11,7 +11,7 @@ import edu.jlime.graphly.client.Graph;
 import edu.jlime.graphly.jobs.MapperFactory;
 import edu.jlime.graphly.rec.KatzPregel;
 import edu.jlime.graphly.server.GraphlyServer;
-import edu.jlime.graphly.traversal.Pregel;
+import edu.jlime.graphly.traversal.PregelTraversal;
 import edu.jlime.pregel.client.CacheFactory;
 import edu.jlime.pregel.client.PregelConfig;
 import edu.jlime.pregel.functions.PageRankFloat.PageRankHaltCondition;
@@ -42,9 +42,9 @@ public class KatzTest {
 		// test.setDefaultFloat("pagerank", 1f / vertexCount);
 		// test.setDefaultFloat("ranksource", .85f);
 
-		test.v().set("mapper", MapperFactory.rr()).as(Pregel.class).vertexFunction(new KatzPregel("katz", 0.0001f),
+		test.v().set("mapper", MapperFactory.rr()).as(PregelTraversal.class).vertexFunction(new KatzPregel("katz", 0.0001f),
 				PregelConfig.create().haltCondition(new PageRankHaltCondition(0.000001f, "katz")).steps(50)
-						.persistVList(false).executeOnAll(true).queue(100).cache(CacheFactory.NO_CACHE)
+						.persistVList(false).executeOnAll(true).cacheSize(100).cache(CacheFactory.NO_CACHE)
 						.aggregator("katz", MessageAggregators.floatSum()).merger("katz", MessageMergers.floatSum()))
 				.exec();
 		System.out.println((System.currentTimeMillis() - init) / 1000f);

@@ -10,7 +10,7 @@ import edu.jlime.graphly.rec.CustomStep.CustomFunction;
 import edu.jlime.graphly.rec.hits.HITSPregel;
 import edu.jlime.graphly.rec.salsa.AuthHubResult;
 import edu.jlime.graphly.traversal.Traversal;
-import edu.jlime.graphly.traversal.Pregel;
+import edu.jlime.graphly.traversal.PregelTraversal;
 import edu.jlime.graphly.traversal.TraversalResult;
 import edu.jlime.graphly.util.MessageAggregators;
 import edu.jlime.pregel.client.PregelConfig;
@@ -43,7 +43,7 @@ public class HITSPregelStep implements CustomFunction {
 				.merger("hits-hub", MessageMergers.floatSum()).steps(steps).subgraph("hits-sg", sg);
 
 		Graph g = tr.getGraph();
-		g.v(sg).set("mapper", MapperFactory.location()).as(Pregel.class)
+		g.v(sg).set("mapper", MapperFactory.location()).as(PregelTraversal.class)
 				.vertexFunction(new HITSPregel(auth, hub), config).exec();
 
 		System.out.println(g.sumFloat(auth));

@@ -24,6 +24,7 @@ public class FloatMessageQueueImpl implements FloatMessageQueue {
 	private volatile TLongFloatHashMap[] current = new TLongFloatHashMap[HASHES];
 
 	private FloatTroveMessageMerger merger;
+	private int currentsize = 0;
 
 	public FloatMessageQueueImpl(FloatTroveMessageMerger merger) {
 		for (int i = 0; i < current.length; i++) {
@@ -41,7 +42,10 @@ public class FloatMessageQueueImpl implements FloatMessageQueue {
 	public void putFloat(long from, long to, float msg) {
 		TLongFloatHashMap map = current[getHash(to)];
 		synchronized (map) {
+			int old = map.size();
 			merger.merge(to, msg, map);
+			if (map.size() != old)
+				currentsize++;
 		}
 	}
 
@@ -52,17 +56,19 @@ public class FloatMessageQueueImpl implements FloatMessageQueue {
 			readOnly[i] = current[i];
 			current[i] = aux;
 			this.current[i].clear();
+			currentsize = 0;
 		}
 
 	}
 
 	@Override
 	public int currentSize() {
-		int size = 0;
-		for (int i = 0; i < current.length; i++) {
-			size += current[i].size();
-		}
-		return size;
+		return currentsize;
+		// int size = 0;
+		// for (int i = 0; i < current.length; i++) {
+		// size += current[i].size();
+		// }
+		// return size;
 	}
 
 	@Override

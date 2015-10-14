@@ -14,8 +14,8 @@ import edu.jlime.util.Pair;
 public class Algorithms {
 	private static final int KATZ_DEPTH = 4;
 	private static final int FRIENDLINK_DEPTH = 4;
-	private static final int HITS_NEIGHBOURS = 100000;
-	private static final int SALSA_NEIGHBOURS = 100000;
+	private static final int HITS_NEIGHBOURS = 10000;
+	private static final int SALSA_NEIGHBOURS = 10000;
 
 	public static GraphlyRun ecHybrid() {
 		return new GraphlyRun("ecHybrid") {

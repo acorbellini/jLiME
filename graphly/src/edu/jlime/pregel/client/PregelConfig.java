@@ -19,7 +19,6 @@ public class PregelConfig implements Serializable {
 
 	private int maxSteps = 0;
 	private boolean executeOnAll = false;
-	private String queue_limit = "auto";
 	private GraphConnectionFactory graph;
 	private int bQueue = 100;
 	private Integer send_threads = null;
@@ -29,7 +28,7 @@ public class PregelConfig implements Serializable {
 
 	private HaltCondition condition = null;
 
-	private int queue_size = 5000000;
+	private int cacheSize = 50000000;
 
 	private CacheFactory cacheFactory = CacheFactory.SIMPLE;
 
@@ -112,12 +111,12 @@ public class PregelConfig implements Serializable {
 		return threads;
 	}
 
-	public String getQueueLimit() {
-		return queue_limit;
-	}
+	// public String getQueueLimit() {
+	// return queue_limit;
+	// }
 
-	public PregelConfig queue(int queue_limit) {
-		this.queue_size = queue_limit;
+	public PregelConfig cacheSize(int cacheSize) {
+		this.cacheSize = cacheSize;
 		return this;
 	}
 
@@ -134,8 +133,8 @@ public class PregelConfig implements Serializable {
 		return bQueue;
 	}
 
-	public int getCacheSize() {
-		return bsp ? Integer.MAX_VALUE : queue_size;
+	public float getCacheSize() {
+		return bsp ? Integer.MAX_VALUE : cacheSize;
 	}
 
 	public int getSendThreads() {

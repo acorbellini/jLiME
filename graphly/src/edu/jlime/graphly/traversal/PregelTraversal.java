@@ -4,13 +4,13 @@ import edu.jlime.graphly.rec.CustomStep;
 import edu.jlime.pregel.client.PregelConfig;
 import edu.jlime.pregel.graph.VertexFunction;
 
-public class Pregel extends CustomTraversal {
+public class PregelTraversal extends CustomTraversal {
 
-	public Pregel(Traversal tr) {
+	public PregelTraversal(Traversal tr) {
 		super(tr);
 	}
 
-	public Pregel vertexFunction(VertexFunction<?> func, PregelConfig config) {
+	public PregelTraversal vertexFunction(VertexFunction<?> func, PregelConfig config) {
 		tr.customStep(new PregelCustomFunction(func, config));
 		return this;
 	}
@@ -20,12 +20,12 @@ public class Pregel extends CustomTraversal {
 		return ((PregelCustomFunction) last.getFunction()).getConfig();
 	}
 
-	public Pregel aggregatorValue(String string) {
+	public PregelTraversal aggregatorValue(String string) {
 		tr.customStep(new AggregatorStep(string));
 		return this;
 	}
 
-	public Pregel aggregatorSet(String string) {
+	public PregelTraversal aggregatorSet(String string) {
 		tr.customStep(new AggregatorSetStep(string));
 		return this;
 	}

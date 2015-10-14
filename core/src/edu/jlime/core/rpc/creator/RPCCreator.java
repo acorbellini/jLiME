@@ -182,8 +182,8 @@ public class RPCCreator {
 					methodSignature.params.arguments));
 		}
 
-		writer.write("@Override\n" + "public void setRPC(RPCDispatcher rpc) {\n" + "this.disp=rpc;\n"
-				+ "this.localRPC = RPCDispatcher.getLocalDispatcher(super.dest);\n" + "}\n");
+		writer.write("@Override\n" + "public void setRPC(RPC rpc) {\n" + "this.disp=rpc;\n"
+				+ "this.localRPC = RPC.getLocalDispatcher(super.dest);\n" + "}\n");
 
 		writer.write("public " + serverInterface.getSimpleName() + " getLocal() throws Exception {"
 				+ "	if(local==null){" + "		synchronized(this){" + "			if(local==null){"
@@ -201,7 +201,7 @@ public class RPCCreator {
 			if (method.getAnnotation(Cache.class) != null && !method.getReturnType().getSimpleName().equals("void"))
 				builder.append(
 						"   " + method.getReturnType().getSimpleName() + " " + method.getName() + "Cached = null;\n");
-		builder.append("   transient RPCDispatcher localRPC;\n");
+		builder.append("   transient RPC localRPC;\n");
 
 		builder.append("   transient volatile " + iface + " local = null;\n");
 
@@ -214,7 +214,7 @@ public class RPCCreator {
 
 	private String getBroadcastFields() {
 		StringBuilder field = new StringBuilder();
-		field.append("  RPCDispatcher disp;\n");
+		field.append("  RPC disp;\n");
 		field.append("  Peer local;\n");
 		field.append("  List<Peer> dest = new ArrayList<Peer>();\n");
 		field.append("  Peer client;\n");
@@ -225,11 +225,11 @@ public class RPCCreator {
 	private String getConstructor(String name, String iface) {
 		StringBuilder constructor = new StringBuilder();
 
-		constructor.append("  public " + name + "(RPCDispatcher disp, Peer dest, Peer client, String targetID) {\n");
+		constructor.append("  public " + name + "(RPC disp, Peer dest, Peer client, String targetID) {\n");
 		constructor.append(" super(disp, dest, client, targetID);\n");
 
 		// constructor
-		constructor.append(" this.localRPC = RPCDispatcher.getLocalDispatcher(dest);");
+		constructor.append(" this.localRPC = RPC.getLocalDispatcher(dest);");
 		// constructor.append(" if(localRPC!=null)");
 		// constructor.append(" this.local = (" + iface
 		// + ") localRPC.getTarget(targetID);\n");
@@ -241,7 +241,7 @@ public class RPCCreator {
 	private String getBroadcastConstructor(String name) {
 		StringBuilder constructor = new StringBuilder();
 		constructor
-				.append("  public " + name + "(RPCDispatcher disp, List<Peer> dest, Peer client, String targetID) {\n");
+				.append("  public " + name + "(RPC disp, List<Peer> dest, Peer client, String targetID) {\n");
 		constructor.append("    this.disp = disp;\n");
 		constructor.append("    this.dest.addAll(dest);\n");
 		constructor.append("    this.client = client;\n");
@@ -395,7 +395,7 @@ public class RPCCreator {
 	private String getImports(Class<?> ifaceClass) {
 		StringBuilder imports = new StringBuilder();
 		imports.append("import " + ifaceClass.getName() + ";\n");
-		imports.append("import edu.jlime.core.rpc.RPCDispatcher;\n");
+		imports.append("import edu.jlime.core.rpc.RPC;\n");
 		imports.append("import edu.jlime.core.rpc.RPCClient;\n");
 		imports.append("import edu.jlime.core.cluster.Peer;\n");
 		imports.append("import java.util.List;\n");

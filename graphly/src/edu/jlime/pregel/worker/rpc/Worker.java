@@ -74,7 +74,7 @@ public interface Worker {
 	@Sync
 	public void sendBroadcastMessageSubgraphFloat(String msgType, String subgraph, long v, float val, int taskid)
 			throws Exception;
-
-	@Sync
-	public void finishedProcessing(int taskID) throws Exception;
+	//
+	// @Sync
+	// public void finishedProcessing(int taskID) throws Exception;
 }

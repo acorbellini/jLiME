@@ -30,7 +30,7 @@ public class CacheManagerImpl implements CacheManagerI {
 
 	private ExecutorService pool;
 
-	private int max_size;
+	private float max_size;
 
 	private boolean parallel;
 
@@ -145,14 +145,17 @@ public class CacheManagerImpl implements CacheManagerI {
 	}
 
 	private void checkSize(final String type, final PregelMessageQueue cache) throws Exception {
-		if (max_size < Integer.MAX_VALUE && cache.currentSize() == max_size) {
+		if (max_size < Integer.MAX_VALUE && cache.currentSize() > max_size) {
 			if (parallel) {
 				Future<?> fut = futures.remove(type);
-				if (fut != null)
+				if (fut != null) {
+					// long init = System.currentTimeMillis();
 					fut.get();
+					// System.out.println("Blocked during " +
+					// (System.currentTimeMillis() - init));
+				}
 				cache.switchQueue();
 				fut = pool.submit(new Runnable() {
-
 					@Override
 					public void run() {
 						try {

@@ -22,6 +22,7 @@ import java.util.concurrent.ThreadFactory;
 
 import org.apache.log4j.Logger;
 
+import edu.jlime.core.cluster.Peer;
 import edu.jlime.core.transport.Address;
 import edu.jlime.core.transport.FailureListener;
 import edu.jlime.metrics.metric.Metrics;
@@ -289,8 +290,8 @@ public class UDPNIO extends MessageProcessor implements AddressListProvider, Fai
 	}
 
 	@Override
-	public void nodeFailed(Address node) {
-		DatagramChannel dc = addressBook.get(node);
+	public void nodeFailed(Peer node) {
+		DatagramChannel dc = addressBook.get(node.getAddress());
 		if (dc != null)
 			try {
 				dc.close();

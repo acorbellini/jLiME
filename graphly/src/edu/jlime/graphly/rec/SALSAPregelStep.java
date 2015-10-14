@@ -10,7 +10,7 @@ import edu.jlime.graphly.rec.salsa.AuthHubResult;
 import edu.jlime.graphly.rec.salsa.SALSAPregel;
 import edu.jlime.graphly.traversal.Dir;
 import edu.jlime.graphly.traversal.Traversal;
-import edu.jlime.graphly.traversal.Pregel;
+import edu.jlime.graphly.traversal.PregelTraversal;
 import edu.jlime.graphly.traversal.TraversalResult;
 import edu.jlime.pregel.client.PregelConfig;
 import edu.jlime.pregel.mergers.MessageMergers;
@@ -55,7 +55,7 @@ public class SALSAPregelStep implements CustomFunction {
 		PregelConfig config = PregelConfig.create().merger("salsa-auth", MessageMergers.floatSum())
 				.merger("salsa-hub", MessageMergers.floatSum()).steps(steps).subgraph("salsa-sg", subgraph);
 
-		g.v(subgraph).set("mapper", tr.get("mapper")).as(Pregel.class)
+		g.v(subgraph).set("mapper", tr.get("mapper")).as(PregelTraversal.class)
 				.vertexFunction(new SALSAPregel(auth, hub, authSet.size(), hubSet.size()), config).exec();
 
 		log.info("Counting top " + top);

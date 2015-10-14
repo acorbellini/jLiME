@@ -1,16 +1,16 @@
 $package
 		
 import edu.jlime.core.cluster.Peer;
-import edu.jlime.core.rpc.RPCDispatcher;
+import edu.jlime.core.rpc.RPC;
 import edu.jlime.core.rpc.ClientFactory;
 
 import java.util.List;
 
 public class $name implements ClientFactory<$iface,$bcast>{
-	private RPCDispatcher rpc;
+	private RPC rpc;
 	private String target;
 
-	public $name(RPCDispatcher rpc, String target){
+	public $name(RPC rpc, String target){
 		this.rpc = rpc;
 		this.target = target;
 	}

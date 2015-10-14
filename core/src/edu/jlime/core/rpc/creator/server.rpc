@@ -1,7 +1,7 @@
 $package
 
 $imports
-import edu.jlime.core.rpc.RPCDispatcher;
+import edu.jlime.core.rpc.RPC;
 import edu.jlime.core.rpc.RPCClient;
 import edu.jlime.core.cluster.Peer;
 import java.util.List;
@@ -12,11 +12,11 @@ import $ifacefqn;
 
 public class $nameServerImpl extends RPCClient implements $name, Transferible {
 	$fields
-	transient RPCDispatcher local = null;	
+	transient RPC local = null;	
 	
-	public $nameServerImpl(RPCDispatcher disp, Peer dest, Peer client, String targetID) {
+	public $nameServerImpl(RPC disp, Peer dest, Peer client, String targetID) {
 		super(disp, dest, client, targetID);
-		local = RPCDispatcher.getLocalDispatcher(dest);
+		local = RPC.getLocalDispatcher(dest);
 	}
 	
 	#method
@@ -45,7 +45,7 @@ public class $nameServerImpl extends RPCClient implements $name, Transferible {
 	#method 
 	
 	@Override
-	public void setRPC(RPCDispatcher rpc) {
+	public void setRPC(RPC rpc) {
 		this.disp=rpc;
 		
 	}

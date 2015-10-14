@@ -27,12 +27,10 @@ public class LocalPath implements VertexFunction<FloatMessage> {
 		PregelGraph g = ctx.getGraph();
 		float adj = 0f;
 		if (ctx.getSuperStep() > 0) {
-
 			while (in.hasNext()) {
 				FloatMessage msg = in.next();
 				adj += msg.value();
 			}
-
 			if (ctx.getSuperStep() > 1) {
 				float lp = adj;
 				if (ctx.getSuperStep() == 3)
@@ -41,9 +39,7 @@ public class LocalPath implements VertexFunction<FloatMessage> {
 			}
 		} else
 			adj = 1f;
-
 		if (ctx.getSuperStep() < 3) {
-
 			TLongHashSet out = g.getAdjacents(v, dir);
 			TLongIterator it = out.iterator();
 			while (it.hasNext()) {

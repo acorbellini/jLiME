@@ -20,6 +20,7 @@ import edu.jlime.pregel.coordinator.rpc.Coordinator;
 import edu.jlime.pregel.coordinator.rpc.CoordinatorBroadcast;
 import edu.jlime.pregel.coordinator.rpc.CoordinatorFactory;
 import edu.jlime.pregel.graph.VertexFunction;
+import edu.jlime.pregel.messages.PregelMessage;
 import edu.jlime.pregel.worker.WorkerFilter;
 import edu.jlime.pregel.worker.WorkerServer;
 import edu.jlime.pregel.worker.rpc.Worker;
@@ -72,7 +73,7 @@ public class CoordinatorTask {
 		log.info("Remaining in step: " + currentStep.size());
 	}
 
-	public PregelExecution execute(final VertexFunction<?> func, long[] list, final PregelConfig config)
+	public PregelExecution execute(final VertexFunction<PregelMessage> func, long[] list, final PregelConfig config)
 			throws Exception {
 
 		long startTask = System.currentTimeMillis();
@@ -136,7 +137,7 @@ public class CoordinatorTask {
 
 			log.info("Finished superstep " + step);
 
-			workerMgr.broadcast().finishedProcessing(taskID);
+			// workerMgr.broadcast().finishedProcessing(taskID);
 
 			log.info("Updating aggregators.");
 			for (Entry<String, Aggregator> e : aggregators.entrySet()) {

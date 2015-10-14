@@ -94,5 +94,4 @@ public class SALSAPregel implements VertexFunction<FloatMessage> {
 			}
 		}
 	}
-
 }

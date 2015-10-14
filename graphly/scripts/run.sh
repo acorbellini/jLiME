@@ -20,5 +20,5 @@ if [ $(hostname) == "GridCluster1" ]; then
 	coord="true"
 else
  	coord="false"
-fi	
+fi
 nohup java -cp "$CP" $OPTIONS edu.jlime.graphly.server.GraphlyServer ~/GraphlyDB/ 1 $coord 8  > log.out 2>&1 &

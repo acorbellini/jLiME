@@ -14,7 +14,7 @@ import edu.jlime.graphly.rec.salsa.SalsaStepRandomWalk;
 import edu.jlime.graphly.traversal.CustomTraversal;
 import edu.jlime.graphly.traversal.Dir;
 import edu.jlime.graphly.traversal.Traversal;
-import edu.jlime.graphly.traversal.Pregel;
+import edu.jlime.graphly.traversal.PregelTraversal;
 import edu.jlime.graphly.util.FloatSumAggregator;
 import edu.jlime.graphly.util.MessageAggregators;
 import edu.jlime.pregel.client.PregelConfig;
@@ -104,7 +104,7 @@ public class Recommendation extends CustomTraversal {
 				.merger("pr", MessageMergers.floatSum()).haltCondition(new PageRankHaltCondition(cut, "pr"))
 				.executeOnAll(true);
 
-		tr.as(Pregel.class).vertexFunction(new PageRankFloat(pagerankProp, vertexCount), config);
+		tr.as(PregelTraversal.class).vertexFunction(new PageRankFloat(pagerankProp, vertexCount), config);
 
 		return this;
 	}
@@ -143,7 +143,7 @@ public class Recommendation extends CustomTraversal {
 		// plus 1 to activate origin
 		PregelConfig config = PregelConfig.create().steps(steps + 1).merger("katz", MessageMergers.floatSum());
 
-		tr.as(Pregel.class).vertexFunction(new KatzRootedPregel(val, beta, steps, dir), config);
+		tr.as(PregelTraversal.class).vertexFunction(new KatzRootedPregel(val, beta, steps, dir), config);
 
 		return this;
 	}
@@ -159,7 +159,7 @@ public class Recommendation extends CustomTraversal {
 
 		PregelConfig config = PregelConfig.create().steps(1).aggregator("cm", new IntersectAggregator());
 
-		tr.as(Pregel.class).vertexFunction(new CommonNeighboursPregel(res), config).aggregatorValue("cm");
+		tr.as(PregelTraversal.class).vertexFunction(new CommonNeighboursPregel(res), config).aggregatorValue("cm");
 
 		return this;
 	}
@@ -179,7 +179,7 @@ public class Recommendation extends CustomTraversal {
 
 		PregelConfig config = PregelConfig.create().steps(1).aggregator("cm", new JaccardAggregator());
 
-		tr.as(Pregel.class).vertexFunction(new CommonNeighboursPregel(res), config).aggregatorValue("cm");
+		tr.as(PregelTraversal.class).vertexFunction(new CommonNeighboursPregel(res), config).aggregatorValue("cm");
 
 		return this;
 	}
@@ -195,7 +195,7 @@ public class Recommendation extends CustomTraversal {
 		PregelConfig config = PregelConfig.create().steps(1).aggregator("cm", new IntersectAggregator())
 				.aggregator("adamic", new FloatSumAggregator());
 
-		tr.as(Pregel.class).vertexFunction(new CommonNeighboursPregel(res), config).aggregatorSet("cm")
+		tr.as(PregelTraversal.class).vertexFunction(new CommonNeighboursPregel(res), config).aggregatorSet("cm")
 				.vertexFunction(new AdamicAdarPregel(), config).aggregatorValue("adamic");
 
 		return this;
@@ -213,7 +213,7 @@ public class Recommendation extends CustomTraversal {
 															// guardar los datos
 				.merger("lp", MessageMergers.floatSum());
 
-		tr.as(Pregel.class).vertexFunction(new LocalPath(key, alpha, dir), config);
+		tr.as(PregelTraversal.class).vertexFunction(new LocalPath(key, alpha, dir), config);
 
 		return this;
 	}
@@ -234,7 +234,7 @@ public class Recommendation extends CustomTraversal {
 				// guardar los datos
 				.merger("fl", MessageMergers.floatSum());
 
-		tr.as(Pregel.class).vertexFunction(new FriendLink(k, vertices, depth, dir), config);
+		tr.as(PregelTraversal.class).vertexFunction(new FriendLink(k, vertices, depth, dir), config);
 
 		return this;
 	}

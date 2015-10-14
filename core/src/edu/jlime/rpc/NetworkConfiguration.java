@@ -77,7 +77,7 @@ public class NetworkConfiguration {
 	public NetworkConfiguration(Configuration config) {
 		this.config = config;
 
-		this.protocol = config.getString("protocol", "tcp");
+		this.protocol = config.getString("protocol", "tcpnio");
 
 		this.port = config.getInt("port", 3550);
 		this.port_range = config.getInt("port_range", 1000);
@@ -103,7 +103,7 @@ public class NetworkConfiguration {
 		this.timeout_mult = config.getFloat("ack-nack.timeout_mult", 3f);
 
 		this.ack_delay = config.getInt("ack.ack_delay", 15);
-		this.retransmit_delay = config.getInt("ack.retransmit_delay", 25);
+		this.retransmit_delay = config.getInt("ack.retransmit_delay", 50);
 		this.ack_max_resend_size = config.getInt("ack.max_resend_size", 1024);
 
 		this.useNACK = config.getBoolean("ack.usenack", false);
@@ -134,15 +134,15 @@ public class NetworkConfiguration {
 		this.fcConfig.max_rcv_initial = config.getInt("fc.max_rcv", 100000);
 		this.fcConfig.max_send_initial = config.getInt("fc.max_send", 6000);
 
-		this.tcpnio_max_msg_size = config.getInt("tcpnio.max_msg_size", 32 * 1024);
+		this.tcpnio_max_msg_size = config.getInt("tcpnio.max_msg_size", 8 * 1024);
 
 		this.tcp_config = new TCPConfig();
-		this.tcp_config.conn_limit = config.getInt("tcp.conn_limit", 10);
+		this.tcp_config.conn_limit = config.getInt("tcp.conn_limit", 2);
 		this.tcp_config.time_limit = config.getInt("tcp.time_limit", 15000);
 		this.tcp_config.tcp_rcv_buffer = config.getInt("tcp.rcv_buffer", 25 * 1024 * 1024);
 		this.tcp_config.tcp_send_buffer = config.getInt("tcp.send_buffer", 25 * 1024 * 1024);
-		this.tcp_config.input_buffer = config.getInt("tcp.input_buffer", 32 * 1024);
-		this.tcp_config.output_buffer = config.getInt("tcp.output_buffer", 32 * 1024);
+		this.tcp_config.input_buffer = config.getInt("tcp.input_buffer", 8 * 1024);
+		this.tcp_config.output_buffer = config.getInt("tcp.output_buffer", 8 * 1024);
 
 	}
 }

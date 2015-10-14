@@ -287,9 +287,9 @@ public class WorkerTask {
 				while (vertexCounter.get() != 0)
 					vertexCounter.wait();
 			}
-			if (!config.isBSPMode()) {
-				flushCaches();
-			}
+			// if (!config.isBSPMode()) {
+			flushCaches();
+			// }
 			log.info("Finished work for step " + currentStep + " on Worker " + worker.getID());
 			coordMgr.getFirst().finished(getTaskid(), this.worker.getID(), true, aggregators);
 
@@ -655,11 +655,12 @@ public class WorkerTask {
 		return getWorker(to).equals(workerMgr.get(workerMgr.getLocalPeer()));
 	}
 
-	public void finishedProcessing() throws Exception {
-		if (config.isBSPMode()) {
-			long init = System.currentTimeMillis();
-			flushCaches();
-			log.info("Finished flushing in BSP mode: " + (System.currentTimeMillis() - init) + " ms");
-		}
-	}
+	// public void finishedProcessing() throws Exception {
+	// if (config.isBSPMode()) {
+	// long init = System.currentTimeMillis();
+	// flushCaches();
+	// log.info("Finished flushing in BSP mode: " + (System.currentTimeMillis()
+	// - init) + " ms");
+	// }
+	// }
 }

@@ -22,17 +22,16 @@ public class PregelCustomFunction implements CustomFunction {
 	@Override
 	public PregelResult execute(TraversalResult before, Traversal tr) throws Exception {
 		TLongHashSet list = before.vertices();
-
 		Mapper mapper = (Mapper) tr.get("mapper");
 
 		Graph g = tr.getGraph();
 
-		PregelConfig conf = config.setPureBSP(true).graph(GraphlyPregelAdapter.getFactory(g.getGraph()))
+		PregelConfig conf = config.cacheSize(10000000)
+				.graph(GraphlyPregelAdapter.getFactory(g.getGraph()))
 				.split(new MapperPregelAdapter(mapper, tr.getGraph().getRpc()));
 		Pregel cli = tr.getGraph().getPregeClient();
 		PregelExecution res = cli.execute(func, list.toArray(), conf);
 		return new PregelResult(before.vertices(), res);
-
 	}
 
 	public PregelConfig getConfig() {

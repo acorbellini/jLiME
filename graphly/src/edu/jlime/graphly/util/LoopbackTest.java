@@ -10,7 +10,7 @@ import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.client.Graph;
 import edu.jlime.graphly.jobs.MapperFactory;
 import edu.jlime.graphly.server.GraphlyServer;
-import edu.jlime.graphly.traversal.Pregel;
+import edu.jlime.graphly.traversal.PregelTraversal;
 import edu.jlime.pregel.client.CacheFactory;
 import edu.jlime.pregel.client.PregelConfig;
 import edu.jlime.pregel.functions.PageRankFloat;
@@ -42,10 +42,10 @@ public class LoopbackTest {
 		// test.setDefaultFloat("pagerank", 1f / vertexCount);
 		test.setDefaultFloat("ranksource", .85f);
 
-		test.v().set("mapper", MapperFactory.rr()).as(Pregel.class).vertexFunction(
+		test.v().set("mapper", MapperFactory.rr()).as(PregelTraversal.class).vertexFunction(
 				new PageRankFloat("pagerank", vertexCount),
 				PregelConfig.create().haltCondition(new PageRankHaltCondition(0.000001f, "pr")).steps(50)
-						.persistVList(false).executeOnAll(true).queue(100).cache(CacheFactory.NO_CACHE)
+						.persistVList(false).executeOnAll(true).cacheSize(100).cache(CacheFactory.NO_CACHE)
 						.aggregator("pr", MessageAggregators.floatSum()).merger("pr", MessageMergers.floatSum()))
 				.exec();
 		System.out.println((System.currentTimeMillis() - init) / 1000f);

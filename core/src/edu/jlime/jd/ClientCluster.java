@@ -8,6 +8,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.esotericsoftware.minlog.Log;
+
 import edu.jlime.core.cluster.BroadcastOutputStream;
 import edu.jlime.core.cluster.MCastStreamResult;
 import edu.jlime.core.cluster.Peer;
@@ -53,9 +55,16 @@ public class ClientCluster implements Iterable<Node> {
 		if (ret == null) {
 			synchronized (this) {
 				ret = byName.get(jobNode);
-				if (ret == null) {
+				while (ret == null) {
 					getPeers();
 					ret = byName.get(jobNode);
+					if (ret == null)
+						try {
+							Log.warn("Waiting for peer " + jobNode + " current state: " + byName);
+							Thread.sleep(5000);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
 				}
 			}
 		}

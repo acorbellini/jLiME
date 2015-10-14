@@ -35,25 +35,7 @@ public class TCPNIO extends MessageProcessor implements AddressListProvider {
 
 	ByteBuffer readbuffer;
 
-	private static class Event {
-		Address from;
-		Address to;
-		SocketChannel channel;
-		byte[] data;
-	}
-
 	RingQueue events = new RingQueue();
-
-	// private ExecutorService exec = Executors
-	// .newCachedThreadPool(new ThreadFactory() {
-	//
-	// @Override
-	// public Thread newThread(Runnable r) {
-	// Thread t = Executors.defaultThreadFactory().newThread(r);
-	// t.setName("TCP NIO Worker Thread");
-	// return t;
-	// }
-	// });
 
 	private Metrics metrics;
 	private Address local;
@@ -93,68 +75,53 @@ public class TCPNIO extends MessageProcessor implements AddressListProvider {
 
 	@Override
 	public void send(Message msg) throws Exception {
-		// RingQueue map = q.get(msg.getTo());
-		// if (map == null) {
-		// synchronized (map) {
-		// map = q.get(msg.getTo());
-		// if (map == null) {
-		// map = new RingQueue();
-		// q.put(msg.getTo(), map);
-		// }
-		// }
-		// }
-		// map.put(msg);
 		SocketChannel sc = null;
-		List<Channel> list = channels.get(msg.getTo());
-		if (list == null) {
-			synchronized (channels) {
-				list = channels.get(msg.getTo());
-				if (list == null) {
-					sc = SocketChannel.open();
 
-					fromHash.put(sc, msg.getTo());
+		List<Channel> list = getChannelList(msg.getTo());
 
-					sc.setOption(StandardSocketOptions.SO_RCVBUF, config.tcp_config.tcp_rcv_buffer);
-					sc.setOption(StandardSocketOptions.SO_SNDBUF, config.tcp_config.tcp_send_buffer);
-					sc.setOption(StandardSocketOptions.TCP_NODELAY, true);
-
-					InetSocketAddress sockTo = null;
-					SocketAddress sock = msg.getSock();
-					if (sock != null) {
-						sockTo = sock.getSockTo();
-					} else {
-						sockTo = addressBook.get(msg.getTo());
-					}
-
-					sc.connect(sockTo);
-
-					sc.configureBlocking(false);
-
-					edu.jlime.util.ByteBuffer buff = new edu.jlime.util.ByteBuffer(SIZEOFACCEPTMESSAGE);
-					buff.putUUID(local.getId());
-					buff.putUUID(msg.getTo().getId());
-					ByteBuffer wrap = ByteBuffer.wrap(buff.build());
-
-					synchronized (sc) {
-						int write = 0;
-						while ((write += sc.write(wrap)) != buff.size()) {
-						}
-					}
-
-					synchronized (toRegister) {
-						toRegister.add(sc);
-					}
-					sel.wakeup();
-
-					// sc.register(sel, SelectionKey.OP_READ);
-
-					list = new ArrayList<Channel>();
-					list.add(sc);
-					channels.put(msg.getTo(), list);
-				}
-			}
-		}
 		synchronized (list) {
+			if (list.isEmpty()) {
+				sc = SocketChannel.open();
+
+				fromHash.put(sc, msg.getTo());
+
+				sc.setOption(StandardSocketOptions.SO_RCVBUF, config.tcp_config.tcp_rcv_buffer);
+				sc.setOption(StandardSocketOptions.SO_SNDBUF, config.tcp_config.tcp_send_buffer);
+				sc.setOption(StandardSocketOptions.TCP_NODELAY, true);
+
+				InetSocketAddress sockTo = null;
+				SocketAddress sock = msg.getSock();
+				if (sock != null) {
+					sockTo = sock.getSockTo();
+				} else {
+					sockTo = addressBook.get(msg.getTo());
+				}
+
+				sc.connect(sockTo);
+
+				sc.configureBlocking(false);
+
+				edu.jlime.util.ByteBuffer buff = new edu.jlime.util.ByteBuffer(SIZEOFACCEPTMESSAGE);
+				buff.putUUID(local.getId());
+				buff.putUUID(msg.getTo().getId());
+				ByteBuffer wrap = ByteBuffer.wrap(buff.build());
+
+				synchronized (sc) {
+					int write = 0;
+					while ((write += sc.write(wrap)) != buff.size()) {
+					}
+				}
+
+				synchronized (toRegister) {
+					toRegister.add(sc);
+				}
+				sel.wakeup();
+
+				// sc.register(sel, SelectionKey.OP_READ);
+
+				list.add(sc);
+			}
+
 			sc = (SocketChannel) list.get((int) (Math.random() * list.size()));
 		}
 
@@ -165,14 +132,7 @@ public class TCPNIO extends MessageProcessor implements AddressListProvider {
 		// byte[] ba = msg.toByteArray();
 
 		edu.jlime.util.ByteBuffer toSend = new edu.jlime.util.ByteBuffer(32 + 4);
-		toSend.putInt(
-				// 32 +
-				msg.getSize());
-				// toSend.putUUID(local.getId());
-				// toSend.putUUID(msg.getTo().getId());
-				// toSend.putRawByteArray(ba);
-
-		// ByteBuffer buff = ByteBuffer.wrap(toSend.build());
+		toSend.putInt(msg.getSize());
 
 		ByteBuffer[] buff = new ByteBuffer[1 + msgAsBytes.length];
 		// buff[0] = ByteBuffer.wrap(toSend.build());´
@@ -184,14 +144,20 @@ public class TCPNIO extends MessageProcessor implements AddressListProvider {
 		// if (!sc.isConnected())
 		// return;
 
-		try {
+		try
+
+		{
 			synchronized (sc) {
 				int write = 0;
 				while ((write += sc.write(buff)) != size) {
 				}
 			}
 
-		} catch (Exception e) {
+		} catch (
+
+		Exception e)
+
+		{
 			sc.close();
 		}
 
@@ -309,6 +275,14 @@ public class TCPNIO extends MessageProcessor implements AddressListProvider {
 			return;
 		}
 
+		List<Channel> list = getChannelList(from);
+		synchronized (list) {
+			list.add(sock);
+		}
+		fromHash.put(sock, from);
+	}
+
+	private List<Channel> getChannelList(Address from) {
 		List<Channel> list = channels.get(from);
 		if (list == null) {
 			synchronized (channels) {
@@ -319,8 +293,7 @@ public class TCPNIO extends MessageProcessor implements AddressListProvider {
 				}
 			}
 		}
-		list.add(sock);
-		fromHash.put(sock, from);
+		return list;
 	}
 
 	private void read(SocketChannel channel) throws Exception {
@@ -423,12 +396,24 @@ public class TCPNIO extends MessageProcessor implements AddressListProvider {
 
 	@Override
 	protected void onStop() throws Exception {
-		sel.close();
+		try {
+			sel.close();
+		} catch (Exception e1) {
+			e1.printStackTrace();
+		}
 		// exec.shutdown();
-		channel.close();
+		try {
+			channel.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		for (List<Channel> l : channels.values()) {
 			for (Channel channel : l) {
-				channel.close();
+				try {
+					channel.close();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 			}
 		}
 	}

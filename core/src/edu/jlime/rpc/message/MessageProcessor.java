@@ -22,7 +22,7 @@ public abstract class MessageProcessor implements StackElement {
 
 	private List<MessageListener> all = new CopyOnWriteArrayList<MessageListener>();
 
-	protected boolean stopped = false;
+	protected volatile boolean stopped = false;
 
 	private String name;
 

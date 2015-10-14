@@ -4,7 +4,7 @@ import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.client.Graph;
 import edu.jlime.graphly.jobs.MapperFactory;
 import edu.jlime.graphly.rec.Recommendation;
-import edu.jlime.graphly.traversal.Pregel;
+import edu.jlime.graphly.traversal.PregelTraversal;
 
 public class QueryTest {
 
@@ -102,10 +102,10 @@ public class QueryTest {
 		// System.out.println(sum);
 		// }
 		long init = System.currentTimeMillis();
-		Pregel pagerank = g.v().set("mapper", MapperFactory.location()).as(Recommendation.class)
-				.pagerank("pagerank", 30, 1E-5f).as(Pregel.class);
+		PregelTraversal pagerank = g.v().set("mapper", MapperFactory.location()).as(Recommendation.class)
+				.pagerank("pagerank", 30, 1E-5f).as(PregelTraversal.class);
 
-		pagerank.getConfig().threads(2).queue(1000);
+		pagerank.getConfig().threads(2).cacheSize(1000);
 
 		pagerank.exec();
 

@@ -8,7 +8,7 @@ import edu.jlime.graphly.client.Graph;
 import edu.jlime.graphly.rec.CustomStep.CustomFunction;
 import edu.jlime.graphly.traversal.CountResult;
 import edu.jlime.graphly.traversal.Traversal;
-import edu.jlime.graphly.traversal.Pregel;
+import edu.jlime.graphly.traversal.PregelTraversal;
 import edu.jlime.graphly.traversal.TraversalResult;
 import edu.jlime.pregel.client.PregelConfig;
 import edu.jlime.pregel.mergers.MessageMergers;
@@ -30,7 +30,7 @@ public class ExploratoryCountPregel implements CustomFunction {
 
 		Graph g = tr.getGraph();
 
-		g.v(before.vertices()).set("mapper", tr.get("mapper")).as(Pregel.class)
+		g.v(before.vertices()).set("mapper", tr.get("mapper")).as(PregelTraversal.class)
 				.vertexFunction(new ExploratoryCount(), config).exec();
 
 		Logger log = Logger.getLogger(ExploratoryCountPregel.class);

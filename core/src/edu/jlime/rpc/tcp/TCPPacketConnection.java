@@ -16,6 +16,7 @@ import edu.jlime.util.StreamUtils;
 class TCPPacketConnection implements Runnable {
 
 	Logger log = Logger.getLogger(TCPPacketConnection.class);
+
 	Socket conn;
 
 	InputStream is;

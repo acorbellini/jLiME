@@ -10,10 +10,11 @@ public class RemoteGraphlyServer extends GraphlyServer {
 	private String username;
 	private int servers = 0;
 
-	public RemoteGraphlyServer(String installPath, String clusterfile, String username) {
+	public RemoteGraphlyServer(String installPath, String clusterfile, String username, int servers) {
 		this.installPath = installPath;
 		this.clusterFile = clusterfile;
 		this.username = username;
+		this.servers = servers;
 	}
 
 	@Override

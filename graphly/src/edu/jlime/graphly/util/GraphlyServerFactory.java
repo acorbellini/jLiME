@@ -26,12 +26,12 @@ public abstract class GraphlyServerFactory {
 	}
 
 	public static GraphlyServerFactory distributed(final String installpath, final String username,
-			final String servers) {
+			final String clusterFile, final int servers) {
 		return new GraphlyServerFactory() {
 
 			@Override
 			public GraphlyServer build() throws Exception {
-				return new RemoteGraphlyServer(installpath, servers, username);
+				return new RemoteGraphlyServer(installpath, clusterFile, username, servers);
 			}
 		};
 	}

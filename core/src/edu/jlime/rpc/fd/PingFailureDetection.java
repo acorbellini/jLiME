@@ -40,6 +40,8 @@ public class PingFailureDetection implements StackElement, FailureProvider {
 
 	private ConcurrentHashMap<Address, AtomicInteger> tries = new ConcurrentHashMap<>();
 
+	private ConcurrentHashMap<Address, Peer> peers = new ConcurrentHashMap<>();
+
 	@Override
 	public void addListener(FailureListener l) {
 		list.add(l);
@@ -55,6 +57,7 @@ public class PingFailureDetection implements StackElement, FailureProvider {
 	@Override
 	public void addPeerToMonitor(Peer peer) throws Exception {
 		tries.put(peer.getAddress(), new AtomicInteger(0));
+		peers.put(peer.getAddress(), peer);
 	}
 
 	@Override
@@ -67,14 +70,14 @@ public class PingFailureDetection implements StackElement, FailureProvider {
 
 						for (Entry<Address, AtomicInteger> e : tries.entrySet()) {
 							AtomicInteger current = e.getValue();
-							Address peer = e.getKey();
+							Address addr = e.getKey();
 							if (current.get() > max_missed)
-								failed(peer, current.get());
+								failed(addr, current.get());
 							else {
 								if (log.isDebugEnabled())
-									log.debug("Sending ping to " + peer + ", try number " + current.get());
+									log.debug("Sending ping to " + addr + ", try number " + current.get());
 								try {
-									conn.send(Message.newEmptyOutDataMessage(MessageType.PING, peer));
+									conn.send(Message.newEmptyOutDataMessage(MessageType.PING, addr));
 								} catch (Exception e1) {
 									e1.printStackTrace();
 								}
@@ -93,16 +96,17 @@ public class PingFailureDetection implements StackElement, FailureProvider {
 
 	protected void failed(final Address addr, Integer t) {
 		if (log.isDebugEnabled())
-			log.debug("Removing " + addr + " tried " + t + " times.");
+			log.debug("Removing " + peers.get(addr) + " tried " + t + " times.");
 
 		tries.remove(addr);
+		final Peer peer = peers.remove(addr);
 
 		failure.execute(new Runnable() {
 
 			@Override
 			public void run() {
 				for (FailureListener l : list)
-					l.nodeFailed(addr);
+					l.nodeFailed(peer);
 			}
 		});
 
