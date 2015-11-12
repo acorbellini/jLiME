@@ -70,8 +70,8 @@ public class WorkerImpl implements Worker {
 	}
 
 	@Override
-	public void sendFloatMessage(String msgType, long from, long to, float msg, int taskID) throws Exception {
-		contexts.get(taskID).queueFloatVertexData(msgType, from, to, msg);
+	public void sendFloatMessage(UUID wid, String msgType, long from, long to, float msg, int taskID) throws Exception {
+		contexts.get(taskID).queueFloatVertexData(wid, msgType, from, to, msg);
 	}
 
 	@Override
@@ -126,9 +126,10 @@ public class WorkerImpl implements Worker {
 	}
 
 	@Override
-	public void sendFloatMessage(String msgType, long from, long[] to, float[] vals, int taskid) throws Exception {
+	public void sendFloatMessage(UUID wid, String msgType, long from, long[] to, float[] vals, int taskid)
+			throws Exception {
 		WorkerTask workerTask = contexts.get(taskid);
-		workerTask.queueFloatVertexData(msgType, from, to, vals);
+		workerTask.queueFloatVertexData(wid, msgType, from, to, vals);
 
 	}
 

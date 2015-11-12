@@ -38,7 +38,7 @@ public class ModelComparison {
 
 	// @formatter:off
 	private static final long[] USERS = new long[] {
-			1, // by-followers
+//			1, // by-followers
 			1811269, 
 			6035057,
 			1653, 
@@ -123,33 +123,33 @@ public class ModelComparison {
 	private void run() throws Exception {
 		// @formatter:off
 		GraphlyRun[] exp = new GraphlyRun[] {
-				Algorithms.ecFJ(),				
+//				Algorithms.ecFJ(),				
 				Algorithms.ecPregel(),
-				Algorithms.ecHybrid(),
-				Algorithms.friendLinkFJ(),
+//				Algorithms.ecHybrid(),
+//				Algorithms.friendLinkFJ(),
 				Algorithms.friendLinkPregel(),
-				Algorithms.friendLinkHybrid(),
-				Algorithms.localPathFJ(),
+//				Algorithms.friendLinkHybrid(),
+//				Algorithms.localPathFJ(),
 				Algorithms.localPathPregel(), 
-				Algorithms.localPathHybrid(),
-				Algorithms.katzFJ(),
+//				Algorithms.localPathHybrid(),
+//				Algorithms.katzFJ(),
 				Algorithms.katzPregel(),
-				Algorithms.katzHybrid(),
-				Algorithms.salsaFJ(),
+//				Algorithms.katzHybrid(),
+//				Algorithms.salsaFJ(),
 				Algorithms.salsaPregel(),
-				Algorithms.salsaHybrid(),
-				Algorithms.hitsFJ(),				
+//				Algorithms.salsaHybrid(),
+//				Algorithms.hitsFJ(),				
 				Algorithms.hitsPregel(),
-				Algorithms.hitsHybrid()
+//				Algorithms.hitsHybrid()
 		};
 		
 		GraphlyRun[] groups_exp = new GraphlyRun[] { 
-				Algorithms.adamicFJ(),
-				Algorithms.adamicPregel(), 
-				Algorithms.jaccardFJ(),
-				Algorithms.jaccardPregel(), 
-				Algorithms.commonFJ(),
-				Algorithms.commonPregel() 
+//				Algorithms.adamicFJ(),
+//				Algorithms.adamicPregel(), 
+//				Algorithms.jaccardFJ(),
+//				Algorithms.jaccardPregel(), 
+//				Algorithms.commonFJ(),
+//				Algorithms.commonPregel() 
 		};
 		// @formatter:on
 

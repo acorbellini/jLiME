@@ -29,41 +29,14 @@ public class HashedMessageQueue implements ObjectMessageQueue {
 			this.current.put(to, merger.getCopy(msg));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see edu.jlime.pregel.worker.PregelMessageQueue#switchQueue()
-	 */
 	@Override
-	public synchronized void switchQueue() {
-		TLongObjectHashMap<Object> aux = readOnly;
-		this.readOnly = current;
-		this.current = aux;
-		this.current.clear();
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see edu.jlime.pregel.worker.PregelMessageQueue#currentSize()
-	 */
-	@Override
-	public int currentSize() {
-		return current.size();
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see edu.jlime.pregel.worker.PregelMessageQueue#readOnlySize()
-	 */
-	@Override
-	public int readOnlySize() {
+	public int size() {
 		return readOnly.size();
 	}
 
 	@Override
-	public void flush(String msgType, String subgraph, WorkerTask workerTask) throws Exception {
+	public void flush(String msgType, String subgraph, WorkerTask workerTask)
+			throws Exception {
 		// final TLongObjectIterator<Object> it = readOnly.iterator();
 		// while (it.hasNext()) {
 		// it.advance();
@@ -93,7 +66,8 @@ public class HashedMessageQueue implements ObjectMessageQueue {
 				if (subgraph == null)
 					workerTask.outputObject(msgType, -1l, -1l, it.value());
 				else
-					workerTask.outputObjectSubgraph(msgType, subgraph, -1l, it.value());
+					workerTask.outputObjectSubgraph(msgType, subgraph, -1l,
+							it.value());
 			} else {
 				Worker w = workerTask.getWorker(to);
 				ObjectData data = ret.get(w);
@@ -111,7 +85,8 @@ public class HashedMessageQueue implements ObjectMessageQueue {
 	}
 
 	@Override
-	public Iterator<PregelMessage> getMessages(final String msgType, final long to) {
+	public Iterator<PregelMessage> getMessages(final String msgType,
+			final long to) {
 		final Object found = this.readOnly.get(to);
 		if (found == null)
 			return null;
@@ -135,5 +110,11 @@ public class HashedMessageQueue implements ObjectMessageQueue {
 	@Override
 	public long[] keys() {
 		return readOnly.keys();
+	}
+
+	@Override
+	public void transferTo(PregelMessageQueue cache) {
+		// TODO Auto-generated method stub
+
 	}
 }

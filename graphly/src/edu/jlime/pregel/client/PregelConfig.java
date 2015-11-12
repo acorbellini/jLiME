@@ -28,7 +28,7 @@ public class PregelConfig implements Serializable {
 
 	private HaltCondition condition = null;
 
-	private int cacheSize = 50000000;
+	private int cacheSize = Integer.MAX_VALUE;
 
 	private CacheFactory cacheFactory = CacheFactory.SIMPLE;
 

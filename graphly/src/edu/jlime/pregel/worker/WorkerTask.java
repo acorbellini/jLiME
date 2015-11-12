@@ -1,11 +1,11 @@
 package edu.jlime.pregel.worker;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -19,10 +19,10 @@ import edu.jlime.core.cluster.Peer;
 import edu.jlime.core.rpc.Client;
 import edu.jlime.core.rpc.RPC;
 import edu.jlime.pregel.PregelSubgraph;
+import edu.jlime.pregel.client.Context;
 import edu.jlime.pregel.client.CoordinatorFilter;
 import edu.jlime.pregel.client.PregelConfig;
 import edu.jlime.pregel.client.SplitFunction;
-import edu.jlime.pregel.client.Context;
 import edu.jlime.pregel.coordinator.Aggregator;
 import edu.jlime.pregel.coordinator.CoordinatorServer;
 import edu.jlime.pregel.coordinator.rpc.Coordinator;
@@ -40,15 +40,15 @@ import edu.jlime.pregel.queues.FloatMessageQueue;
 import edu.jlime.pregel.queues.MessageQueueFactory;
 import edu.jlime.pregel.queues.ObjectData;
 import edu.jlime.pregel.queues.ObjectMessageQueue;
-import edu.jlime.pregel.queues.PregelMessageQueue;
 import edu.jlime.pregel.worker.rpc.Worker;
 import edu.jlime.pregel.worker.rpc.WorkerBroadcast;
 import edu.jlime.pregel.worker.rpc.WorkerFactory;
-import edu.jlime.util.Pair;
 import gnu.trove.iterator.TLongIterator;
 import gnu.trove.set.hash.TLongHashSet;
 
 public class WorkerTask {
+
+	private static final UUID BROADCAST_UUID = new UUID(0, 0);
 
 	protected Logger log = Logger.getLogger(WorkerTask.class);
 
@@ -57,6 +57,8 @@ public class WorkerTask {
 	private Worker[] workers;
 
 	private HashMap<Integer, CacheManagerI> cacheMgr;
+
+	// private CacheManagerI cache;
 
 	private PregelGraph graph;
 
@@ -70,9 +72,7 @@ public class WorkerTask {
 
 	private PregelConfig config;
 
-	private Map<String, PregelMessageQueue> queue;
-
-	private Map<String, PregelMessageQueue> broadcast;
+	InputQueue queue;
 
 	private Client<Coordinator, CoordinatorBroadcast> coordMgr;
 
@@ -92,9 +92,11 @@ public class WorkerTask {
 
 	private AtomicInteger vertexCounter = new AtomicInteger(0);
 
-	private Map<Pair<String, String>, PregelMessageQueue> subgraphqueue;
-
 	private Map<String, PregelSubgraph> subgraphs = new ConcurrentHashMap<>();
+
+	private HashMap<UUID, Worker> workersByID;
+
+	private UUID[] IDsByWorker;
 
 	public WorkerTask(WorkerImpl w, RPC rpc, Peer client, final VertexFunction<PregelMessage> func, long[] vList,
 			final int taskID, PregelConfig config) throws Exception {
@@ -143,35 +145,14 @@ public class WorkerTask {
 		this.taskid = taskID;
 
 		this.config = config;
-		this.queue = new ConcurrentHashMap<>();
-		this.broadcast = new ConcurrentHashMap<>();
-		this.subgraphqueue = new ConcurrentHashMap<>();
+
+		this.queue = new InputQueue(config);
 
 		this.f = func;
 	}
 
 	public void queueVertexData(String msg, long from, long to, Object val) throws Exception {
-		((ObjectMessageQueue) getQueue(msg)).put(from, to, val);
-	}
-
-	private PregelMessageQueue getQueue(String msg) {
-		PregelMessageQueue ret = queue.get(msg);
-		if (ret == null) {
-			synchronized (queue) {
-				ret = queue.get(msg);
-				if (ret == null) {
-					ret = getQueueFactory(msg).getMQ();
-					queue.put(msg, ret);
-				}
-			}
-		}
-		return ret;
-	}
-
-	MessageQueueFactory getQueueFactory(String msgType) {
-		MessageMerger merger = config.getMerger(msgType);
-		MessageQueueFactory fact = merger != null ? merger.getFactory() : MessageQueueFactory.simple(null);
-		return fact;
+		((ObjectMessageQueue) queue.getQueue(msg)).put(from, to, val);
 	}
 
 	public void nextStep(int superstep, SplitFunction func, Map<String, Aggregator> aggregators) throws Exception {
@@ -185,19 +166,17 @@ public class WorkerTask {
 		Peer[] peers = this.split.getPeers();
 
 		this.workers = new Worker[peers.length];
-		for (int i = 0; i < peers.length; i++)
+		this.workersByID = new HashMap<>();
+		this.IDsByWorker = new UUID[peers.length];
+		for (int i = 0; i < peers.length; i++) {
 			this.workers[i] = this.workerMgr.get(peers[i]);
+			workersByID.put(this.workers[i].getID(), this.workers[i]);
+			IDsByWorker[i] = this.workers[i].getID();
+		}
 
 		this.currentStep = superstep;
 
-		for (PregelMessageQueue s : queue.values())
-			s.switchQueue();
-
-		for (PregelMessageQueue s : broadcast.values())
-			s.switchQueue();
-
-		for (PregelMessageQueue s : subgraphqueue.values())
-			s.switchQueue();
+		queue.switchQueue();
 	}
 
 	public void execute() throws Exception {
@@ -205,7 +184,7 @@ public class WorkerTask {
 		final VertexList vList = this.config.isPersitentCurrentSplitList() ? new PersistedVertexList()
 				: new InMemVertexList();
 
-		if (broadcastSize() > 0) { // activate all vertices.
+		if (queue.broadcastSize() > 0) { // activate all vertices.
 			if (this.graphVertexList == null) {
 				this.graphVertexList = this.config.isPersitentVertexList() ? new PersistedVertexList()
 						: new InMemVertexList();
@@ -228,7 +207,7 @@ public class WorkerTask {
 			this.log.info("Loaded slice " + vList.size() + " vertices.");
 		} else {
 			TLongHashSet activeVertices = new TLongHashSet();
-			if (subgraphSize() > 0) {
+			if (queue.subgraphSize() > 0) {
 				Peer localPeer = this.workerMgr.getLocalPeer();
 				List<Peer> peers2 = this.workerMgr.getPeers();
 				for (Entry<String, TLongHashSet> e : config.getSubgraphs().entrySet()) {
@@ -241,9 +220,8 @@ public class WorkerTask {
 				}
 			}
 
-			for (Entry<String, PregelMessageQueue> e : queue.entrySet()) {
-				activeVertices.addAll(e.getValue().keys());
-			}
+			activeVertices.addAll(queue.getKeys());
+
 			TLongIterator it = activeVertices.iterator();
 			while (it.hasNext())
 				vList.add(it.next());
@@ -301,9 +279,14 @@ public class WorkerTask {
 
 	private void flushCaches() throws Exception, InterruptedException {
 		log.info("Flushing cache on step " + currentStep + " on Worker " + worker.getID());
-		for (CacheManagerI cache : cacheMgr.values()) {
-			cache.flush();
+
+		Iterator<CacheManagerI> iterator = cacheMgr.values().iterator();
+		CacheManagerI first = iterator.next();
+		while (iterator.hasNext()) {
+			CacheManagerI cache = iterator.next();
+			cache.mergeWith(first);
 		}
+		first.flush();
 
 		synchronized (sendCount) {
 			while (sendCount.get() != 0)
@@ -311,26 +294,10 @@ public class WorkerTask {
 		}
 	}
 
-	private int broadcastSize() {
-		int ret = 0;
-		for (PregelMessageQueue s : broadcast.values())
-			ret += s.readOnlySize();
-		return ret;
-	}
-
-	private int subgraphSize() {
-		int ret = 0;
-		for (PregelMessageQueue s : subgraphqueue.values())
-			ret += s.readOnlySize();
-		return ret;
-	}
-
 	private void executeVertexRange(final int size, final int threads, final AtomicInteger count, final int threadID,
 			VertexList vList) throws Exception {
 
 		LongIterator it = vList.iterator();
-
-		ArrayList<Iterator<PregelMessage>> currList = new ArrayList<>();
 
 		Context ctx = new Context(WorkerTask.this, cacheMgr.get(threadID), -1);
 
@@ -347,24 +314,7 @@ public class WorkerTask {
 			long currentVertex = it.next();
 			if (vertexCursor >= from) {
 				ctx.setCurrVertex(currentVertex);
-				currList.clear();
-				for (Entry<String, PregelMessageQueue> e : queue.entrySet()) {
-					PregelMessageQueue q = e.getValue();
-					currList.add(q.getMessages(e.getKey(), currentVertex));
-				}
-
-				for (Entry<String, PregelMessageQueue> e : broadcast.entrySet()) {
-					PregelMessageQueue q = e.getValue();
-					currList.add(q.getMessages(e.getKey(), -1l));
-				}
-
-				for (Entry<Pair<String, String>, PregelMessageQueue> e : subgraphqueue.entrySet()) {
-					PregelMessageQueue q = e.getValue();
-					if (config.getSubgraph(e.getKey().right).contains(currentVertex))
-						currList.add(q.getMessages(e.getKey().left, -1l));
-				}
-
-				Iterator<PregelMessage> messages = new ConcatIterator(currList);
+				Iterator<PregelMessage> messages = queue.getMessages(currentVertex);
 				if (messages.hasNext()) {
 					printCompleted(size, count.getAndIncrement());
 
@@ -433,7 +383,7 @@ public class WorkerTask {
 
 	public void outputFloat(String msgtype, long from, long to, float value) throws Exception {
 		if (to != -1l)
-			getWorker(to).sendFloatMessage(msgtype, from, to, value, getTaskid());
+			getWorker(to).sendFloatMessage(this.worker.getID(), msgtype, from, to, value, getTaskid());
 		else
 			workerMgr.broadcast().sendFloatBroadcastMessage(msgtype, from, value, getTaskid());
 	}
@@ -451,7 +401,11 @@ public class WorkerTask {
 				public void run() {
 					FloatData fData = e.getValue();
 					try {
-						e.getKey().sendFloatMessage(msgType, -1l, fData.keys, fData.values, taskid);
+						// System.out.println(
+						// "Sending to " + e.getKey() + " " + msgType + ":"
+						// + fData.values.length + " pairs.");
+						e.getKey().sendFloatMessage(WorkerTask.this.worker.getID(), msgType, -1l, fData.keys,
+								fData.values, taskid);
 					} catch (Exception e1) {
 						e1.printStackTrace();
 					} finally {
@@ -491,41 +445,27 @@ public class WorkerTask {
 		}
 	}
 
-	public void queueFloatVertexData(String msg, long from, long to, float val) throws Exception {
-		((FloatMessageQueue) getQueue(msg)).putFloat(from, to, val);
+	public void queueFloatVertexData(UUID wID, String msg, long from, long to, float val) throws Exception {
+		((FloatMessageQueue) queue.getQueue(msg)).putFloat(wID, from, to, val);
 	}
 
 	public void queueDoubleVertexData(String msg, long from, long to, double val) throws Exception {
-		((DoubleMessageQueue) getQueue(msg)).putDouble(from, to, val);
+		((DoubleMessageQueue) queue.getQueue(msg)).putDouble(from, to, val);
 	}
 
 	public void queueBroadcastDoubleVertexData(String type, long from, double val) throws Exception {
-		DoubleMessageQueue q = (DoubleMessageQueue) getBroadcastQueue(type);
+		DoubleMessageQueue q = (DoubleMessageQueue) queue.getBroadcastQueue(type);
 		q.putDouble(from, -1l, val);
 	}
 
-	private PregelMessageQueue getBroadcastQueue(String msg) {
-		PregelMessageQueue ret = broadcast.get(msg);
-		if (ret == null) {
-			synchronized (broadcast) {
-				ret = broadcast.get(msg);
-				if (ret == null) {
-					ret = getQueueFactory(msg).getMQ();
-					broadcast.put(msg, ret);
-				}
-			}
-		}
-		return ret;
-	}
-
 	public void queueBroadcastVertexData(String msg, long from, Object val) throws Exception {
-		ObjectMessageQueue q = (ObjectMessageQueue) getBroadcastQueue(msg);
+		ObjectMessageQueue q = (ObjectMessageQueue) queue.getBroadcastQueue(msg);
 		q.put(from, -1, val);
 	}
 
 	public void queueBroadcastFloatVertexData(String msg, long from, float val) throws Exception {
-		FloatMessageQueue q = (FloatMessageQueue) getBroadcastQueue(msg);
-		q.putFloat(from, -1l, val);
+		FloatMessageQueue q = (FloatMessageQueue) queue.getBroadcastQueue(msg);
+		q.putFloat(BROADCAST_UUID, from, -1l, val);
 	}
 
 	public Aggregator getAggregator(String string) {
@@ -564,12 +504,12 @@ public class WorkerTask {
 	}
 
 	public void queueBroadcastFloatArrayVertexData(String msg, long from, float[] val) throws Exception {
-		FloatArrayMessageQueue q = (FloatArrayMessageQueue) getBroadcastQueue(msg);
+		FloatArrayMessageQueue q = (FloatArrayMessageQueue) queue.getBroadcastQueue(msg);
 		q.putFloatArray(from, -1l, val);
 	}
 
 	public void queueFloatArrayVertexData(String msg, long from, long to, float[] data) throws Exception {
-		((FloatArrayMessageQueue) getQueue(msg)).putFloatArray(from, to, data);
+		((FloatArrayMessageQueue) queue.getQueue(msg)).putFloatArray(from, to, data);
 	}
 
 	public void sendObjects(final String msgType, HashMap<Worker, ObjectData> ret) throws InterruptedException {
@@ -597,7 +537,7 @@ public class WorkerTask {
 	}
 
 	public void queueVertexData(String msgtype, long[] from, long[] to, Object[] objects) {
-		ObjectMessageQueue q = (ObjectMessageQueue) getQueue(msgtype);
+		ObjectMessageQueue q = (ObjectMessageQueue) queue.getQueue(msgtype);
 		synchronized (q) {
 			for (int i = 0; i < to.length; i++) {
 				q.put(from != null ? from[i] : -1l, to[i], objects == null ? null : objects[i]);
@@ -605,11 +545,11 @@ public class WorkerTask {
 		}
 	}
 
-	public void queueFloatVertexData(String msgType, long from, long[] to, float[] vals) {
-		FloatMessageQueue q = (FloatMessageQueue) getQueue(msgType);
+	public void queueFloatVertexData(UUID uid, String msgType, long from, long[] to, float[] vals) {
+		FloatMessageQueue q = (FloatMessageQueue) queue.getQueue(msgType);
 		synchronized (q) {
 			for (int i = 0; i < to.length; i++) {
-				q.putFloat(from, to[i], vals[i]);
+				q.putFloat(uid, from, to[i], vals[i]);
 			}
 		}
 	}
@@ -619,23 +559,8 @@ public class WorkerTask {
 	}
 
 	public void queueBroadcastSubgraphVertexData(String msgType, String subGraph2, Object val) {
-		ObjectMessageQueue q = (ObjectMessageQueue) getBroadcastSubgraphQueue(msgType, subGraph2);
+		ObjectMessageQueue q = (ObjectMessageQueue) queue.getBroadcastSubgraphQueue(msgType, subGraph2);
 		q.put(-1, -1, val);
-	}
-
-	private PregelMessageQueue getBroadcastSubgraphQueue(String msgType, String subGraph2) {
-		Pair<String, String> p = new Pair<>(msgType, subGraph2);
-		PregelMessageQueue ret = subgraphqueue.get(p);
-		if (ret == null) {
-			synchronized (subgraphqueue) {
-				ret = subgraphqueue.get(p);
-				if (ret == null) {
-					ret = getQueueFactory(p.left).getMQ();
-					subgraphqueue.put(p, ret);
-				}
-			}
-		}
-		return ret;
 	}
 
 	public PregelSubgraph getSubgraph(String string) {
@@ -647,8 +572,8 @@ public class WorkerTask {
 	}
 
 	public void queueBroadcastSubgraphFloat(String msgType, String subgraph, float val) {
-		FloatMessageQueue q = (FloatMessageQueue) getBroadcastSubgraphQueue(msgType, subgraph);
-		q.putFloat(-1, -1, val);
+		FloatMessageQueue q = (FloatMessageQueue) queue.getBroadcastSubgraphQueue(msgType, subgraph);
+		q.putFloat(BROADCAST_UUID, -1, -1, val);
 	}
 
 	public boolean isLocal(long to) {
@@ -663,4 +588,20 @@ public class WorkerTask {
 	// - init) + " ms");
 	// }
 	// }
+	// TODO Repeated code (see InputQueue)... will fix later.
+	MessageQueueFactory getQueueFactory(String msgType) {
+		MessageMerger merger = config.getMerger(msgType);
+		MessageQueueFactory fact = merger != null ? merger.getFactory() : MessageQueueFactory.simple(null);
+		return fact;
+	}
+
+	public Worker getWorkerByID(UUID key) throws Exception {
+		return workersByID.get(key);
+	}
+
+	public UUID getWorkerID(long to) {
+		if (to == -1)
+			return BROADCAST_UUID;
+		return IDsByWorker[split.hash(to)];
+	}
 }

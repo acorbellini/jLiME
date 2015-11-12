@@ -1,25 +1,26 @@
 package edu.jlime.pregel.worker;
 
-import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import edu.jlime.pregel.messages.PregelMessage;
 
 public class ConcatIterator implements Iterator<PregelMessage> {
 
-	private Iterator<Iterator<PregelMessage>> l;
+	private List<Iterator<PregelMessage>> l;
+	int cont = 0;
 	Iterator<PregelMessage> curr = null;
 
-	public ConcatIterator(ArrayList<Iterator<PregelMessage>> currList) {
-		this.l = currList.iterator();
+	public ConcatIterator(List<Iterator<PregelMessage>> ret) {
+		this.l = ret;
 	}
 
 	@Override
 	public boolean hasNext() {
 		while (curr == null || !curr.hasNext()) {
-			if (!l.hasNext())
+			if (l.isEmpty())
 				return false;
-			curr = l.next();
+			curr = l.remove(0);
 		}
 		return true;
 	}

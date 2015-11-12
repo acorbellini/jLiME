@@ -26,8 +26,8 @@ public class SalsaJob implements Job<AuthHubSubResult> {
 	private long[] subgraph;
 	private TLongArrayList vertices;
 
-	public SalsaJob(Graph graph, TLongFloatHashMap auth, TLongFloatHashMap hub, int i, TLongHashSet subgraph,
-			TLongArrayList value) {
+	public SalsaJob(Graph graph, TLongFloatHashMap auth, TLongFloatHashMap hub,
+			int i, TLongHashSet subgraph, TLongArrayList value) {
 		this.g = graph;
 		this.auth = new TLongFloatHashMap(auth);
 		this.hub = new TLongFloatHashMap(hub);
@@ -50,58 +50,64 @@ public class SalsaJob implements Job<AuthHubSubResult> {
 
 		for (int i = 0; i < threads; i++) {
 			final int tID = i;
-			Future<AuthHubSubResult> fut = exec.submit(new Callable<AuthHubSubResult>() {
-				@Override
-				public AuthHubSubResult call() throws Exception {
-					TLongFloatHashMap authRes = new TLongFloatHashMap();
-					TLongFloatHashMap hubRes = new TLongFloatHashMap();
+			Future<AuthHubSubResult> fut = exec
+					.submit(new Callable<AuthHubSubResult>() {
+						@Override
+						public AuthHubSubResult call() throws Exception {
+							TLongFloatHashMap authRes = new TLongFloatHashMap();
+							TLongFloatHashMap hubRes = new TLongFloatHashMap();
 
-					int from = (int) (chunks * tID);
-					int to = (int) (chunks * (tID + 1));
+							int from = (int) (chunks * tID);
+							int to = (int) (chunks * (tID + 1));
 
-					if (tID == threads - 1)
-						to = vertices.size();
+							if (tID == threads - 1)
+								to = vertices.size();
 
-					int cont = from;
-					while (cont < to) {
-						long v = vertices.get(cont++);
-						if (step % 2 == 0) {
+							int cont = from;
+							while (cont < to) {
+								long v = vertices.get(cont++);
+								if (step % 2 == 0) {
 
-							// AUTH
-							long[] inW = sg.getEdges(Dir.IN, v);
-							if (inW.length > 0) {
-								float a = auth.get(v);
-								float value = a / inW.length;
-								for (long w : inW)
-									authRes.adjustOrPutValue(w, value, value);
+									// AUTH
+									long[] inW = sg.getEdges(Dir.IN, v);
+									if (inW.length > 0) {
+										float a = auth.get(v);
+										float value = a / inW.length;
+										for (long w : inW)
+											authRes.adjustOrPutValue(w, value,
+													value);
+									}
+
+									// HUB
+									long[] outW = sg.getEdges(Dir.OUT, v);
+									if (outW.length > 0) {
+										float h = hub.get(v);
+										float val = h / outW.length;
+										for (long w : outW)
+											hubRes.adjustOrPutValue(w, val,
+													val);
+									}
+
+								} else if (step % 2 == 1) {
+									long[] outV = sg.getEdges(Dir.OUT, v);
+									float authsum = auth.get(v);
+									float value = authsum / outV.length;
+									for (long w : outV)
+										authRes.adjustOrPutValue(w, value,
+												value);
+									long[] inV = sg.getEdges(Dir.IN, v);
+									float hubSum = hub.get(v);
+									float hubvalue = hubSum / inV.length;
+									for (long w : inV)
+										hubRes.adjustOrPutValue(w, hubvalue,
+												hubvalue);
+								}
+
 							}
 
-							// HUB
-							long[] outW = sg.getEdges(Dir.OUT, v);
-							if (outW.length > 0) {
-								float h = hub.get(v);
-								float val = h / outW.length;
-								for (long w : outW)
-									hubRes.adjustOrPutValue(w, val, val);
-							}
-
-						} else if (step % 2 == 1) {
-							long[] outV = sg.getEdges(Dir.OUT, v);
-							float authsum = auth.get(v);
-							float value = authsum / outV.length;
-							for (long w : outV)
-								authRes.adjustOrPutValue(w, value, value);
-							long[] inV = sg.getEdges(Dir.IN, v);
-							float hubSum = hub.get(v);
-							float hubvalue = hubSum / inV.length;
-							for (long w : inV)
-								hubRes.adjustOrPutValue(w, hubvalue, hubvalue);
+							return new AuthHubSubResult(authRes, hubRes);
 						}
-
-					}
-					return new AuthHubSubResult(authRes, hubRes);
-				}
-			});
+					});
 			futs.add(fut);
 		}
 		exec.shutdown();
@@ -116,9 +122,13 @@ public class SalsaJob implements Job<AuthHubSubResult> {
 			TLongFloatIterator itHub = authHubSubResult.hub.iterator();
 			while (itHub.hasNext()) {
 				itHub.advance();
-				hubRes.adjustOrPutValue(itHub.key(), itHub.value(), itHub.value());
+				hubRes.adjustOrPutValue(itHub.key(), itHub.value(),
+						itHub.value());
 			}
 		}
+
+		// System.out.println("Sending to parent auth: " + authRes.size() +
+		// "hub: " + hubRes.size() + " pairs.");
 		return new AuthHubSubResult(authRes, hubRes);
 	}
 }

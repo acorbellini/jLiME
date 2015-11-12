@@ -6,6 +6,11 @@ public class FloatData {
 		values = new float[size];
 	}
 
+	public FloatData(long[] keys2, float[] values2) {
+		this.keys = keys2;
+		this.values = values2;
+	}
+
 	public long[] keys;
 	public float[] values;
 	private int lcont = 0;

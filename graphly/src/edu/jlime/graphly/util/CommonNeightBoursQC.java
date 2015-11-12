@@ -8,7 +8,8 @@ public class CommonNeightBoursQC implements QueryContainer {
 
 	@Override
 	public void run(Graph g, long[] users, Mapper mapper) throws Exception {
-		g.v(users).set("mapper", mapper).as(Recommendation.class).commonNeighbours().exec();
+		g.v(users).set("mapper", mapper).as(Recommendation.class).commonFJ()
+				.exec();
 	}
 
 	@Override

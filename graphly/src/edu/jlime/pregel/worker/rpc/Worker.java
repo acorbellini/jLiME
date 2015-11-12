@@ -34,7 +34,7 @@ public interface Worker {
 	public void sendMessage(String msgType, long from, long to, Object msg, int taskID) throws Exception;
 
 	@Sync
-	public void sendFloatMessage(String msgType, long from, long to, float msg, int taskID) throws Exception;
+	public void sendFloatMessage(UUID wid, String msgType, long from, long to, float msg, int taskID) throws Exception;
 
 	@Sync
 	public void sendBroadcastMessage(String msgType, long from, Object val, int taskID) throws Exception;
@@ -43,7 +43,8 @@ public interface Worker {
 	public void sendFloatBroadcastMessage(String msgType, long from, float val, int taskID) throws Exception;
 
 	@Sync
-	public void sendFloatMessage(String msgType, long from, long[] keys, float[] values, int taskid) throws Exception;
+	public void sendFloatMessage(UUID wid, String msgType, long from, long[] keys, float[] values, int taskid)
+			throws Exception;
 
 	@Sync
 	public void sendDoubleMessage(String msgType, long i, long[] keys, double[] values, int taskid) throws Exception;

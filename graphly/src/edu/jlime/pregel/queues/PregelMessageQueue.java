@@ -7,17 +7,15 @@ import edu.jlime.pregel.worker.WorkerTask;
 
 public interface PregelMessageQueue {
 
-	public abstract void switchQueue();
-
-	public abstract int currentSize();
-
-	public abstract int readOnlySize();
+	public abstract int size();
 
 	public abstract void flush(String msgType, String subgraph, WorkerTask workerTask) throws Exception;
 
 	public abstract Iterator<PregelMessage> getMessages(String msgType, long currentVertex);
 
 	public abstract long[] keys();
+
+	public abstract void transferTo(PregelMessageQueue cache);
 
 	// public abstract Iterator<List<PregelMessage>> iterator();
 

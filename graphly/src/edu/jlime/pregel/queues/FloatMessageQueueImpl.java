@@ -1,7 +1,11 @@
 package edu.jlime.pregel.queues;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map.Entry;
+import java.util.UUID;
 
 import edu.jlime.pregel.messages.FloatMessage;
 import edu.jlime.pregel.messages.PregelMessage;
@@ -15,146 +19,136 @@ import gnu.trove.map.hash.TLongFloatHashMap;
 import gnu.trove.map.hash.TObjectIntHashMap;
 
 public class FloatMessageQueueImpl implements FloatMessageQueue {
+	private HashMap<UUID, TLongFloatHashMap> current = new HashMap<>();
 
-	private static final int HASHES = Runtime.getRuntime().availableProcessors();
 	private static final float NO_VALUE = Float.MIN_VALUE;
 	private static final long NO_KEY = Long.MIN_VALUE;
-
-	private volatile TLongFloatHashMap[] readOnly = new TLongFloatHashMap[HASHES];
-	private volatile TLongFloatHashMap[] current = new TLongFloatHashMap[HASHES];
 
 	private FloatTroveMessageMerger merger;
 	private int currentsize = 0;
 
 	public FloatMessageQueueImpl(FloatTroveMessageMerger merger) {
-		for (int i = 0; i < current.length; i++) {
-			current[i] = new TLongFloatHashMap(8, .75f, NO_KEY, NO_VALUE);
-			readOnly[i] = new TLongFloatHashMap(8, .75f, NO_KEY, NO_VALUE);
-		}
 		this.merger = merger;
 	}
 
-	private int getHash(long to) {
-		int hash = Math.abs((int) ((to * 2147483647l) % HASHES));
-		return hash;
-	}
-
-	public void putFloat(long from, long to, float msg) {
-		TLongFloatHashMap map = current[getHash(to)];
-		synchronized (map) {
-			int old = map.size();
-			merger.merge(to, msg, map);
-			if (map.size() != old)
-				currentsize++;
+	public void putFloat(UUID wID, long from, long to, float msg) {
+		TLongFloatHashMap map = current.get(wID);
+		if (map == null) {
+			map = new TLongFloatHashMap(8, .75f, NO_KEY, NO_VALUE);
+			current.put(wID, map);
 		}
+		int old = map.size();
+		merger.merge(to, msg, map);
+		if (map.size() != old)
+			currentsize++;
 	}
 
 	@Override
-	public synchronized void switchQueue() {
-		for (int i = 0; i < current.length; i++) {
-			TLongFloatHashMap aux = readOnly[i];
-			readOnly[i] = current[i];
-			current[i] = aux;
-			this.current[i].clear();
-			currentsize = 0;
-		}
-
-	}
-
-	@Override
-	public int currentSize() {
+	public int size() {
 		return currentsize;
-		// int size = 0;
-		// for (int i = 0; i < current.length; i++) {
-		// size += current[i].size();
-		// }
-		// return size;
-	}
-
-	@Override
-	public int readOnlySize() {
-		int size = 0;
-		for (int i = 0; i < readOnly.length; i++) {
-			size += readOnly[i].size();
-		}
-		return size;
 	}
 
 	@Override
 	public void flush(String msgType, String subgraph, final WorkerTask workerTask) throws Exception {
 
-		TObjectIntHashMap<Worker> sizes = new TObjectIntHashMap<>();
-		{
-			for (int i = 0; i < readOnly.length; i++) {
-				final TLongFloatIterator it = readOnly[i].iterator();
+		// TObjectIntHashMap<Worker> sizes = new TObjectIntHashMap<>();
+		// {
+		// for (TLongFloatHashMap map : current.values()) {
+		// final TLongFloatIterator it = map.iterator();
+		// while (it.hasNext()) {
+		// it.advance();
+		// long to = it.key();
+		// if (to != -1) {
+		// Worker w = workerTask.getWorker(to);
+		// sizes.adjustOrPutValue(w, 1, 1);
+		// }
+		// }
+		// }
+		// }
+		//
+		// HashMap<Worker, FloatData> ret = new HashMap<Worker, FloatData>();
+		// for (TLongFloatHashMap map : current.values()) {
+		// final TLongFloatIterator it = map.iterator();
+		// while (it.hasNext()) {
+		// it.advance();
+		// long to = it.key();
+		// if (to == -1) {
+		// if (subgraph == null)
+		// workerTask.outputFloat(msgType, -1l, -1l, it.value());
+		// else
+		// workerTask.outputFloatSubgraph(msgType, subgraph, -1l, it.value());
+		// } else {
+		// Worker w = workerTask.getWorker(to);
+		// FloatData data = ret.get(w);
+		// if (data == null) {
+		// data = new FloatData(sizes.get(w));
+		// ret.put(w, data);
+		// }
+		// data.addL(to);
+		// data.addF(it.value());
+		// }
+		// }
+		// map.clear();
+		// }
+		HashMap<Worker, FloatData> ret = new HashMap<Worker, FloatData>();
+		for (Entry<UUID, TLongFloatHashMap> e : current.entrySet()) {
+			Worker workerByID = workerTask.getWorkerByID(e.getKey());
+			TLongFloatHashMap map = e.getValue();
+			if (workerByID == null) {
+				// TODO Improve Broadcast sending. Add proper APIs for batch
+				// send.
+				TLongFloatIterator it = map.iterator();
 				while (it.hasNext()) {
 					it.advance();
-					long to = it.key();
-					if (to != -1) {
-						Worker w = workerTask.getWorker(to);
-						sizes.adjustOrPutValue(w, 1, 1);
-					}
-				}
-			}
-		}
-
-		HashMap<Worker, FloatData> ret = new HashMap<Worker, FloatData>();
-		for (int i = 0; i < readOnly.length; i++) {
-			final TLongFloatIterator it = readOnly[i].iterator();
-			while (it.hasNext()) {
-				it.advance();
-				long to = it.key();
-				if (to == -1) {
 					if (subgraph == null)
 						workerTask.outputFloat(msgType, -1l, -1l, it.value());
 					else
 						workerTask.outputFloatSubgraph(msgType, subgraph, -1l, it.value());
-				} else {
-					Worker w = workerTask.getWorker(to);
-					FloatData data = ret.get(w);
-					if (data == null) {
-						data = new FloatData(sizes.get(w));
-						ret.put(w, data);
-					}
-					data.addL(to);
-					data.addF(it.value());
 				}
+			} else {
+				FloatData fData = new FloatData(map.keys(), map.values());
+
+				ret.put(workerByID, fData);
 			}
-			readOnly[i].clear();
+
+			map.clear();
 		}
+
+		current.clear();
+
 		workerTask.sendFloats(msgType, ret);
+
 	}
 
 	@Override
 	public Iterator<PregelMessage> getMessages(final String msgType, final long to) {
-		int hash = getHash(to);
-		final float found = this.readOnly[hash].get(to);
-		if (found == this.readOnly[hash].getNoEntryValue())
-			return null;
-		else
-			return new Iterator<PregelMessage>() {
-				boolean first = true;
-
-				@Override
-				public PregelMessage next() {
-					first = false;
-					return new FloatMessage(msgType, -1l, to, found);
-				}
-
-				@Override
-				public boolean hasNext() {
-					return first;
-				}
-			};
+		List<PregelMessage> msgs = new ArrayList<>();
+		for (TLongFloatHashMap map : current.values())
+			if (map.containsKey(to))
+				msgs.add(new FloatMessage(msgType, -1, to, map.get(to)));
+		return msgs.iterator();
 	}
 
 	@Override
 	public long[] keys() {
 		TLongArrayList ret = new TLongArrayList();
-		for (TLongFloatHashMap tLongFloatHashMap : readOnly) {
+		for (TLongFloatHashMap tLongFloatHashMap : current.values()) {
 			ret.addAll(tLongFloatHashMap.keys());
 		}
 		return ret.toArray();
+	}
+
+	@Override
+	public void transferTo(PregelMessageQueue cache) {
+		FloatMessageQueue q = (FloatMessageQueue) cache;
+		for (Entry<UUID, TLongFloatHashMap> e : current.entrySet()) {
+			TLongFloatIterator it = e.getValue().iterator();
+			while (it.hasNext()) {
+				it.advance();
+				q.putFloat(e.getKey(), -1, it.key(), it.value());
+			}
+			e.getValue().clear();
+		}
 	}
 
 }

@@ -1,5 +1,7 @@
 package edu.jlime.pregel.worker;
 
+import java.util.UUID;
+
 public interface CacheManagerI {
 
 	void flush() throws Exception;
@@ -8,7 +10,7 @@ public interface CacheManagerI {
 
 	void sendAll(String msgType, long v, Object val) throws Exception;
 
-	void sendFloat(String type, long v, long to, float curr) throws Exception;
+	void sendFloat(UUID wid, String type, long v, long to, float curr) throws Exception;
 
 	void sendAllFloat(String msgType, long v, float val) throws Exception;
 
@@ -21,5 +23,7 @@ public interface CacheManagerI {
 	void sendAllSubGraph(String msgType, String subgraph, long v, Object val) throws Exception;
 
 	void sendAllFloatSubGraph(String msgType, String subgraph, long v, float val) throws Exception;
+
+	void mergeWith(CacheManagerI cache) throws Exception;
 
 }

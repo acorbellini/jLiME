@@ -68,8 +68,8 @@ public class Graphly implements Closeable {
 
 	private long[] EMPTY_LONG_ARRAY = new long[] {};
 
-	private Graphly(Coordinator coord, Pregel pregel_client, Client<StoreNode, StoreNodeBroadcast> mgr,
-			Dispatcher jd) throws Exception {
+	private Graphly(Coordinator coord, Pregel pregel_client, Client<StoreNode, StoreNodeBroadcast> mgr, Dispatcher jd)
+			throws Exception {
 		this.pregel_client = pregel_client;
 		this.mgr = mgr;
 		this.rpc = mgr.getRpc();
@@ -607,6 +607,8 @@ public class Graphly implements Closeable {
 							subProp.put(l, v.get(l));
 						}
 						try {
+
+							System.out.println("Sending to " + node + " " + subProp.size() + " pairs.");
 							node.setTempFloats(graph, k, add, subProp);
 						} catch (Exception e) {
 							e.printStackTrace();

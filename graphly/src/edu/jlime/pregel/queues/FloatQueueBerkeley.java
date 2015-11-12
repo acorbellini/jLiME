@@ -2,6 +2,7 @@ package edu.jlime.pregel.queues;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.UUID;
 
 import edu.jlime.pregel.messages.FloatMessage;
 import edu.jlime.pregel.messages.PregelMessage;
@@ -28,25 +29,13 @@ public class FloatQueueBerkeley implements FloatMessageQueue {
 	}
 
 	@Override
-	public void switchQueue() {
-		BerkeleyKV aux = readOnly;
-		readOnly = current;
-		current = aux;
-	}
-
-	@Override
-	public int currentSize() {
-		return (int) current.size();
-
-	}
-
-	@Override
-	public int readOnlySize() {
+	public int size() {
 		return (int) readOnly.size();
 	}
 
 	@Override
-	public void flush(String msgType, String subgraph, WorkerTask workerTask) throws Exception {
+	public void flush(String msgType, String subgraph, WorkerTask workerTask)
+			throws Exception {
 		TObjectIntHashMap<Worker> sizes = new TObjectIntHashMap<>();
 		{
 			final TLongFloatIterator it = readOnly.iterator();
@@ -83,7 +72,8 @@ public class FloatQueueBerkeley implements FloatMessageQueue {
 	}
 
 	@Override
-	public Iterator<PregelMessage> getMessages(final String msgType, final long to) {
+	public Iterator<PregelMessage> getMessages(final String msgType,
+			final long to) {
 		final Float found = this.readOnly.get(to);
 		if (found == null)
 			return null;
@@ -105,7 +95,7 @@ public class FloatQueueBerkeley implements FloatMessageQueue {
 	}
 
 	@Override
-	public void putFloat(long from, long to, float msg) {
+	public void putFloat(UUID wid, long from, long to, float msg) {
 		Object lock = locks[(int) Math.abs(to % LOCKS)];
 		synchronized (lock) {
 			Float found = this.current.get(to);
@@ -120,6 +110,11 @@ public class FloatQueueBerkeley implements FloatMessageQueue {
 	@Override
 	public long[] keys() {
 		return readOnly.keys();
+	}
+
+	@Override
+	public void transferTo(PregelMessageQueue cache) {
+
 	}
 
 }

@@ -6,40 +6,17 @@ import edu.jlime.pregel.PregelSubgraph;
 import edu.jlime.pregel.client.Context;
 import edu.jlime.pregel.graph.VertexFunction;
 import edu.jlime.pregel.graph.rpc.PregelGraph;
-import edu.jlime.pregel.mergers.ObjectMessageMerger;
 import edu.jlime.pregel.messages.FloatMessage;
 
 public class SALSAPregel implements VertexFunction<FloatMessage> {
-
-	public static class SalsaMessage {
-		float auth;
-		float hub;
-
-		public SalsaMessage(float auth, float hub) {
-			this.auth = auth;
-			this.hub = hub;
-		}
-	}
-
-	public static class SalsaMerger extends ObjectMessageMerger<SalsaMessage> {
-		@Override
-		public SalsaMessage getCopy(SalsaMessage msg) {
-			return new SalsaMessage(msg.auth, msg.hub);
-		}
-
-		@Override
-		public void merge(SalsaMessage from, SalsaMessage into) {
-			into.auth = into.auth + from.auth;
-			into.hub = into.hub + from.hub;
-		}
-	}
 
 	private String authKey;
 	private String hubKey;
 	private int as;
 	private int hs;
 
-	public SALSAPregel(final String authKey, final String hubKey, int as, int hs) {
+	public SALSAPregel(final String authKey, final String hubKey, int as,
+			int hs) {
 		this.authKey = authKey;
 		this.hubKey = hubKey;
 		this.as = as;
@@ -47,7 +24,8 @@ public class SALSAPregel implements VertexFunction<FloatMessage> {
 	}
 
 	@Override
-	public void execute(long v, Iterator<FloatMessage> in, Context ctx) throws Exception {
+	public void execute(long v, Iterator<FloatMessage> in, Context ctx)
+			throws Exception {
 		PregelGraph graph = ctx.getGraph();
 		float auth = 0f;
 		float hub = 0f;
@@ -74,7 +52,8 @@ public class SALSAPregel implements VertexFunction<FloatMessage> {
 
 		// Send auth data
 		if (auth > 0) {
-			long[] toSendAuth = superstep % 2 == 0 ? subgraph.getIncoming(v) : subgraph.getOutgoing(v);
+			long[] toSendAuth = superstep % 2 == 0 ? subgraph.getIncoming(v)
+					: subgraph.getOutgoing(v);
 			if (toSendAuth.length > 0) {
 				float toSend = auth / toSendAuth.length;
 				for (long inV : toSendAuth) {
@@ -85,7 +64,8 @@ public class SALSAPregel implements VertexFunction<FloatMessage> {
 
 		// Send hub data.
 		if (hub > 0) {
-			long[] toSendHub = superstep % 2 == 0 ? subgraph.getOutgoing(v) : subgraph.getIncoming(v);
+			long[] toSendHub = superstep % 2 == 0 ? subgraph.getOutgoing(v)
+					: subgraph.getIncoming(v);
 			if (toSendHub.length > 0) {
 				float toSend = hub / toSendHub.length;
 				for (long outV : toSendHub) {

@@ -87,12 +87,6 @@ public class Recommendation extends CustomTraversal {
 		tr.customStep(new CircleOfTrust(steps, max_depth, top));
 		return this;
 	}
-
-	public Recommendation commonNeighbours() {
-
-		return this;
-	}
-
 	public Recommendation pagerank(String pagerankProp, int steps, float cut) throws Exception {
 		Graph g = tr.getGraph();
 		int vertexCount = g.getVertexCount();

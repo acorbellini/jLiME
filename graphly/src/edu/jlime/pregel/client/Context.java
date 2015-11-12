@@ -42,8 +42,8 @@ public class Context {
 		// if (task.isLocal(to))
 		// task.outputFloat(type, v, to, curr);
 		// else
-		cache.sendFloat(type, this.v, to, curr);
-
+		// cache.sendFloat(task.getWorker(to).getID(), type, this.v, to, curr);
+		cache.sendFloat(task.getWorkerID(to), type, this.v, to, curr);
 	}
 
 	public void sendAllFloat(String msgType, float val) throws Exception {

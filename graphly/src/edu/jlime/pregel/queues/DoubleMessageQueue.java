@@ -13,8 +13,10 @@ import gnu.trove.map.hash.TObjectIntHashMap;
 
 public class DoubleMessageQueue implements PregelMessageQueue {
 
-	private volatile TLongDoubleHashMap readOnly = new TLongDoubleHashMap(8, .75f, Long.MAX_VALUE, Double.MAX_VALUE);
-	private volatile TLongDoubleHashMap current = new TLongDoubleHashMap(8, .75f, Long.MAX_VALUE, Double.MAX_VALUE);
+	private volatile TLongDoubleHashMap readOnly = new TLongDoubleHashMap(8,
+			.75f, Long.MAX_VALUE, Double.MAX_VALUE);
+	private volatile TLongDoubleHashMap current = new TLongDoubleHashMap(8,
+			.75f, Long.MAX_VALUE, Double.MAX_VALUE);
 	private DoubleMessageMerger merger;
 
 	public DoubleMessageQueue(DoubleMessageMerger merger) {
@@ -33,38 +35,16 @@ public class DoubleMessageQueue implements PregelMessageQueue {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see edu.jlime.pregel.worker.PregelMessageQueue#switchQueue()
-	 */
-	@Override
-	public synchronized void switchQueue() {
-		TLongDoubleHashMap aux = readOnly;
-		this.readOnly = current;
-		this.current = aux;
-		this.current.clear();
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
 	 * @see edu.jlime.pregel.worker.PregelMessageQueue#currentSize()
 	 */
 	@Override
-	public int currentSize() {
+	public int size() {
 		return current.size();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see edu.jlime.pregel.worker.PregelMessageQueue#readOnlySize()
-	 */
 	@Override
-	public int readOnlySize() {
-		return readOnly.size();
-	}
-
-	@Override
-	public void flush(String msgType, String subgraph, WorkerTask workerTask) throws Exception {
+	public void flush(String msgType, String subgraph, WorkerTask workerTask)
+			throws Exception {
 		TObjectIntHashMap<Worker> sizes = new TObjectIntHashMap<>();
 		{
 			final TLongDoubleIterator it = readOnly.iterator();
@@ -101,7 +81,8 @@ public class DoubleMessageQueue implements PregelMessageQueue {
 	}
 
 	@Override
-	public Iterator<PregelMessage> getMessages(final String msgType, final long to) {
+	public Iterator<PregelMessage> getMessages(final String msgType,
+			final long to) {
 		final double found = this.readOnly.get(to);
 		if (found == this.readOnly.getNoEntryValue())
 			return null;
@@ -125,6 +106,10 @@ public class DoubleMessageQueue implements PregelMessageQueue {
 	@Override
 	public long[] keys() {
 		return readOnly.keys();
+	}
+
+	@Override
+	public void transferTo(PregelMessageQueue cache) {
 	}
 
 }

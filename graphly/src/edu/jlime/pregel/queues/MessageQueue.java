@@ -19,7 +19,7 @@ import gnu.trove.map.hash.TObjectIntHashMap;
 public class MessageQueue implements ObjectMessageQueue {
 	private static final int MAX = 5000000;
 	private static final int AVGSIZE = 500;
-	private volatile TreeMap<long[], Object> readOnly;
+
 	private volatile TreeMap<long[], Object> current;
 	private ObjectMessageMerger merger;
 	private int contPut = 0;
@@ -40,7 +40,6 @@ public class MessageQueue implements ObjectMessageQueue {
 				return compare;
 			}
 		};
-		readOnly = new TreeMap<>(comparator);
 		current = new TreeMap<>(comparator);
 		// this.readOnly = new PersistentOrderedQueue(merger, MAX, AVGSIZE);
 		// this.current = new PersistentOrderedQueue(merger, MAX, AVGSIZE);
@@ -97,45 +96,17 @@ public class MessageQueue implements ObjectMessageQueue {
 	// }
 	// }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see edu.jlime.pregel.worker.PregelMessageQueue#switchQueue()
-	 */
 	@Override
-	public synchronized void switchQueue() {
-		TreeMap<long[], Object> aux = readOnly;
-		this.readOnly = current;
-		this.current = aux;
-		this.current.clear();
-		contPut = 0;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see edu.jlime.pregel.worker.PregelMessageQueue#currentSize()
-	 */
-	@Override
-	public int currentSize() {
+	public int size() {
 		return current.size();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see edu.jlime.pregel.worker.PregelMessageQueue#readOnlySize()
-	 */
 	@Override
-	public int readOnlySize() {
-		return readOnly.size();
-	}
-
-	@Override
-	public void flush(String msgType, String subgraph, WorkerTask workerTask) throws Exception {
+	public void flush(String msgType, String subgraph, WorkerTask workerTask)
+			throws Exception {
 		TObjectIntHashMap<Worker> sizes = new TObjectIntHashMap<>();
 		{
-			for (Entry<long[], Object> e : readOnly.entrySet()) {
+			for (Entry<long[], Object> e : current.entrySet()) {
 				long to = e.getKey()[0];
 				if (to != -1) {
 					Worker w = workerTask.getWorker(to);
@@ -145,13 +116,14 @@ public class MessageQueue implements ObjectMessageQueue {
 		}
 
 		HashMap<Worker, ObjectData> ret = new HashMap<>();
-		for (Entry<long[], Object> e : readOnly.entrySet()) {
+		for (Entry<long[], Object> e : current.entrySet()) {
 			long to = e.getKey()[0];
 			if (to == -1) {
 				if (subgraph == null)
 					workerTask.outputObject(msgType, -1l, -1l, e.getValue());
 				else
-					workerTask.outputObjectSubgraph(msgType, subgraph, -1l, e.getValue());
+					workerTask.outputObjectSubgraph(msgType, subgraph, -1l,
+							e.getValue());
 			} else {
 				Worker w = workerTask.getWorker(to);
 				ObjectData data = ret.get(w);
@@ -163,13 +135,14 @@ public class MessageQueue implements ObjectMessageQueue {
 				data.addObj(e.getValue());
 			}
 		}
-		readOnly.clear();
+		current.clear();
 		workerTask.sendObjects(msgType, ret);
 	}
 
 	@Override
 	public Iterator<PregelMessage> getMessages(final String msgType, long v) {
-		SortedMap<long[], Object> sm = readOnly.subMap(new long[] { v, Long.MIN_VALUE },
+		SortedMap<long[], Object> sm = current.subMap(
+				new long[] { v, Long.MIN_VALUE },
 				new long[] { v + 1, Long.MIN_VALUE });
 		final Iterator<Entry<long[], Object>> it = sm.entrySet().iterator();
 		return new Iterator<PregelMessage>() {
@@ -178,7 +151,8 @@ public class MessageQueue implements ObjectMessageQueue {
 			public PregelMessage next() {
 				Entry<long[], Object> e = it.next();
 				long[] k = e.getKey();
-				return new GenericPregelMessage(msgType, k[1], k[0], e.getValue());
+				return new GenericPregelMessage(msgType, k[1], k[0],
+						e.getValue());
 			}
 
 			@Override
@@ -191,9 +165,17 @@ public class MessageQueue implements ObjectMessageQueue {
 	@Override
 	public long[] keys() {
 		TLongArrayList ret = new TLongArrayList();
-		for (long[] k : readOnly.keySet()) {
+		for (long[] k : current.keySet()) {
 			ret.add(k[0]);
 		}
 		return ret.toArray();
+	}
+
+	@Override
+	public void transferTo(PregelMessageQueue pmq) {
+		MessageQueue other = (MessageQueue) pmq;
+		for (Entry<long[], Object> e : current.entrySet()) {
+			other.put(e.getKey()[1], e.getKey()[0], e.getValue());
+		}
 	}
 }

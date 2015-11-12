@@ -437,7 +437,7 @@ public class StoreNodeImpl implements StoreNode {
 					if (tID == cores - 1)
 						to = keys.length;
 					long initChunk = System.currentTimeMillis();
-					TLongFloatMap map = new TLongFloatHashMap(10000000);
+					TLongFloatMap map = new TLongFloatHashMap();
 					int cont = from;
 
 					while (cont < to) {

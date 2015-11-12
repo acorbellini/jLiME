@@ -26,7 +26,7 @@ public class PregelCustomFunction implements CustomFunction {
 
 		Graph g = tr.getGraph();
 
-		PregelConfig conf = config.cacheSize(10000000)
+		PregelConfig conf = config
 				.graph(GraphlyPregelAdapter.getFactory(g.getGraph()))
 				.split(new MapperPregelAdapter(mapper, tr.getGraph().getRpc()));
 		Pregel cli = tr.getGraph().getPregeClient();
