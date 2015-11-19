@@ -1,7 +1,7 @@
 package edu.jlime.graphly.util;
 
-import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.client.Graph;
+import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.jobs.MapperFactory;
 import edu.jlime.graphly.rec.Recommendation;
 import edu.jlime.graphly.traversal.PregelTraversal;

@@ -6,6 +6,7 @@ import java.util.Set;
 
 import edu.jlime.core.rpc.Sync;
 import edu.jlime.graphly.traversal.Dir;
+import edu.jlime.pregel.worker.VertexList;
 import gnu.trove.set.hash.TLongHashSet;
 
 public interface PregelGraph extends Serializable {
@@ -74,21 +75,32 @@ public interface PregelGraph extends Serializable {
 	public abstract double getDouble(long v, String string) throws Exception;
 
 	@Sync
-	public abstract void setDouble(long v, String string, double currentVal) throws Exception;
+	public abstract void setDouble(long v, String string, double currentVal)
+			throws Exception;
 
 	public abstract float getFloat(long v, String string) throws Exception;
 
 	@Sync
-	public abstract void setFloat(long v, String string, float currentVal) throws Exception;
+	public abstract void setFloat(long v, String string, float currentVal)
+			throws Exception;
 
 	public abstract float getDefaultFloat(String prop) throws Exception;
 
-	public abstract float getFloat(String string, long v, float f) throws Exception;
+	public abstract float getFloat(String string, long v, float f)
+			throws Exception;
 
 	public abstract TLongHashSet getNeighbours(long v) throws Exception;
 
 	public abstract int getNeighbourhoodSize(long v) throws Exception;
 
 	public abstract TLongHashSet getAdjacents(long v, Dir dir) throws Exception;
+
+	public abstract boolean isLocal(long v) throws Exception;
+
+	@Sync
+	public abstract void preload(VertexList remote) throws Exception;
+
+	@Sync
+	public abstract void flush(VertexList remote) throws Exception;
 
 }

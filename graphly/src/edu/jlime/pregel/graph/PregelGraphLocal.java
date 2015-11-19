@@ -10,6 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import edu.jlime.graphly.traversal.Dir;
 import edu.jlime.pregel.graph.rpc.PregelGraph;
 import edu.jlime.pregel.worker.VertexData;
+import edu.jlime.pregel.worker.VertexList;
 import gnu.trove.decorator.TLongSetDecorator;
 import gnu.trove.iterator.TLongObjectIterator;
 import gnu.trove.map.hash.TLongObjectHashMap;
@@ -30,9 +31,11 @@ public class PregelGraphLocal implements Serializable, PregelGraph {
 
 	long graphid = 0;
 
-	TLongObjectHashMap<VertexData> vertices = new TLongObjectHashMap<VertexData>(1024, 0.75f);
+	TLongObjectHashMap<VertexData> vertices = new TLongObjectHashMap<VertexData>(
+			1024, 0.75f);
 
-	TLongObjectHashMap<VertexData> disabled = new TLongObjectHashMap<VertexData>(1024, 0.75f);
+	TLongObjectHashMap<VertexData> disabled = new TLongObjectHashMap<VertexData>(
+			1024, 0.75f);
 
 	private String name;
 
@@ -470,7 +473,8 @@ public class PregelGraphLocal implements Serializable, PregelGraph {
 	}
 
 	@Override
-	public void setDouble(long v, String string, double currentVal) throws Exception {
+	public void setDouble(long v, String string, double currentVal)
+			throws Exception {
 		// TODO Auto-generated method stub
 
 	}
@@ -482,7 +486,8 @@ public class PregelGraphLocal implements Serializable, PregelGraph {
 	}
 
 	@Override
-	public void setFloat(long v, String string, float currentVal) throws Exception {
+	public void setFloat(long v, String string, float currentVal)
+			throws Exception {
 		// TODO Auto-generated method stub
 
 	}
@@ -515,5 +520,23 @@ public class PregelGraphLocal implements Serializable, PregelGraph {
 	public TLongHashSet getAdjacents(long v, Dir dir) throws Exception {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public boolean isLocal(long v) throws Exception {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public void preload(VertexList remote) throws Exception {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void flush(VertexList remote) throws Exception {
+		// TODO Auto-generated method stub
+
 	}
 }

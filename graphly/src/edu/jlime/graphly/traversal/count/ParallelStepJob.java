@@ -1,7 +1,7 @@
 package edu.jlime.graphly.traversal.count;
 
-import edu.jlime.graphly.traversal.Traversal;
 import edu.jlime.graphly.traversal.Step;
+import edu.jlime.graphly.traversal.Traversal;
 import edu.jlime.graphly.traversal.TraversalResult;
 import edu.jlime.jd.Node;
 import edu.jlime.jd.client.JobContext;

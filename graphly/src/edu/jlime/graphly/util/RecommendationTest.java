@@ -11,8 +11,8 @@ import java.util.TreeMap;
 
 import org.springframework.context.support.FileSystemXmlApplicationContext;
 
-import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.client.Graph;
+import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.jobs.Mapper;
 import edu.jlime.graphly.server.LocalGraphlyServer;
 import edu.jlime.jd.Node;

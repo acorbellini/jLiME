@@ -1,12 +1,16 @@
 package edu.jlime.graphly.client;
 
+import java.util.Arrays;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import edu.jlime.core.rpc.RPC;
 import edu.jlime.core.rpc.Transferible;
 import edu.jlime.graphly.rec.hits.DivideUpdateProperty;
 import edu.jlime.graphly.storenode.Count;
+import edu.jlime.graphly.storenode.properties.InMemoryGraphFloatProperties;
+import edu.jlime.graphly.storenode.properties.InMemoryGraphProperties;
 import edu.jlime.graphly.traversal.Dir;
 import edu.jlime.graphly.traversal.Traversal;
 import edu.jlime.graphly.util.Gather;
@@ -15,14 +19,23 @@ import edu.jlime.graphly.util.TopGatherer;
 import edu.jlime.jd.Dispatcher;
 import edu.jlime.pregel.client.Pregel;
 import edu.jlime.util.Pair;
-import gnu.trove.map.hash.TLongFloatHashMap;
+import gnu.trove.list.array.TLongArrayList;
+import gnu.trove.map.TLongFloatMap;
+import gnu.trove.map.TLongObjectMap;
 import gnu.trove.map.hash.TLongObjectHashMap;
 import gnu.trove.set.hash.TLongHashSet;
 
 public class Graph implements Transferible {
 
+	private static final float PRELOAD_BATCH = 1000f;
 	private String graph;
 	private transient Graphly graphly;
+
+	private InMemoryGraphProperties props = new InMemoryGraphProperties();
+	private InMemoryGraphFloatProperties floatProps = new InMemoryGraphFloatProperties();
+	private TLongHashSet preloaded = new TLongHashSet();
+	private TLongObjectMap<long[]> adjacencyIn = new TLongObjectHashMap<>();
+	private TLongObjectMap<long[]> adjacencyOut = new TLongObjectHashMap<>();
 
 	public Graph(Graphly graphly, String graphName) {
 		this.graph = graphName;
@@ -46,15 +59,41 @@ public class Graph implements Transferible {
 		graphly.remove(graph, id);
 	}
 
-	public Edge addEdge(long id, long id2, String label, Object... keyValues) throws Exception {
+	public Edge addEdge(long id, long id2, String label, Object... keyValues)
+			throws Exception {
 		return graphly.addEdge(graph, id, id2, label, keyValues);
 	}
 
 	public long[] getEdges(Dir dir, long... vids) throws Exception {
-		return graphly.getEdges(graph, dir, vids);
+		if (vids.length == 1 && preloaded.contains(vids[0]))
+			return dir == Dir.IN ? adjacencyIn.get(vids[0])
+					: adjacencyOut.get(vids[0]);
+		boolean hasPre = false;
+		for (long v : vids)
+			if (preloaded.contains(v)) {
+				hasPre = true;
+				break;
+			}
+		if (!hasPre)
+			return graphly.getEdges(graph, dir, vids);
+		else {
+
+			TLongHashSet ret = new TLongHashSet();
+			TLongHashSet local = new TLongHashSet();
+			for (long v : vids) {
+				if (preloaded.contains(v))
+					ret.addAll(dir == Dir.IN ? adjacencyIn.get(v)
+							: adjacencyOut.get(v));
+				else
+					local.add(v);
+			}
+			ret.addAll(graphly.getEdges(graph, dir, local.toArray()));
+			return ret.toArray();
+		}
 	}
 
-	public long[] getEdgesMax(final Dir dir, final int max_edges, long... vids) throws Exception {
+	public long[] getEdgesMax(final Dir dir, final int max_edges, long... vids)
+			throws Exception {
 		return graphly.getEdgesMax(graph, dir, max_edges, vids);
 	}
 
@@ -62,40 +101,50 @@ public class Graph implements Transferible {
 		graphly.addEdges(graph, vid, dir, dests);
 	}
 
-	public Count countEdges(final Dir dir, final int max_edges, long[] keys, float[] values, long[] toFilter)
-			throws Exception {
-		return graphly.countEdges(graph, dir, max_edges, keys, values, toFilter);
+	public Count countEdges(final Dir dir, final int max_edges, long[] keys,
+			float[] values, long[] toFilter) throws Exception {
+		return graphly.countEdges(graph, dir, max_edges, keys, values,
+				toFilter);
 	}
 
-	public long getRandomEdge(long before, long[] subset, Dir d) throws Exception {
+	public long getRandomEdge(long before, long[] subset, Dir d)
+			throws Exception {
 		return graphly.getRandomEdge(graph, before, subset, d);
 	}
 
 	public Object getProperty(String key, long vid) throws Exception {
+		if (preloaded.contains(vid))
+			return props.get(graph, vid, key);
 		return graphly.getProperty(graph, key, vid);
 	}
 
-	public void setProperties(long vid, Map<String, Object> value) throws Exception {
+	public void setProperties(long vid, Map<String, Object> value)
+			throws Exception {
 		graphly.setProperties(graph, vid, value);
 	}
 
 	public void setProperty(long vid, String k, Object v) throws Exception {
-		graphly.setProperty(graph, vid, k, v);
+		if (preloaded.contains(vid))
+			props.put(graph, vid, k, v);
+		else
+			graphly.setProperty(graph, vid, k, v);
 	}
 
 	public Object getProperty(long vid, String k, Object alt) throws Exception {
 		return graphly.getProperty(graph, vid, k, alt);
 	}
 
-	public TLongObjectHashMap<Object> collect(String k, int top, long[] vids) throws Exception {
+	public TLongObjectHashMap<Object> collect(String k, int top, long[] vids)
+			throws Exception {
 		return graphly.collect(graph, k, top, vids);
 	}
 
-	public void set(String to, TLongObjectHashMap<Object> map) throws Exception {
-		graphly.set(graph, to, map);
+	public void set(String key, TLongObjectMap<Object> map) throws Exception {
+		graphly.set(graph, key, map);
 	}
 
-	public int getEdgesCount(Dir dir, long vid, TLongHashSet at) throws Exception {
+	public int getEdgesCount(Dir dir, long vid, TLongHashSet at)
+			throws Exception {
 		return graphly.getEdgesCount(graph, dir, vid, at);
 	}
 
@@ -107,11 +156,31 @@ public class Graph implements Transferible {
 		return graphly.getSubGraph(graph, k, all);
 	}
 
-	public long[] getEdgesFiltered(Dir in, long vid, TLongHashSet all) {
-		return graphly.getEdgesFiltered(graph, in, vid, all);
+	public long[] getEdgesFiltered(Dir in, long vid, TLongHashSet all)
+			throws Exception {
+		if (preloaded.contains(vid)) {
+			long[] edges = getEdges(in, vid);
+
+			if (edges != null)
+				if (all == null || all.size() == 0)
+					return edges;
+				else {
+					TLongHashSet ret = new TLongHashSet();
+					for (long l : edges) {
+						if (all.contains(l))
+							ret.add(l);
+					}
+					return ret.toArray();
+				}
+			else
+				System.out.println("Edges is null for " + vid);
+			return new long[] {};
+		} else
+			return graphly.getEdgesFiltered(graph, in, vid, all);
 	}
 
-	public Map<Long, Map<String, Object>> getProperties(long[] array, String... k) throws Exception {
+	public Map<Long, Map<String, Object>> getProperties(long[] array,
+			String... k) throws Exception {
 		return graphly.getProperties(graph, array, k);
 	}
 
@@ -139,7 +208,8 @@ public class Graph implements Transferible {
 		graphly.setDefaultDouble(graph, k, v);
 	}
 
-	public void setDouble(long v, String k, double currentVal) throws Exception {
+	public void setDouble(long v, String k, double currentVal)
+			throws Exception {
 		graphly.setDouble(graph, v, k, currentVal);
 	}
 
@@ -157,7 +227,8 @@ public class Graph implements Transferible {
 		this.graphly = (Graphly) jd.getGlobal("graphly");
 	}
 
-	public void setTempProperties(long[] before, Map<Long, Map<String, Object>> temps) throws InterruptedException {
+	public void setTempProperties(long[] before,
+			Map<Long, Map<String, Object>> temps) throws InterruptedException {
 		this.graphly.setTempProperties(graph, before, temps);
 
 	}
@@ -184,11 +255,16 @@ public class Graph implements Transferible {
 	}
 
 	public float getFloat(long v, String k) throws Exception {
+		if (preloaded.contains(v))
+			return floatProps.get(graph, v, k);
 		return this.graphly.getFloat(graph, v, k);
 	}
 
 	public void setFloat(long v, String k, float currentVal) throws Exception {
-		this.graphly.setFloat(graph, v, k, currentVal);
+		if (preloaded.contains(v))
+			floatProps.put(graph, v, k, currentVal);
+		else
+			this.graphly.setFloat(graph, v, k, currentVal);
 	}
 
 	public void setDefaultFloat(String string, float f) throws Exception {
@@ -199,16 +275,19 @@ public class Graph implements Transferible {
 		return new GatherResult(this.graphly.gather(graph, g));
 	}
 
-	public Set<Pair<Long, Float>> topFloat(String string, int i) throws Exception {
+	public Set<Pair<Long, Float>> topFloat(String string, int i)
+			throws Exception {
 		return this.gather(new TopGatherer(string, i)).merge(new TopMerger(i));
 	}
 
 	public Float sumFloat(String string) throws Exception {
-		return this.gather(new SumFloatPropertiesGather(string)).merge(new SumMerger());
+		return this.gather(new SumFloatPropertiesGather(string))
+				.merge(new SumMerger());
 	}
 
 	public Float quadSumFloat(String string) throws Exception {
-		return this.gather(new QuadSumFloatPropertiesGather(string)).merge(new SumMerger());
+		return this.gather(new QuadSumFloatPropertiesGather(string))
+				.merge(new SumMerger());
 	}
 
 	public float getDefaultFloat(String prop) throws Exception {
@@ -220,19 +299,26 @@ public class Graph implements Transferible {
 
 	}
 
-	public Set<Pair<Long, Float>> topFloat(String string, int i, TLongHashSet vertices) throws Exception {
-		return this.gather(new TopGatherer(string, i, vertices)).merge(new TopMerger(i));
+	public Set<Pair<Long, Float>> topFloat(String string, int i,
+			TLongHashSet vertices) throws Exception {
+		return this.gather(new TopGatherer(string, i, vertices))
+				.merge(new TopMerger(i));
 	}
 
-	public float sumFloat(String string, TLongHashSet vertices) throws Exception {
-		return this.gather(new SumFloatPropertiesGather(string, vertices)).merge(new SumMerger());
+	public float sumFloat(String string, TLongHashSet vertices)
+			throws Exception {
+		return this.gather(new SumFloatPropertiesGather(string, vertices))
+				.merge(new SumMerger());
 	}
 
-	public float quadSumFloat(String string, TLongHashSet vertices) throws Exception {
-		return this.gather(new QuadSumFloatPropertiesGather(string, vertices)).merge(new SumMerger());
+	public float quadSumFloat(String string, TLongHashSet vertices)
+			throws Exception {
+		return this.gather(new QuadSumFloatPropertiesGather(string, vertices))
+				.merge(new SumMerger());
 	}
 
-	public void setTempFloats(String k, boolean add, TLongFloatHashMap v) throws Exception {
+	public void setTempFloats(String k, boolean add, TLongFloatMap v)
+			throws Exception {
 		graphly.setTempFloats(graph, k, add, v);
 
 	}
@@ -242,7 +328,8 @@ public class Graph implements Transferible {
 
 	}
 
-	public void updateFloatProperty(String prop, DivideUpdateProperty upd) throws Exception {
+	public void updateFloatProperty(String prop, DivideUpdateProperty upd)
+			throws Exception {
 		this.graphly.updateFloatProperty(graph, prop, upd);
 	}
 
@@ -250,19 +337,111 @@ public class Graph implements Transferible {
 		return this.graphly.getFloat(graph, in, hubKey, alt);
 	}
 
-	public void setFloat(String k, TLongFloatHashMap auth2) {
+	public void setFloat(String k, TLongFloatMap auth2) throws Exception {
 		this.graphly.setFloat(graph, k, auth2);
 	}
 
-	public TLongFloatHashMap getFloats(String k) throws Exception {
+	public TLongFloatMap getFloats(String k) throws Exception {
 		return getFloats(k, null);
 	}
 
-	public TLongFloatHashMap getFloats(String k, TLongHashSet vertices) throws Exception {
-		return this.gather(new FloatGather(k, vertices)).merge(new FloatMerger());
+	public TLongFloatMap getFloats(String k, TLongHashSet vertices)
+			throws Exception {
+		return this.gather(new FloatGather(k, vertices))
+				.merge(new FloatMerger());
 	}
 
 	public void setProperty(TLongHashSet vertices, String k, String val) {
 		this.graphly.setProperty(graph, vertices, k, val);
+	}
+
+	public void preload(TLongArrayList list) throws Exception {
+		this.preloaded = new TLongHashSet(list);
+		long[] array = list.toArray();
+		{
+			props = new InMemoryGraphProperties();
+			int from = 0;
+			int to = 0;
+			int section = (int) Math.ceil(array.length / PRELOAD_BATCH);
+			for (int i = 0; i < section; i++) {
+				if (i == section - 1)
+					to = array.length;
+				else
+					to = (i + 1) * section;
+				from = i * section;
+				Map<String, TLongObjectMap<Object>> map = graphly
+						.getAllProperties(graph,
+								Arrays.copyOfRange(array, from, to));
+				for (Entry<String, TLongObjectMap<Object>> e : map.entrySet()) {
+					props.putAll(graph, e.getKey(), e.getValue());
+				}
+
+			}
+
+		}
+		{
+			floatProps = new InMemoryGraphFloatProperties();
+
+			int from = 0;
+			int to = 0;
+			int section = (int) Math.ceil(array.length / PRELOAD_BATCH);
+			for (int i = 0; i < section; i++) {
+				if (i == section - 1)
+					to = array.length;
+				else
+					to = (i + 1) * section;
+				from = i * section;
+
+				Map<String, TLongFloatMap> map = graphly.getAllFloatProperties(
+						graph, Arrays.copyOfRange(array, from, to));
+				for (Entry<String, TLongFloatMap> e : map.entrySet()) {
+					floatProps.putAll(graph, e.getKey(), e.getValue());
+				}
+			}
+		}
+
+		{
+			// if (!adjacencyLoaded) {
+			long[] toLoad = null;
+			if (adjacencyIn.isEmpty() && adjacencyOut.isEmpty())
+				toLoad = array;
+			else {
+				TLongArrayList curr = new TLongArrayList();
+				for (long v : array) {
+					if (!adjacencyIn.containsKey(v)
+							|| !adjacencyOut.containsKey(v))
+						curr.add(v);
+				}
+				toLoad = curr.toArray();
+			}
+			if (toLoad.length > 0) {
+				int from = 0;
+				int to = 0;
+				int section = (int) Math.ceil(toLoad.length / PRELOAD_BATCH);
+				for (int i = 0; i < section; i++) {
+					if (i == section - 1)
+						to = toLoad.length;
+					else
+						to = (i + 1) * section;
+					from = i * section;
+
+					adjacencyIn.putAll(graphly.getAllEdges(graph,
+							Arrays.copyOfRange(toLoad, from, to), Dir.IN));
+					adjacencyOut.putAll(graphly.getAllEdges(graph,
+							Arrays.copyOfRange(toLoad, from, to), Dir.OUT));
+				}
+			}
+		}
+
+	}
+
+	public void flush(TLongArrayList list) throws Exception {
+		for (String k : props.getProperties()) {
+			set(k, props.get(graph, k));
+		}
+
+		for (String k : floatProps.getProperties()) {
+			setFloat(k, floatProps.getAll(graph, k));
+		}
 	}
 }

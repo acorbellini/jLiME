@@ -7,6 +7,7 @@ import org.apache.log4j.Logger;
 import edu.jlime.graphly.client.Graph;
 import edu.jlime.util.Pair;
 import gnu.trove.iterator.TLongIterator;
+import gnu.trove.map.TLongFloatMap;
 import gnu.trove.map.hash.TLongFloatHashMap;
 import gnu.trove.set.hash.TLongHashSet;
 
@@ -16,7 +17,8 @@ public class GraphCountResult extends TraversalResult {
 	private String countK;
 	private TLongHashSet vertices;
 
-	public GraphCountResult(TLongHashSet vertices, Graph graphlyGraph, String countK) {
+	public GraphCountResult(TLongHashSet vertices, Graph graphlyGraph,
+			String countK) {
 		this.vertices = vertices;
 		this.g = graphlyGraph;
 		this.countK = countK;
@@ -28,15 +30,16 @@ public class GraphCountResult extends TraversalResult {
 	}
 
 	@Override
-	public TLongFloatHashMap getCounts() throws Exception {
-		TLongFloatHashMap ret = g.getFloats(countK, vertices());
+	public TLongFloatMap getCounts() throws Exception {
+		TLongFloatMap ret = g.getFloats(countK, vertices());
 		return ret;
 	}
 
 	@Override
 	public TraversalResult top(int top) throws Exception {
 		Logger log = Logger.getLogger(GraphCountResult.class);
-		log.info("Obtaining top " + top + " vertices from graph property " + countK);
+		log.info("Obtaining top " + top + " vertices from graph property "
+				+ countK);
 		Set<Pair<Long, Float>> t = g.topFloat(countK, top, vertices());
 		TLongFloatHashMap ret = new TLongFloatHashMap();
 		for (Pair<Long, Float> pair : t) {

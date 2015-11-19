@@ -2,11 +2,11 @@ package edu.jlime.pregel.worker.rpc;
 
 
 		
-import edu.jlime.core.cluster.Peer;
-import edu.jlime.core.rpc.RPC;
-import edu.jlime.core.rpc.ClientFactory;
-
 import java.util.List;
+
+import edu.jlime.core.cluster.Peer;
+import edu.jlime.core.rpc.ClientFactory;
+import edu.jlime.core.rpc.RPC;
 
 public class WorkerFactory implements ClientFactory<Worker,WorkerBroadcast>{
 	private RPC rpc;

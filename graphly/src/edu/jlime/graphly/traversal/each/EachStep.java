@@ -4,8 +4,8 @@ import java.util.List;
 
 import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.jobs.Mapper;
-import edu.jlime.graphly.traversal.Traversal;
 import edu.jlime.graphly.traversal.Step;
+import edu.jlime.graphly.traversal.Traversal;
 import edu.jlime.graphly.traversal.TraversalResult;
 import edu.jlime.jd.Dispatcher;
 import edu.jlime.jd.Node;

@@ -11,7 +11,8 @@ import gnu.trove.list.array.TLongArrayList;
 
 public interface Mapper extends Serializable {
 
-	public List<Pair<Node, TLongArrayList>> map(int max, long[] data, JobContext ctx) throws Exception;
+	public List<Pair<Node, TLongArrayList>> map(int max, long[] data,
+			JobContext ctx) throws Exception;
 
 	public String getName();
 

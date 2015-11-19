@@ -5,8 +5,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.log4j.Logger;
 
-import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.client.Graph;
+import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.jobs.Mapper;
 import edu.jlime.graphly.rec.Repeat;
 import edu.jlime.jd.Dispatcher;

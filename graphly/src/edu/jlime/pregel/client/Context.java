@@ -13,9 +13,8 @@ public class Context {
 
 	private CacheManagerI cache;
 
-	public Context(WorkerTask task, CacheManagerI cacheManager, long v) {
+	public Context(WorkerTask task, CacheManagerI cacheManager) {
 		this.task = task;
-		this.v = v;
 		this.cache = cacheManager;
 	}
 
@@ -73,11 +72,13 @@ public class Context {
 		return task.getSubgraph(string);
 	}
 
-	public void sendAllSubGraph(String msgType, String subgraph, Object val) throws Exception {
+	public void sendAllSubGraph(String msgType, String subgraph, Object val)
+			throws Exception {
 		cache.sendAllSubGraph(msgType, subgraph, this.v, val);
 	}
 
-	public void sendAllFloatSubGraph(String msgType, String subgraph, float val) throws Exception {
+	public void sendAllFloatSubGraph(String msgType, String subgraph, float val)
+			throws Exception {
 		cache.sendAllFloatSubGraph(msgType, subgraph, this.v, val);
 	}
 }

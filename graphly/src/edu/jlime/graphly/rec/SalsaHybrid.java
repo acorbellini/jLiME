@@ -5,8 +5,8 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
-import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.client.Graph;
+import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.jobs.Mapper;
 import edu.jlime.graphly.rec.CustomStep.CustomFunction;
 import edu.jlime.graphly.rec.salsa.AuthHubResult;
@@ -65,16 +65,6 @@ public class SalsaHybrid implements CustomFunction {
 
 		TLongHashSet subgraph = new TLongHashSet(authSet);
 		subgraph.addAll(hubSet);
-		//
-		// TLongIterator it = subgraph.iterator();
-		// while (it.hasNext()) {
-		// long v = it.next();
-		// if (authSet.contains(v))
-		// auth.put(v, 1f / authSet.size());
-		//
-		// if (hubSet.contains(v))
-		// hub.put(v, 1f / hubSet.size());
-		// }
 
 		int authSize = authSet.size();
 		int hubSize = hubSet.size();
@@ -95,13 +85,6 @@ public class SalsaHybrid implements CustomFunction {
 
 				@Override
 				public void onSuccess(AuthHubSubResult subres) {
-					// log.info("Received subresult.");
-					// synchronized (auth) {
-					// auth.putAll(subres.auth);
-					// }
-					// synchronized (hub) {
-					// hub.putAll(subres.hub);
-					// }
 				}
 
 				@Override
@@ -120,16 +103,14 @@ public class SalsaHybrid implements CustomFunction {
 		}
 
 		log.info("Counting top " + top);
-		Set<Pair<Long, Float>> set = g.topFloat(auth, top);
-
 		TLongFloatHashMap authRes = new TLongFloatHashMap();
+		TLongFloatHashMap hubRes = new TLongFloatHashMap();
+		
+		Set<Pair<Long, Float>> set = g.topFloat(auth, top);
 		for (Pair<Long, Float> pair : set) {
 			authRes.put(pair.left, pair.right);
 		}
-
 		Set<Pair<Long, Float>> setHub = g.topFloat(hub, top);
-
-		TLongFloatHashMap hubRes = new TLongFloatHashMap();
 		for (Pair<Long, Float> pair : setHub) {
 			hubRes.put(pair.left, pair.right);
 		}

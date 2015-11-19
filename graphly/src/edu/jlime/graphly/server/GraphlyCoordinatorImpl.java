@@ -7,7 +7,7 @@ import edu.jlime.core.rpc.RPC.RPCStatus;
 import edu.jlime.graphly.client.ConsistentHashing;
 import edu.jlime.graphly.storenode.rpc.StoreNode;
 import edu.jlime.graphly.storenode.rpc.StoreNodeBroadcast;
-import edu.jlime.graphly.storenode.rpc.GraphlyStoreNodeIFactory;
+import edu.jlime.graphly.storenode.rpc.StoreNodeFactory;
 
 public class GraphlyCoordinatorImpl implements Coordinator {
 
@@ -23,8 +23,9 @@ public class GraphlyCoordinatorImpl implements Coordinator {
 
 		rpc.registerTarget("Coordinator", this, true, RPCStatus.INIT);
 
-		this.mgr = rpc.manage(new GraphlyStoreNodeIFactory(rpc, "graphly"),
-				new DataFilter("app", "graphly-server", true), rpc.getCluster().getLocalPeer());
+		this.mgr = rpc.manage(new StoreNodeFactory(rpc, "graphly"),
+				new DataFilter("app", "graphly-server", true),
+				rpc.getCluster().getLocalPeer());
 
 		this.mgr.waitForClient(nodes);
 

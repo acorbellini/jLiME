@@ -27,28 +27,32 @@ public abstract class MessageQueueFactory {
 		};
 	}
 
-	public static MessageQueueFactory floatQueue(final FloatTroveMessageMerger merger) {
+	public static MessageQueueFactory floatQueue(
+			final FloatTroveMessageMerger merger) {
 		return new MessageQueueFactory() {
 
 			@Override
 			public PregelMessageQueue getMQ() {
-				return new FloatMessageQueueImpl(merger);
+				return new FloatMessageQueue(merger);
 			}
 		};
 	}
 
-	public static MessageQueueFactory doubleQueue(final DoubleMessageMerger doubleMessageMerger) {
+	public static MessageQueueFactory doubleQueue(
+			final DoubleMessageMerger doubleMessageMerger) {
 		return new MessageQueueFactory() {
 
 			@Override
 			public PregelMessageQueue getMQ() {
-				DoubleMessageQueue ret = new DoubleMessageQueue(doubleMessageMerger);
+				DoubleMessageQueue ret = new DoubleMessageQueue(
+						doubleMessageMerger);
 				return ret;
 			}
 		};
 	}
 
-	public static MessageQueueFactory floatArrayFactory(final FloatArrayMerger messageMerger) {
+	public static MessageQueueFactory floatArrayFactory(
+			final FloatArrayMerger messageMerger) {
 		return new MessageQueueFactory() {
 
 			@Override

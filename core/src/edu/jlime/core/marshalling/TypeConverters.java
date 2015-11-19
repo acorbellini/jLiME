@@ -27,6 +27,7 @@ import edu.jlime.core.rpc.RPCObject;
 import edu.jlime.core.transport.Address;
 import edu.jlime.metrics.metric.Metrics;
 import edu.jlime.util.ByteBuffer;
+import gnu.trove.map.hash.TLongFloatHashMap;
 
 public class TypeConverters {
 
@@ -81,6 +82,8 @@ public class TypeConverters {
 		registerTypeConverter(float[].class, new FloatArrayConverter());
 
 		registerTypeConverter(double[].class, new DoubleArrayConverter());
+		
+		registerTypeConverter(TLongFloatHashMap.class, new TLongFloatMapConverter());
 
 	}
 

@@ -10,8 +10,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.client.Graph;
+import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.traversal.Dir;
 import edu.jlime.util.Pair;
 

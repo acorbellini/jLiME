@@ -8,6 +8,9 @@ import org.apache.commons.lang3.NotImplementedException;
 import edu.jlime.graphly.client.Graph;
 import edu.jlime.pregel.client.GraphConnectionFactory;
 import edu.jlime.pregel.graph.rpc.PregelGraph;
+import edu.jlime.pregel.worker.LongIterator;
+import edu.jlime.pregel.worker.VertexList;
+import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.set.hash.TLongHashSet;
 
 public class GraphlyPregelAdapter implements PregelGraph {
@@ -148,7 +151,8 @@ public class GraphlyPregelAdapter implements PregelGraph {
 	}
 
 	@Override
-	public void setDouble(long v, String k, double currentVal) throws Exception {
+	public void setDouble(long v, String k, double currentVal)
+			throws Exception {
 		g.setDouble(v, k, currentVal);
 	}
 
@@ -178,7 +182,7 @@ public class GraphlyPregelAdapter implements PregelGraph {
 	}
 
 	@Override
-	public TLongHashSet getNeighbours(long v) {
+	public TLongHashSet getNeighbours(long v) throws Exception {
 		return getAdjacents(v, Dir.BOTH);
 
 	}
@@ -189,8 +193,36 @@ public class GraphlyPregelAdapter implements PregelGraph {
 	}
 
 	@Override
-	public TLongHashSet getAdjacents(long v, Dir dir) {
+	public TLongHashSet getAdjacents(long v, Dir dir) throws Exception {
 		return new TLongHashSet(g.getEdgesFiltered(dir, v, null));
+	}
+
+	@Override
+	public boolean isLocal(long v) {
+		return g.getHash().getNode(v).equals(g.getJobClient().getLocalPeer());
+	}
+
+	@Override
+	public void preload(VertexList remote) throws Exception {
+		TLongArrayList list = new TLongArrayList();
+		LongIterator it = remote.iterator();
+		while (it.hasNext()) {
+			long v = it.next();
+			list.add(v);
+		}
+
+		g.preload(list);
+	}
+
+	@Override
+	public void flush(VertexList remote) throws Exception {
+		TLongArrayList list = new TLongArrayList();
+		LongIterator it = remote.iterator();
+		while (it.hasNext()) {
+			long v = it.next();
+			list.add(v);
+		}
+		g.flush(list);
 	}
 
 }

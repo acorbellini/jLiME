@@ -2,8 +2,8 @@ package edu.jlime.graphly.rec;
 
 import java.io.Serializable;
 
-import edu.jlime.graphly.traversal.Traversal;
 import edu.jlime.graphly.traversal.Step;
+import edu.jlime.graphly.traversal.Traversal;
 import edu.jlime.graphly.traversal.TraversalResult;
 
 public class CustomStep implements Step {

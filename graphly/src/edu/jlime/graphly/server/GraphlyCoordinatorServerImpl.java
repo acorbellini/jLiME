@@ -1,8 +1,8 @@
 package edu.jlime.graphly.server;
 
 import edu.jlime.core.cluster.Peer;
-import edu.jlime.core.rpc.RPCClient;
 import edu.jlime.core.rpc.RPC;
+import edu.jlime.core.rpc.RPCClient;
 import edu.jlime.core.rpc.Transferible;
 import edu.jlime.graphly.client.ConsistentHashing;
 

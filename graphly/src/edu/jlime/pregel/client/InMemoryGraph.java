@@ -27,13 +27,15 @@ import edu.jlime.graphly.traversal.Dir;
 import edu.jlime.pregel.graph.PregelGraphLocal;
 import edu.jlime.pregel.graph.rpc.PregelGraph;
 import edu.jlime.pregel.graph.rpc.PregelGraphBroadcast;
-import edu.jlime.pregel.graph.rpc.GraphFactory;
+import edu.jlime.pregel.graph.rpc.PregelGraphFactory;
 import edu.jlime.pregel.util.SplitFunctions;
+import edu.jlime.pregel.worker.VertexList;
 import gnu.trove.set.hash.TLongHashSet;
 
 public class InMemoryGraph implements PregelGraph, Transferible {
 
-	public static final class InMemoryGraphConnectionFactory implements GraphConnectionFactory {
+	public static final class InMemoryGraphConnectionFactory
+			implements GraphConnectionFactory {
 		private String name;
 
 		public InMemoryGraphConnectionFactory(String string) {
@@ -42,7 +44,8 @@ public class InMemoryGraph implements PregelGraph, Transferible {
 
 		@Override
 		public PregelGraph getGraph(RPC rpc) throws Exception {
-			return new InMemoryGraph(rpc, "graph", SplitFunctions.rr(), Pregel.workerFilter(), 2);
+			return new InMemoryGraph(rpc, "graph", SplitFunctions.rr(),
+					Pregel.workerFilter(), 2);
 		}
 	}
 
@@ -66,8 +69,8 @@ public class InMemoryGraph implements PregelGraph, Transferible {
 
 	private int minNodes;
 
-	public InMemoryGraph(RPC rpc, String name, SplitFunction func, PeerFilter filter, int minNodes)
-			throws Exception {
+	public InMemoryGraph(RPC rpc, String name, SplitFunction func,
+			PeerFilter filter, int minNodes) throws Exception {
 		this.rpc = rpc;
 		this.name = name;
 		this.func = func;
@@ -85,7 +88,8 @@ public class InMemoryGraph implements PregelGraph, Transferible {
 	}
 
 	private void createClient() throws Exception {
-		cli = rpc.manage(new GraphFactory(rpc, name), filter, rpc.getCluster().getLocalPeer());
+		cli = rpc.manage(new PregelGraphFactory(rpc, name), filter,
+				rpc.getCluster().getLocalPeer());
 		cli.waitForClient(minNodes);
 		for (Peer p : cli.getPeers()) {
 			rpc.registerIfAbsent(p, name, new PregelGraphLocal(name, true));
@@ -367,7 +371,8 @@ public class InMemoryGraph implements PregelGraph, Transferible {
 
 		pool = Executors.newFixedThreadPool(5);
 		max = new Semaphore(10);
-		BufferedReader s = new BufferedReader(new FileReader(new File(pathname)));
+		BufferedReader s = new BufferedReader(
+				new FileReader(new File(pathname)));
 
 		List<long[]> cache = new ArrayList<>();
 
@@ -376,7 +381,8 @@ public class InMemoryGraph implements PregelGraph, Transferible {
 			if (cont++ % 1000 == 0)
 				System.out.println("Cont: " + cont);
 
-			String[] rel = s.readLine().replaceAll("\\s", " ").trim().split(" ");
+			String[] rel = s.readLine().replaceAll("\\s", " ").trim()
+					.split(" ");
 			long from = Long.valueOf(rel[0]);
 			long to = Long.valueOf(rel[1]);
 
@@ -405,7 +411,8 @@ public class InMemoryGraph implements PregelGraph, Transferible {
 	}
 
 	@Override
-	public void setDouble(long v, String string, double currentVal) throws Exception {
+	public void setDouble(long v, String string, double currentVal)
+			throws Exception {
 		getGraph(v).setDouble(v, string, currentVal);
 	}
 
@@ -416,7 +423,8 @@ public class InMemoryGraph implements PregelGraph, Transferible {
 	}
 
 	@Override
-	public void setFloat(long v, String string, float currentVal) throws Exception {
+	public void setFloat(long v, String string, float currentVal)
+			throws Exception {
 		// TODO Auto-generated method stub
 
 	}
@@ -453,6 +461,24 @@ public class InMemoryGraph implements PregelGraph, Transferible {
 	public TLongHashSet getAdjacents(long v, Dir dir) {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public boolean isLocal(long v) throws Exception {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public void preload(VertexList remote) throws Exception {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void flush(VertexList remote) throws Exception {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

@@ -9,8 +9,8 @@ import edu.jlime.graphly.rec.CustomStep.CustomFunction;
 import edu.jlime.graphly.rec.salsa.AuthHubResult;
 import edu.jlime.graphly.rec.salsa.SALSAPregel;
 import edu.jlime.graphly.traversal.Dir;
-import edu.jlime.graphly.traversal.Traversal;
 import edu.jlime.graphly.traversal.PregelTraversal;
+import edu.jlime.graphly.traversal.Traversal;
 import edu.jlime.graphly.traversal.TraversalResult;
 import edu.jlime.pregel.client.PregelConfig;
 import edu.jlime.pregel.mergers.MessageMergers;
@@ -59,16 +59,14 @@ public class SALSAPregelStep implements CustomFunction {
 				.vertexFunction(new SALSAPregel(auth, hub, authSet.size(), hubSet.size()), config).exec();
 
 		log.info("Counting top " + top);
-		Set<Pair<Long, Float>> set = g.topFloat(auth, top);
-
 		TLongFloatHashMap authRes = new TLongFloatHashMap();
+		TLongFloatHashMap hubRes = new TLongFloatHashMap();
+		
+		Set<Pair<Long, Float>> set = g.topFloat(auth, top);
 		for (Pair<Long, Float> pair : set) {
 			authRes.put(pair.left, pair.right);
 		}
-
 		Set<Pair<Long, Float>> setHub = g.topFloat(hub, top);
-
-		TLongFloatHashMap hubRes = new TLongFloatHashMap();
 		for (Pair<Long, Float> pair : setHub) {
 			hubRes.put(pair.left, pair.right);
 		}

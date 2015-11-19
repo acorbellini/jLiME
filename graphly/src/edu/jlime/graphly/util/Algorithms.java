@@ -12,10 +12,10 @@ import edu.jlime.graphly.traversal.ValueResult;
 import edu.jlime.util.Pair;
 
 public class Algorithms {
-	private static final int KATZ_DEPTH = 4;
+	private static final int KATZ_DEPTH = 10;
 	private static final int FRIENDLINK_DEPTH = 4;
 	private static final int HITS_NEIGHBOURS = 10000;
-	private static final int SALSA_NEIGHBOURS = 10000;
+	private static final int SALSA_NEIGHBOURS = 1000000;
 
 	public static GraphlyRun ecHybrid() {
 		return new GraphlyRun("ecHybrid") {

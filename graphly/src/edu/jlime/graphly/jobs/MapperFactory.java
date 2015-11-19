@@ -7,11 +7,15 @@ import edu.jlime.metrics.sysinfo.filter.SimpleInfoFilter;
 public class MapperFactory {
 
 	public static Mapper cpuCriteria() {
-		return new CriteriaMapper(new LogFilter<Node>(new SimpleInfoFilter<Node>("sysinfo.cpu.usage"), false), true);
+		return new CriteriaMapper(
+				new LogFilter<Node>(
+						new SimpleInfoFilter<Node>("sysinfo.cpu.usage"), false),
+				true);
 	}
 
-	public static Mapper simple(String criteria, Boolean dynamic) {
-		return new CriteriaMapper(new SimpleInfoFilter<Node>(criteria), dynamic);
+	public static Mapper criteria(String criteria, Boolean dynamic) {
+		return new CriteriaMapper(new SimpleInfoFilter<Node>(criteria),
+				dynamic);
 	}
 
 	public static Mapper location() {

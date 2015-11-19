@@ -5,8 +5,8 @@ import java.util.List;
 import org.apache.log4j.Logger;
 
 import edu.jlime.graphly.jobs.Mapper;
-import edu.jlime.graphly.traversal.Traversal;
 import edu.jlime.graphly.traversal.Step;
+import edu.jlime.graphly.traversal.Traversal;
 import edu.jlime.graphly.traversal.TraversalResult;
 import edu.jlime.jd.Dispatcher;
 import edu.jlime.jd.Node;

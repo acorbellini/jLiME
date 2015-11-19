@@ -6,8 +6,8 @@ import java.io.FileWriter;
 import java.text.NumberFormat;
 import java.util.Locale;
 
-import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.client.Graph;
+import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.jobs.MapperFactory;
 import edu.jlime.graphly.server.GraphlyServer;
 import edu.jlime.graphly.traversal.PregelTraversal;
@@ -17,7 +17,7 @@ import edu.jlime.pregel.functions.PageRankFloat;
 import edu.jlime.pregel.functions.PageRankFloat.PageRankHaltCondition;
 import edu.jlime.pregel.mergers.MessageMergers;
 import gnu.trove.iterator.TLongFloatIterator;
-import gnu.trove.map.hash.TLongFloatHashMap;
+import gnu.trove.map.TLongFloatMap;
 
 public class LoopbackTest {
 	public static void main(String[] args) throws Exception {
@@ -42,23 +42,30 @@ public class LoopbackTest {
 		// test.setDefaultFloat("pagerank", 1f / vertexCount);
 		test.setDefaultFloat("ranksource", .85f);
 
-		test.v().set("mapper", MapperFactory.rr()).as(PregelTraversal.class).vertexFunction(
-				new PageRankFloat("pagerank", vertexCount),
-				PregelConfig.create().haltCondition(new PageRankHaltCondition(0.000001f, "pr")).steps(50)
-						.persistVList(false).executeOnAll(true).cacheSize(100).cache(CacheFactory.NO_CACHE)
-						.aggregator("pr", MessageAggregators.floatSum()).merger("pr", MessageMergers.floatSum()))
+		test.v().set("mapper", MapperFactory.rr()).as(PregelTraversal.class)
+				.vertexFunction(new PageRankFloat("pagerank", vertexCount),
+						PregelConfig.create()
+								.haltCondition(new PageRankHaltCondition(
+										0.000001f, "pr"))
+								.steps(50).persistVList(false)
+								.executeOnAll(true).cacheSize(100)
+								.cache(CacheFactory.NO_CACHE)
+								.aggregator("pr", MessageAggregators.floatSum())
+								.merger("pr", MessageMergers.floatSum()))
 				.exec();
 		System.out.println((System.currentTimeMillis() - init) / 1000f);
 		NumberFormat numberInstance = NumberFormat.getNumberInstance(Locale.US);
 		numberInstance.setMaximumFractionDigits(10);
 
-		BufferedWriter writer = new BufferedWriter(new FileWriter(new File(args[2])));
+		BufferedWriter writer = new BufferedWriter(
+				new FileWriter(new File(args[2])));
 
-		TLongFloatHashMap res = test.getFloats("pagerank");
+		TLongFloatMap res = test.getFloats("pagerank");
 		TLongFloatIterator it = res.iterator();
 		while (it.hasNext()) {
 			it.advance();
-			writer.append(it.key() + "," + numberInstance.format(it.value()) + "\n");
+			writer.append(
+					it.key() + "," + numberInstance.format(it.value()) + "\n");
 		}
 		writer.close();
 		float sum = test.sumFloat("pagerank");

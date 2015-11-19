@@ -35,8 +35,8 @@ public class HybridMapper implements Mapper {
 
 		@Override
 		public String toString() {
-			return "MapperData [mapper=" + mapper + ", div=" + div + ", peers=" + peers.length + ", peerPos=" + peerPos
-					+ "]";
+			return "MapperData [mapper=" + mapper + ", div=" + div + ", peers="
+					+ peers.length + ", peerPos=" + peerPos + "]";
 		}
 
 	}
@@ -55,7 +55,8 @@ public class HybridMapper implements Mapper {
 	private Peer[] peers;
 
 	@Override
-	public List<Pair<Node, TLongArrayList>> map(int max, long[] data, JobContext ctx) throws Exception {
+	public List<Pair<Node, TLongArrayList>> map(int max, long[] data,
+			JobContext ctx) throws Exception {
 
 		// if (log.isDebugEnabled())
 		// log.debug("Mapping " + data.length + " keys by location.");
@@ -79,10 +80,11 @@ public class HybridMapper implements Mapper {
 		for (int i = 0; i < mapData.length; i++) {
 			MapperData mapperData = mapData[i];
 			float range = data.length * mapperData.div;
-			int to = (int) (i == mapData.length - 1 ? data.length : acc + range);
+			int to = (int) (i == mapData.length - 1 ? data.length
+					: acc + range);
 
-			List<Pair<Node, TLongArrayList>> subMap = mapperData.mapper.map(max, Arrays.copyOfRange(data, acc, to),
-					ctx);
+			List<Pair<Node, TLongArrayList>> subMap = mapperData.mapper.map(max,
+					Arrays.copyOfRange(data, acc, to), ctx);
 
 			acc += range;
 			for (Pair<Node, TLongArrayList> pair : subMap) {
@@ -102,7 +104,8 @@ public class HybridMapper implements Mapper {
 	public String getName() {
 		StringBuilder builder = new StringBuilder();
 		for (MapperData mapper : mapData) {
-			builder.append((builder.length() == 0 ? "" : ",") + mapper.mapper.getName() + "[" + mapper.div + "]");
+			builder.append((builder.length() == 0 ? "" : ",")
+					+ mapper.mapper.getName() + "[" + mapper.div + "]");
 		}
 		return "hybrid-(" + builder.toString() + ")";
 	}

@@ -10,7 +10,6 @@ public class InMemVertexList implements VertexList {
 
 	public InMemVertexList() throws IOException {
 		super();
-		// TODO Auto-generated constructor stub
 	}
 
 	@Override

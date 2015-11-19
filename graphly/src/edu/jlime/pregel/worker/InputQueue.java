@@ -145,7 +145,7 @@ public class InputQueue {
 		return ret;
 	}
 
-	public int subgraphSize() {
+	public int broadcastSubgraphSize() {
 		int ret = 0;
 		for (PregelMessageQueue s : readOnlySG.values())
 			ret += s.size();

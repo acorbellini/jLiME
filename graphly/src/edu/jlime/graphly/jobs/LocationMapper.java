@@ -30,12 +30,7 @@ public class LocationMapper implements Mapper, Closeable {
 
 	@Override
 	public List<Pair<Node, TLongArrayList>> map(int max, long[] data, JobContext ctx) throws Exception {
-
-		// if (log.isDebugEnabled())
-		// log.debug("Mapping " + data.length + " keys by location.");
-
 		Map<Peer, TLongArrayList> map = getGraph(ctx).getHash().hashKeys(data);
-
 		Map<Node, TLongArrayList> ret = new HashMap<>();
 		for (Entry<Peer, TLongArrayList> e : map.entrySet()) {
 			ret.put(getGraph(ctx).getJobClient().getCluster().getClientFor(e.getKey()), e.getValue());
@@ -57,7 +52,6 @@ public class LocationMapper implements Mapper, Closeable {
 	public synchronized void update(JobContext ctx) throws Exception {
 		if (nodes != null)
 			return;
-
 		this.peers = getGraph(ctx).getHash().getCircle();
 		this.nodes = new Node[peers.length];
 		for (int i = 0; i < this.nodes.length; i++) {
@@ -85,12 +79,6 @@ public class LocationMapper implements Mapper, Closeable {
 
 	@Override
 	public Peer[] getPeers() {
-		// Peer[] peers = new Peer[nodes.length];
-		// for (int i = 0; i < nodes.length; i++) {
-		// peers[i] = nodes[i].getPeer();
-		// }
-		// return peers;
-
 		return peers;
 	}
 

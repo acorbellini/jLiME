@@ -10,8 +10,8 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.client.Graph;
+import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.server.GraphlyServer;
 import edu.jlime.graphly.traversal.Dir;
 import gnu.trove.set.hash.TLongHashSet;
