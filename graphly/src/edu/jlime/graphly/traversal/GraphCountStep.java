@@ -57,8 +57,9 @@ public class GraphCountStep implements Step {
 	private Beta calc;
 	private String kBeta;
 
-	public GraphCountStep(Beta calc, Dir dir, TLongHashSet vertices, int max_edges, Traversal tr, String k,
-			boolean returnVertices, String kBeta) {
+	public GraphCountStep(Beta calc, Dir dir, TLongHashSet vertices,
+			int max_edges, Traversal tr, String k, boolean returnVertices,
+			String kBeta) {
 		this.calc = calc;
 		this.filters = vertices;
 		this.dir = dir;
@@ -85,43 +86,48 @@ public class GraphCountStep implements Step {
 
 		Dispatcher jobClient = tr.getGraph().getJobClient();
 
-		JobContext ctx = jobClient.getEnv().getClientEnv(jobClient.getLocalPeer());
+		JobContext ctx = jobClient.getEnv()
+				.getClientEnv(jobClient.getLocalPeer());
 
 		TLongHashSet vertices = before.vertices();
 
 		log.info("Graph count for " + vertices.size());
 
-		final List<Pair<Node, TLongArrayList>> mapped = map.map(1, vertices.toArray(), ctx);
+		final List<Pair<Node, TLongArrayList>> mapped = map.map(1,
+				vertices.toArray(), ctx);
 
 		ForkJoinTask<long[]> fj = new ForkJoinTask<>();
 
 		for (Pair<Node, TLongArrayList> e : mapped) {
-			fj.putJob(new GraphCount(filters, tr.getGraph(), k, dir, max, e.getValue().toArray(), returnVertices),
+			fj.putJob(
+					new GraphCount(filters, tr.getGraph().getGraph(), k, dir,
+							max, e.getValue().toArray(), returnVertices),
 					e.getKey());
 		}
 
-		TLongHashSet res = fj.execute(CountStep.JOBS, new ResultListener<long[], TLongHashSet>() {
-			TLongHashSet temp = new TLongHashSet();
+		TLongHashSet res = fj.execute(CountStep.JOBS,
+				new ResultListener<long[], TLongHashSet>() {
+					TLongHashSet temp = new TLongHashSet();
 
-			@Override
-			public void onSuccess(long[] sr) {
-				log.info("Received count set of size " + sr.length);
-				if (sr.length != 0)
-					synchronized (temp) {
-						temp.addAll(sr);
+					@Override
+					public void onSuccess(long[] sr) {
+						log.info("Received count set of size " + sr.length);
+						if (sr.length != 0)
+							synchronized (temp) {
+								temp.addAll(sr);
+							}
 					}
-			}
 
-			@Override
-			public TLongHashSet onFinished() {
-				log.info("Finished count task of " + temp.size());
-				return temp;
-			}
+					@Override
+					public TLongHashSet onFinished() {
+						log.info("Finished count task of " + temp.size());
+						return temp;
+					}
 
-			@Override
-			public void onFailure(Exception res) {
-			}
-		});
+					@Override
+					public void onFailure(Exception res) {
+					}
+				});
 		log.info("Persisting temporal floats: " + k);
 
 		tr.getGraph().commitFloatUpdates(k);
@@ -133,4 +139,5 @@ public class GraphCountStep implements Step {
 		}
 		return new GraphCountResult(res, tr.getGraph(), k);
 	}
+
 }

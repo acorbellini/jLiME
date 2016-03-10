@@ -17,8 +17,10 @@ public abstract class GraphlyServer {
 
 	public abstract Graphly getGraphlyClient() throws Exception;
 
-	public static ArrayList<LocalGraphlyServer> createServers(final String storeDir, final Integer localServers,
-			final Boolean coord, final Integer remoteServers, String netConfigFile, String graphlyConfigFile)
+	public static ArrayList<LocalGraphlyServer> createServers(
+			final String storeDir, final Integer localServers,
+			final Boolean coord, final Integer remoteServers,
+			String netConfigFile, String graphlyConfigFile)
 					throws Exception, InterruptedException {
 
 		// LogManager.getLogManager().reset();
@@ -36,40 +38,31 @@ public abstract class GraphlyServer {
 				Configuration.newConfig(graphlyConfigFile));
 
 		if (localServers == 1)
-			ret.add(createServer(storeDir, 0, coord, remoteServers, networkConfiguration, graphlyConfiguration));
+			ret.add(createServer(storeDir, 0, coord, remoteServers,
+					networkConfiguration, graphlyConfiguration));
 		else {
-			ExecutorService svc = Executors.newCachedThreadPool();
 			for (int i = 0; i < localServers; i++) {
 				final int curr = i;
-				svc.execute(new Runnable() {
-
-					@Override
-					public void run() {
-						try {
-							boolean isCoord = false;
-							if (curr == 0 && coord)
-								isCoord = true;
-							LocalGraphlyServer srv = createServer(storeDir, curr, isCoord, remoteServers,
-									networkConfiguration, graphlyConfiguration);
-							synchronized (ret) {
-								ret.add(srv);
-							}
-
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
-					}
-				});
+				boolean isCoord = false;
+				if (curr == 0 && coord)
+					isCoord = true;
+				LocalGraphlyServer srv = createServer(storeDir, curr, isCoord,
+						remoteServers, networkConfiguration,
+						graphlyConfiguration);
+				synchronized (ret) {
+					ret.add(srv);
+				}
 			}
-			svc.shutdown();
-			svc.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
+
 		}
 		return ret;
 	}
 
-	public static LocalGraphlyServer createServer(String sdir, int i, Boolean isCoord, Integer remoteServers,
-			NetworkConfiguration config, GraphlyConfig gConfig) throws Exception {
-		return new LocalGraphlyServer(config, gConfig, sdir.replaceAll("\\$i", i + ""), isCoord, remoteServers);
+	public static LocalGraphlyServer createServer(String sdir, int i,
+			Boolean isCoord, Integer remoteServers, NetworkConfiguration config,
+			GraphlyConfig gConfig) throws Exception {
+		return new LocalGraphlyServer(config, gConfig,
+				sdir.replaceAll("\\$i", i + ""), isCoord, remoteServers);
 	}
 
 	public static void main(final String[] args) throws Exception {
@@ -78,13 +71,23 @@ public abstract class GraphlyServer {
 		final Integer localServers = Integer.valueOf(args[1]);
 		Boolean coord = Boolean.valueOf(args[2]);
 		final Integer remoteServers = Integer.valueOf(args[3]);
-
-		ArrayList<LocalGraphlyServer> s = GraphlyServer.createServers(storeDir, localServers, coord, remoteServers,
-				null, null);
-		for (LocalGraphlyServer localGraphlyServer : s) {
-			localGraphlyServer.start();
+		ExecutorService svc = Executors.newCachedThreadPool();
+		ArrayList<LocalGraphlyServer> s = GraphlyServer.createServers(storeDir,
+				localServers, coord, remoteServers, null, null);
+		for (final LocalGraphlyServer localGraphlyServer : s) {
+			svc.execute(new Runnable() {
+				@Override
+				public void run() {
+					try {
+						localGraphlyServer.start();
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+			});
 		}
-
+		svc.shutdown();
+		svc.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
 	}
 
 }

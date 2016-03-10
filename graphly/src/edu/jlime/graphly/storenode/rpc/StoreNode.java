@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Set;
 
 import edu.jlime.core.rpc.Sync;
+import edu.jlime.graphly.client.PropertyData;
 import edu.jlime.graphly.rec.hits.DivideUpdateProperty;
 import edu.jlime.graphly.storenode.Count;
 import edu.jlime.graphly.traversal.Dir;
@@ -128,8 +129,8 @@ public interface StoreNode {
 	public Object gather(String graph, Gather<?> g) throws Exception;
 
 	@Sync
-	public void setTempFloats(String graph, String k, boolean add,
-			TLongFloatMap subProp) throws Exception;
+	public void setTempFloats(String graph, String k, boolean add, long[] keys,
+			float[] fs) throws Exception;
 
 	@Sync
 	public void commitFloatUpdates(String graph, String... props)
@@ -151,12 +152,20 @@ public interface StoreNode {
 	public abstract void setProperty(String graph, String k, String val,
 			TLongArrayList value) throws Exception;
 
-	public abstract Map<String, TLongObjectMap<Object>> getAllProperties(
-			String graph, long[] array) throws Exception;
+	public abstract Map<String, PropertyData> getAllProperties(String graph,
+			long[] array) throws Exception;
 
 	public abstract Map<String, TLongFloatMap> getAllFloatProperties(
 			String graph, long[] array) throws Exception;
 
-	public abstract TLongObjectMap<long[]> getAllEdges(String graph,
+	public abstract AdjacencyData getAllEdges(String graph,
 			TLongArrayList value, Dir dir) throws Exception;
+
+	public abstract boolean containsVertex(String graph, long v)
+			throws Exception;
+
+	@Sync
+	public void createSubgraph(String from, String sg, long[] vids)
+			throws Exception;
+
 }

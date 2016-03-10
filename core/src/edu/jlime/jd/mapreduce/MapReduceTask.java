@@ -43,7 +43,7 @@ public abstract class MapReduceTask<T, R, SR> implements Job<R> {
 
 	private boolean dontCacheSubResults;
 
-	MapReduceException exceptions = null;
+	ForkJoinException exceptions = null;
 
 	private Semaphore lock;
 
@@ -61,13 +61,13 @@ public abstract class MapReduceTask<T, R, SR> implements Job<R> {
 	public void error(Peer p, Exception res) {
 		synchronized (this) {
 			if (exceptions == null)
-				exceptions = new MapReduceException();
+				exceptions = new ForkJoinException();
 		}
 		exceptions.put(p, res);
 		lock.release();
 	}
 
-	public R exec(ClientCluster c) throws Exception {
+	public R exec(ClientCluster c) throws Throwable {
 		if (c.getLocalNode().isExec())
 			return c.getLocalNode().exec(this);
 		else

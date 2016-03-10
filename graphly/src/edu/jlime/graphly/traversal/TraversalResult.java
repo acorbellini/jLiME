@@ -41,4 +41,5 @@ public abstract class TraversalResult implements Serializable {
 	public abstract float getCount(long key) throws Exception;
 
 	public abstract TLongFloatMap getCounts() throws Exception;
+
 }

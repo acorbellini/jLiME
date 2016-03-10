@@ -12,7 +12,6 @@ import edu.jlime.graphly.traversal.Dir;
 import edu.jlime.jd.Node;
 import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.Job;
-import gnu.trove.iterator.TLongFloatIterator;
 import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.map.hash.TLongFloatHashMap;
 import gnu.trove.set.hash.TLongHashSet;
@@ -105,7 +104,9 @@ public class SalsaJob implements Job<AuthHubSubResult> {
 
 							}
 
-							return new AuthHubSubResult(authRes, hubRes);
+							return new AuthHubSubResult(authRes.keys(),
+									authRes.values(), hubRes.keys(),
+									hubRes.values());
 						}
 					});
 			futs.add(fut);
@@ -113,22 +114,29 @@ public class SalsaJob implements Job<AuthHubSubResult> {
 		exec.shutdown();
 		for (Future<AuthHubSubResult> future : futs) {
 			AuthHubSubResult authHubSubResult = future.get();
-			TLongFloatIterator it = authHubSubResult.auth.iterator();
-			while (it.hasNext()) {
-				it.advance();
-				authRes.adjustOrPutValue(it.key(), it.value(), it.value());
+			{
+				long[] auth_sub = authHubSubResult.auth;
+				float[] auth_sub_vals = authHubSubResult.auth_vals;
+				for (int i = 0; i < auth_sub.length; i++) {
+					long key = auth_sub[i];
+					float value = auth_sub_vals[i];
+					authRes.adjustOrPutValue(key, value, value);
+				}
 			}
-
-			TLongFloatIterator itHub = authHubSubResult.hub.iterator();
-			while (itHub.hasNext()) {
-				itHub.advance();
-				hubRes.adjustOrPutValue(itHub.key(), itHub.value(),
-						itHub.value());
+			{
+				long[] hub_sub = authHubSubResult.hub;
+				float[] hub_sub_vals = authHubSubResult.hub_vals;
+				for (int i = 0; i < hub_sub.length; i++) {
+					long key = hub_sub[i];
+					float value = hub_sub_vals[i];
+					hubRes.adjustOrPutValue(key, value, value);
+				}
 			}
 		}
 
 		// System.out.println("Sending to parent auth: " + authRes.size() +
 		// "hub: " + hubRes.size() + " pairs.");
-		return new AuthHubSubResult(authRes, hubRes);
+		return new AuthHubSubResult(authRes.keys(), authRes.values(),
+				hubRes.keys(), hubRes.values());
 	}
 }

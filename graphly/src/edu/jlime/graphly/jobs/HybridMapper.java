@@ -58,23 +58,6 @@ public class HybridMapper implements Mapper {
 	public List<Pair<Node, TLongArrayList>> map(int max, long[] data,
 			JobContext ctx) throws Exception {
 
-		// if (log.isDebugEnabled())
-		// log.debug("Mapping " + data.length + " keys by location.");
-
-		// update(ctx);
-
-		// Map<ClientNode, TLongArrayList> ret = new HashMap<>();
-		//
-		// for (long l : data) {
-		// ClientNode node = getNode(l, ctx);
-		// TLongArrayList sublist = ret.get(node);
-		// if (sublist == null) {
-		// sublist = new TLongArrayList();
-		// ret.put(node, sublist);
-		// }
-		// sublist.add(l);
-		// }
-
 		int acc = 0;
 		Map<Node, TLongArrayList> ret = new HashMap<>();
 		for (int i = 0; i < mapData.length; i++) {

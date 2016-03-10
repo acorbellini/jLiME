@@ -11,7 +11,6 @@ import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.jobs.MapperFactory;
 import edu.jlime.graphly.server.GraphlyServer;
 import edu.jlime.graphly.traversal.PregelTraversal;
-import edu.jlime.pregel.client.CacheFactory;
 import edu.jlime.pregel.client.PregelConfig;
 import edu.jlime.pregel.functions.PageRankFloat;
 import edu.jlime.pregel.functions.PageRankFloat.PageRankHaltCondition;
@@ -49,7 +48,6 @@ public class LoopbackTest {
 										0.000001f, "pr"))
 								.steps(50).persistVList(false)
 								.executeOnAll(true).cacheSize(100)
-								.cache(CacheFactory.NO_CACHE)
 								.aggregator("pr", MessageAggregators.floatSum())
 								.merger("pr", MessageMergers.floatSum()))
 				.exec();

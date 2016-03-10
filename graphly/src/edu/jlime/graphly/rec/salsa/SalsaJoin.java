@@ -15,8 +15,8 @@ public class SalsaJoin implements Join<TLongFloatHashMap, Float> {
 			while (it.hasNext()) {
 				it.advance();
 				Float authval = it.value().get(vid);
-				if (authval == null)
-					authval = 0f;
+				// if (authval == null)
+				// authval = 0f;
 				sum += authval;
 			}
 			res.put(vid, sum / input.size());

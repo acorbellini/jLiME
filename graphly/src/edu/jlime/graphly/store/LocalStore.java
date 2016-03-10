@@ -124,7 +124,8 @@ public class LocalStore {
 						e = iterator.next();
 						byte[] key = e.getKey();
 						curr = key;
-						if (UnsignedBytes.lexicographicalComparator().compare(to, key) > 0) {
+						if (UnsignedBytes.lexicographicalComparator()
+								.compare(to, key) > 0) {
 							if (!first || (first && inclFirst))
 								cont++;
 							first = false;
@@ -162,7 +163,8 @@ public class LocalStore {
 						e = iterator.next();
 						byte[] key = e.getKey();
 						curr = key;
-						if (UnsignedBytes.lexicographicalComparator().compare(to, key) > 0) {
+						if (UnsignedBytes.lexicographicalComparator()
+								.compare(to, key) > 0) {
 							if (!first || (first && inclFirst)) {
 								db.delete(key);
 								cont++;
@@ -186,18 +188,25 @@ public class LocalStore {
 		log.info("Deleted " + cont + " records.");
 	}
 
-	public List<byte[]> getRangeOfLength(boolean includeFirst, byte[] from, byte[] to, int max) throws Exception {
+	public List<byte[]> getRangeOfLength(boolean includeFirst, byte[] from,
+			byte[] to, int max) throws Exception {
 		List<byte[]> ret = new ArrayList<byte[]>();
 
-		Iterator<Pair<byte[], byte[]>> it = getRangeIterator(includeFirst, from, to, max);
+		Iterator<Pair<byte[], byte[]>> it = getRangeIterator(includeFirst, from,
+				to, max);
 		while (it.hasNext())
 			ret.add(it.next().right);
 		return ret;
 
 	}
 
-	public Iterator<Pair<byte[], byte[]>> getRangeIterator(boolean includeFirst, byte[] from, byte[] to, int max)
-			throws Exception {
+	public Iterator<Pair<byte[], byte[]>> getRangeIterator(boolean includeFirst,
+			byte[] from, byte[] to, int max) throws Exception {
 		return new RangeIterator(includeFirst, from, to, max, getDb());
 	}
+
+	public boolean containsKey(byte[] k) throws Exception {
+		return load(k) != null;
+	}
+
 }

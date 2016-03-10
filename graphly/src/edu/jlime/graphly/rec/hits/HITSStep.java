@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
-import edu.jlime.graphly.client.Graph;
 import edu.jlime.graphly.client.Graphly;
 import edu.jlime.graphly.jobs.Mapper;
 import edu.jlime.graphly.rec.CustomStep.CustomFunction;
@@ -30,18 +29,18 @@ public class HITSStep implements CustomFunction {
 	}
 
 	@Override
-	public TraversalResult execute(TraversalResult before, Traversal tr) throws Exception {
+	public TraversalResult execute(TraversalResult before, Traversal tr)
+			throws Exception {
 		final Logger log = Logger.getLogger(HITSStep.class);
 
 		long[] subgraph = before.vertices().toArray();
-
-		Graph g = tr.getGraph();
 
 		Mapper map = (Mapper) tr.get("mapper");
 
 		Dispatcher jobClient = tr.getGraph().getJobClient();
 
-		JobContext ctx = jobClient.getEnv().getClientEnv(jobClient.getLocalPeer());
+		JobContext ctx = jobClient.getEnv()
+				.getClientEnv(jobClient.getLocalPeer());
 
 		log.info("Executing HITS on " + subgraph.length + " vertices.");
 
@@ -57,12 +56,14 @@ public class HITSStep implements CustomFunction {
 
 			log.info("Executing Step " + i);
 
-			final List<Pair<Node, TLongArrayList>> mapped = map.map(Graphly.NUM_JOBS, subgraph, ctx);
+			final List<Pair<Node, TLongArrayList>> mapped = map
+					.map(Graphly.NUM_JOBS, subgraph, ctx);
 
 			ForkJoinTask<AuthHubSubResult> fj = new ForkJoinTask<>();
 
 			for (Pair<Node, TLongArrayList> e : mapped)
-				fj.putJob(new HITSJob(tr.getGraph(), auth, hub, subgraph, e.getValue()), e.getKey());
+				fj.putJob(new HITSJob(tr.getGraph(), auth, hub, subgraph,
+						e.getValue()), e.getKey());
 
 			auth.clear();
 			hub.clear();
@@ -73,17 +74,21 @@ public class HITSStep implements CustomFunction {
 				public void onSuccess(AuthHubSubResult subres) {
 					log.info("Received subresult.");
 					synchronized (auth) {
-						TLongFloatIterator itAuth = subres.auth.iterator();
-						while (itAuth.hasNext()) {
-							itAuth.advance();
-							auth.adjustOrPutValue(itAuth.key(), itAuth.value(), itAuth.value());
+						long[] auth_sub = subres.auth;
+						float[] auth_sub_vals = subres.auth_vals;
+						for (int i = 0; i < auth_sub.length; i++) {
+							long key = auth_sub[i];
+							float value = auth_sub_vals[i];
+							auth.adjustOrPutValue(key, value, value);
 						}
 					}
 					synchronized (hub) {
-						TLongFloatIterator itHub = subres.hub.iterator();
-						while (itHub.hasNext()) {
-							itHub.advance();
-							hub.adjustOrPutValue(itHub.key(), itHub.value(), itHub.value());
+						long[] hub_sub = subres.hub;
+						float[] hub_sub_vals = subres.hub_vals;
+						for (int i = 0; i < hub_sub.length; i++) {
+							long key = hub_sub[i];
+							float value = hub_sub_vals[i];
+							hub.adjustOrPutValue(key, value, value);
 						}
 					}
 				}

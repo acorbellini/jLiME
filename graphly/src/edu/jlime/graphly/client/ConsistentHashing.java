@@ -21,11 +21,9 @@ public class ConsistentHashing implements Serializable {
 
 	private int vnodes;
 
-	private int range;
-
-	public ConsistentHashing(Map<Peer, StoreNode> nodes, int vNodes) throws Exception {
+	public ConsistentHashing(Map<Peer, StoreNode> nodes, int vNodes)
+			throws Exception {
 		this.vnodes = vNodes;
-		this.range = keySpace / vNodes;
 		circle = new Peer[vnodes];
 		stores = new StoreNode[vnodes];
 		if (!initCircle(nodes)) {
@@ -49,7 +47,6 @@ public class ConsistentHashing implements Serializable {
 		ArrayList<Peer> nodes = new ArrayList<>(map.keySet());
 		for (int i = 0; i < vnodes; i++) {
 			Peer gs = nodes.get(i % nodes.size());
-			// int j = range * i;
 			circle[i] = gs;
 			stores[i] = map.get(gs);
 			map.get(gs).addRange(i);
@@ -65,10 +62,7 @@ public class ConsistentHashing implements Serializable {
 	}
 
 	public int hash(long k) {
-		int hashed = Math.abs(((int) k * 31) % vnodes);
-		if (hashed + 1 >= circle.length)
-			return 0;
-		return hashed + 1;
+		return Math.abs(((int) k * 31) % vnodes);
 	}
 
 	public Map<Peer, TLongArrayList> hashKeys(long[] data) {

@@ -98,6 +98,10 @@ public class GraphlyExperiment {
 
 	}
 
+	private static final boolean RUN_FIRST = true;
+
+	private static final boolean PRINT_WHOLE_RESULTS = false;
+
 	Logger log = Logger.getLogger(GraphlyExperiment.class);
 
 	private String graphName;
@@ -113,8 +117,9 @@ public class GraphlyExperiment {
 
 	private Mapper mapper;
 
-	public GraphlyExperiment(int reps, long[] users, GraphlyRun run, GraphlyServerFactory fact, String graph,
-			boolean print_results, String startNode, Mapper mapper) {
+	public GraphlyExperiment(int reps, long[] users, GraphlyRun run,
+			GraphlyServerFactory fact, String graph, boolean print_results,
+			String startNode, Mapper mapper) {
 		this.reps = reps;
 		this.run = run;
 		this.fact = fact;
@@ -130,42 +135,61 @@ public class GraphlyExperiment {
 		// prof.getNetworkConsumption(), prof.getMemoryConsumption(),
 		// (System.currentTimeMillis() - start));
 
-		for (int i = 0; i < reps + 1; i++) {
+		int limit = reps + (RUN_FIRST ? 1 : 0);
+		for (int i = 0; i < limit; i++) {
 
 			long start = System.currentTimeMillis();
 			GraphlyServer server = fact.build();
 			server.start();
-
 			Graphly graphly = server.getGraphlyClient();
 
 			Graph graph = graphly.getGraph(graphName);
 
-			ClusterProfiler prof = new ClusterProfiler(graphly.getJobClient().getCluster(), 1000);
+			ClusterProfiler prof = new ClusterProfiler(
+					graphly.getJobClient().getCluster(), 1000);
 			prof.start();
-			Traversal tr = run.run(users, graph, mapper);
+
 			TraversalResult res = null;
-			if (this.start != null)
-				res = tr.submit(graphly.getJobClient().getCluster().getByName(this.start));
-			else
-				res = tr.exec();
-			long time = System.currentTimeMillis() - start;
-			prof.stop();
+			long time = 0;
+			try {
+				Traversal tr = run.run(users, graph, mapper);
+
+				if (this.start != null)
+					res = tr.submit(graphly.getJobClient().getCluster()
+							.getByName(this.start));
+				else
+					res = tr.exec();
+				time = System.currentTimeMillis() - start;
+			} finally {
+				prof.stop();
+				graphly.close();
+				server.stop();
+			}
+
 			if (print_res)
 				System.out.println(run.printResult(res, graph));
 
-			if (i > 0) {
-				expRes.addExperiment(time, prof.getNetworkConsumption(), prof.getMemoryConsumption());
+			if (PRINT_WHOLE_RESULTS) {
+				System.out.println(prof.print(ClusterProfiler.NET_EXTRACTOR));
+				System.out.println(
+						prof.print(ClusterProfiler.USED_MEM_EXTRACTOR));
 			}
-			graphly.close();
-			server.stop();
+
+			if (i > 0 || !RUN_FIRST) {
+				expRes.addExperiment(time, prof.getNetworkConsumption(),
+						prof.getMemoryConsumption());
+			}
+
 		}
 		return expRes;
 
 	}
 
-	public static ExperimentResult exec(int reps, long[] users, String graph, GraphlyServerFactory fact, GraphlyRun run,
-			boolean print_results, String startNode, Mapper mapper) throws Exception {
-		return new GraphlyExperiment(reps, users, run, fact, graph, print_results, startNode, mapper).execute();
+	public static ExperimentResult exec(int reps, long[] users, String graph,
+			GraphlyServerFactory fact, GraphlyRun run, boolean print_results,
+			String startNode, Mapper mapper) throws Exception {
+		return new GraphlyExperiment(reps, users, run, fact, graph,
+				print_results, startNode, mapper).execute();
 
 	}
 }

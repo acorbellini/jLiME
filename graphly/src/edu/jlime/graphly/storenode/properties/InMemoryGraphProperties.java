@@ -68,7 +68,7 @@ public class InMemoryGraphProperties implements Serializable {
 		return props.toString();
 	}
 
-	public Set<String> getProperties() {
+	public synchronized Set<String> getProperties() {
 		HashSet<String> ret = new HashSet<>();
 		for (Entry<String, Map<String, TLongObjectMap<Object>>> e : props
 				.entrySet()) {
@@ -84,7 +84,10 @@ public class InMemoryGraphProperties implements Serializable {
 		Map<String, TLongObjectMap<Object>> m = props.get(graph);
 		if (m == null)
 			return null;
-		return m.get(k);
+		TLongObjectMap<Object> map = m.get(k);
+		if (map != null)
+			return new TLongObjectHashMap<Object>(map);
+		return null;
 	}
 
 	public synchronized void putAll(String graph, String key,
@@ -93,5 +96,9 @@ public class InMemoryGraphProperties implements Serializable {
 		synchronized (p_key) {
 			p_key.putAll(value);
 		}
+	}
+
+	public void clear() {
+		props.clear();
 	}
 }

@@ -59,9 +59,9 @@ public class JobContainer implements Runnable, Serializable {
 				res = rJ.call(srv.getEnv().getClientEnv(rJ.getClient()), origin);
 				if (log.isDebugEnabled())
 					log.debug("Finished call to job " + jobID + " from " + origin);
-			} catch (Exception e) {
-				e.printStackTrace();
-				res = e;
+			} catch (Throwable e) {
+				log.error("", e);
+				res = new Exception("Exception calling job " + jobID + " from " + origin, e);
 			}
 			try {
 				if (!isNoresponse() || Exception.class.isAssignableFrom(res.getClass())) {

@@ -82,8 +82,9 @@ public class TypeConverters {
 		registerTypeConverter(float[].class, new FloatArrayConverter());
 
 		registerTypeConverter(double[].class, new DoubleArrayConverter());
-		
-		registerTypeConverter(TLongFloatHashMap.class, new TLongFloatMapConverter());
+
+		registerTypeConverter(TLongFloatHashMap.class,
+				new TLongFloatMapConverter());
 
 	}
 
@@ -107,7 +108,8 @@ public class TypeConverters {
 
 	Logger log = Logger.getLogger(TypeConverters.class);
 
-	public void objectToByteArray(Object o, ByteBuffer buffer, Peer client) throws Exception {
+	public void objectToByteArray(Object o, ByteBuffer buffer, Peer client)
+			throws Exception {
 		Class<?> classOfObject = o == null ? NullType.class : o.getClass();
 		// Default converter
 		TypeConverter converter = getTypeConverter(classOfObject);
@@ -131,12 +133,20 @@ public class TypeConverters {
 	}
 
 	public Object getObjectFromArray(ByteBuffer buff) throws Exception {
-		String type = buff.getString();
-		if (!convs.containsKey(type)) {
-			log.error("Converter for type " + type + " not found.");
+		String type = "";
+		try {
+			type = buff.getString();
+			if (!convs.containsKey(type)) {
+				log.error("Converter for type " + type + " not found.");
+			}
+			TypeConverter converter = convs.get(type);
+			return converter.fromArray(buff);
+		} catch (Exception e) {
+			throw new Exception(
+					"Exception getting object from array of bytes for type "
+							+ type,
+					e);
 		}
-		TypeConverter converter = convs.get(type);
-		return converter.fromArray(buff);
 	}
 
 	public void clear() {

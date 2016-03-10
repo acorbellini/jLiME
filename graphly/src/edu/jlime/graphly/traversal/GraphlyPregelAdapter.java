@@ -8,8 +8,6 @@ import org.apache.commons.lang3.NotImplementedException;
 import edu.jlime.graphly.client.Graph;
 import edu.jlime.pregel.client.GraphConnectionFactory;
 import edu.jlime.pregel.graph.rpc.PregelGraph;
-import edu.jlime.pregel.worker.LongIterator;
-import edu.jlime.pregel.worker.VertexList;
 import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.set.hash.TLongHashSet;
 
@@ -203,26 +201,13 @@ public class GraphlyPregelAdapter implements PregelGraph {
 	}
 
 	@Override
-	public void preload(VertexList remote) throws Exception {
-		TLongArrayList list = new TLongArrayList();
-		LongIterator it = remote.iterator();
-		while (it.hasNext()) {
-			long v = it.next();
-			list.add(v);
-		}
-
-		g.preload(list);
+	public void preload(TLongArrayList remote) throws Exception {
+		g.preload(remote);
 	}
 
 	@Override
-	public void flush(VertexList remote) throws Exception {
-		TLongArrayList list = new TLongArrayList();
-		LongIterator it = remote.iterator();
-		while (it.hasNext()) {
-			long v = it.next();
-			list.add(v);
-		}
-		g.flush(list);
+	public void flush(TLongArrayList remote) throws Exception {
+		g.flush(remote);
 	}
 
 }

@@ -2,13 +2,13 @@ package edu.jlime.pregel.mergers;
 
 import java.io.Serializable;
 
-import edu.jlime.pregel.queues.MessageQueueFactory;
+import gnu.trove.map.hash.TLongFloatHashMap;
+import gnu.trove.map.hash.TObjectFloatHashMap;
 
 public interface MessageMerger extends Serializable {
 
-	// public void merge(PregelMessage msg1, PregelMessage msg2, PregelMessage
-	// into);
+	void merge(long to, float curr, TLongFloatHashMap map);
 
-	MessageQueueFactory getFactory();
+	<T> void merge(T type, float val, TObjectFloatHashMap<T> broadcast);
 
 }

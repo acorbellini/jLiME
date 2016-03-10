@@ -5,7 +5,7 @@ import gnu.trove.iterator.TLongIterator;
 import gnu.trove.set.hash.TLongHashSet;
 
 public class JaccardAggregator implements SetAggregator {
-	TLongHashSet inter = new TLongHashSet();
+	TLongHashSet inter = null;
 	TLongHashSet union = new TLongHashSet();
 
 	@Override
@@ -23,7 +23,8 @@ public class JaccardAggregator implements SetAggregator {
 
 	@Override
 	public void merge(Aggregator value) {
-		addInter(((JaccardAggregator) value).inter);
+		if (inter != null)
+			addInter(((JaccardAggregator) value).inter);
 		addUnion(((JaccardAggregator) value).union);
 	}
 
@@ -32,8 +33,8 @@ public class JaccardAggregator implements SetAggregator {
 	}
 
 	private synchronized void addInter(TLongHashSet v) {
-		if (inter.isEmpty())
-			inter.addAll(v);
+		if (inter == null)
+			inter = new TLongHashSet(v);
 		else {
 			TLongIterator it = inter.iterator();
 			while (it.hasNext()) {
@@ -45,6 +46,8 @@ public class JaccardAggregator implements SetAggregator {
 
 	@Override
 	public float get() {
+		if (inter == null)
+			return 0f;
 		return inter.size() / (float) union.size();
 	}
 

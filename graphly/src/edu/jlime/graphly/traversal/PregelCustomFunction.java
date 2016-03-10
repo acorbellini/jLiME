@@ -23,7 +23,7 @@ public class PregelCustomFunction implements CustomFunction {
 	public PregelResult execute(TraversalResult before, Traversal tr) throws Exception {
 		TLongHashSet list = before.vertices();
 		Mapper mapper = (Mapper) tr.get("mapper");
-
+		
 		Graph g = tr.getGraph();
 
 		PregelConfig conf = config

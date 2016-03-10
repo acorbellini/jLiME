@@ -30,6 +30,7 @@ import edu.jlime.graphly.server.Coordinator;
 import edu.jlime.graphly.server.GraphlyCoordinatorBroadcast;
 import edu.jlime.graphly.server.GraphlyCoordinatorFactory;
 import edu.jlime.graphly.storenode.Count;
+import edu.jlime.graphly.storenode.rpc.AdjacencyData;
 import edu.jlime.graphly.storenode.rpc.StoreNode;
 import edu.jlime.graphly.storenode.rpc.StoreNodeBroadcast;
 import edu.jlime.graphly.storenode.rpc.StoreNodeFactory;
@@ -232,39 +233,32 @@ public class Graphly implements Closeable {
 
 		if (map.size() == 1) {
 			StoreNode node = map.entrySet().iterator().next().getKey();
-			try {
-				return node.getEdges(graph, dir, max_edges, vids);
-			} catch (Exception e1) {
-				e1.printStackTrace();
-			}
+			return node.getEdges(graph, dir, max_edges, vids);
 		}
 
 		final TLongHashSet ret = new TLongHashSet();
+
+		List<Future<Void>> futs = new ArrayList<>();
+
 		for (final Entry<StoreNode, TLongArrayList> e : map.entrySet()) {
-			svc.execute(new Runnable() {
+			futs.add(svc.submit(new Callable<Void>() {
 
 				@Override
-				public void run() {
-					try {
-						long[] edges = e.getKey().getEdges(graph, dir,
-								max_edges, e.getValue().toArray());
-						synchronized (ret) {
-							ret.addAll(edges);
-						}
-					} catch (Exception e) {
-						e.printStackTrace();
+				public Void call() throws Exception {
+					long[] edges = e.getKey().getEdges(graph, dir, max_edges,
+							e.getValue().toArray());
+					synchronized (ret) {
+						ret.addAll(edges);
 					}
+					return null;
 				}
-			});
+			}));
 
 		}
 		svc.shutdown();
-		try {
-			svc.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
-		} catch (InterruptedException e1) {
-			e1.printStackTrace();
+		for (Future<Void> future : futs) {
+			future.get();
 		}
-
 		return ret.toArray();
 	}
 
@@ -647,18 +641,21 @@ public class Graphly implements Closeable {
 		Map<StoreNode, TLongArrayList> map = hashKeys(v.keys());
 
 		if (map.size() == 1) {
-			map.keySet().iterator().next().setTempFloats(graph, k, add, v);
+			map.keySet().iterator().next().setTempFloats(graph, k, add,
+					v.keys(), v.values());
 		} else {
 
 			ExecutorService exec = Executors.newFixedThreadPool(
 					Runtime.getRuntime().availableProcessors());
 
+			List<Future<Void>> futures = new ArrayList<>();
+
 			for (final Entry<StoreNode, TLongArrayList> entry : map
 					.entrySet()) {
-				exec.execute(new Runnable() {
+				futures.add(exec.submit(new Callable<Void>() {
 
 					@Override
-					public void run() {
+					public Void call() throws Exception {
 
 						final StoreNode node = entry.getKey();
 						final long[] current = entry.getValue().toArray();
@@ -666,24 +663,19 @@ public class Graphly implements Closeable {
 						for (long l : current) {
 							subProp.put(l, v.get(l));
 						}
-						try {
-
-							System.out.println("Sending to " + node + " "
-									+ subProp.size() + " pairs.");
-							node.setTempFloats(graph, k, add, subProp);
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
+						System.out.println("Sending to " + node + " "
+								+ subProp.size() + " pairs.");
+						node.setTempFloats(graph, k, add, subProp.keys(),
+								subProp.values());
+						return null;
 					}
-				});
+				}));
 
 			}
 
 			exec.shutdown();
-			try {
-				exec.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
+			for (Future<Void> future : futures) {
+				future.get();
 			}
 		}
 
@@ -713,30 +705,30 @@ public class Graphly implements Closeable {
 
 		ExecutorService exec = Executors
 				.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+		List<Future<Void>> futures = new ArrayList<>();
 
 		for (final Entry<StoreNode, TLongArrayList> entry : map.entrySet()) {
 
-			exec.execute(new Runnable() {
+			futures.add(exec.submit(new Callable<Void>() {
 
 				@Override
-				public void run() {
+				public Void call() throws Exception {
 					final StoreNode node = entry.getKey();
 					final long[] current = entry.getValue().toArray();
 					TLongFloatMap subProp = new TLongFloatHashMap();
 					for (long l : current) {
 						subProp.put(l, auth2.get(l));
 					}
-					try {
-						node.setFloats(graph, k, subProp);
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
+					node.setFloats(graph, k, subProp);
+					return null;
 				}
-			});
+			}));
 
 		}
 		exec.shutdown();
-		exec.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
+		for (Future<Void> future : futures) {
+			future.get();
+		}
 	}
 
 	public void setProperty(String graph, TLongHashSet vertices, String k,
@@ -761,17 +753,17 @@ public class Graphly implements Closeable {
 		ExecutorService exec = Executors
 				.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
-		ArrayList<Future<Map<String, TLongObjectMap<Object>>>> futs = new ArrayList<>();
+		ArrayList<Future<Map<String, PropertyData>>> futs = new ArrayList<>();
 
 		for (final Entry<StoreNode, TLongArrayList> entry : div.entrySet()) {
-			Future<Map<String, TLongObjectMap<Object>>> res = exec.submit(
-					new Callable<Map<String, TLongObjectMap<Object>>>() {
+			Future<Map<String, PropertyData>> res = exec
+					.submit(new Callable<Map<String, PropertyData>>() {
 
 						@Override
-						public Map<String, TLongObjectMap<Object>> call()
+						public Map<String, PropertyData> call()
 								throws Exception {
-							Map<String, TLongObjectMap<Object>> remote = entry
-									.getKey().getAllProperties(graph, array);
+							Map<String, PropertyData> remote = entry.getKey()
+									.getAllProperties(graph, array);
 
 							return remote;
 						}
@@ -781,15 +773,18 @@ public class Graphly implements Closeable {
 		}
 		exec.shutdown();
 
-		for (Future<Map<String, TLongObjectMap<Object>>> future : futs) {
-			for (Entry<String, TLongObjectMap<Object>> e : future.get()
-					.entrySet()) {
+		for (Future<Map<String, PropertyData>> future : futs) {
+			for (Entry<String, PropertyData> e : future.get().entrySet()) {
 				TLongObjectMap<Object> sm = props.get(e.getKey());
+				PropertyData data = e.getValue();
+
 				if (sm == null) {
-					sm = e.getValue();
+					sm = new TLongObjectHashMap<>();
 					props.put(e.getKey(), sm);
-				} else
-					sm.putAll(e.getValue());
+				}
+				for (int i = 0; i < data.keys.length; i++) {
+					sm.put(data.keys[i], data.values[i]);
+				}
 			}
 		}
 
@@ -846,13 +841,13 @@ public class Graphly implements Closeable {
 		ExecutorService exec = Executors
 				.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
-		ArrayList<Future<TLongObjectMap<long[]>>> futs = new ArrayList<>();
+		ArrayList<Future<AdjacencyData>> futs = new ArrayList<>();
 
 		for (final Entry<StoreNode, TLongArrayList> entry : div.entrySet()) {
-			Future<TLongObjectMap<long[]>> res = exec
-					.submit(new Callable<TLongObjectMap<long[]>>() {
+			Future<AdjacencyData> res = exec
+					.submit(new Callable<AdjacencyData>() {
 						@Override
-						public TLongObjectMap<long[]> call() throws Exception {
+						public AdjacencyData call() throws Exception {
 							return entry.getKey().getAllEdges(graph,
 									entry.getValue(), dir);
 						}
@@ -860,9 +855,23 @@ public class Graphly implements Closeable {
 			futs.add(res);
 		}
 		exec.shutdown();
-		for (Future<TLongObjectMap<long[]>> future : futs)
-			ret.putAll(future.get());
+		for (Future<AdjacencyData> future : futs) {
+			AdjacencyData data = future.get();
+			for (int i = 0; i < data.keys.length; i++) {
+				ret.put(data.keys[i], data.values[i]);
+			}
+
+		}
 
 		return ret;
+	}
+
+	public StoreNode getLocalStore() {
+		return mgr.get(mgr.getLocalPeer());
+	}
+
+	public void createSubgraph(String from, String sg, long[] vids)
+			throws Exception {
+		mgr.broadcast().createSubgraph(from, sg, vids);
 	}
 }

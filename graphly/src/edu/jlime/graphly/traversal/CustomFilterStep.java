@@ -40,7 +40,7 @@ public class CustomFilterStep implements Step {
 
 		final List<Pair<Node, TLongArrayList>> mapped = map.map(Graphly.NUM_JOBS, before.vertices().toArray(), ctx);
 
-		ForkJoinTask<TLongHashSet> fj = new ForkJoinTask<>();
+		ForkJoinTask<long[]> fj = new ForkJoinTask<>();
 
 		if (mapped.size() == 1) {
 			fj.putJob(new FilterJob(tr.getGraph(), f, before.vertices().toArray()), mapped.get(0).left);
@@ -50,15 +50,16 @@ public class CustomFilterStep implements Step {
 			}
 		}
 
-		TLongHashSet ret = fj.execute(16, new ResultListener<TLongHashSet, TLongHashSet>() {
+		TLongHashSet ret = fj.execute(16, new ResultListener<long[], TLongHashSet>() {
 			final TLongHashSet temp = new TLongHashSet();
 
 			AtomicInteger jobCount = new AtomicInteger(mapped.size());
 
 			@Override
-			public void onSuccess(TLongHashSet subres) {
+			public void onSuccess(long[] subres) {
 				synchronized (temp) {
-					log.info("Received filter result, remaining " + jobCount.decrementAndGet() + " jobs.");
+					log.info("Received filter result of size " + subres.length + ", remaining "
+							+ jobCount.decrementAndGet() + " jobs.");
 					temp.addAll(subres);
 				}
 			}

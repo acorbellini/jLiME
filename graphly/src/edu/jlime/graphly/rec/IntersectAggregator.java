@@ -5,7 +5,7 @@ import gnu.trove.iterator.TLongIterator;
 import gnu.trove.set.hash.TLongHashSet;
 
 public class IntersectAggregator implements SetAggregator {
-	TLongHashSet set = new TLongHashSet();
+	TLongHashSet set = null;
 
 	@Override
 	public void superstep(int s) {
@@ -22,12 +22,13 @@ public class IntersectAggregator implements SetAggregator {
 
 	@Override
 	public void merge(Aggregator value) {
-		add(((IntersectAggregator) value).set);
+		if (set != null)
+			add(((IntersectAggregator) value).set);
 	}
 
-	public synchronized void add(TLongHashSet out) {
-		if (set.isEmpty())
-			set.addAll(out);
+	public void add(TLongHashSet out) {
+		if (set == null)
+			set = new TLongHashSet(out);
 		else {
 			TLongIterator it = set.iterator();
 			while (it.hasNext()) {
@@ -38,11 +39,13 @@ public class IntersectAggregator implements SetAggregator {
 	}
 
 	public TLongHashSet getSet() {
+		if (set == null)
+			return new TLongHashSet();
 		return set;
 	}
 
 	@Override
 	public float get() {
-		return set.size();
+		return set != null ? set.size() : 0f;
 	}
 }

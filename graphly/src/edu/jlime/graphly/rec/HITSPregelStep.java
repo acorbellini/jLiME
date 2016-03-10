@@ -5,7 +5,6 @@ import java.util.Set;
 import org.apache.log4j.Logger;
 
 import edu.jlime.graphly.client.Graph;
-import edu.jlime.graphly.jobs.MapperFactory;
 import edu.jlime.graphly.rec.CustomStep.CustomFunction;
 import edu.jlime.graphly.rec.hits.HITSPregel;
 import edu.jlime.graphly.rec.salsa.AuthHubResult;
@@ -38,12 +37,14 @@ public class HITSPregelStep implements CustomFunction {
 		TLongHashSet sg = before.vertices();
 
 		Logger log = Logger.getLogger(HITSPregel.class);
+		
 		PregelConfig config = PregelConfig.create().aggregator("hits-auth", MessageAggregators.floatSum())
 				.aggregator("hits-hub", MessageAggregators.floatSum()).merger("hits-auth", MessageMergers.floatSum())
 				.merger("hits-hub", MessageMergers.floatSum()).steps(steps).subgraph("hits-sg", sg);
 
 		Graph g = tr.getGraph();
-		g.v(sg).set("mapper", MapperFactory.location()).as(PregelTraversal.class)
+		
+		g.v(sg).set("mapper", tr.get("mapper")).as(PregelTraversal.class)
 				.vertexFunction(new HITSPregel(auth, hub), config).exec();
 
 		System.out.println(g.sumFloat(auth));

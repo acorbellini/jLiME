@@ -28,8 +28,14 @@ public class GraphlyLoader {
 		Integer serverInt = Integer.valueOf(servers);
 
 		Graphly graphly = Graphly.build(serverInt);
-
 		Graph g = graphly.getGraph(graph);
+
+		// GraphlyServer server = GraphlyServerFactory
+		// .loopback("D:/Graphly/konect").build();
+		// server.start();
+		// Graphly graphly = server.getGraphlyClient();
+
+		// Graph g = graphly.getGraph("konect");
 
 		if (action.equals("validate")) {
 			new GraphlyLoader(g).validate(fileIn, sep, Dir.IN);
@@ -40,6 +46,7 @@ public class GraphlyLoader {
 
 		}
 		graphly.close();
+		// server.stop();
 	}
 
 	private Graph g;
@@ -48,12 +55,14 @@ public class GraphlyLoader {
 		this.g = graphly;
 	}
 
-	public void validate(String file, String sep, final Dir dir) throws Exception, IOException {
+	public void validate(String file, String sep, final Dir dir)
+			throws Exception, IOException {
 		Iterator<Pair<Long, long[]>> adj = GraphlySintetic.read(file, sep);
 		int cont = 0;
 		int last = -1;
 		while (adj.hasNext()) {
-			Pair<java.lang.Long, long[]> pair = (Pair<java.lang.Long, long[]>) adj.next();
+			Pair<java.lang.Long, long[]> pair = (Pair<java.lang.Long, long[]>) adj
+					.next();
 
 			long[] value = pair.getValue();
 			if (value != null) {
@@ -70,7 +79,8 @@ public class GraphlyLoader {
 		}
 	}
 
-	public void load(String fname, String sep, final Dir dir) throws Exception, IOException, InterruptedException {
+	public void load(String fname, String sep, final Dir dir)
+			throws Exception, IOException, InterruptedException {
 		int cont = 0;
 		final AtomicInteger contProm = new AtomicInteger(0);
 		final AtomicLong sum = new AtomicLong(0);

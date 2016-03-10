@@ -12,10 +12,13 @@ import edu.jlime.graphly.traversal.ValueResult;
 import edu.jlime.util.Pair;
 
 public class Algorithms {
-	private static final int KATZ_DEPTH = 10;
+	private static final int HITS_STEPS = 10;
+	private static final int KATZ_DEPTH = 4;
+	private static final Dir KATZ_DIR = Dir.OUT;
 	private static final int FRIENDLINK_DEPTH = 4;
 	private static final int HITS_NEIGHBOURS = 10000;
-	private static final int SALSA_NEIGHBOURS = 1000000;
+	private static final int SALSA_NEIGHBOURS = 10000;
+	protected static final int CN_EXPANSION = 100000;
 
 	public static GraphlyRun ecHybrid() {
 		return new GraphlyRun("ecHybrid") {
@@ -39,7 +42,7 @@ public class Algorithms {
 			@Override
 			Traversal run(long[] users, Graph graph, Mapper mapper) throws Exception {
 				return graph.v(users).set("mapper", mapper).as(Recommendation.class)
-						.friendLinkFJ(10, FRIENDLINK_DEPTH, Dir.OUT).asTraversal();
+						.friendLinkFJ(10, FRIENDLINK_DEPTH, Dir.BOTH).asTraversal();
 			}
 
 			@Override
@@ -124,7 +127,8 @@ public class Algorithms {
 
 			@Override
 			Traversal run(long[] users, Graph graph, Mapper mapper) throws Exception {
-				return graph.v(users).set("mapper", mapper).as(Recommendation.class).adamicFJ().asTraversal();
+				return graph.v(users).set("mapper", mapper).expand(Dir.BOTH, CN_EXPANSION)
+						.expand(Dir.BOTH, CN_EXPANSION).as(Recommendation.class).adamicFJ().asTraversal();
 			}
 
 			@Override
@@ -141,7 +145,8 @@ public class Algorithms {
 
 			@Override
 			Traversal run(long[] users, Graph graph, Mapper mapper) throws Exception {
-				return graph.v(users).set("mapper", mapper).as(Recommendation.class).adamicPregel().asTraversal();
+				return graph.v(users).set("mapper", mapper).expand(Dir.BOTH, CN_EXPANSION)
+						.expand(Dir.BOTH, CN_EXPANSION).as(Recommendation.class).adamicPregel().asTraversal();
 			}
 
 			@Override
@@ -158,7 +163,8 @@ public class Algorithms {
 
 			@Override
 			Traversal run(long[] users, Graph graph, Mapper mapper) throws Exception {
-				return graph.v(users).set("mapper", mapper).as(Recommendation.class).jaccardFJ().asTraversal();
+				return graph.v(users).set("mapper", mapper).expand(Dir.BOTH, CN_EXPANSION)
+						.expand(Dir.BOTH, CN_EXPANSION).as(Recommendation.class).jaccardFJ().asTraversal();
 			}
 
 			@Override
@@ -175,7 +181,8 @@ public class Algorithms {
 
 			@Override
 			Traversal run(long[] users, Graph graph, Mapper mapper) throws Exception {
-				return graph.v(users).set("mapper", mapper).as(Recommendation.class).jaccardPregel().asTraversal();
+				return graph.v(users).set("mapper", mapper).expand(Dir.BOTH, CN_EXPANSION)
+						.expand(Dir.BOTH, CN_EXPANSION).as(Recommendation.class).jaccardPregel().asTraversal();
 			}
 
 			@Override
@@ -193,7 +200,7 @@ public class Algorithms {
 			@Override
 			Traversal run(long[] users, Graph graph, Mapper mapper) throws Exception {
 				return graph.v(users).set("mapper", mapper).as(Recommendation.class)
-						.katzFJ(0.0001f, KATZ_DEPTH, 10, Dir.OUT).asTraversal();
+						.katzFJ(0.0001f, KATZ_DEPTH, 10, KATZ_DIR).asTraversal();
 			}
 
 			@Override
@@ -211,7 +218,7 @@ public class Algorithms {
 			@Override
 			Traversal run(long[] users, Graph graph, Mapper mapper) throws Exception {
 				return graph.v(users).set("mapper", mapper).as(Recommendation.class)
-						.katz("katz", KATZ_DEPTH, 0.0001f, Dir.OUT).asTraversal();
+						.katz("katz", KATZ_DEPTH, 0.0001f, KATZ_DIR).asTraversal();
 			}
 
 			@Override
@@ -234,7 +241,8 @@ public class Algorithms {
 
 			@Override
 			Traversal run(long[] users, Graph graph, Mapper mapper) throws Exception {
-				return graph.v(users).set("mapper", mapper).as(Recommendation.class).commonFJ().asTraversal();
+				return graph.v(users).set("mapper", mapper).expand(Dir.BOTH, CN_EXPANSION)
+						.expand(Dir.BOTH, CN_EXPANSION).as(Recommendation.class).commonFJ().asTraversal();
 			}
 
 			@Override
@@ -251,7 +259,8 @@ public class Algorithms {
 
 			@Override
 			Traversal run(long[] users, Graph graph, Mapper mapper) throws Exception {
-				return graph.v(users).set("mapper", mapper).as(Recommendation.class).commonNeighboursPregel()
+				return graph.v(users).set("mapper", mapper).expand(Dir.BOTH, CN_EXPANSION)
+						.expand(Dir.BOTH, CN_EXPANSION).as(Recommendation.class).commonNeighboursPregel()
 						.asTraversal();
 			}
 
@@ -277,7 +286,7 @@ public class Algorithms {
 			@Override
 			Traversal run(long[] users, Graph graph, Mapper mapper) throws Exception {
 				return graph.v(users).set("mapper", mapper).expand(Dir.BOTH, HITS_NEIGHBOURS)
-						.expand(Dir.BOTH, HITS_NEIGHBOURS).as(Recommendation.class).hits(10, 10).asTraversal();
+						.expand(Dir.BOTH, HITS_NEIGHBOURS).as(Recommendation.class).hits(HITS_STEPS, 10).asTraversal();
 			}
 
 			@Override
@@ -298,7 +307,7 @@ public class Algorithms {
 			Traversal run(long[] users, Graph graph, Mapper mapper) throws Exception {
 				return graph.v(users).set("mapper", mapper).expand(Dir.BOTH, HITS_NEIGHBOURS)
 						.expand(Dir.BOTH, HITS_NEIGHBOURS).as(Recommendation.class)
-						.hitsPregel("hits-auth", "hits-hub", 10, 10).asTraversal();
+						.hitsPregel("hits-auth", "hits-hub", HITS_STEPS, 10).asTraversal();
 			}
 
 			@Override
@@ -428,7 +437,7 @@ public class Algorithms {
 			@Override
 			Traversal run(long[] users, Graph graph, Mapper mapper) throws Exception {
 				return graph.v(users).set("mapper", mapper).as(Recommendation.class)
-						.katzHybrid(0.0001f, KATZ_DEPTH, 10, Dir.OUT).asTraversal();
+						.katzHybrid(0.0001f, KATZ_DEPTH, 10, KATZ_DIR).asTraversal();
 			}
 
 			@Override
@@ -467,7 +476,7 @@ public class Algorithms {
 			Traversal run(long[] users, Graph graph, Mapper mapper) throws Exception {
 				return graph.v(users).set("mapper", mapper).expand(Dir.BOTH, HITS_NEIGHBOURS)
 						.expand(Dir.BOTH, HITS_NEIGHBOURS).as(Recommendation.class)
-						.hitsHybrid("hits-auth", "hits-hub", 10, 10).asTraversal();
+						.hitsHybrid("hits-auth", "hits-hub", HITS_STEPS, 10).asTraversal();
 			}
 
 			@Override

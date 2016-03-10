@@ -13,7 +13,7 @@ import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.job.Job;
 import gnu.trove.set.hash.TLongHashSet;
 
-public class FilterJob implements Job<TLongHashSet> {
+public class FilterJob implements Job<long[]> {
 
 	private Graph g;
 	private VertexFilter f;
@@ -26,7 +26,7 @@ public class FilterJob implements Job<TLongHashSet> {
 	}
 
 	@Override
-	public TLongHashSet call(JobContext env, Node peer) throws Exception {
+	public long[] call(JobContext env, Node peer) throws Exception {
 		ArrayList<Future<TLongHashSet>> futs = new ArrayList<>();
 		final int threads = Runtime.getRuntime().availableProcessors();
 		ExecutorService exec = Executors.newFixedThreadPool(threads);
@@ -55,6 +55,6 @@ public class FilterJob implements Job<TLongHashSet> {
 		for (Future<TLongHashSet> future : futs) {
 			ret.addAll(future.get());
 		}
-		return ret;
+		return ret.toArray();
 	}
 }

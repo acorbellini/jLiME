@@ -38,11 +38,13 @@ import com.google.common.collect.TreeMultimap;
 
 import edu.jlime.core.rpc.RPC;
 import edu.jlime.graphly.GraphlyConfig;
+import edu.jlime.graphly.client.PropertyData;
 import edu.jlime.graphly.rec.hits.DivideUpdateProperty;
 import edu.jlime.graphly.store.LocalStore;
 import edu.jlime.graphly.storenode.properties.InMemoryGraphDoubleProperties;
 import edu.jlime.graphly.storenode.properties.InMemoryGraphFloatProperties;
 import edu.jlime.graphly.storenode.properties.InMemoryGraphProperties;
+import edu.jlime.graphly.storenode.rpc.AdjacencyData;
 import edu.jlime.graphly.storenode.rpc.StoreNode;
 import edu.jlime.graphly.traversal.Dir;
 import edu.jlime.graphly.util.Gather;
@@ -63,6 +65,7 @@ import gnu.trove.set.hash.TLongHashSet;
 
 public class StoreNodeImpl implements StoreNode {
 
+	private static final long[] EMPTY_LONG_ARRAY = new long[] {};
 	private static final byte VERTEX = 0x0;
 	private static final byte ADJACENCY = 0x1;
 	private static final byte VERTEX_PROP = 0x2;
@@ -160,8 +163,7 @@ public class StoreNodeImpl implements StoreNode {
 			throws Exception {
 		long id = k;
 
-		if (type.equals(Dir.IN))
-			id = -id - 1;
+		id = getID(type, id);
 
 		store.store(buildAdjacencyKey(graph, id),
 				DataTypeUtils.longArrayToByteArray(list));
@@ -265,18 +267,20 @@ public class StoreNodeImpl implements StoreNode {
 	private long[] getEdges(String graph, Dir type, long id)
 			throws ExecutionException {
 		if (type.equals(Dir.BOTH)) {
-			long[] out = getEdges0(graph, id);
-			long[] in = getEdges0(graph, -id - 1);
+			long[] out = getEdges0(graph, getID(Dir.OUT, id));
+			long[] in = getEdges0(graph, getID(Dir.IN, id));
 			TLongHashSet list = new TLongHashSet(out.length + in.length);
 			list.addAll(out);
 			list.addAll(in);
 			return list.toArray();
 		}
+		return getEdges0(graph, getID(type, id));
+	}
 
+	private long getID(Dir type, long id) {
 		if (type.equals(Dir.IN))
-			id = -id - 1;
-
-		return getEdges0(graph, id);
+			return -id - 1;
+		return id;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -345,7 +349,7 @@ public class StoreNodeImpl implements StoreNode {
 
 	}
 
-	private long[] loadEdgesFromStore(final String graph, Long key) {
+	private long[] loadEdgesFromStore(final String graph, long key) {
 		byte[] array;
 		try {
 			array = store.load(buildAdjacencyKey(graph, key));
@@ -358,7 +362,7 @@ public class StoreNodeImpl implements StoreNode {
 			e.printStackTrace();
 
 		}
-		return new long[] {};
+		return EMPTY_LONG_ARRAY;
 	}
 
 	/*
@@ -439,7 +443,7 @@ public class StoreNodeImpl implements StoreNode {
 		log.info("Counting edges in dir " + dir + " with max " + max_edges
 				+ " and vertices " + keys.length + ".");
 
-		long[] toAdd = f == null ? new long[] {} : f;
+		long[] toAdd = f == null ? EMPTY_LONG_ARRAY : f;
 		final TLongHashSet toFilter = new TLongHashSet(toAdd);
 
 		long init = System.currentTimeMillis();
@@ -855,12 +859,12 @@ public class StoreNodeImpl implements StoreNode {
 	}
 
 	@Override
-	public void setTempFloats(String graph, String k, boolean add,
-			TLongFloatMap subProp) {
+	public void setTempFloats(String graph, String k, boolean add, long[] keys,
+			float[] values) {
 		if (add)
-			this.tempFloatProps.addAll(graph, k, subProp);
+			this.tempFloatProps.addAll(graph, k, keys, values);
 		else
-			this.tempFloatProps.putAll(graph, k, subProp);
+			this.tempFloatProps.putAll(graph, k, keys, values);
 	}
 
 	@Override
@@ -993,14 +997,16 @@ public class StoreNodeImpl implements StoreNode {
 	}
 
 	@Override
-	public Map<String, TLongObjectMap<Object>> getAllProperties(String graph,
+	public Map<String, PropertyData> getAllProperties(String graph,
 			long[] array) {
-		Map<String, TLongObjectMap<Object>> ret = new HashMap<>();
+		Map<String, PropertyData> ret = new HashMap<>();
 		for (String propKey : props.getProperties()) {
-			TLongObjectMap<Object> prop_map = props.get(graph, propKey);
-			if (prop_map != null) {
-				ret.put(propKey, prop_map);
+			TLongObjectMap<Object> tlo = new TLongObjectHashMap<>();
+			for (long l : array) {
+				tlo.put(l, props.get(graph, l, propKey));
 			}
+			PropertyData data = new PropertyData(tlo.keys(), tlo.values());
+			ret.put(propKey, data);
 		}
 		return ret;
 	}
@@ -1010,23 +1016,63 @@ public class StoreNodeImpl implements StoreNode {
 			long[] array) throws Exception {
 		Map<String, TLongFloatMap> ret = new HashMap<>();
 		for (String propKey : floatProps.getProperties()) {
-			TLongFloatMap prop_map = floatProps.getAll(graph, propKey);
-			if (prop_map != null) {				
-				ret.put(propKey, prop_map);
+			TLongFloatMap tlo = new TLongFloatHashMap();
+			for (long l : array) {
+				tlo.put(l, floatProps.get(graph, l, propKey));
 			}
+			ret.put(propKey, tlo);
 		}
 		return ret;
 	}
 
 	@Override
-	public TLongObjectMap<long[]> getAllEdges(String graph,
-			TLongArrayList value, Dir dir) throws Exception {
+	public AdjacencyData getAllEdges(String graph, TLongArrayList value,
+			Dir dir) throws Exception {
 		TLongObjectHashMap<long[]> ret = new TLongObjectHashMap<>();
 		TLongIterator it = value.iterator();
 		while (it.hasNext()) {
 			long v = it.next();
 			ret.put(v, getEdges(graph, dir, v));
 		}
-		return ret;
+		return new AdjacencyData(ret.keys(),
+				ret.values(new long[ret.size()][]));
 	}
+
+	public boolean containsVertex(String g, long v) throws Exception {
+		return store.containsKey(buildVertexKey(g, v));
+	}
+
+	@Override
+	public void createSubgraph(String graph, String sg, long[] vids)
+			throws Exception {
+		TLongHashSet sg_list = new TLongHashSet(vids);
+		for (long l : vids) {
+			if (containsVertex(graph, l)) {
+				{
+					long[] edges = getEdges(graph, Dir.IN, l, sg_list);
+					if (edges != null)
+						addEdges(sg, l, Dir.IN, edges);
+				}
+				{
+					long[] edges = getEdges(graph, Dir.OUT, l, sg_list);
+					if (edges != null)
+						addEdges(sg, l, Dir.OUT, edges);
+				}
+			}
+		}
+	}
+
+	private long[] getEdges(String g, Dir dir, long v, TLongHashSet vertices)
+			throws Exception {
+		long[] edges = getEdges(g, dir, v);
+		if (edges == null)
+			return null;
+		TLongHashSet ret = new TLongHashSet();
+		for (long l : edges) {
+			if (vertices.contains(l))
+				ret.add(l);
+		}
+		return ret.toArray();
+	}
+
 }

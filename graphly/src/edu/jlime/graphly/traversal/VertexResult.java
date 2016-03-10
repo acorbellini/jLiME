@@ -90,5 +90,4 @@ public class VertexResult extends TraversalResult {
 			ret.put(it.next(), 1);
 		return ret;
 	}
-
 }

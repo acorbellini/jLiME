@@ -1,11 +1,11 @@
 package edu.jlime.graphly.jobs;
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.TreeMap;
 
 import org.apache.log4j.Logger;
 
@@ -26,6 +26,10 @@ public class CriteriaMapper implements Mapper {
 
 	private static final int V_BUCKETS = 100;
 
+	private static final float MAX_THRES = 0.9f;
+
+	private static final float MIN_THRES = 0.5f;
+
 	Mapper location = MapperFactory.location();
 
 	private SysInfoFilter<Node> filter;
@@ -44,8 +48,7 @@ public class CriteriaMapper implements Mapper {
 	}
 
 	@Override
-	public List<Pair<Node, TLongArrayList>> map(int max, long[] data,
-			JobContext ctx) throws Exception {
+	public List<Pair<Node, TLongArrayList>> map(int max, long[] data, JobContext ctx) throws Exception {
 		HashMap<Node, TLongArrayList> div = new HashMap<Node, TLongArrayList>();
 		update(ctx);
 
@@ -82,8 +85,7 @@ public class CriteriaMapper implements Mapper {
 
 		HashMap<Node, Float> infoValues = filter.extract(info);
 		// if (log.isDebugEnabled())
-		log.info("Obtained Info for Criteria Mapper  : " + this + " - values "
-				+ infoValues);
+		log.info("Obtained Info for Criteria Mapper  : " + this + " - values " + infoValues);
 
 		// Normalize sum to [0,1)
 		float max = Float.MIN_VALUE;
@@ -96,18 +98,27 @@ public class CriteriaMapper implements Mapper {
 		float sum = 0;
 		for (Entry<Node, Float> entry : infoValues.entrySet()) {
 			float value = (float) entry.getValue() / max;
+			// Only use this node if higher than max thres.
+			if (value >= MAX_THRES)
+				value = 1f;
 			entry.setValue(value);
 			sum += value;
 		}
 
 		nodes = infoValues.keySet().toArray(new Node[] {});
+		Arrays.sort(nodes, new Comparator<Node>() {
+
+			@Override
+			public int compare(Node o1, Node o2) {
+				return o1.getName().compareTo(o2.getName());
+			}
+		});
 		probs = new HashMap<>();
 		pos = new HashMap<>();
 
 		for (int i = 0; i < nodes.length; i++)
 			pos.put(nodes[i], i);
 
-		nodes = infoValues.keySet().toArray(new Node[] {});
 		for (int j = 0; j < nodes.length; j++) {
 			float prob = infoValues.get(nodes[j]);
 			float diff = 1 - prob;
@@ -118,13 +129,22 @@ public class CriteriaMapper implements Mapper {
 			}
 
 			// Calculo probs para el actual
+			float acc_prob = 0f;
 			float[] probs = new float[nodes.length];
 			for (int i = 0; i < nodes.length; i++) {
 				if (i == j)
-					probs[i] = prob;
-				else if (diff > 0)
-					probs[i] = (infoValues.get(nodes[i]) / (sum - prob)) * diff;
+					probs[i] = prob; // The maximum prob.
+				else if (diff > 0) {
+					Float prob_nodei = infoValues.get(nodes[i]);
+					if (prob_nodei <= MIN_THRES)
+						probs[i] = 0f;
+					else
+						probs[i] = (prob_nodei / (sum - prob)) * diff;
+				}
+				acc_prob += probs[i];
 			}
+			for (int i = 0; i < probs.length; i++)
+				probs[i] /= acc_prob;
 
 			int acc = 0;
 			for (int i = 0; i < probs.length; i++) {
@@ -133,6 +153,8 @@ public class CriteriaMapper implements Mapper {
 				int to = 0;
 				if (i == probs.length - 1)
 					to = probsNode.length;
+				// else if (probability <= MIN_THRES)
+				// to = acc; // Ignore node if less than threshold
 				else
 					to = (int) (acc + V_BUCKETS * probability);
 
@@ -169,7 +191,7 @@ public class CriteriaMapper implements Mapper {
 	@Override
 	public Node getNode(long v, JobContext ctx) {
 		Node byLoc = location.getNode(v, ctx);
-		return probs.get(byLoc)[(int) ((v * PRIME) % V_BUCKETS)];
+		return probs.get(byLoc)[Math.abs((int) ((v * PRIME) % V_BUCKETS))];
 	}
 
 	@Override
@@ -181,58 +203,10 @@ public class CriteriaMapper implements Mapper {
 		return peers;
 	}
 
-	public static void main(String[] args) {
-		Map<String, Float> infoValues = new TreeMap<String, Float>();
-		infoValues.put("Node0", 5000f);
-		infoValues.put("Node1", 3500f);
-		infoValues.put("Node2", 500f);
-		infoValues.put("Node3", 250f);
-		infoValues.put("Node4", 100f);
-
-		float max = Float.MIN_VALUE;
-		for (Entry<String, Float> val : infoValues.entrySet()) {
-			if (val.getValue() > max)
-				max = val.getValue();
-		}
-
-		float sum = 0;
-
-		for (Entry<String, Float> entry : infoValues.entrySet()) {
-			float value = entry.getValue() / max;
-			entry.setValue(value);
-			sum += value;
-		}
-
-		float[][] probs = new float[infoValues.size()][];
-		String[] nodes = infoValues.keySet().toArray(new String[] {});
-		for (int j = 0; j < nodes.length; j++) {
-			float prob = infoValues.get(nodes[j]);
-			float diff = 1 - prob;
-			probs[j] = new float[nodes.length];
-			for (int i = 0; i < nodes.length; i++) {
-				if (i == j)
-					probs[j][i] = prob;
-				else if (diff > 0) {
-					probs[j][i] = (infoValues.get(nodes[i]) / (sum - prob))
-							* diff;
-				}
-			}
-		}
-
-		for (float[] fs : probs) {
-			System.out.println(Arrays.toString(fs));
-			float sumF = 0;
-			for (float f : fs) {
-				sumF += f;
-			}
-			System.out.println(sumF);
-		}
-	}
-
 	@Override
 	public int hash(long v, JobContext ctx) {
 		Node byLoc = location.getNode(v, ctx);
-		Node n = probs.get(byLoc)[(int) ((v * PRIME) % V_BUCKETS)];
+		Node n = probs.get(byLoc)[Math.abs((int) ((v * PRIME) % V_BUCKETS))];
 		return pos.get(n);
 	}
 }

@@ -1,16 +1,14 @@
 package edu.jlime.graphly.storenode.properties;
 
 import java.io.Serializable;
-import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import gnu.trove.iterator.TLongFloatIterator;
 import gnu.trove.map.TLongFloatMap;
-import gnu.trove.map.TLongObjectMap;
 import gnu.trove.map.hash.TLongFloatHashMap;
 
 public class InMemoryGraphFloatProperties implements Serializable {
@@ -142,5 +140,27 @@ public class InMemoryGraphFloatProperties implements Serializable {
 			return new TLongFloatHashMap(sub);
 		}
 
+	}
+
+	public void addAll(String graph, String key, long[] keys, float[] values) {
+		TLongFloatMap map = getGraphProps(graph, key);
+		synchronized (map) {
+			for (int i = 0; i < keys.length; i++) {
+				map.adjustOrPutValue(keys[i], values[i], values[i]);
+			}
+		}
+	}
+
+	public void putAll(String graph, String key, long[] keys, float[] values) {
+		TLongFloatMap map = getGraphProps(graph, key);
+		synchronized (map) {
+			for (int i = 0; i < keys.length; i++) {
+				map.put(keys[i], values[i]);
+			}
+		}
+	}
+
+	public void clear() {
+		props.clear();
 	}
 }

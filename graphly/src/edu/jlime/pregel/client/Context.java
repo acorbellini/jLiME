@@ -1,21 +1,35 @@
 package edu.jlime.pregel.client;
 
+import java.util.HashMap;
+import java.util.Map.Entry;
+
 import edu.jlime.pregel.PregelSubgraph;
 import edu.jlime.pregel.coordinator.Aggregator;
 import edu.jlime.pregel.graph.rpc.PregelGraph;
-import edu.jlime.pregel.worker.CacheManagerI;
 import edu.jlime.pregel.worker.WorkerTask;
+import edu.jlime.util.Pair;
+import gnu.trove.map.hash.TLongFloatHashMap;
+import gnu.trove.map.hash.TObjectFloatHashMap;
 
 public class Context {
 	private WorkerTask task;
 
-	private long v;
+	private HashMap<String, TLongFloatHashMap> result = new HashMap();
 
-	private CacheManagerI cache;
+	private TObjectFloatHashMap<String> broadcast = new TObjectFloatHashMap<>();
 
-	public Context(WorkerTask task, CacheManagerI cacheManager) {
+	private TObjectFloatHashMap<Pair<String, String>> sg_broadcast = new TObjectFloatHashMap<>();
+
+	private HashMap<String, Aggregator> aggregators = new HashMap<>();
+
+	private PregelConfig config;
+
+	public Context(WorkerTask task) {
 		this.task = task;
-		this.cache = cacheManager;
+		this.config = task.getConfig();
+		for (Entry<String, Aggregator> e : config.getAggregators().entrySet()) {
+			aggregators.put(e.getKey(), e.getValue().copy());
+		}
 	}
 
 	public PregelGraph getGraph() {
@@ -26,59 +40,39 @@ public class Context {
 		return task.getSuperStep();
 	};
 
-	public void send(String type, long to, Object curr) throws Exception {
-		// if (task.isLocal(to))
-		// task.outputObject(type, v, to, curr);
-		// else
-		cache.send(type, this.v, to, curr);
-	}
-
-	public void sendAll(String msgType, Object val) throws Exception {
-		cache.sendAll(msgType, this.v, val);
-	}
-
 	public void sendFloat(String type, long to, float curr) throws Exception {
-		// if (task.isLocal(to))
-		// task.outputFloat(type, v, to, curr);
-		// else
-		// cache.sendFloat(task.getWorker(to).getID(), type, this.v, to, curr);
-		cache.sendFloat(task.getWorkerID(to), type, this.v, to, curr);
+		TLongFloatHashMap map = result.get(type);
+		if (map == null) {
+			map = new TLongFloatHashMap();
+			result.put(type, map);
+		}
+		config.getMerger(type).merge(to, curr, map);
 	}
 
-	public void sendAllFloat(String msgType, float val) throws Exception {
-		cache.sendAllFloat(msgType, this.v, val);
-	}
-
-	public void sendAllDouble(String msgType, double val) throws Exception {
-		cache.sendAllDouble(msgType, this.v, val);
-	}
-
-	public void sendDouble(String type, long to, double val) throws Exception {
-		// if (task.isLocal(to))
-		// task.outputDouble(type, v, to, val);
-		// else
-		cache.sendDouble(type, this.v, to, val);
-	}
-
-	public void setCurrVertex(long currentVertex) {
-		this.v = currentVertex;
+	public void sendAllFloat(String type, float val) throws Exception {
+		config.getMerger(type).merge(type, val, broadcast);
 	}
 
 	public Aggregator getAggregator(String string) {
-		return task.getAggregator(string);
+		return aggregators.get(string);
 	}
 
 	public PregelSubgraph getSubGraph(String string) {
 		return task.getSubgraph(string);
 	}
 
-	public void sendAllSubGraph(String msgType, String subgraph, Object val)
-			throws Exception {
-		cache.sendAllSubGraph(msgType, subgraph, this.v, val);
-	}
-
 	public void sendAllFloatSubGraph(String msgType, String subgraph, float val)
 			throws Exception {
-		cache.sendAllFloatSubGraph(msgType, subgraph, this.v, val);
+		Pair<String, String> key = new Pair<String, String>(msgType, subgraph);
+		config.getMerger(msgType).merge(key, val, sg_broadcast);
+
+	}
+
+	public ContextResult getResult() {
+		return new ContextResult(result, broadcast, sg_broadcast, aggregators);
+	}
+
+	public HashMap<String, Aggregator> getAggregators() {
+		return aggregators;
 	}
 }

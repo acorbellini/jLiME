@@ -18,7 +18,6 @@ import edu.jlime.jd.client.JobContext;
 import edu.jlime.jd.task.ForkJoinTask;
 import edu.jlime.jd.task.ResultListener;
 import edu.jlime.util.Pair;
-import gnu.trove.iterator.TLongFloatIterator;
 import gnu.trove.iterator.TLongIterator;
 import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.map.hash.TLongFloatHashMap;
@@ -32,28 +31,34 @@ public class SalsaStep implements CustomFunction {
 	}
 
 	@Override
-	public TraversalResult execute(TraversalResult before, Traversal tr) throws Exception {
+	public TraversalResult execute(TraversalResult before, Traversal tr)
+			throws Exception {
 		final Logger log = Logger.getLogger(SalsaStep.class);
 
+		Dispatcher jobClient = tr.getGraph().getJobClient();
+
+		JobContext ctx = jobClient.getEnv()
+				.getClientEnv(jobClient.getLocalPeer());
+
 		TLongHashSet beforeSet = before.vertices();
+
 		log.info("Executing Salsa Step on " + beforeSet.size());
 
 		Graph g = tr.getGraph();
 
-		log.info("Filtering authority side");
-		TLongHashSet authSet = g.v(beforeSet).set("mapper", tr.get("mapper"))
-				.filter(new MinEdgeFilter(Dir.IN, 1, beforeSet)).exec().vertices();
-		log.info("Filtering hub side");
-		TLongHashSet hubSet = g.v(beforeSet).set("mapper", tr.get("mapper"))
-				.filter(new MinEdgeFilter(Dir.OUT, 1, beforeSet)).exec().vertices();
-
 		Mapper map = (Mapper) tr.get("mapper");
 
-		Dispatcher jobClient = tr.getGraph().getJobClient();
+		log.info("Filtering authority side");
+		TLongHashSet authSet = g.v(beforeSet).set("mapper", tr.get("mapper"))
+				.filter(new MinEdgeFilter(Dir.IN, 1, beforeSet)).exec()
+				.vertices();
+		log.info("Filtering hub side");
+		TLongHashSet hubSet = g.v(beforeSet).set("mapper", tr.get("mapper"))
+				.filter(new MinEdgeFilter(Dir.OUT, 1, beforeSet)).exec()
+				.vertices();
 
-		JobContext ctx = jobClient.getEnv().getClientEnv(jobClient.getLocalPeer());
-
-		log.info("Executing SalsaRepeat with hubset " + hubSet.size() + " and auth " + authSet.size());
+		log.info("Executing SalsaRepeat with hubset " + hubSet.size()
+				+ " and auth " + authSet.size());
 
 		final TLongFloatHashMap auth = new TLongFloatHashMap();
 		final TLongFloatHashMap hub = new TLongFloatHashMap();
@@ -75,12 +80,14 @@ public class SalsaStep implements CustomFunction {
 
 			log.info("Executing Step " + i);
 
-			final List<Pair<Node, TLongArrayList>> mapped = map.map(Graphly.NUM_JOBS, subgraph.toArray(), ctx);
+			final List<Pair<Node, TLongArrayList>> mapped = map
+					.map(Graphly.NUM_JOBS, subgraph.toArray(), ctx);
 
 			ForkJoinTask<AuthHubSubResult> fj = new ForkJoinTask<>();
 
 			for (Pair<Node, TLongArrayList> e : mapped)
-				fj.putJob(new SalsaJob(tr.getGraph(), auth, hub, i, subgraph, e.getValue()), e.getKey());
+				fj.putJob(new SalsaJob(tr.getGraph(), auth, hub, i, subgraph,
+						e.getValue()), e.getKey());
 			auth.clear();
 			hub.clear();
 			fj.execute(16, new ResultListener<AuthHubSubResult, Void>() {
@@ -89,17 +96,21 @@ public class SalsaStep implements CustomFunction {
 				public void onSuccess(AuthHubSubResult subres) {
 					log.info("Received subresult.");
 					synchronized (auth) {
-						TLongFloatIterator itAuth = subres.auth.iterator();
-						while (itAuth.hasNext()) {
-							itAuth.advance();
-							auth.adjustOrPutValue(itAuth.key(), itAuth.value(), itAuth.value());
+						long[] auth_sub = subres.auth;
+						float[] auth_sub_vals = subres.auth_vals;
+						for (int i = 0; i < auth_sub.length; i++) {
+							long key = auth_sub[i];
+							float value = auth_sub_vals[i];
+							auth.adjustOrPutValue(key, value, value);
 						}
 					}
 					synchronized (hub) {
-						TLongFloatIterator itHub = subres.hub.iterator();
-						while (itHub.hasNext()) {
-							itHub.advance();
-							hub.adjustOrPutValue(itHub.key(), itHub.value(), itHub.value());
+						long[] hub_sub = subres.hub;
+						float[] hub_sub_vals = subres.hub_vals;
+						for (int i = 0; i < hub_sub.length; i++) {
+							long key = hub_sub[i];
+							float value = hub_sub_vals[i];
+							hub.adjustOrPutValue(key, value, value);
 						}
 					}
 				}
@@ -114,13 +125,6 @@ public class SalsaStep implements CustomFunction {
 				}
 			});
 		}
-
-		// TLongIterator itResult = subgraph.iterator();
-		// while (itResult.hasNext()) {
-		// long v = itResult.next();
-		// g.setFloat(this.auth, auth);
-		// g.setFloat(this.hub, hub);
-		// }
 
 		return new AuthHubResult(auth, hub);
 	}

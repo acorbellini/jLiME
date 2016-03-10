@@ -53,9 +53,11 @@ public class CountStep implements Step {
 
 		Dispatcher jobClient = tr.getGraph().getJobClient();
 
-		JobContext ctx = jobClient.getEnv().getClientEnv(jobClient.getLocalPeer());
+		JobContext ctx = jobClient.getEnv()
+				.getClientEnv(jobClient.getLocalPeer());
 
-		final List<Pair<Node, TLongArrayList>> mapped = map.map(1, before.vertices().toArray(), ctx);
+		final List<Pair<Node, TLongArrayList>> mapped = map.map(1,
+				before.vertices().toArray(), ctx);
 
 		final ForkJoinTask<Count> fj = new ForkJoinTask<>();
 
@@ -68,17 +70,18 @@ public class CountStep implements Step {
 		final long[] filter = toFilter.toArray();
 		if (mapped.size() == 1) {
 			TLongFloatMap counts = before.getCounts();
-			fj.putJob(new CountJob(tr.getGraph(), dir, max_edges, counts.keys(), counts.values(), filter),
-					mapped.get(0).left);
+			fj.putJob(new CountJob(tr.getGraph(), dir, max_edges, counts.keys(),
+					counts.values(), filter), mapped.get(0).left);
 		} else {
-			ExecutorService exec = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+			ExecutorService exec = Executors.newFixedThreadPool(
+					Runtime.getRuntime().availableProcessors());
 
 			for (final Pair<Node, TLongArrayList> e : mapped) {
 				exec.execute(new Runnable() {
 					@Override
 					public void run() {
 						try {
-							TLongFloatHashMap prevCounts = new TLongFloatHashMap(100000);
+							TLongFloatHashMap prevCounts = new TLongFloatHashMap();
 
 							TLongArrayList value = e.getValue();
 							for (int i = 0; i < value.size(); i++) {
@@ -86,8 +89,11 @@ public class CountStep implements Step {
 								prevCounts.put(v, before.getCount(v));
 							}
 
-							fj.putJob(new CountJob(tr.getGraph(), dir, max_edges, prevCounts.keys(),
-									prevCounts.values(), filter), e.getKey());
+							fj.putJob(
+									new CountJob(tr.getGraph(), dir, max_edges,
+											prevCounts.keys(),
+											prevCounts.values(), filter),
+									e.getKey());
 
 						} catch (Exception e) {
 							e.printStackTrace();
@@ -99,46 +105,52 @@ public class CountStep implements Step {
 			exec.shutdown();
 			exec.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
 		}
-		log.info("Finished creating jobs in " + (System.currentTimeMillis() - init));
+		log.info("Finished creating jobs in "
+				+ (System.currentTimeMillis() - init));
 		init = System.currentTimeMillis();
-		TLongFloatMap finalRes = fj.execute(JOBS, new ResultListener<Count, TLongFloatMap>() {
-			TLongFloatMap temp = null;
+		TLongFloatMap finalRes = fj.execute(JOBS,
+				new ResultListener<Count, TLongFloatMap>() {
+					TLongFloatMap temp = null;
 
-			@Override
-			public void onSuccess(Count gc) {
+					@Override
+					public void onSuccess(Count gc) throws Exception {
 
-				log.info("Received result with " + gc.size() + " vertices.");
-				long init = System.currentTimeMillis();
-				synchronized (this) {
-					if (temp == null)
-						temp = new TLongFloatHashMap(gc.keys(), gc.values());
-					else {
-						TLongFloatIterator it = gc.iterator();
+						log.info("Received result with " + gc.size()
+								+ " vertices.");
+						long init = System.currentTimeMillis();
+						synchronized (this) {
+							if (temp == null)
+								temp = new TLongFloatHashMap(gc.keys(),
+										gc.values());
+							else {
+								TLongFloatIterator it = gc.iterator();
 
-						while (it.hasNext()) {
-							it.advance();
-							long key = it.key();
-							float value = it.value();
-							temp.adjustOrPutValue(key, value, value);
+								while (it.hasNext()) {
+									it.advance();
+									long key = it.key();
+									float value = it.value();
+									temp.adjustOrPutValue(key, value, value);
+								}
+							}
 						}
+						log.info("Finished adding to result in "
+								+ (System.currentTimeMillis() - init));
+
 					}
-				}
-				log.info("Finished adding to result in " + (System.currentTimeMillis() - init));
 
-			}
+					@Override
+					public TLongFloatMap onFinished() {
+						log.info("Finished count task.");
+						return temp;
+					}
 
-			@Override
-			public TLongFloatMap onFinished() {
-				log.info("Finished count task.");
-				return temp;
-			}
+					@Override
+					public void onFailure(Exception res) {
+					}
+				});
 
-			@Override
-			public void onFailure(Exception res) {
-			}
-		});
-
-		log.info("Finished Count Step in " + (System.currentTimeMillis() - init) + " ms");
+		log.info("Finished Count Step in " + (System.currentTimeMillis() - init)
+				+ " ms");
 		return new CountResult(finalRes);
 	}
 

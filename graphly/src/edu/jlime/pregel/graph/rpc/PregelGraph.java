@@ -6,7 +6,7 @@ import java.util.Set;
 
 import edu.jlime.core.rpc.Sync;
 import edu.jlime.graphly.traversal.Dir;
-import edu.jlime.pregel.worker.VertexList;
+import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.set.hash.TLongHashSet;
 
 public interface PregelGraph extends Serializable {
@@ -98,9 +98,9 @@ public interface PregelGraph extends Serializable {
 	public abstract boolean isLocal(long v) throws Exception;
 
 	@Sync
-	public abstract void preload(VertexList remote) throws Exception;
+	public abstract void preload(TLongArrayList remote) throws Exception;
 
 	@Sync
-	public abstract void flush(VertexList remote) throws Exception;
+	public abstract void flush(TLongArrayList remote) throws Exception;
 
 }

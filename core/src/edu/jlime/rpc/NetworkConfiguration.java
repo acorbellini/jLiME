@@ -96,7 +96,7 @@ public class NetworkConfiguration {
 		this.disc_delay = config.getInt("disco.delay", 1000);
 
 		this.max_pings = config.getInt("fd.max_pings", 60);
-		this.ping_delay = config.getInt("fd.ping_delay", 1000);
+		this.ping_delay = config.getInt("fd.ping_delay", 5000);
 
 		this.udp_threads = config.getInt("udp.threads", 1);
 

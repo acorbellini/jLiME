@@ -30,8 +30,6 @@ public class PregelConfig implements Serializable {
 
 	private int cacheSize = Integer.MAX_VALUE;
 
-	private CacheFactory cacheFactory = CacheFactory.SIMPLE;
-
 	private HashMap<String, TLongHashSet> sg = new HashMap<>();
 
 	private boolean parallelcache = true;
@@ -174,15 +172,6 @@ public class PregelConfig implements Serializable {
 
 	public HaltCondition getHaltCondition() {
 		return condition;
-	}
-
-	public CacheFactory getCacheFactory() {
-		return cacheFactory;
-	}
-
-	public PregelConfig cache(CacheFactory cf) {
-		cacheFactory = cf;
-		return this;
 	}
 
 	public PregelConfig subgraph(String name, TLongHashSet all) {

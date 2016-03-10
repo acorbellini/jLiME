@@ -47,10 +47,11 @@ public class MetricList implements Iterable<MetricListItem> {
 			String val = k;
 			if (k.contains("."))
 				val = k.substring(k.lastIndexOf(".") + 1, k.length());
-			String[] split = prefix.split("|");
+			String[] split = prefix.split("\\|");
 			for (String pre : split) {
-				if (val.startsWith(pre))
+				if (val.startsWith(pre)) {
 					return new MetricListItem(k, metrics);
+				}
 			}
 
 		}

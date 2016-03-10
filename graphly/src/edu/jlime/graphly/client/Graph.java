@@ -5,6 +5,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
+
 import edu.jlime.core.rpc.RPC;
 import edu.jlime.core.rpc.Transferible;
 import edu.jlime.graphly.rec.hits.DivideUpdateProperty;
@@ -19,6 +21,7 @@ import edu.jlime.graphly.util.TopGatherer;
 import edu.jlime.jd.Dispatcher;
 import edu.jlime.pregel.client.Pregel;
 import edu.jlime.util.Pair;
+import gnu.trove.iterator.TLongObjectIterator;
 import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.map.TLongFloatMap;
 import gnu.trove.map.TLongObjectMap;
@@ -27,15 +30,16 @@ import gnu.trove.set.hash.TLongHashSet;
 
 public class Graph implements Transferible {
 
-	private static final float PRELOAD_BATCH = 1000f;
+	private static final int PRELOAD_BATCH = 10000;
+	private static final long[] EMPTY_LONG_ARRAY = new long[] {};
 	private String graph;
 	private transient Graphly graphly;
 
-	private InMemoryGraphProperties props = new InMemoryGraphProperties();
-	private InMemoryGraphFloatProperties floatProps = new InMemoryGraphFloatProperties();
-	private TLongHashSet preloaded = new TLongHashSet();
-	private TLongObjectMap<long[]> adjacencyIn = new TLongObjectHashMap<>();
-	private TLongObjectMap<long[]> adjacencyOut = new TLongObjectHashMap<>();
+	private transient TLongHashSet preloaded = new TLongHashSet();
+	private transient TLongObjectMap<long[]> adjacencyIn = new TLongObjectHashMap<>();
+	private transient TLongObjectMap<long[]> adjacencyOut = new TLongObjectHashMap<>();
+	private transient InMemoryGraphProperties props = new InMemoryGraphProperties();
+	private transient InMemoryGraphFloatProperties floatProps = new InMemoryGraphFloatProperties();
 
 	public Graph(Graphly graphly, String graphName) {
 		this.graph = graphName;
@@ -65,36 +69,62 @@ public class Graph implements Transferible {
 	}
 
 	public long[] getEdges(Dir dir, long... vids) throws Exception {
-		if (vids.length == 1 && preloaded.contains(vids[0]))
-			return dir == Dir.IN ? adjacencyIn.get(vids[0])
-					: adjacencyOut.get(vids[0]);
-		boolean hasPre = false;
-		for (long v : vids)
-			if (preloaded.contains(v)) {
-				hasPre = true;
-				break;
-			}
-		if (!hasPre)
-			return graphly.getEdges(graph, dir, vids);
-		else {
-
-			TLongHashSet ret = new TLongHashSet();
-			TLongHashSet local = new TLongHashSet();
-			for (long v : vids) {
-				if (preloaded.contains(v))
-					ret.addAll(dir == Dir.IN ? adjacencyIn.get(v)
-							: adjacencyOut.get(v));
-				else
-					local.add(v);
-			}
-			ret.addAll(graphly.getEdges(graph, dir, local.toArray()));
-			return ret.toArray();
-		}
+		return getEdgesMax(dir, Integer.MAX_VALUE, vids);
 	}
 
 	public long[] getEdgesMax(final Dir dir, final int max_edges, long... vids)
 			throws Exception {
-		return graphly.getEdgesMax(graph, dir, max_edges, vids);
+		if (preloaded != null && preloaded.isEmpty())
+			return graphly.getEdgesMax(graph, dir, max_edges, vids);
+		long[] ret = null;
+		if (vids.length == 1 && preloaded != null
+				&& preloaded.contains(vids[0])) {
+			ret = getPreloaded(dir, vids[0], max_edges);
+		} else {
+			TLongHashSet remote = new TLongHashSet();
+			TLongHashSet local = new TLongHashSet();
+			for (long v : vids) {
+				if (preloaded != null && preloaded.contains(v))
+					local.add(v);
+				else
+					remote.add(v);
+			}
+			TLongHashSet aux = new TLongHashSet();
+			for (long l : local.toArray()) {
+				aux.addAll(getPreloaded(dir, l, max_edges));
+			}
+			aux.addAll(graphly.getEdgesMax(graph, dir, max_edges,
+					remote.toArray()));
+			ret = aux.toArray();
+		}
+		if (ret == null)
+			ret = EMPTY_LONG_ARRAY;
+
+		return ret;
+	}
+
+	private long[] getPreloaded(final Dir dir, long v, int max_edges) {
+		long[] ret = null;
+		if (dir.equals(Dir.BOTH)) {
+			long[] out = adjacencyOut.get(v);
+			long[] in = adjacencyIn.get(v);
+			if (out == null)
+				ret = in;
+			else if (in == null)
+				ret = out;
+			else {
+				TLongHashSet list = new TLongHashSet(out.length + in.length);
+				list.addAll(out);
+				list.addAll(in);
+				ret = list.toArray();
+			}
+		} else if (dir.equals(Dir.IN)) {
+			ret = adjacencyIn.get(v);
+		} else
+			ret = adjacencyOut.get(v);
+		if (ret != null && ret.length > max_edges)
+			ret = Arrays.copyOfRange(ret, 0, max_edges);
+		return ret;
 	}
 
 	public void addEdges(long vid, Dir dir, long[] dests) throws Exception {
@@ -113,7 +143,7 @@ public class Graph implements Transferible {
 	}
 
 	public Object getProperty(String key, long vid) throws Exception {
-		if (preloaded.contains(vid))
+		if (preloaded != null && preloaded.contains(vid))
 			return props.get(graph, vid, key);
 		return graphly.getProperty(graph, key, vid);
 	}
@@ -124,7 +154,7 @@ public class Graph implements Transferible {
 	}
 
 	public void setProperty(long vid, String k, Object v) throws Exception {
-		if (preloaded.contains(vid))
+		if (preloaded != null && preloaded.contains(vid))
 			props.put(graph, vid, k, v);
 		else
 			graphly.setProperty(graph, vid, k, v);
@@ -158,7 +188,7 @@ public class Graph implements Transferible {
 
 	public long[] getEdgesFiltered(Dir in, long vid, TLongHashSet all)
 			throws Exception {
-		if (preloaded.contains(vid)) {
+		if (preloaded != null && preloaded.contains(vid)) {
 			long[] edges = getEdges(in, vid);
 
 			if (edges != null)
@@ -255,13 +285,13 @@ public class Graph implements Transferible {
 	}
 
 	public float getFloat(long v, String k) throws Exception {
-		if (preloaded.contains(v))
+		if (preloaded != null && preloaded.contains(v))
 			return floatProps.get(graph, v, k);
 		return this.graphly.getFloat(graph, v, k);
 	}
 
 	public void setFloat(long v, String k, float currentVal) throws Exception {
-		if (preloaded.contains(v))
+		if (preloaded != null && preloaded.contains(v))
 			floatProps.put(graph, v, k, currentVal);
 		else
 			this.graphly.setFloat(graph, v, k, currentVal);
@@ -325,7 +355,6 @@ public class Graph implements Transferible {
 
 	public void commitFloatUpdates(String... props) throws Exception {
 		this.graphly.commitFloatUpdates(graph, props);
-
 	}
 
 	public void updateFloatProperty(String prop, DivideUpdateProperty upd)
@@ -333,8 +362,14 @@ public class Graph implements Transferible {
 		this.graphly.updateFloatProperty(graph, prop, upd);
 	}
 
-	public float getFloat(long in, String hubKey, float alt) throws Exception {
-		return this.graphly.getFloat(graph, in, hubKey, alt);
+	public float getFloat(long v, String k, float alt) throws Exception {
+		if (preloaded != null && preloaded.contains(v)) {
+			float res = floatProps.get(graph, v, k);
+			if (res == InMemoryGraphFloatProperties.VALUE_NOT_FOUND)
+				res = alt;
+			return res;
+		}
+		return this.graphly.getFloat(graph, v, k, alt);
 	}
 
 	public void setFloat(String k, TLongFloatMap auth2) throws Exception {
@@ -356,82 +391,105 @@ public class Graph implements Transferible {
 	}
 
 	public void preload(TLongArrayList list) throws Exception {
-		this.preloaded = new TLongHashSet(list);
-		long[] array = list.toArray();
+		preloaded = new TLongHashSet();
+		adjacencyIn = new TLongObjectHashMap<>();
+		adjacencyOut = new TLongObjectHashMap<>();
+		props = new InMemoryGraphProperties();
+		floatProps = new InMemoryGraphFloatProperties();
 		{
+			Logger.getLogger(Graph.class).info("Loading object properties");
 			props = new InMemoryGraphProperties();
 			int from = 0;
 			int to = 0;
-			int section = (int) Math.ceil(array.length / PRELOAD_BATCH);
+			int section = (int) Math.ceil(list.size() / (float) PRELOAD_BATCH);
 			for (int i = 0; i < section; i++) {
 				if (i == section - 1)
-					to = array.length;
+					to = list.size();
 				else
-					to = (i + 1) * section;
-				from = i * section;
+					to = (i + 1) * PRELOAD_BATCH;
+				from = i * PRELOAD_BATCH;
 				Map<String, TLongObjectMap<Object>> map = graphly
 						.getAllProperties(graph,
-								Arrays.copyOfRange(array, from, to));
+								list.subList(from, to).toArray());
 				for (Entry<String, TLongObjectMap<Object>> e : map.entrySet()) {
 					props.putAll(graph, e.getKey(), e.getValue());
 				}
 
 			}
+			Logger.getLogger(Graph.class)
+					.info("Finished loading " + list.size() + " properties.");
 
 		}
+
 		{
+			Logger.getLogger(Graph.class).info("Loading float properties");
 			floatProps = new InMemoryGraphFloatProperties();
 
 			int from = 0;
 			int to = 0;
-			int section = (int) Math.ceil(array.length / PRELOAD_BATCH);
+			int section = (int) Math.ceil(list.size() / (float) PRELOAD_BATCH);
 			for (int i = 0; i < section; i++) {
 				if (i == section - 1)
-					to = array.length;
+					to = list.size();
 				else
-					to = (i + 1) * section;
-				from = i * section;
+					to = (i + 1) * PRELOAD_BATCH;
+				from = i * PRELOAD_BATCH;
 
 				Map<String, TLongFloatMap> map = graphly.getAllFloatProperties(
-						graph, Arrays.copyOfRange(array, from, to));
+						graph, list.subList(from, to).toArray());
 				for (Entry<String, TLongFloatMap> e : map.entrySet()) {
 					floatProps.putAll(graph, e.getKey(), e.getValue());
 				}
 			}
+			Logger.getLogger(Graph.class)
+					.info("Finished loading " + list.size() + " properties.");
 		}
 
 		{
 			// if (!adjacencyLoaded) {
-			long[] toLoad = null;
-			if (adjacencyIn.isEmpty() && adjacencyOut.isEmpty())
-				toLoad = array;
-			else {
-				TLongArrayList curr = new TLongArrayList();
-				for (long v : array) {
-					if (!adjacencyIn.containsKey(v)
-							|| !adjacencyOut.containsKey(v))
-						curr.add(v);
-				}
-				toLoad = curr.toArray();
-			}
-			if (toLoad.length > 0) {
+			if (list.size() > 0) {
+				Logger.getLogger(Graph.class).info(
+						"Loading adjacency of " + list.size() + " vertices.");
+
 				int from = 0;
 				int to = 0;
-				int section = (int) Math.ceil(toLoad.length / PRELOAD_BATCH);
+				int section = (int) Math
+						.ceil(list.size() / (float) PRELOAD_BATCH);
 				for (int i = 0; i < section; i++) {
 					if (i == section - 1)
-						to = toLoad.length;
+						to = list.size();
 					else
-						to = (i + 1) * section;
-					from = i * section;
+						to = (i + 1) * PRELOAD_BATCH;
+					from = i * PRELOAD_BATCH;
 
-					adjacencyIn.putAll(graphly.getAllEdges(graph,
-							Arrays.copyOfRange(toLoad, from, to), Dir.IN));
-					adjacencyOut.putAll(graphly.getAllEdges(graph,
-							Arrays.copyOfRange(toLoad, from, to), Dir.OUT));
+					long[] request = list.subList(from, to).toArray();
+
+					{
+						TLongObjectMap<long[]> inedges = graphly
+								.getAllEdges(graph, request, Dir.IN);
+						TLongObjectIterator<long[]> it = inedges.iterator();
+						while (it.hasNext()) {
+							it.advance();
+							adjacencyIn.put(it.key(), it.value());
+						}
+					}
+					{
+						TLongObjectMap<long[]> outedges = graphly
+								.getAllEdges(graph, request, Dir.OUT);
+						TLongObjectIterator<long[]> itOut = outedges.iterator();
+						while (itOut.hasNext()) {
+							itOut.advance();
+							adjacencyOut.put(itOut.key(), itOut.value());
+						}
+					}
 				}
-			}
+				Logger.getLogger(Graph.class)
+						.info("Finshed loading adjacency.");
+			} else
+				Logger.getLogger(Graph.class).info("All vertices preloaded.");
 		}
+
+		this.preloaded.addAll(list);
 
 	}
 
@@ -444,4 +502,10 @@ public class Graph implements Transferible {
 			setFloat(k, floatProps.getAll(graph, k));
 		}
 	}
+
+	public Graph createSubgraph(String string, long[] vids) throws Exception {
+		graphly.createSubgraph(graph, string, vids);
+		return graphly.getGraph(string);
+	}
+
 }

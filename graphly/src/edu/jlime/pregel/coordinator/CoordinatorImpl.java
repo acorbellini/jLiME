@@ -22,7 +22,8 @@ public class CoordinatorImpl implements Coordinator {
 
 	private RPC rpc;
 
-	public CoordinatorImpl(RPC rpc, Client<Worker, WorkerBroadcast> workers) throws Exception {
+	public CoordinatorImpl(RPC rpc, Client<Worker, WorkerBroadcast> workers)
+			throws Exception {
 		this.rpc = rpc;
 	}
 
@@ -31,29 +32,41 @@ public class CoordinatorImpl implements Coordinator {
 	}
 
 	@Override
-	public void finished(int taskID, UUID workerID, Boolean didWork, Map<String, Aggregator> ags) throws Exception {
+	public void finished(int taskID, UUID workerID, Boolean didWork,
+			Map<String, Aggregator> ags) throws Exception {
 		tasks.get(taskID).finished(workerID, didWork, ags);
 	}
 
 	@Override
-	public PregelExecution execute(VertexFunction func, long[] vList, PregelConfig config, Peer client)
-			throws Exception {
+	public PregelExecution execute(VertexFunction func, long[] vList,
+			PregelConfig config, Peer client) throws Exception {
 		// int taskID = taskCount.getAndIncrement();
 
 		int taskID = 0;
 		CoordinatorTask task = null;
 		synchronized (tasks) {
 			taskID = tasks.size();
-			task = new CoordinatorTask(taskID, rpc, config.getAggregators(), client);
+			task = new CoordinatorTask(taskID, rpc, config.getAggregators(),
+					client);
 			tasks.add(task);
 
 		}
-		PregelExecution ret = task.execute(func, vList, config);
+		PregelExecution ret;
+		try {
+			ret = task.execute(func, vList, config);
+		} catch (Exception e) {
+			throw new Exception("Coordinator Task Exception", e);
+		}
 
 		tasks.set(taskID, null);
 
 		return ret;
 
+	}
+
+	@Override
+	public void error(Exception e, int taskid, UUID id) throws Exception {
+		tasks.get(taskid).error(id, e);
 	}
 
 	// @Override

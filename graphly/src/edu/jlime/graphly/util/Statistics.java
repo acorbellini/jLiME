@@ -5,9 +5,6 @@ import java.io.FileWriter;
 
 import edu.jlime.graphly.client.Graph;
 import edu.jlime.graphly.server.GraphlyServer;
-import edu.jlime.graphly.traversal.Dir;
-import gnu.trove.iterator.TLongIntIterator;
-import gnu.trove.map.hash.TLongIntHashMap;
 
 public class Statistics {
 	public static void main(String[] args) throws Exception {

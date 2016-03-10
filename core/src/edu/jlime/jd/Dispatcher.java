@@ -352,8 +352,8 @@ public class Dispatcher implements ClusterChangeListener, JobExecutor {
 		try {
 			ResultManager manager = jobMap.get(jobID);
 			if (manager == null) {
-				if (Exception.class.isAssignableFrom(res.getClass()))
-					log.error("Received asynchronous exception from " + req, (Exception) res);
+				if (Throwable.class.isAssignableFrom(res.getClass()))
+					log.error("Received asynchronous exception from " + req, (Throwable) res);
 				else
 					log.info("Result was not expected from job " + jobID + " from server " + req);
 			} else {

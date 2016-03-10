@@ -14,7 +14,6 @@ public class MinEdgeFilter implements VertexFilter {
 		this.dir = dir;
 		this.min = min;
 		this.at = amongThese;
-		// Arrays.sort(at);
 	}
 
 	@Override

@@ -29,4 +29,9 @@ public class MapperFactory {
 	public static Mapper hybrid(float[] divs, Mapper... mappers) {
 		return new HybridMapper(mappers, divs);
 	}
+
+	public static Mapper logcriteria(String string, boolean b) {
+		return new CriteriaMapper(
+				new LogFilter<>(new SimpleInfoFilter<Node>(string), false), b);
+	}
 }

@@ -1,6 +1,8 @@
 package edu.jlime.graphly.jobs;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 
@@ -16,23 +18,22 @@ import gnu.trove.list.array.TLongArrayList;
 //Simple Round Robin
 
 public class RoundRobinMapper implements Mapper {
+	private static final int PRIME = 1;
 
 	private static final long serialVersionUID = -2914997038447380314L;
 	private Node[] nodes;
 
 	@Override
-	public List<Pair<Node, TLongArrayList>> map(int max, long[] data,
-			JobContext ctx) throws Exception {
+	public List<Pair<Node, TLongArrayList>> map(int max, long[] data, JobContext ctx) throws Exception {
 		Logger log = Logger.getLogger(RoundRobinMapper.class);
 		HashMap<Node, TLongArrayList> div = new HashMap<Node, TLongArrayList>();
 
-		ArrayList<Node> serverList = ctx.getCluster().getExecutors();
-		if (log.isDebugEnabled())
-			log.debug("Mapping " + data.length + " between " + serverList);
-		int count = 0;
+		update(ctx);
+
+		// if (log.isDebugEnabled())
+		log.info("Mapping " + data.length + " between " + nodes.length);
 		for (long i : data) {
-			Node p = serverList.get(count);
-			count = (count + 1) % serverList.size();
+			Node p = getNode(i, ctx);
 			TLongArrayList uList = div.get(p);
 			if (uList == null) {
 				uList = new TLongArrayList();
@@ -40,8 +41,8 @@ public class RoundRobinMapper implements Mapper {
 			}
 			uList.add(i);
 		}
-		if (log.isDebugEnabled())
-			log.debug("Resulting list (size " + div.size() + ")");
+		// if (log.isDebugEnabled())
+		log.info("Resulting list (size " + div.size() + ")");
 		return GraphlyUtil.divide(div, max);
 	}
 
@@ -58,6 +59,13 @@ public class RoundRobinMapper implements Mapper {
 	@Override
 	public void update(JobContext ctx) throws Exception {
 		ArrayList<Node> exec = ctx.getCluster().getExecutors();
+		Collections.sort(exec, new Comparator<Node>() {
+
+			@Override
+			public int compare(Node o1, Node o2) {
+				return o1.getName().compareTo(o2.getName());
+			}
+		});
 		nodes = new Node[exec.size()];
 		int i = 0;
 		for (Node clientNode : exec) {
@@ -83,6 +91,6 @@ public class RoundRobinMapper implements Mapper {
 
 	@Override
 	public int hash(long v, JobContext ctx) {
-		return (int) (v % nodes.length);
+		return Math.abs((int) ((v * PRIME) % nodes.length));
 	}
 }

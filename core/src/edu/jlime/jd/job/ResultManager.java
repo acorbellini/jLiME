@@ -39,7 +39,7 @@ public abstract class ResultManager<R> {
 		int current_remaining = remainingResults.decrementAndGet();
 
 		if (current_remaining < 0) {
-			if (res != null && Exception.class.isAssignableFrom(res.getClass()))
+			if (res != null && Throwable.class.isAssignableFrom(res.getClass()))
 				log.error("Unexpected exception from job " + jobID + " from server " + req, (Throwable) res);
 			else if (log.isDebugEnabled())
 				log.debug("Received result, but remaining result count is 0 for " + jobID + " from server " + req);

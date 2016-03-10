@@ -12,13 +12,11 @@ import edu.jlime.graphly.jobs.MapperFactory;
 import edu.jlime.graphly.rec.KatzPregel;
 import edu.jlime.graphly.server.GraphlyServer;
 import edu.jlime.graphly.traversal.PregelTraversal;
-import edu.jlime.pregel.client.CacheFactory;
 import edu.jlime.pregel.client.PregelConfig;
 import edu.jlime.pregel.functions.PageRankFloat.PageRankHaltCondition;
 import edu.jlime.pregel.mergers.MessageMergers;
 import gnu.trove.iterator.TLongFloatIterator;
 import gnu.trove.map.TLongFloatMap;
-import gnu.trove.map.hash.TLongFloatHashMap;
 
 public class KatzTest {
 	public static void main(String[] args) throws Exception {
@@ -50,7 +48,6 @@ public class KatzTest {
 										0.000001f, "katz"))
 								.steps(50).persistVList(false)
 								.executeOnAll(true).cacheSize(100)
-								.cache(CacheFactory.NO_CACHE)
 								.aggregator("katz",
 										MessageAggregators.floatSum())
 						.merger("katz", MessageMergers.floatSum()))

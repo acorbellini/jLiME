@@ -20,6 +20,8 @@ import java.util.TreeMap;
 import edu.jlime.jd.ClientCluster;
 import edu.jlime.jd.Node;
 import edu.jlime.metrics.metric.CompositeMetrics;
+import edu.jlime.metrics.metric.Metric;
+import edu.jlime.metrics.metric.MetricListItem;
 import edu.jlime.metrics.metric.Metrics;
 import edu.jlime.util.CSV;
 
@@ -30,10 +32,29 @@ public class ClusterProfiler implements Profiler {
 		public int compare(Node o1, Node o2) {
 			int comp = o1.getName().compareTo(o2.getName());
 			if (comp == 0)
-				comp = o1.getPeer().getAddress().compareTo(o2.getPeer().getAddress());
+				comp = o1.getPeer().getAddress()
+						.compareTo(o2.getPeer().getAddress());
 			return comp;
 		}
 	}
+
+	public static final MetricExtractor<Float> NET_EXTRACTOR = new MetricExtractor<Float>() {
+		@Override
+		public Float get(Metrics m) {
+			MetricListItem findFirst = m.list("sysinfo.net")
+					.findFirst("eth|p7p1|p4p1");
+			Metric<?> metric = findFirst.get("sent_total");
+			return Float.valueOf(metric.get());
+		}
+	};
+
+	public static final MetricExtractor<Float> USED_MEM_EXTRACTOR = new MetricExtractor<Float>() {
+
+		@Override
+		public Float get(Metrics m) {
+			return Float.valueOf(m.get("jvminfo.mem.used").get());
+		}
+	};
 
 	public static final String SEP = ",";
 
@@ -149,7 +170,8 @@ public class ClusterProfiler implements Profiler {
 	}
 
 	public static void main(String[] args) {
-		System.out.println(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Calendar.getInstance().getTime()));
+		System.out.println(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+				.format(Calendar.getInstance().getTime()));
 	}
 
 	public String print(MetricExtractor ext) {
@@ -169,8 +191,11 @@ public class ClusterProfiler implements Profiler {
 	 * ProfilerFunctionPerNode, edu.jlime.jd.profiler.MetricExtractor)
 	 */
 	@Override
-	public <T> Map<Node, T> calcPerNode(ProfilerFunctionPerNode<T> profilerFunction, MetricExtractor<T> ext) {
-		Map<Node, TreeMap<Date, T>> toCalc = new TreeMap<>(new NodeComparator());
+	public <T> Map<Node, T> calcPerNode(
+			ProfilerFunctionPerNode<T> profilerFunction,
+			MetricExtractor<T> ext) {
+		Map<Node, TreeMap<Date, T>> toCalc = new TreeMap<>(
+				new NodeComparator());
 		for (Entry<Date, CompositeMetrics<Node>> e : info.entrySet()) {
 			CompositeMetrics<Node> composite = e.getValue();
 			for (Node clientNode : composite.getKeys()) {
@@ -184,7 +209,8 @@ public class ClusterProfiler implements Profiler {
 		}
 		TreeMap<Node, T> ret = new TreeMap<>(new NodeComparator());
 		for (Entry<Node, TreeMap<Date, T>> toCalcEntry : toCalc.entrySet()) {
-			ret.put(toCalcEntry.getKey(), profilerFunction.call(toCalcEntry.getValue()));
+			ret.put(toCalcEntry.getKey(),
+					profilerFunction.call(toCalcEntry.getValue()));
 		}
 		return ret;
 
@@ -197,7 +223,9 @@ public class ClusterProfiler implements Profiler {
 	 * ProfilerFunctionPerDate, edu.jlime.jd.profiler.MetricExtractor)
 	 */
 	@Override
-	public <T> Map<Date, T> calcPerDate(ProfilerFunctionPerDate<T> profilerFunction, MetricExtractor<T> ext) {
+	public <T> Map<Date, T> calcPerDate(
+			ProfilerFunctionPerDate<T> profilerFunction,
+			MetricExtractor<T> ext) {
 		Map<Date, TreeMap<Node, T>> toCalc = new TreeMap<>();
 
 		for (Entry<Date, CompositeMetrics<Node>> e : info.entrySet()) {
@@ -213,26 +241,26 @@ public class ClusterProfiler implements Profiler {
 		}
 		Map<Date, T> ret = new TreeMap<>();
 		for (Entry<Date, TreeMap<Node, T>> toCalcEntry : toCalc.entrySet()) {
-			ret.put(toCalcEntry.getKey(), profilerFunction.call(toCalcEntry.getValue()));
+			ret.put(toCalcEntry.getKey(),
+					profilerFunction.call(toCalcEntry.getValue()));
 		}
 		return ret;
 	}
 
 	public float getNetworkConsumption() {
-		Map<Node, Float> diffs = calcPerNode(new ProfilerFunctionPerNode<Float>() {
 
-			@Override
-			public Float call(TreeMap<Date, Float> value) {
-				Float first = Float.valueOf(value.firstEntry().getValue());
-				Float last = Float.valueOf(value.lastEntry().getValue());
-				return last - first;
-			}
-		}, new MetricExtractor<Float>() {
-			@Override
-			public Float get(Metrics m) {
-				return Float.valueOf(m.list("sysinfo.net").findFirst("eth|p7p1").get("sent_total").get());
-			}
-		});
+		Map<Node, Float> diffs = calcPerNode(
+				new ProfilerFunctionPerNode<Float>() {
+
+					@Override
+					public Float call(TreeMap<Date, Float> value) {
+						Float first = Float
+								.valueOf(value.firstEntry().getValue());
+						Float last = Float
+								.valueOf(value.lastEntry().getValue());
+						return last - first;
+					}
+				}, NET_EXTRACTOR);
 		float netSum = 0f;
 		for (Entry<Node, Float> netentry : diffs.entrySet()) {
 			netSum += netentry.getValue();
@@ -241,23 +269,19 @@ public class ClusterProfiler implements Profiler {
 	}
 
 	public float getMemoryConsumption() {
-		Map<Date, Float> memSums = calcPerDate(new ProfilerFunctionPerDate<Float>() {
 
-			@Override
-			public Float call(TreeMap<Node, Float> value) {
-				float sum = 0f;
-				for (Entry<Node, Float> e : value.entrySet()) {
-					sum += Float.valueOf(e.getValue());
-				}
-				return sum;
-			}
-		}, new MetricExtractor<Float>() {
+		Map<Date, Float> memSums = calcPerDate(
+				new ProfilerFunctionPerDate<Float>() {
 
-			@Override
-			public Float get(Metrics m) {
-				return Float.valueOf(m.get("jvminfo.mem.used").get());
-			}
-		});
+					@Override
+					public Float call(TreeMap<Node, Float> value) {
+						float sum = 0f;
+						for (Entry<Node, Float> e : value.entrySet()) {
+							sum += Float.valueOf(e.getValue());
+						}
+						return sum;
+					}
+				}, USED_MEM_EXTRACTOR);
 
 		float memMax = 0f;
 		for (Entry<Date, Float> memEntry : memSums.entrySet()) {

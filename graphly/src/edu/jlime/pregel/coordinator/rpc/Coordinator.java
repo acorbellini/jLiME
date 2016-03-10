@@ -18,4 +18,6 @@ public interface Coordinator {
 	@Sync
 	public PregelExecution execute(VertexFunction<?> f, long[] vList, PregelConfig conf, Peer client) throws Exception;
 
+	public void error(Exception e, int taskid, UUID id) throws Exception;;
+
 }

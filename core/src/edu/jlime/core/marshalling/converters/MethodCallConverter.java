@@ -23,7 +23,8 @@ public class MethodCallConverter implements TypeConverter {
 	}
 
 	@Override
-	public void toArray(Object o, ByteBuffer buff, Peer cliID) throws Exception {
+	public void toArray(Object o, ByteBuffer buff, Peer cliID)
+			throws Exception {
 		MethodCall mc = (MethodCall) o;
 		buff.putString(mc.getName());
 		buff.putString(mc.getObjectKey());
@@ -42,13 +43,19 @@ public class MethodCallConverter implements TypeConverter {
 
 	@Override
 	public Object fromArray(ByteBuffer buff) throws Exception {
-		List<Object> objects = new ArrayList<>();
-		List<Class<?>> types = new ArrayList<>();
-		String name = buff.getString();
-		String k = buff.getString();
-		int num = buff.getInt();
-		for (int j = 0; j < num; j++)
-			objects.add(this.typeConverters.getObjectFromArray(buff));
-		return new MethodCall(k, name, objects.toArray());
+		String name = "";
+		String k = "";
+		try {
+			List<Object> objects = new ArrayList<>();
+			name = buff.getString();
+			k = buff.getString();
+			int num = buff.getInt();
+			for (int j = 0; j < num; j++)
+				objects.add(this.typeConverters.getObjectFromArray(buff));
+			return new MethodCall(k, name, objects.toArray());
+		} catch (Exception e) {
+			throw new Exception("Exception converting method call: name=" + name
+					+ " k=" + k, e);
+		}
 	}
 }
