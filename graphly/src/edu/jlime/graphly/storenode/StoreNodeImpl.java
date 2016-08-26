@@ -85,16 +85,13 @@ public class StoreNodeImpl implements StoreNode {
 
 	private LocalStore store;
 
-	Cache<String, Boolean> graph_cache = CacheBuilder.newBuilder()
-			.maximumSize(100).build();
+	Cache<String, Boolean> graph_cache = CacheBuilder.newBuilder().maximumSize(100).build();
 
 	ConcurrentHashMap<String, LoadingCache<Long, long[]>> adj_cache = new ConcurrentHashMap<>();
 
-	Cache<Long, Boolean> vertex_cache = CacheBuilder.newBuilder()
-			.maximumSize(1000).build();
+	Cache<Long, Boolean> vertex_cache = CacheBuilder.newBuilder().maximumSize(1000).build();
 
-	Cache<String, Integer> size_cache = CacheBuilder.newBuilder()
-			.maximumSize(1000).build();
+	Cache<String, Integer> size_cache = CacheBuilder.newBuilder().maximumSize(1000).build();
 
 	private File localRanges;
 	private List<Integer> ranges = new ArrayList<>();
@@ -108,8 +105,7 @@ public class StoreNodeImpl implements StoreNode {
 
 	// Store store;
 
-	public StoreNodeImpl(String localpath, GraphlyConfig config, RPC rpc)
-			throws IOException {
+	public StoreNodeImpl(String localpath, GraphlyConfig config, RPC rpc) throws IOException {
 
 		this.config = config;
 
@@ -125,15 +121,13 @@ public class StoreNodeImpl implements StoreNode {
 		prop.load(new FileReader(localRanges));
 		String rangeString = prop.getProperty("ranges");
 		if (rangeString != null && !rangeString.isEmpty()) {
-			rangeString = rangeString.replaceAll("\\[", "")
-					.replaceAll("\\s", "").replaceAll("\\]", "");
+			rangeString = rangeString.replaceAll("\\[", "").replaceAll("\\s", "").replaceAll("\\]", "");
 			for (String rangeVal : rangeString.split(",")) {
 				ranges.add(Integer.valueOf(rangeVal));
 			}
 		}
 		// this.graph = Neo4jGraph.open(localpath + "/neo4j");
-		this.store = new LocalStore(localpath, config.storeCache,
-				config.storePool);
+		this.store = new LocalStore(localpath, config.storeCache, config.storePool);
 	}
 
 	@Override
@@ -159,14 +153,12 @@ public class StoreNodeImpl implements StoreNode {
 	 * adjacencygraph.get.GetType, java.lang.Long, long[])
 	 */
 	@Override
-	public void addEdges(String graph, long k, Dir type, long[] list)
-			throws Exception {
+	public void addEdges(String graph, long k, Dir type, long[] list) throws Exception {
 		long id = k;
 
 		id = getID(type, id);
 
-		store.store(buildAdjacencyKey(graph, id),
-				DataTypeUtils.longArrayToByteArray(list));
+		store.store(buildAdjacencyKey(graph, id), DataTypeUtils.longArrayToByteArray(list));
 
 		addVertex(graph, k, "");
 
@@ -223,8 +215,7 @@ public class StoreNodeImpl implements StoreNode {
 		return buff.build();
 	}
 
-	private static byte[] buildVertexPropertyKey(String graph, long id,
-			String key) {
+	private static byte[] buildVertexPropertyKey(String graph, long id, String key) {
 		byte[] b = key.getBytes();
 		ByteBuffer buff = new ByteBuffer(1 + 8 + b.length);
 		buff.put(VERTEX_PROP);
@@ -241,8 +232,7 @@ public class StoreNodeImpl implements StoreNode {
 	 * adjacencygraph.get.GetType, java.lang.Long)
 	 */
 	@Override
-	public long[] getEdges(String graph, Dir type, int max_edges, long[] id)
-			throws ExecutionException {
+	public long[] getEdges(String graph, Dir type, int max_edges, long[] id) throws ExecutionException {
 		if (id.length == 1) {
 			long[] edges = getEdges(graph, type, id[0]);
 			if (edges.length > max_edges && max_edges > 0)
@@ -264,8 +254,7 @@ public class StoreNodeImpl implements StoreNode {
 
 	}
 
-	private long[] getEdges(String graph, Dir type, long id)
-			throws ExecutionException {
+	private long[] getEdges(String graph, Dir type, long id) throws ExecutionException {
 		if (type.equals(Dir.BOTH)) {
 			long[] out = getEdges0(graph, getID(Dir.OUT, id));
 			long[] in = getEdges0(graph, getID(Dir.IN, id));
@@ -284,8 +273,7 @@ public class StoreNodeImpl implements StoreNode {
 	}
 
 	@SuppressWarnings("unchecked")
-	private long[] getEdges0(final String graph, long id)
-			throws ExecutionException {
+	private long[] getEdges0(final String graph, long id) throws ExecutionException {
 		if (config.edgeCacheType.equals("no-cache"))
 			return loadEdgesFromStore(graph, id);
 
@@ -301,21 +289,19 @@ public class StoreNodeImpl implements StoreNode {
 					@SuppressWarnings("rawtypes")
 					CacheBuilder builder = CacheBuilder.newBuilder();
 					if (config.edgeCacheType.equals("mem-based")) {
-						long size = (long) (Runtime.getRuntime().maxMemory()
-								* config.cacheSize);
-						builder = builder.maximumWeight(size)
-								.weigher(new Weigher<Long, long[]>() {
+						long size = (long) (Runtime.getRuntime().maxMemory() * config.cacheSize);
+						builder = builder.maximumWeight(size).weigher(new Weigher<Long, long[]>() {
 
-									@Override
-									public int weigh(Long key, long[] value) {
-										// Es lo que más ocupa en un heap
-										// dump=>
-										// 68
-										// de softEntry y 68 de weightedEntry
-										return 68 + 68 + 24 // size of Long
-												+ 24 + value.length * 8;
-									}
-								}).softValues();
+							@Override
+							public int weigh(Long key, long[] value) {
+								// Es lo que más ocupa en un heap
+								// dump=>
+								// 68
+								// de softEntry y 68 de weightedEntry
+								return 68 + 68 + 24 // size of Long
+										+ 24 + value.length * 8;
+							}
+						}).softValues();
 					} else if (config.edgeCacheType.equals("fixed-size")) {
 						builder = builder.maximumSize(config.cacheLength);
 					}
@@ -354,8 +340,7 @@ public class StoreNodeImpl implements StoreNode {
 		try {
 			array = store.load(buildAdjacencyKey(graph, key));
 			if (array != null) {
-				long[] byteArrayToLongArray = DataTypeUtils
-						.byteArrayToLongArray(array);
+				long[] byteArrayToLongArray = DataTypeUtils.byteArrayToLongArray(array);
 				return byteArrayToLongArray;
 			}
 		} catch (Exception e) {
@@ -372,9 +357,17 @@ public class StoreNodeImpl implements StoreNode {
 	 * java.lang.String, java.lang.Object)
 	 */
 	@Override
-	public void setProperty(String graph, long vid, String k, Object val)
-			throws Exception {
-		props.put(graph, vid, k, val);
+	public void setProperty(String graph, long vid, String k, Object val) throws Exception {
+		if (config.persistObjects) {
+			byte[] key = buildVertexPropertyKey(graph, vid, k);
+			ByteBuffer buffer = new ByteBuffer();
+			buffer.putObject(val);
+			byte[] data = buffer.build();
+			store.store(key, data);
+		} else {
+			props.put(graph, vid, k, val);
+		}
+
 	}
 
 	/*
@@ -384,31 +377,40 @@ public class StoreNodeImpl implements StoreNode {
 	 * java.lang.String)
 	 */
 	@Override
-	public Object getProperty(String graph, long vid, String k)
-			throws Exception {
-		Object ret = props.get(graph, vid, k);
+	public Object getProperty(String graph, long vid, String k) throws Exception {
+		Object ret = null;
+		if (config.persistObjects) {
+			byte[] key = buildVertexPropertyKey(graph, vid, k);
+			byte[] data = store.load(key);
+			if (data != null)
+				ret = new ByteBuffer(data).getObject();
+		} else {
+			ret = props.get(graph, vid, k);
+		}
 		if (ret == null)
 			ret = getDefault(graph, k);
 		return ret;
 	}
 
 	@Override
-	public void addVertex(final String graph, final long id, String label)
-			throws Exception {
+	public void addVertex(final String graph, final long id, final String label) throws Exception {
 		vertex_cache.get(id, new Callable<Boolean>() {
 			@Override
 			public Boolean call() throws Exception {
 				byte[] vk = buildVertexKey(graph, id);
 				if (store.load(vk) == null) {
-					store.store(vk, DataTypeUtils.longToByteArray(id));
+					byte[] labelAsBytes = label.getBytes();
+					byte[] vertexData = new byte[8 + labelAsBytes.length];
+					DataTypeUtils.longToByteArray(id, vertexData, 0);
+					System.arraycopy(labelAsBytes, 0, vertexData, 8, labelAsBytes.length);
+					store.store(vk, vertexData);
 					synchronized (store) {
 						byte[] buildCountKey = buildCountKey(graph);
 						byte[] intBytes = store.load(buildCountKey);
 						int toStore = 0;
 						if (intBytes != null)
 							toStore = DataTypeUtils.byteArrayToInt(intBytes);
-						store.store(buildCountKey,
-								DataTypeUtils.intToByteArray(toStore + 1));
+						store.store(buildCountKey, DataTypeUtils.intToByteArray(toStore + 1));
 					}
 
 				}
@@ -423,8 +425,35 @@ public class StoreNodeImpl implements StoreNode {
 	}
 
 	@Override
-	public void addEdge(String graph, long orig, long dest, String label,
-			Object[] keyValues) throws Exception {
+	public void addEdge(String graph, long orig, long dest, String label, Object[] keyValues) throws Exception {
+
+		{
+			long innerID = getID(Dir.OUT, orig);
+			byte[] k = buildAdjacencyKey(graph, innerID);
+			long[] adj = getEdges(graph, Dir.OUT, orig);
+			if (Arrays.binarySearch(adj, dest) < 0) {
+				adj = Arrays.copyOf(adj, adj.length + 1);
+				adj[adj.length - 1] = dest;
+				Arrays.sort(adj);
+				store.store(k, DataTypeUtils.longArrayToByteArray(adj));
+			}
+		}
+
+		{
+			long innerID = getID(Dir.IN, dest);
+			byte[] k = buildAdjacencyKey(graph, innerID);
+			long[] adj = getEdges(graph, Dir.IN, dest);
+			if (Arrays.binarySearch(adj, orig) < 0) {
+				adj = Arrays.copyOf(adj, adj.length + 1);
+				adj[adj.length - 1] = orig;
+				Arrays.sort(adj);
+				store.store(k, DataTypeUtils.longArrayToByteArray(adj));
+			}
+		}
+
+		// addVertex(graph, orig, "");
+		// addVertex(graph, dest, "");
+		// addGraph(graph);
 	}
 
 	@Override
@@ -432,16 +461,13 @@ public class StoreNodeImpl implements StoreNode {
 	}
 
 	@Override
-	public void addInEdgePlaceholder(String graph, long id2, long id,
-			String label) throws Exception {
+	public void addInEdgePlaceholder(String graph, long id2, long id, String label) throws Exception {
 	}
 
 	@Override
-	public Count countEdges(final String graph, final Dir dir,
-			final int max_edges, final long[] keys, final float[] values,
-			final long[] f) throws Exception {
-		log.info("Counting edges in dir " + dir + " with max " + max_edges
-				+ " and vertices " + keys.length + ".");
+	public Count countEdges(final String graph, final Dir dir, final int max_edges, final long[] keys,
+			final float[] values, final long[] f) throws Exception {
+		log.info("Counting edges in dir " + dir + " with max " + max_edges + " and vertices " + keys.length + ".");
 
 		long[] toAdd = f == null ? EMPTY_LONG_ARRAY : f;
 		final TLongHashSet toFilter = new TLongHashSet(toAdd);
@@ -477,18 +503,15 @@ public class StoreNodeImpl implements StoreNode {
 						cont++;
 						long[] curr = null;
 						try {
-							curr = getEdges(graph, dir, max_edges,
-									new long[] { l });
+							curr = getEdges(graph, dir, max_edges, new long[] { l });
 						} catch (ExecutionException e1) {
 							e1.printStackTrace();
 						}
 						if (curr.length > 500000) {
 							synchronized (finalResult) {
 								for (long m : curr)
-									if (toFilter == null
-											|| !toFilter.contains(m))
-										finalResult.adjustOrPutValue(m, mult,
-												mult);
+									if (toFilter == null || !toFilter.contains(m))
+										finalResult.adjustOrPutValue(m, mult, mult);
 							}
 						} else {
 							for (long m : curr)
@@ -505,12 +528,10 @@ public class StoreNodeImpl implements StoreNode {
 						TLongFloatIterator itMap = map.iterator();
 						while (itMap.hasNext()) {
 							itMap.advance();
-							finalResult.adjustOrPutValue(itMap.key(),
-									itMap.value(), itMap.value());
+							finalResult.adjustOrPutValue(itMap.key(), itMap.value(), itMap.value());
 						}
 					}
-					log.info("Finished adding results to final result in "
-							+ (System.currentTimeMillis() - initAdd));
+					log.info("Finished adding results to final result in " + (System.currentTimeMillis() - initAdd));
 				}
 			});
 		}
@@ -519,17 +540,14 @@ public class StoreNodeImpl implements StoreNode {
 		exec.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
 
 		Count c = new Count(finalResult.keys(), finalResult.values());
-		log.info("Finished count of " + keys.length
-				+ " (different) vertices resulting in " + finalResult.size()
-				+ " vertices with counts in "
-				+ (System.currentTimeMillis() - init) + " ms");
+		log.info("Finished count of " + keys.length + " (different) vertices resulting in " + finalResult.size()
+				+ " vertices with counts in " + (System.currentTimeMillis() - init) + " ms");
 		return c;
 
 	}
 
 	@Override
-	public long getRandomEdge(String graph, long v, long[] subset, Dir d)
-			throws Exception {
+	public long getRandomEdge(String graph, long v, long[] subset, Dir d) throws Exception {
 		long[] edges = getEdges(graph, d, v);
 		if (edges == null || edges.length == 0)
 			return -1;
@@ -547,8 +565,7 @@ public class StoreNodeImpl implements StoreNode {
 	}
 
 	@Override
-	public void setProperties(String graph, String to, TLongObjectMap<Object> m)
-			throws Exception {
+	public void setProperties(String graph, String to, TLongObjectMap<Object> m) throws Exception {
 		TLongObjectIterator<Object> it = m.iterator();
 		while (it.hasNext()) {
 			it.advance();
@@ -557,8 +574,8 @@ public class StoreNodeImpl implements StoreNode {
 	}
 
 	@Override
-	public TLongObjectHashMap<Object> getProperties(String graph, String k,
-			int top, TLongArrayList list) throws Exception {
+	public TLongObjectHashMap<Object> getProperties(String graph, String k, int top, TLongArrayList list)
+			throws Exception {
 		if (top <= 0) {
 			TLongObjectHashMap<Object> res = new TLongObjectHashMap<>();
 			TLongIterator it = list.iterator();
@@ -598,8 +615,7 @@ public class StoreNodeImpl implements StoreNode {
 	}
 
 	@Override
-	public int getEdgeCount(String graph, long vid, Dir dir, TLongHashSet among)
-			throws Exception {
+	public int getEdgeCount(String graph, long vid, Dir dir, TLongHashSet among) throws Exception {
 		if (log.isDebugEnabled())
 			log.debug("Getting edge count of vid among " + among.size());
 
@@ -619,25 +635,22 @@ public class StoreNodeImpl implements StoreNode {
 				ret++;
 		}
 		if (log.isDebugEnabled())
-			log.debug("Returning intersection bt " + among.size() + " curr "
-					+ curr.length + ":" + ret);
+			log.debug("Returning intersection bt " + among.size() + " curr " + curr.length + ":" + ret);
 		return ret;
 	}
 
 	@Override
-	public void setEdgeProperty(String graph, long v1, long v2, String k,
-			Object val, String... labels) throws Exception {
+	public void setEdgeProperty(String graph, long v1, long v2, String k, Object val, String... labels)
+			throws Exception {
 	}
 
 	@Override
-	public Object getEdgeProperty(String graph, long v1, long v2, String k,
-			String... labels) throws Exception {
+	public Object getEdgeProperty(String graph, long v1, long v2, String k, String... labels) throws Exception {
 		return null;
 	}
 
 	@Override
-	public void setTempProperties(String graph,
-			HashMap<Long, Map<String, Object>> temps) throws Exception {
+	public void setTempProperties(String graph, HashMap<Long, Map<String, Object>> temps) throws Exception {
 		Map<Long, Map<String, Object>> map = this.temps.get(graph);
 		if (map == null) {
 			synchronized (temps) {
@@ -669,8 +682,7 @@ public class StoreNodeImpl implements StoreNode {
 	}
 
 	@Override
-	public Map<Long, Map<String, Object>> getProperties(String graph,
-			long[] array, String... k) throws Exception {
+	public Map<Long, Map<String, Object>> getProperties(String graph, long[] array, String... k) throws Exception {
 		Map<Long, Map<String, Object>> ret = new HashMap<>();
 		for (long l : array) {
 			for (String propKey : k) {
@@ -695,10 +707,8 @@ public class StoreNodeImpl implements StoreNode {
 				byte[] intBytes = store.load(buildCountKey);
 				Integer ret = null;
 				if (intBytes == null) {
-					ret = store.count(buildVertexKey(graph, Long.MIN_VALUE),
-							buildVertexKey(graph, Long.MAX_VALUE));
-					store.store(buildCountKey,
-							DataTypeUtils.intToByteArray(ret));
+					ret = store.count(buildVertexKey(graph, Long.MIN_VALUE), buildVertexKey(graph, Long.MAX_VALUE));
+					store.store(buildCountKey, DataTypeUtils.intToByteArray(ret));
 				} else
 					ret = DataTypeUtils.byteArrayToInt(intBytes);
 				return ret;
@@ -707,20 +717,16 @@ public class StoreNodeImpl implements StoreNode {
 	}
 
 	@Override
-	public TLongArrayList getVertices(String graph, long from, int lenght,
-			boolean includeFirst) throws Exception {
+	public TLongArrayList getVertices(String graph, long from, int lenght, boolean includeFirst) throws Exception {
 		final int MAX_INIT_SIZE = 1000000;
-		List<byte[]> list = store.getRangeOfLength(includeFirst,
-				buildVertexKey(graph, from),
+		List<byte[]> list = store.getRangeOfLength(includeFirst, buildVertexKey(graph, from),
 				buildVertexKey(graph, Long.MAX_VALUE), lenght);
 
-		TLongArrayList ret = new TLongArrayList(
-				Math.min(MAX_INIT_SIZE, lenght));
+		TLongArrayList ret = new TLongArrayList(Math.min(MAX_INIT_SIZE, lenght));
 		for (byte[] bs : list)
 			ret.add(DataTypeUtils.byteArrayToLong(bs));
 		if (log.isDebugEnabled())
-			log.debug("Returning list of vertices from " + ret.get(0) + "to"
-					+ ret.get(ret.size() - 1));
+			log.debug("Returning list of vertices from " + ret.get(0) + "to" + ret.get(ret.size() - 1));
 
 		return ret;
 	}
@@ -736,8 +742,7 @@ public class StoreNodeImpl implements StoreNode {
 	}
 
 	@Override
-	public synchronized double getDouble(String graph, long v, String k)
-			throws Exception {
+	public synchronized double getDouble(String graph, long v, String k) throws Exception {
 		double tObjectDoubleHashMap = doubleProps.get(graph, v, k);
 		if (tObjectDoubleHashMap == doubleProps.NOT_FOUND)
 			return getDefaultDouble(graph, k);
@@ -745,14 +750,12 @@ public class StoreNodeImpl implements StoreNode {
 	}
 
 	@Override
-	public void setDouble(String graph, long v, String k, double currentVal)
-			throws Exception {
+	public void setDouble(String graph, long v, String k, double currentVal) throws Exception {
 		doubleProps.put(graph, v, k, currentVal);
 	}
 
 	@Override
-	public void setDefaultDouble(String graph, String k, double v)
-			throws Exception {
+	public void setDefaultDouble(String graph, String k, double v) throws Exception {
 		defaultDoubleMap.put(graph + "." + k, v);
 	}
 
@@ -773,8 +776,7 @@ public class StoreNodeImpl implements StoreNode {
 		to.put(GRAPH);
 		to.put((byte) 0xF);
 
-		List<byte[]> res = store.getRangeOfLength(true, from.build(),
-				to.build(), Integer.MAX_VALUE);
+		List<byte[]> res = store.getRangeOfLength(true, from.build(), to.build(), Integer.MAX_VALUE);
 
 		for (byte[] bs : res) {
 			ret.add(new String(bs));
@@ -801,12 +803,10 @@ public class StoreNodeImpl implements StoreNode {
 	}
 
 	@Override
-	public void setFloat(String graph, long v, String k, float currentVal)
-			throws Exception {
+	public void setFloat(String graph, long v, String k, float currentVal) throws Exception {
 		if (config.persistfloats) {
 			byte[] key = buildFloatPropertyKey(graph, v, k);
-			store.store(key, DataTypeUtils
-					.intToByteArray(Float.floatToIntBits(currentVal)));
+			store.store(key, DataTypeUtils.intToByteArray(Float.floatToIntBits(currentVal)));
 		} else {
 			floatProps.put(graph, v, k, currentVal);
 		}
@@ -815,8 +815,7 @@ public class StoreNodeImpl implements StoreNode {
 	private static byte[] buildFloatPropertyKey(String g, long id, String k) {
 		byte[] gName = g.getBytes();
 		byte[] keyBytes = k.getBytes();
-		ByteBuffer buff = new ByteBuffer(
-				1 + 4 + gName.length + keyBytes.length + 8);
+		ByteBuffer buff = new ByteBuffer(1 + 4 + gName.length + keyBytes.length + 8);
 		buff.put(FLOAT_PROPS);
 		buff.putByteArray(gName);
 		buff.putByteArray(keyBytes);
@@ -825,8 +824,7 @@ public class StoreNodeImpl implements StoreNode {
 	}
 
 	@Override
-	public void setDefaultFloat(String graph, String k, float v)
-			throws Exception {
+	public void setDefaultFloat(String graph, String k, float v) throws Exception {
 		TObjectFloatHashMap<String> gMap = defaultFloatMap.get(graph);
 		if (gMap == null) {
 			synchronized (defaultFloatMap) {
@@ -842,8 +840,7 @@ public class StoreNodeImpl implements StoreNode {
 
 	@Override
 	public float getDefaultFloat(String graph, String k) throws Exception {
-		TObjectFloatHashMap<String> tObjectFloatHashMap = defaultFloatMap
-				.get(graph);
+		TObjectFloatHashMap<String> tObjectFloatHashMap = defaultFloatMap.get(graph);
 		if (tObjectFloatHashMap == null)
 			return 0f;
 		return tObjectFloatHashMap.get(k);
@@ -859,8 +856,7 @@ public class StoreNodeImpl implements StoreNode {
 	}
 
 	@Override
-	public void setTempFloats(String graph, String k, boolean add, long[] keys,
-			float[] values) {
+	public void setTempFloats(String graph, String k, boolean add, long[] keys, float[] values) {
 		if (add)
 			this.tempFloatProps.addAll(graph, k, keys, values);
 		else
@@ -882,8 +878,7 @@ public class StoreNodeImpl implements StoreNode {
 	}
 
 	@Override
-	public void updateFloatProperty(String graph, String prop,
-			DivideUpdateProperty upd) throws Exception {
+	public void updateFloatProperty(String graph, String prop, DivideUpdateProperty upd) throws Exception {
 		TLongFloatMap map = floatProps.getAll(graph, prop);
 		synchronized (map) {
 			TLongFloatIterator it = map.iterator();
@@ -895,8 +890,7 @@ public class StoreNodeImpl implements StoreNode {
 	}
 
 	@Override
-	public float getFloat(String graph, long v, String k, float alt)
-			throws Exception {
+	public float getFloat(String graph, long v, String k, float alt) throws Exception {
 		if (config.persistfloats) {
 			byte[] key = buildFloatPropertyKey(graph, v, k);
 			byte[] val = store.load(key);
@@ -912,13 +906,11 @@ public class StoreNodeImpl implements StoreNode {
 		}
 	}
 
-	public TLongFloatIterator getFloatIterator(String graph, String k)
-			throws Exception {
+	public TLongFloatIterator getFloatIterator(String graph, String k) throws Exception {
 		if (config.persistfloats) {
 			byte[] from = buildFloatPropertyKey(graph, Long.MIN_VALUE, k);
 			byte[] to = buildFloatPropertyKey(graph, Long.MAX_VALUE, k);
-			final Iterator<Pair<byte[], byte[]>> it = store
-					.getRangeIterator(true, from, to, Integer.MAX_VALUE);
+			final Iterator<Pair<byte[], byte[]>> it = store.getRangeIterator(true, from, to, Integer.MAX_VALUE);
 			return new TLongFloatIterator() {
 				float val = 0f;
 				private long key;
@@ -935,10 +927,8 @@ public class StoreNodeImpl implements StoreNode {
 				@Override
 				public void advance() {
 					Pair<byte[], byte[]> next = it.next();
-					key = DataTypeUtils.byteArrayToLongOrdered(next.left,
-							next.left.length - 8);
-					val = Float.intBitsToFloat(
-							DataTypeUtils.byteArrayToInt(next.right));
+					key = DataTypeUtils.byteArrayToLongOrdered(next.left, next.left.length - 8);
+					val = Float.intBitsToFloat(DataTypeUtils.byteArrayToInt(next.right));
 
 				}
 
@@ -965,8 +955,7 @@ public class StoreNodeImpl implements StoreNode {
 	}
 
 	@Override
-	public void setFloats(String graph, String k, TLongFloatMap subProp)
-			throws Exception {
+	public void setFloats(String graph, String k, TLongFloatMap subProp) throws Exception {
 		TLongFloatIterator it = subProp.iterator();
 		while (it.hasNext()) {
 			it.advance();
@@ -976,29 +965,24 @@ public class StoreNodeImpl implements StoreNode {
 	}
 
 	@Override
-	public void setProperty(String graph, String k, String val,
-			TLongArrayList value) throws Exception {
+	public void setProperty(String graph, String k, String val, TLongArrayList value) throws Exception {
 		TLongIterator it = value.iterator();
 		while (it.hasNext())
 			setProperty(graph, it.next(), k, val);
-
 	}
 
-	public void addFloat(String graph, long v, String k, float f)
-			throws Exception {
+	public void addFloat(String graph, long v, String k, float f) throws Exception {
 		if (config.persistfloats) {
 			byte[] key = buildFloatPropertyKey(graph, v, k);
 			float curr = getFloat(graph, v, k, 0f);
-			store.store(key, DataTypeUtils
-					.intToByteArray(Float.floatToIntBits(curr + f)));
+			store.store(key, DataTypeUtils.intToByteArray(Float.floatToIntBits(curr + f)));
 		} else {
 			floatProps.add(graph, v, k, f);
 		}
 	}
 
 	@Override
-	public Map<String, PropertyData> getAllProperties(String graph,
-			long[] array) {
+	public Map<String, PropertyData> getAllProperties(String graph, long[] array) {
 		Map<String, PropertyData> ret = new HashMap<>();
 		for (String propKey : props.getProperties()) {
 			TLongObjectMap<Object> tlo = new TLongObjectHashMap<>();
@@ -1012,8 +996,7 @@ public class StoreNodeImpl implements StoreNode {
 	}
 
 	@Override
-	public Map<String, TLongFloatMap> getAllFloatProperties(String graph,
-			long[] array) throws Exception {
+	public Map<String, TLongFloatMap> getAllFloatProperties(String graph, long[] array) throws Exception {
 		Map<String, TLongFloatMap> ret = new HashMap<>();
 		for (String propKey : floatProps.getProperties()) {
 			TLongFloatMap tlo = new TLongFloatHashMap();
@@ -1026,16 +1009,14 @@ public class StoreNodeImpl implements StoreNode {
 	}
 
 	@Override
-	public AdjacencyData getAllEdges(String graph, TLongArrayList value,
-			Dir dir) throws Exception {
+	public AdjacencyData getAllEdges(String graph, TLongArrayList value, Dir dir) throws Exception {
 		TLongObjectHashMap<long[]> ret = new TLongObjectHashMap<>();
 		TLongIterator it = value.iterator();
 		while (it.hasNext()) {
 			long v = it.next();
 			ret.put(v, getEdges(graph, dir, v));
 		}
-		return new AdjacencyData(ret.keys(),
-				ret.values(new long[ret.size()][]));
+		return new AdjacencyData(ret.keys(), ret.values(new long[ret.size()][]));
 	}
 
 	public boolean containsVertex(String g, long v) throws Exception {
@@ -1043,8 +1024,7 @@ public class StoreNodeImpl implements StoreNode {
 	}
 
 	@Override
-	public void createSubgraph(String graph, String sg, long[] vids)
-			throws Exception {
+	public void createSubgraph(String graph, String sg, long[] vids) throws Exception {
 		TLongHashSet sg_list = new TLongHashSet(vids);
 		for (long l : vids) {
 			if (containsVertex(graph, l)) {
@@ -1062,8 +1042,7 @@ public class StoreNodeImpl implements StoreNode {
 		}
 	}
 
-	private long[] getEdges(String g, Dir dir, long v, TLongHashSet vertices)
-			throws Exception {
+	private long[] getEdges(String g, Dir dir, long v, TLongHashSet vertices) throws Exception {
 		long[] edges = getEdges(g, dir, v);
 		if (edges == null)
 			return null;

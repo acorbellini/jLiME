@@ -10,3 +10,5 @@ jlime/dist/
 .project
 .classpath
 .settings/
+.metadata/
+.recommenders/
