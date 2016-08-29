@@ -421,6 +421,13 @@ public class StoreNodeImpl implements StoreNode {
 
 	@Override
 	public String getLabel(String graph, long id) throws Exception {
+		byte[] vk = buildVertexKey(graph, id);
+		byte[] data = store.load(vk);
+		if (data != null) {
+			ByteBuffer buffer = new ByteBuffer(data);
+			buffer.getLong();
+			return new String(buffer.getRawByteArray());
+		}
 		return null;
 	}
 
